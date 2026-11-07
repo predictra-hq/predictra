@@ -1,0 +1,66 @@
+# Data dictionary — calcio (M2)
+
+Migrazione: `supabase/migrations/20261107120000_football_core.sql` · Decisioni: [ADR 0010](../decisions/0010-modello-dati-calcio.md) · Tipi TypeScript: `packages/shared-types/src/football.ts` (verificati dal test `supabase/tests/football.test.ts`).
+
+Regole comuni:
+
+- **Lettura:** utenti autenticati con account attivo (RLS `app_private.is_active_user()`). `anon` non ha privilegi.
+- **Scrittura:** solo `service_role` (job di ingestion con la chiave secret). Nessuna policy di scrittura per gli utenti, nemmeno per gli admin.
+- **Dati personali:** nessuno.
+- **Provenienza.** Le tabelle di dati esterni hanno:
+  - `provider` → `providers`, da cui si ricavano licenza e attribuzione;
+  - `observed_at`: quando PREDICTRA ha letto il dato;
+  - `event_time`: l'istante a cui il dato si riferisce secondo il provider;
+  - `quality` (`OK`, `WARNING`, `ERROR`);
+  - `ingestion_run_id`: l'ultima esecuzione che ha scritto la riga.
+
+  L'ID del provider è in `provider_entity_map`.
+
+## Tabelle
+
+| Tabella                  | PK                                                | FK                                          | Vincoli e indici                                                                                                                             | Retention                   |
+| ------------------------ | ------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `providers`              | `code`                                            | —                                           | codice `[a-z0-9-]`, URL `https`. Seed: `football-data-org` (termini verificati), `api-football` (`terms_verified_at` vuoto)                  | statica                     |
+| `source_freshness_rules` | (`provider`, `data_kind`)                         | providers                                   | `max_age` > 0 o vuoto (= non scade)                                                                                                          | statica                     |
+| `ingestion_runs`         | `id`                                              | providers                                   | `RUNNING` ⇔ `finished_at` vuoto; un solo `RUNNING` per (`provider`, `job_type`, `window_key`); `error_summary` ≤ 2000 caratteri, mai segreti | da definire in M8           |
+| `competitions`           | `id`                                              | providers, ingestion_runs                   | `code` unico se presente (es. `SA`)                                                                                                          | conservate                  |
+| `seasons`                | `id`                                              | competitions                                | unica per (competizione, data di inizio); `label` `AAAA` o `AAAA/AA`                                                                         | conservate                  |
+| `teams`                  | `id`                                              | providers                                   | `tla` 2–5 caratteri maiuscoli                                                                                                                | conservate                  |
+| `team_aliases`           | `id`                                              | teams (cascade)                             | unico per (`source`, alias normalizzato: minuscolo, spazi compressi)                                                                         | conservati                  |
+| `matches`                | `id`                                              | competitions, seasons, teams (casa, ospite) | squadre diverse; punteggi in coppia e ≥ 0; indici per data, competizione, giornata, squadra                                                  | conservate (storico per M4) |
+| `standings`              | `id`                                              | competitions, seasons, teams                | fotografie: unica per (stagione, tipo, fase, girone, squadra, `observed_at`)                                                                 | conservate                  |
+| `provider_entity_map`    | (`provider`, `entity_type`, `provider_entity_id`) | providers                                   | un solo ID per entità e provider; un trigger verifica che `entity_id` esista                                                                 | segue l'entità              |
+| `data_quality_issues`    | `id`                                              | providers, ingestion_runs                   | un solo problema `OPEN` per (controllo, provider, entità); `OPEN` ⇔ `resolved_at` vuoto                                                      | da definire in M8           |
+
+## Tipi enum
+
+| Tipo                   | Valori                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `quality_status`       | `OK`, `WARNING`, `ERROR`                                                                       |
+| `freshness_status`     | `FRESH`, `STALE`                                                                               |
+| `competition_type`     | `LEAGUE`, `CUP`, `LEAGUE_CUP`, `PLAYOFFS`                                                      |
+| `match_status`         | `SCHEDULED`, `LIVE`, `FINISHED`, `POSTPONED`, `SUSPENDED`, `CANCELLED`, `ABANDONED`, `AWARDED` |
+| `score_duration`       | `REGULAR`, `EXTRA_TIME`, `PENALTY_SHOOTOUT`                                                    |
+| `standing_type`        | `TOTAL`, `HOME`, `AWAY`                                                                        |
+| `football_entity_type` | `competition`, `season`, `team`, `match`                                                       |
+| `football_data_kind`   | `competitions`, `teams`, `matches`, `standings`                                                |
+| `ingestion_run_status` | `RUNNING`, `SUCCEEDED`, `PARTIAL`, `FAILED`                                                    |
+| `issue_severity`       | `INFO`, `WARNING`, `ERROR`                                                                     |
+| `issue_status`         | `OPEN`, `RESOLVED`, `IGNORED`                                                                  |
+
+## Viste
+
+Tutte con `security_invoker = true`: applicano la RLS di chi le interroga.
+
+| Vista                | Contenuto                                                                                                                                                                                                                                                                       | Usata da                       |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `v_match_center`     | Una riga per partita con competizione, stagione, squadre, punteggi, provider, ID della partita presso il provider, `observed_at`, `event_time`, qualità, freschezza (`STALE` oltre la soglia; le partite concluse da più di 72 ore restano `FRESH`) e numero di problemi aperti | M2 corsia B (Match Center)     |
+| `v_match_results`    | Solo partite `FINISHED` con risultato e qualità diversa da `ERROR`. **Filtrare per `kickoff_at`** per evitare il leakage                                                                                                                                                        | M3 (statistiche), M4 (modelli) |
+| `v_latest_standings` | Ultima fotografia della classifica per stagione, con differenza reti e freschezza                                                                                                                                                                                               | M2 corsia B, M3                |
+| `v_source_health`    | Per provider: termini verificati, ultima esecuzione e suo esito, ultimo successo, esecuzioni, errori e richieste nelle 24 ore, quota residua, problemi aperti, freschezza e stato complessivo (`NO_DATA`, `OK`, `DEGRADED`)                                                     | M2 corsia B (Data Center)      |
+
+## Funzioni
+
+| Funzione                              | Tipo    | Scopo                                          |
+| ------------------------------------- | ------- | ---------------------------------------------- |
+| `app_private.check_provider_entity()` | trigger | rifiuta un mapping verso un'entità inesistente |
