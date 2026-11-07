@@ -67,7 +67,10 @@ export function powerProbabilities(odds: readonly number[], tolerance = 1e-12): 
   return p.map((x) => x / sum);
 }
 
-export function demargin(odds: readonly number[], method: DemarginMethod = "proportional"): number[] {
+export function demargin(
+  odds: readonly number[],
+  method: DemarginMethod = "proportional",
+): number[] {
   return method === "power" ? powerProbabilities(odds) : proportionalProbabilities(odds);
 }
 
