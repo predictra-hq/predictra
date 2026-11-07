@@ -1,6 +1,6 @@
 # M3 — Statistiche e quote: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia 0) · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,11 +15,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia              | Persona | Issue | Stato       |
-| ------------------- | ------- | ----- | ----------- |
-| 0 — contratto       | —       | —     | da iniziare |
-| A — quote e calcoli | —       | —     | da iniziare |
-| B — interfaccia     | —       | —     | da iniziare |
+| Corsia              | Persona   | Issue | Stato                                  |
+| ------------------- | --------- | ----- | -------------------------------------- |
+| 0 — contratto       | Alfry1299 | —     | in revisione (PR `feature/m3-0-quote`) |
+| A — quote e calcoli | —         | —     | da iniziare                            |
+| B — interfaccia     | —         | —     | da iniziare                            |
 
 ## Prerequisiti
 

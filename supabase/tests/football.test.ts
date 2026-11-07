@@ -187,7 +187,7 @@ describe("accessi", () => {
         tx,
         "select count(*)::int p from public.v_source_health",
       );
-      expect(p).toBe(2);
+      expect(p).toBe(3);
     });
   });
 
