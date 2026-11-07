@@ -48,10 +48,11 @@ Dopo il rinnovo aggiorna il segreto GitHub con lo stesso nome e rilancia l'ultim
 
 ## Workflow manuali
 
-| Workflow              | Dove                                               | A cosa serve                                                                                   |
-| --------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Bootstrap Super Admin | _Actions → Bootstrap Super Admin → Run workflow_   | crea un invito SUPER_ADMIN; il link è solo nel riepilogo del run (eliminare il run dopo l'uso) |
-| Rilancio del deploy   | _Actions → CI → ultimo run su `dev` → Re-run jobs_ | ripete migrazioni, config Auth e deploy senza nuovi commit                                     |
+| Workflow              | Dove                                               | A cosa serve                                                                                                      |
+| --------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Bootstrap Super Admin | _Actions → Bootstrap Super Admin → Run workflow_   | crea un invito SUPER_ADMIN; il link è solo nel riepilogo del run (eliminare il run dopo l'uso)                    |
+| Data collector        | _Actions → Data collector → Run workflow_          | raccolta manuale da football-data.org verso DEV (opzione `dry_run` per la sola lettura); in automatico ogni 3 ore |
+| Rilancio del deploy   | _Actions → CI → ultimo run su `dev` → Re-run jobs_ | ripete migrazioni, config Auth e deploy senza nuovi commit                                                        |
 
 ## Problemi già incontrati (7/11/2026, prima messa in servizio)
 

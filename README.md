@@ -19,6 +19,7 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 apps/web/                 Next.js 16 (App Router), TypeScript strict, Tailwind 4 — UI + Server Actions
 packages/shared-types/    ruoli, permessi e regole di dominio condivise (con test)
 packages/config/          tsconfig condivisi
+services/data-collector/  raccolta dati calcio in Python (football-data.org → Supabase), con test
 supabase/migrations/      migrazioni SQL versionate (schema, RLS, RPC)
 supabase/tests/           test di migrazione, RLS e isolamento (Postgres embedded)
 supabase/config.toml      impostazioni Auth applicate dalla pipeline

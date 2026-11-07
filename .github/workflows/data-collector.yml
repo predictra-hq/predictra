@@ -1,0 +1,108 @@
+name: Data collector
+
+# M2 corsia A — raccolta dati football-data.org (ADR 0010).
+# - Test e lint del servizio Python a ogni PR o push che lo tocca.
+# - Raccolta programmata ogni 3 ore verso Supabase DEV, più l'avvio manuale.
+#   Lo schedule e l'avvio manuale funzionano solo quando questo file è sul branch
+#   di default (main); il codice eseguito è sempre quello di `dev`.
+# Runbook: docs/operations/data-collector.md
+
+on:
+  pull_request:
+    paths:
+      - "services/data-collector/**"
+      - ".github/workflows/data-collector.yml"
+  push:
+    branches: [dev, main]
+    paths:
+      - "services/data-collector/**"
+      - ".github/workflows/data-collector.yml"
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      competitions:
+        description: "Codici separati da virgola (vuoto = tutte le competizioni della v1)"
+        type: string
+        required: false
+      dry_run:
+        description: "Solo lettura: non scrive su Supabase"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-collector-${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'ingest' || github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: services/data-collector
+
+jobs:
+  test:
+    name: Python — lint e test
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Dipendenze
+        run: uv sync --locked
+      - name: Formattazione
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest
+
+  ingest:
+    name: Raccolta football-data.org (DEV)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Verifica segreti
+        id: secrets
+        working-directory: .
+        run: |
+          missing=""
+          for v in FOOTBALL_DATA_API_KEY SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning title=Raccolta saltata::Segreti mancanti:$missing (vedi docs/operations/data-collector.md)"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.skip != 'true'
+        with:
+          ref: dev
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.secrets.outputs.skip != 'true'
+
+      - name: Dipendenze
+        if: steps.secrets.outputs.skip != 'true'
+        run: uv sync --locked --no-dev
+
+      - name: Raccolta
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          COMPETITIONS: ${{ inputs.competitions }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+          TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          args=(run --triggered-by "$TRIGGERED_BY")
+          if [ -n "$COMPETITIONS" ]; then args+=(--competitions "$COMPETITIONS"); fi
+          if [ -n "$DRY_RUN" ]; then args+=("$DRY_RUN"); fi
+          uv run python -m predictra_collector "${args[@]}"

@@ -4,3 +4,6 @@ pnpm-lock.yaml
 node_modules
 coverage
 supabase/migrations
+# Fixture: risposte dei provider conservate così come pubblicate
+services/*/tests/fixtures/*.json
+services/*/.venv
