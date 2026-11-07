@@ -1,44 +1,46 @@
 # Roadmap e corsie di lavoro
 
-Stato delle milestone, dipendenze e divisione del lavoro in corsie parallele. Le regole per lavorare in parallelo sono in [collaborazione.md](../operations/collaborazione.md); i criteri di completamento di ogni milestone vengono dal [piano tecnico M0](../architecture/M0-piano-tecnico.md) §6.
+Stato delle milestone, dipendenze e piani di lavoro. Ogni milestone ha un piano con tutto ciò che serve per partire: prerequisiti, cosa serve dalle altre milestone, decisioni da prendere, corsie con i file di loro proprietà, fasi e criteri di completamento. Le regole per lavorare in parallelo sono in [collaborazione.md](../operations/collaborazione.md); i criteri di completamento vengono dal [piano tecnico M0](../architecture/M0-piano-tecnico.md) §6.
 
-## Stato
+## Stato e piani
 
-| Milestone | Titolo                 | Dipende da | Stato                                                                               | Piano                                     |
-| --------- | ---------------------- | ---------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
-| M0        | Audit e piano          | —          | completata                                                                          | [M0](../architecture/M0-piano-tecnico.md) |
-| M1        | Fondazioni             | M0         | completata, **in servizio su DEV** dal 7/11/2026 (https://predictra-dev.vercel.app) | [setup](../operations/setup.md)           |
-| M2        | Football data          | M1         | **prossima**                                                                        | [M2](M2-football-data.md)                 |
-| M3        | Statistiche e quote    | M2         | da pianificare                                                                      | —                                         |
-| M4        | Prediction engine      | M2         | da pianificare                                                                      | —                                         |
-| M5        | Bet Builder            | M3, M4     | da pianificare                                                                      | —                                         |
-| M6        | Bankroll e tracker     | M1, M4     | da pianificare                                                                      | —                                         |
-| M7        | Agente autonomo        | M2–M5      | da pianificare                                                                      | —                                         |
-| M8        | Hardening e produzione | tutte      | da pianificare                                                                      | —                                         |
+| Milestone | Titolo                 | Dipende da  | Può partire quando                                                   | Stato                                            | Piano                                     |
+| --------- | ---------------------- | ----------- | -------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------- |
+| M0        | Audit e piano          | —           | —                                                                    | completata                                       | [M0](../architecture/M0-piano-tecnico.md) |
+| M1        | Fondazioni             | M0          | —                                                                    | completata, **in servizio su DEV** dal 7/11/2026 | [setup](../operations/setup.md)           |
+| M2        | Football data          | M1          | subito                                                               | **prossima**                                     | [M2](M2-football-data.md)                 |
+| M3        | Statistiche e quote    | M2          | contratto di M2 su `dev`                                             | da iniziare                                      | [M3](M3-statistiche-e-quote.md)           |
+| M4        | Prediction engine      | M2          | contratto di M2 su `dev` (addestramento reale: storico di M2 su DEV) | da iniziare                                      | [M4](M4-prediction-engine.md)             |
+| M5        | Smart Bet Builder      | M3, M4      | contratti di M3 e M4 su `dev`                                        | da iniziare                                      | [M5](M5-bet-builder.md)                   |
+| M6        | Bankroll e tracker     | M1 (M3, M4) | subito per la base; Kelly dopo M4, CLV dopo M3                       | da iniziare                                      | [M6](M6-bankroll-e-tracker.md)            |
+| M7        | Agente autonomo        | M2–M5       | contratto della coda subito; collegamento dei job quando esistono    | da iniziare                                      | [M7](M7-agente-autonomo.md)               |
+| M8        | Hardening e produzione | tutte       | backup e restore subito; il resto alla fine                          | da iniziare                                      | [M8](M8-hardening-e-produzione.md)        |
 
-Quando si inizia una milestone si crea il suo piano `M<N>-<nome>.md` copiando la struttura di [M2-football-data.md](M2-football-data.md).
+"Contratto" è la corsia 0 della milestone: tabelle, viste, RLS e tipi condivisi. Si unisce su `dev` per prima proprio per sbloccare chi viene dopo (collaborazione.md §6).
 
 ## Dove si può lavorare in parallelo
 
 ```text
-M2 ──┬── M3 (quote) ──────┐
-     └── M4 (modelli) ──┬─┴── M5 (Bet Builder) ──┐
-                        └──── M6 (bankroll) ─────┴── M7 (agente) ── M8 (produzione)
+M1 ──┬── M2 ──┬── M3 (quote) ─────┐
+     │        └── M4 (modelli) ───┴── M5 (Bet Builder) ──┐
+     ├── M6 (bankroll: base subito, Kelly dopo M4) ──────┤
+     └── M7 (coda subito) · M8 (backup subito) ──────────┴── M7 (job reali) ── M8 (produzione)
 ```
 
 - **Dentro ogni milestone**: corsia 0, poi corsie A e B in parallelo.
-- **Tra milestone**: dopo M2, **M3 e M4 sono indipendenti** e possono essere prese una per persona. Dopo M4, **M5 e M6** possono procedere insieme (M5 richiede anche M3).
+- **Tra milestone**:
+  - mentre una persona fa M2, l'altra può fare **M6** (base), il contratto della coda di **M7** o i backup di **M8**: non dipendono da M2;
+  - dopo il contratto di M2, **M3 e M4 sono indipendenti** e si possono prendere una a testa;
+  - dopo i contratti di M3 e M4 si può iniziare **M5**.
 
-## Corsie proposte per le prossime milestone
+## Come iniziare una milestone
 
-La divisione definitiva si decide nella corsia 0 di ogni milestone e si scrive nel suo piano.
+1. Apri il piano della milestone e controlla **Può partire quando** e **Cosa serve dalle altre milestone**. Se un contratto necessario non è su `dev`, segui collaborazione.md §6.
+2. Controlla i **Prerequisiti**: account e segreti li prepara `gennpalm`.
+3. Crea le issue delle corsie (etichette `M<N>`, `corsia:0`, `corsia:A`, `corsia:B`) e scrivi il tuo nome nella tabella **Assegnazione** del piano.
+4. Nella corsia 0 prendi le **decisioni** elencate e scrivile negli ADR riservati alla milestone. Tutto ciò che nei piani è indicato come "proposta" va confermato o corretto lì.
+5. Riverifica limiti e termini dei provider coinvolti: il piano M0 è del 7/11/2026 e i provider cambiano spesso le condizioni.
 
-| Milestone | Corsia 0 (contratto)                                                                         | Corsia A (dati, backend, job)                                                                               | Corsia B (interfaccia)                                                            |
-| --------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| M2        | modello canonico calcio, mapping provider, `ingestion_runs`, qualità; viste per la UI        | adapter football-data.org e API-Football (backfill), data quality gate, job schedulato, salute dei provider | Data Center (Source Intelligence), Match Center                                   |
-| M3        | `bookmakers`, `markets`, `odds_snapshots`; funzioni di overround e de-margin con test        | adapter The Odds API, budget crediti, snapshot 1X2, stato FRESH/STALE                                       | Market Intelligence, Statistics Center, League Intelligence                       |
-| M4        | `model_versions`, `predictions`, `backtests`; ADR sul versioning e sulla riproducibilità     | `services/prediction-engine` (Python): baseline, Elo, Poisson/Dixon-Coles, calibrazione, backtest temporale | Model Intelligence: metriche, versioni, explainability, Confidence Score          |
-| M5        | versioni immutabili delle schedine e regole di correlazione                                  | motore delle combinazioni e delle correlazioni, ranking                                                     | Bet Builder                                                                       |
-| M6        | `bankrolls`, movimenti, giocate reali e simulate, limiti personali; RLS e test di isolamento | metriche e staking (flat, Kelly frazionario limitato) con test                                              | pagine Bankroll e Tracker                                                         |
-| M7        | `agent_jobs`, `agent_runs`, idempotenza (ADR 0003)                                           | coda su Postgres, QStash, worker su GitHub Actions, retry, backoff, DLQ, recovery                           | heartbeat e stato dell'agente in dashboard, notifiche, frequenza reale dichiarata |
-| M8        | criteri finali e checklist di produzione                                                     | security review, backup `pg_dump` e test di restore, ambiente PROD                                          | accessibilità, runbook, verifica finale                                           |
+## Nota sul Prompt Master
+
+La specifica completa ("Prompt Master") è stata fornita dal proprietario ma **non è nel repository**: qui ci sono il suo riassunto ([M0](../architecture/M0-piano-tecnico.md)) e gli ADR. Se una milestone richiede un dettaglio non presente (per esempio i criteri §23.3 e §26 citati per M8, o le categorie del Bet Builder), chiedilo a `gennpalm` oppure aggiungi il documento in `docs/architecture/`.
