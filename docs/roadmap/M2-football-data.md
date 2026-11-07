@@ -114,7 +114,7 @@ Il contratto di M2 è la base di quasi tutto: va pensato anche per chi viene dop
 
 | Criterio                                                                    | Esito                                                                                                                 |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Partite reali su DEV con provider, ID del provider, `observed_at` e qualità | ✅ 8 competizioni, 2.508 partite della stagione in corso, nessun problema di qualità alla prima raccolta               |
+| Partite reali su DEV con provider, ID del provider, `observed_at` e qualità | ✅ 8 competizioni, 2.508 partite della stagione in corso, nessun problema di qualità alla prima raccolta              |
 | Adapter testati con fixture                                                 | ✅ con gli esempi ufficiali della documentazione di football-data.org; risposte reali registrate ancora da aggiungere |
 | Salute dei provider visibile nell'app                                       | ✅ Data Center (`v_source_health`)                                                                                    |
 | `pnpm check` e CI verdi, nessuna chiave nei log, nessun dato inventato      | ✅                                                                                                                    |
