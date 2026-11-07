@@ -40,6 +40,7 @@ pnpm format        # formattazione Prettier
 
 - Piano tecnico e matrici free tier: [docs/architecture/M0-piano-tecnico.md](docs/architecture/M0-piano-tecnico.md)
 - Decisioni architetturali: [docs/decisions/](docs/decisions/README.md)
+- **Checklist di messa in servizio (da zero):** [docs/operations/checklist-messa-in-servizio.md](docs/operations/checklist-messa-in-servizio.md)
 - Setup e deploy: [docs/operations/setup.md](docs/operations/setup.md)
 - Controlli di sicurezza: [docs/operations/security.md](docs/operations/security.md)
 - Data dictionary: [docs/data-dictionary/identity.md](docs/data-dictionary/identity.md)

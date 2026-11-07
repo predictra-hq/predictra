@@ -1,5 +1,7 @@
 # Guida di messa in servizio — PREDICTRA
 
+> Procedura passo-passo con indicazione di dove recuperare ogni valore: [checklist-messa-in-servizio.md](checklist-messa-in-servizio.md).
+
 Questa guida porta da zero a un ambiente **DEV** funzionante e aggiornato in automatico a ogni push.
 Account, chiavi e impostazioni cloud li crea **il proprietario del progetto**: nessuna chiave va scritta nel repository, in chat o in un file versionato.
 
