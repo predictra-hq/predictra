@@ -1,6 +1,6 @@
 # M2 — Football data: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** M1 (in servizio su DEV) · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** da iniziare · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -25,12 +25,12 @@ Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                       | Chi        | Serve a           |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
-| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                       | `gennpalm` | corsia A, fase A2 |
-| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                 | `gennpalm` | corsia A, fase A3 |
-| P3  | Lettura dei termini d'uso di football-data.org e API-Football (nel piano M0 risultano NON VERIFICATI); esito nell'ADR 0010 | corsia 0   | tutte             |
-| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)       | `gennpalm` | ordine            |
+| #   | Cosa                                                                                                                                                             | Chi        | Serve a           |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
+| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                                                             | `gennpalm` | corsia A, fase A2 |
+| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                                                       | `gennpalm` | corsia A, fase A3 |
+| P3  | Lettura dei termini d'uso di football-data.org e API-Football (nel piano M0 risultano NON VERIFICATI), registrati in `docs/data-sources/` come chiede l'ADR 0004 | corsia 0   | tutte             |
+| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)                                             | `gennpalm` | ordine            |
 
 Le corsie possono partire anche senza P1 e P2: i test usano fixture. Le fixture sono **risposte reali registrate** (o esempi della documentazione ufficiale del provider), salvate con fonte e data di registrazione; mai costruite a mano.
 
@@ -43,7 +43,7 @@ corsia 0 (contratto) ──► merge su dev ──┬──► corsia A (ingesti
 
 ## Corsia 0 — contratto (prima PR, una persona)
 
-**Decisioni da prendere e scrivere nell'ADR 0010:**
+**Decisioni da prendere (ADR riservati a M2: 0010–0014), a partire dall'ADR 0010:**
 
 - runtime dell'ingestion. Proposta: servizio Python in `services/data-collector/` eseguito da un workflow schedulato di GitHub Actions; QStash rimandato a M7 (ADR 0002). Alternativa: job TypeScript su Vercel;
 - frequenza degli aggiornamenti e soglie FRESH/STALE per tipo di dato;
@@ -53,6 +53,7 @@ corsia 0 (contratto) ──► merge su dev ──┬──► corsia A (ingesti
 **File:**
 
 - `docs/decisions/0010-modello-dati-calcio.md`
+- `docs/data-sources/football-data-org.md` e `docs/data-sources/api-football.md` (termini d'uso, copertura, limiti)
 - `docs/data-dictionary/football.md`
 - `supabase/migrations/<timestamp>_football_core.sql`
 - `supabase/tests/football.test.ts`
@@ -100,8 +101,17 @@ Finché la corsia A non ha caricato dati, le pagine mostrano lo stato vuoto. Eve
 
 **Fatto quando:** voci Match Center e Data Center attive, dati reali visibili su DEV dopo la corsia A, nessun dato inventato.
 
+## Cosa si aspettano le milestone successive
+
+Il contratto di M2 è la base di quasi tutto: va pensato anche per chi viene dopo.
+
+- **M3** abbina gli eventi delle quote alle partite tramite `teams`, `team_aliases` e `provider_entity_map`.
+- **M4** addestra i modelli sullo storico: servono viste con le partite concluse e i risultati finali, filtrabili per data (per evitare il leakage).
+- **M6** collega facoltativamente una giocata a una partita (`matches`).
+- **M7** sposterà i job nella coda: ogni esecuzione deve essere idempotente per tipo, entità e finestra temporale (ADR 0003), con una chiave che lo dimostri.
+
 ## Chiusura di M2
 
 1. Corsie 0, A e B unite su `dev`, deploy DEV verde.
 2. Verifica su DEV dei criteri di completamento in cima a questo file.
-3. Stato aggiornato in `README.md`, `CLAUDE.md` e [roadmap](README.md); piano della milestone successiva creato.
+3. Stato aggiornato in `README.md`, `CLAUDE.md` e [roadmap](README.md).
