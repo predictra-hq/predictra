@@ -4,12 +4,12 @@ Piattaforma privata di football intelligence. Specifica completa: il "Prompt Mas
 
 ## Stato
 
-| Milestone                                                                 | Stato                                                                                             |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| M0 Audit e piano                                                          | ✅                                                                                                |
-| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ in servizio su DEV (https://predictra-dev.vercel.app); ambienti: `docs/operations/ambienti.md` |
-| **M2 Football data**                                                      | ⏭️ prossima: piano e corsie in `docs/roadmap/M2-football-data.md`                                 |
-| M3–M8                                                                     | `docs/roadmap/README.md` (dipendenze e corsie) e `docs/architecture/M0-piano-tecnico.md` §6       |
+| Milestone                                                                 | Stato                                                                                                                                                                                     |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 Audit e piano                                                          | ✅                                                                                                                                                                                        |
+| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ in servizio su DEV (https://predictra-dev.vercel.app); ambienti: `docs/operations/ambienti.md`                                                                                         |
+| M2 Football data                                                          | ✅ in servizio su DEV: contratto, collector `services/data-collector`, Match Center e Data Center. Fase A3 (API-Football) bloccata dai termini d'uso: `docs/data-sources/api-football.md` |
+| **M3–M8**                                                                 | ⏭️ prossime: M3 e M4 possono partire (contratto M2 su `dev`), M6 è indipendente. Piani in `docs/roadmap/`                                                                                 |
 
 ## Lavoro in parallelo (leggere prima di iniziare)
 

@@ -1,6 +1,6 @@
 # ADR 0010 — Modello dati del calcio e ingestion v1
 
-**Stato:** Proposta (diventa Accettata con il merge della PR di M2 corsia 0) · **Data:** 2026-11-07
+**Stato:** Accettata (PR #5, 7/11/2026) · **Data:** 2026-11-07
 
 ## Contesto
 
