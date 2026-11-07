@@ -14,4 +14,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0007](0007-cartella-supabase-e-test-rls.md)     | Cartella `supabase/` e test RLS su Postgres embedded              | Accettata |
 | [0008](0008-niente-email-e-deploy-automatico.md) | Nessuna email e deploy automatico da GitHub Actions               | Accettata |
 | [0009](0009-lavoro-in-parallelo.md)              | Lavoro in parallelo per corsie                                    | Accettata |
-| [0010](0010-modello-dati-calcio.md)              | Modello dati del calcio e ingestion v1                            | Proposta  |
+| [0010](0010-modello-dati-calcio.md)              | Modello dati del calcio e ingestion v1                            | Accettata |

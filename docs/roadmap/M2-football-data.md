@@ -1,6 +1,6 @@
 # M2 — Football data: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata su DEV il 7/11/2026, tranne la fase A3 (backfill API-Football, bloccata dai termini d'uso) · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,11 +15,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona   | Issue | Stato                                                                                                                   |
-| --------------- | --------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-| 0 — contratto   | Alfry1299 | —     | in revisione (PR `feature/m2-0-modello-dati`)                                                                           |
-| A — ingestion   | Alfry1299 | —     | A1, A2, A4 (controlli di base) e A5 in revisione (PR `feature/m2-a-data-collector`); A3 bloccata (termini API-Football) |
-| B — interfaccia | Alfry1299 | —     | B1–B4 in revisione (PR `feature/m2-b-match-center`)                                                                     |
+| Corsia          | Persona   | Issue | Stato                                                                                  |
+| --------------- | --------- | ----- | -------------------------------------------------------------------------------------- |
+| 0 — contratto   | Alfry1299 | —     | unita (#5)                                                                             |
+| A — ingestion   | Alfry1299 | —     | unita (#6): A1, A2, A4 (controlli di base), A5. **A3 bloccata** (termini API-Football) |
+| B — interfaccia | Alfry1299 | —     | unita (#7)                                                                             |
 
 Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 
@@ -109,6 +109,21 @@ Il contratto di M2 è la base di quasi tutto: va pensato anche per chi viene dop
 - **M4** addestra i modelli sullo storico: servono viste con le partite concluse e i risultati finali, filtrabili per data (per evitare il leakage).
 - **M6** collega facoltativamente una giocata a una partita (`matches`).
 - **M7** sposterà i job nella coda: ogni esecuzione deve essere idempotente per tipo, entità e finestra temporale (ADR 0003), con una chiave che lo dimostri.
+
+## Esito (7/11/2026)
+
+| Criterio                                                                    | Esito                                                                                                                 |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Partite reali su DEV con provider, ID del provider, `observed_at` e qualità | ✅ 8 competizioni, 2.508 partite della stagione in corso, nessun problema di qualità alla prima raccolta              |
+| Adapter testati con fixture                                                 | ✅ con gli esempi ufficiali della documentazione di football-data.org; risposte reali registrate ancora da aggiungere |
+| Salute dei provider visibile nell'app                                       | ✅ Data Center (`v_source_health`)                                                                                    |
+| `pnpm check` e CI verdi, nessuna chiave nei log, nessun dato inventato      | ✅                                                                                                                    |
+
+Resta aperto:
+
+- **A3:** backfill 2022–2024 da API-Football, bloccato finché i termini non sono verificati a mano ([api-football.md](../data-sources/api-football.md));
+- **raccolta automatica ogni 3 ore:** parte solo dopo il merge di `dev` in `main` ([runbook](../operations/data-collector.md));
+- **da verificare con i dati reali:** se `fullTime` includa supplementari e rigori; gli header di quota residua.
 
 ## Chiusura di M2
 

@@ -6,12 +6,12 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 
 ## Stato
 
-| Milestone                                                                      | Stato                                                        |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| M0 — Audit e piano                                                             | ✅ approvata                                                 |
-| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app      |
-| M2 — Football data                                                             | prossima: [piano e corsie](docs/roadmap/M2-football-data.md) |
-| M3–M8                                                                          | [roadmap](docs/roadmap/README.md)                            |
+| Milestone                                                                      | Stato                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                      |
+| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                           |
+| M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football rimandato: [piano](docs/roadmap/M2-football-data.md) |
+| M3–M8                                                                          | [roadmap](docs/roadmap/README.md)                                                                                                                 |
 
 ## Struttura
 
