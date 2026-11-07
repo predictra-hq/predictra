@@ -442,3 +442,232 @@ describe("viste", () => {
     });
   });
 });
+
+describe("funzioni di ingestion", () => {
+  const OBS1 = "2026-01-10T10:00:00Z";
+  const OBS2 = "2026-01-10T13:00:00Z";
+
+  const batch = (observed: string, homePoints = 3) => ({
+    observed_at: observed,
+    competition: {
+      provider_id: "DEMO-C1",
+      name: "DEMO Lega",
+      code: "DEMO",
+      type: "LEAGUE",
+      area_name: "DEMO",
+      area_code: "ITA",
+    },
+    season: {
+      provider_id: "DEMO-S1",
+      label: "2025/26",
+      start_date: "2025-08-01",
+      end_date: "2026-06-30",
+      current_matchday: 1,
+    },
+    teams: [
+      { provider_id: "DEMO-T1", name: "DEMO Squadra Casa", short_name: "DEMO Casa", tla: "DCA" },
+      {
+        provider_id: "DEMO-T2",
+        name: "DEMO Squadra Ospite",
+        short_name: "DEMO Ospite",
+        tla: "DOS",
+      },
+    ],
+    matches: [
+      {
+        provider_id: "DEMO-M1",
+        matchday: 1,
+        stage: "REGULAR_SEASON",
+        kickoff_at: "2026-01-09T19:45:00Z",
+        status: "FINISHED",
+        home_team_provider_id: "DEMO-T1",
+        away_team_provider_id: "DEMO-T2",
+        home_score: 1,
+        away_score: 0,
+        score_duration: "REGULAR",
+        event_time: "2026-01-09T22:00:00Z",
+      },
+    ],
+    standings: [
+      {
+        team_provider_id: "DEMO-T1",
+        position: 1,
+        played: 1,
+        won: 1,
+        draw: 0,
+        lost: 0,
+        goals_for: 1,
+        goals_against: 0,
+        points: homePoints,
+      },
+      {
+        team_provider_id: "DEMO-T2",
+        position: 2,
+        played: 1,
+        won: 0,
+        draw: 0,
+        lost: 1,
+        goals_for: 0,
+        goals_against: 1,
+        points: 0,
+      },
+    ],
+  });
+
+  const startRun = async (tx: Tx, windowKey = "DEMO:2025") =>
+    Number(
+      (
+        await one<{ id: number }>(
+          tx,
+          "select public.start_ingestion_run($1, 'fd.competition', $2, 'manual') id",
+          [FD, windowKey],
+        )
+      ).id,
+    );
+
+  const ingest = async (tx: Tx, runId: number, b: unknown) =>
+    (
+      await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.ingest_football_batch($1, $2) r",
+        [runId, JSON.stringify(b)],
+      )
+    ).r;
+
+  const counts = async (tx: Tx) =>
+    one<Record<string, number>>(
+      tx,
+      `select (select count(*)::int from public.competitions) competitions,
+              (select count(*)::int from public.seasons) seasons,
+              (select count(*)::int from public.teams) teams,
+              (select count(*)::int from public.matches) matches,
+              (select count(*)::int from public.standings) standings,
+              (select count(*)::int from public.team_aliases) aliases,
+              (select count(*)::int from public.provider_entity_map) mappings`,
+    );
+
+  it("rifiuta un provider con termini d'uso non verificati", async () => {
+    await asServiceRole(db, async (tx) => {
+      expect(
+        await attempt(tx, "select public.start_ingestion_run('api-football', 'af.x', 'k')"),
+      ).toMatch(/non verificati/);
+    });
+  });
+
+  it("scrive un lotto e rieseguirlo non duplica nulla", async () => {
+    await asServiceRole(db, async (tx) => {
+      const run1 = await startRun(tx);
+      const r1 = await ingest(tx, run1, batch(OBS1));
+      expect(r1).toMatchObject({ teams: 2, matches: 1, standings_inserted: 2 });
+      await tx.query("select public.finish_ingestion_run($1, 'SUCCEEDED', 2, 8, 5)", [run1]);
+      const after1 = await counts(tx);
+      expect(after1).toEqual({
+        competitions: 1,
+        seasons: 1,
+        teams: 2,
+        matches: 1,
+        standings: 2,
+        aliases: 4,
+        mappings: 5,
+      });
+
+      const run2 = await startRun(tx);
+      const r2 = await ingest(tx, run2, batch(OBS2));
+      expect(r2).toMatchObject({ standings_inserted: 0, standings_confirmed: 2 });
+      expect(await counts(tx)).toEqual(after1);
+      const { observed } = await one<{ observed: string }>(
+        tx,
+        "select max(observed_at)::text observed from public.standings",
+      );
+      expect(new Date(observed).toISOString()).toBe(new Date(OBS2).toISOString());
+    });
+  });
+
+  it("una classifica cambiata diventa una nuova fotografia", async () => {
+    await asServiceRole(db, async (tx) => {
+      await ingest(tx, await startRun(tx, "a"), batch(OBS1));
+      const r = await ingest(tx, await startRun(tx, "b"), batch(OBS2, 4));
+      expect(r).toMatchObject({ standings_inserted: 2, standings_confirmed: 0 });
+      const { n } = await one<{ n: number }>(tx, "select count(*)::int n from public.standings");
+      expect(n).toBe(4);
+    });
+  });
+
+  it("un lotto con una squadra mancante non scrive nulla", async () => {
+    await asServiceRole(db, async (tx) => {
+      const run = await startRun(tx);
+      const bad = batch(OBS1);
+      bad.teams = bad.teams.slice(0, 1);
+      const err = await attempt(tx, "select public.ingest_football_batch($1, $2)", [
+        run,
+        JSON.stringify(bad),
+      ]);
+      expect(err).toMatch(/squadra non presente/);
+      expect(await counts(tx)).toMatchObject({ competitions: 0, teams: 0, matches: 0 });
+    });
+  });
+
+  it("chiude le esecuzioni rimaste aperte e impedisce quelle doppie", async () => {
+    await asServiceRole(db, async (tx) => {
+      const old = await startRun(tx);
+      expect(
+        await attempt(tx, "select public.start_ingestion_run($1, 'fd.competition', 'DEMO:2025')", [
+          FD,
+        ]),
+      ).toMatch(/già in corso/);
+      await tx.query(
+        "update public.ingestion_runs set started_at = now() - interval '2 hours' where id = $1",
+        [old],
+      );
+      const fresh = await startRun(tx);
+      const { status } = await one<{ status: string }>(
+        tx,
+        "select status from public.ingestion_runs where id = $1",
+        [old],
+      );
+      expect(status).toBe("FAILED");
+      expect(fresh).not.toBe(old);
+      expect(
+        await attempt(tx, "select public.finish_ingestion_run($1, 'RUNNING')", [fresh]),
+      ).toMatch(/RUNNING/);
+    });
+  });
+
+  it("i problemi di qualità ripetuti aggiornano quello aperto", async () => {
+    await asServiceRole(db, async (tx) => {
+      const run = await startRun(tx);
+      await ingest(tx, run, batch(OBS1));
+      const issue = [
+        {
+          check_code: "match.score_non_regular",
+          severity: "WARNING",
+          entity_type: "match",
+          provider_entity_id: "DEMO-M1",
+          details: { motivo: "DEMO" },
+        },
+      ];
+      await tx.query("select public.report_quality_issues($1, $2)", [run, JSON.stringify(issue)]);
+      await tx.query("select public.report_quality_issues($1, $2)", [run, JSON.stringify(issue)]);
+      const rows = (
+        await tx.query<{ entity_id: number | null }>(
+          "select entity_id from public.data_quality_issues",
+        )
+      ).rows;
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.entity_id).not.toBeNull();
+    });
+  });
+
+  it("gli utenti non possono chiamare le funzioni di ingestion", async () => {
+    await asUser(db, superAdmin, async (tx) => {
+      for (const sql of [
+        "select public.start_ingestion_run('football-data-org', 'x.y', 'k')",
+        "select public.ingest_football_batch(1, '{}'::jsonb)",
+        "select public.report_quality_issues(1, '[]'::jsonb)",
+        "select public.finish_ingestion_run(1, 'FAILED')",
+      ]) {
+        expect(await attempt(tx, sql), sql).toMatch(/permission denied/);
+      }
+    });
+  });
+});

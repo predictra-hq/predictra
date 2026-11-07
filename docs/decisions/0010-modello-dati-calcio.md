@@ -52,7 +52,7 @@
   - Il backfill di API-Football non sta nei 300 s di Vercel.
   - Le chiavi restano nei segreti GitHub.
   - Stima: circa 8 × 3 min × 30 ≈ 720 min/mese, già prevista nel budget del piano M0 §5.
-- Scrive su Supabase con la chiave secret, che va aggiunta come segreto GitHub (nome proposto: `DEV_SUPABASE_SECRET_KEY`, già presente per il bootstrap).
+- Scrive solo tramite le funzioni `start_ingestion_run`, `ingest_football_batch`, `report_quality_issues` e `finish_ingestion_run` (una transazione per lotto, vedi data dictionary), chiamate via PostgREST con la chiave secret, che va aggiunta come segreto GitHub (nome proposto: `DEV_SUPABASE_SECRET_KEY`, già presente per il bootstrap).
 - QStash e la coda `agent_jobs` arrivano in M7. Nel frattempo:
   - ogni esecuzione è registrata in `ingestion_runs` con una `window_key` (tipo + entità + finestra temporale, ADR 0003);
   - un indice unico impedisce due esecuzioni `RUNNING` dello stesso lavoro;
