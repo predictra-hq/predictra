@@ -7,7 +7,7 @@ Piattaforma privata di football intelligence. Specifica completa: il "Prompt Mas
 | Milestone                                                                 | Stato                                                                                                                 |
 | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | M0 Audit e piano                                                          | ✅                                                                                                                    |
-| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ codice; messa in servizio: `docs/operations/setup.md`                                                              |
+| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ codice; messa in servizio: `docs/operations/checklist-messa-in-servizio.md`                                        |
 | **M2 Football data**                                                      | ⏭️ prossima: modello canonico, adapter football-data.org e API-Football (backfill), data quality, Source Intelligence |
 | M3–M8                                                                     | vedi `docs/architecture/M0-piano-tecnico.md` §6                                                                       |
 
