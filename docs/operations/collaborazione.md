@@ -61,14 +61,53 @@ Anche **milestone indipendenti possono andare in parallelo** (per esempio M3 e M
 
 Perché la regola sulle migrazioni: il deploy applica le migrazioni in ordine di timestamp con `supabase db push`. Se su DEV esiste già una migrazione più recente della tua, il deploy si ferma con un errore.
 
-## 6. Segreti, account e ambienti
+## 6. Milestone diverse in parallelo e dipendenze non ancora unite
+
+Capita che una persona stia ancora lavorando alla milestone N (non ancora su `dev`) e l'altra voglia iniziare una milestone successiva che ne dipende. Si gestisce così.
+
+### 6.1 Da cosa si dipende davvero
+
+Ogni piano in `docs/roadmap/` ha la voce **Può partire quando**. Quasi sempre basta che sia su `dev` il **contratto** (corsia 0) della milestone da cui si dipende, non la milestone intera: per questo la corsia 0 si fa e si unisce per prima.
+
+- Se il contratto che ti serve è già su `dev`: parti normalmente da `dev`. Lavori sulle tabelle e sulle viste del contratto; finché mancano i dati reali usi fixture registrate o lo stato vuoto.
+- Se il contratto non è ancora su `dev`: chiedi nella issue di quella milestone di anticipare la sua corsia 0. È una PR piccola, è il modo più veloce di sbloccare tutti.
+- Nel frattempo puoi lavorare sulle parti della tua milestone che non dipendono da nulla (molte corsie 0 e B si possono iniziare subito: vedi la roadmap).
+
+### 6.2 Se proprio serve codice non ancora unito (branch in pila)
+
+Da usare solo quando non c'è alternativa:
+
+1. Crea il tuo branch **dal branch del collega** (es. da `feature/m2-a-adapter-football-data`), non da `dev`.
+2. Apri la PR con **base = il branch del collega** e scrivi nella descrizione `Bloccata da #<numero della PR del collega>`.
+3. Non fare il merge finché la PR del collega non è su `dev`.
+4. Quando la PR del collega è stata unita (con squash), riporta il tuo lavoro su `dev`: `git rebase --onto origin/dev <ultimo commit del branch del collega> <tuo branch>`, poi cambia la base della tua PR in `dev` (_Edit_ accanto al titolo della PR). In cloud basta chiederlo a Claude con queste parole.
+5. Ricontrolla le migrazioni: le tue devono avere un timestamp successivo a tutte quelle unite nel frattempo.
+
+### 6.3 Spazi riservati per milestone
+
+Per evitare conflitti quando due milestone vanno avanti insieme, ogni milestone usa nomi e numeri suoi:
+
+| Milestone | ADR riservati | Tipi condivisi (`packages/shared-types/src/`) | Data dictionary (`docs/data-dictionary/`) | Chiavi i18n (`it.ts`)                                          |
+| --------- | ------------- | --------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- |
+| M2        | 0010–0014     | `football.ts`                                 | `football.md`                             | `matchCenter`, `dataCenter`                                    |
+| M3        | 0015–0019     | `odds.ts`                                     | `odds.md`                                 | `marketIntelligence`, `statisticsCenter`, `leagueIntelligence` |
+| M4        | 0020–0024     | `predictions.ts`                              | `predictions.md`                          | `modelIntelligence`, `predictions`                             |
+| M5        | 0025–0029     | `bet-builder.ts`                              | `bet-builder.md`                          | `betBuilder`                                                   |
+| M6        | 0030–0034     | `bankroll.ts`                                 | `bankroll.md`                             | `bankroll`, `tracker`                                          |
+| M7        | 0035–0039     | `agent.ts`                                    | `agent.md`                                | `agent`                                                        |
+| M8        | 0040–0044     | —                                             | —                                         | `ask` (se approvato)                                           |
+| Altro     | da 0050       | —                                             | —                                         | —                                                              |
+
+Ogni milestone aggiunge il proprio file in `packages/shared-types/src/` e una sola riga di export in `index.ts`; nel menu (`nav-config.ts`) cambia solo la riga della propria voce.
+
+## 7. Segreti, account e ambienti
 
 - I segreti di GitHub li aggiunge solo **`gennpalm`** (proprietario del repository), che è anche l'unico a poter avviare il workflow _Bootstrap Super Admin_.
 - Se una corsia ha bisogno di un segreto nuovo (per esempio una API key), lo chiede nella issue indicando il **nome esatto**. Il codice lo legge sempre da variabile d'ambiente e `.env.example` ne documenta il nome.
 - Mai valori di segreti in chat, issue, PR, commit o log.
 - Lo stato di ambienti, account e credenziali in scadenza è in [ambienti.md](ambienti.md).
 
-## 7. Lavorare con Claude Code
+## 8. Lavorare con Claude Code
 
 Si può lavorare da **Claude Code sul web** (claude.ai/code, collegato a `gennpalm/predictra`) o in locale (Node.js 22 o superiore e pnpm 10). Controlli, test, migrazioni e deploy girano comunque su GitHub Actions: non serve installare nulla.
 
@@ -82,7 +121,7 @@ Segui CLAUDE.md e docs/operations/collaborazione.md. Apri una PR verso dev e por
 
 Claude legge da solo `CLAUDE.md`. Se per completare il lavoro deve modificare un file che non appartiene alla corsia, si ferma e lo segnala invece di procedere.
 
-## 8. Chiudere una milestone
+## 9. Chiudere una milestone
 
 1. Tutte le PR delle corsie sono su `dev`, con CI e deploy DEV verdi.
 2. Si verificano su DEV i criteri di completamento del piano della milestone.
