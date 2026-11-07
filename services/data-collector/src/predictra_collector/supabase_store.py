@@ -1,0 +1,91 @@
+"""Scrittura su Supabase tramite le funzioni RPC del contratto M2 (PostgREST).
+
+Usa la chiave secret (service_role): solo lato server, mai nei log.
+Funzioni: docs/data-dictionary/football.md, sezione "Funzioni".
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+import httpx
+
+
+class StoreError(RuntimeError):
+    """Errore restituito da Supabase. Non contiene mai la chiave."""
+
+
+@dataclass
+class SupabaseStore:
+    url: str
+    secret_key: str
+    http: httpx.Client = field(default_factory=lambda: httpx.Client(timeout=60.0))
+
+    def _headers(self) -> dict[str, str]:
+        headers = {"apikey": self.secret_key, "Content-Type": "application/json"}
+        # Le chiavi legacy (JWT service_role) vanno anche nell'header Authorization;
+        # le nuove chiavi sb_secret_ si inviano solo come apikey.
+        if self.secret_key.startswith("eyJ"):
+            headers["Authorization"] = f"Bearer {self.secret_key}"
+        return headers
+
+    def rpc(self, name: str, params: dict[str, Any]) -> Any:
+        try:
+            response = self.http.post(
+                f"{self.url}/rest/v1/rpc/{name}", json=params, headers=self._headers()
+            )
+        except httpx.HTTPError as exc:
+            raise StoreError(f"Supabase {name}: {type(exc).__name__}") from None
+        if response.status_code >= 400:
+            try:
+                body = response.json()
+                detail = body.get("message") if isinstance(body, dict) else None
+            except ValueError:
+                detail = None
+            raise StoreError(f"Supabase {name}: HTTP {response.status_code} {detail or ''}".strip())
+        return response.json() if response.content else None
+
+    def start_run(self, provider: str, job_type: str, window_key: str, triggered_by: str) -> int:
+        return int(
+            self.rpc(
+                "start_ingestion_run",
+                {
+                    "p_provider": provider,
+                    "p_job_type": job_type,
+                    "p_window_key": window_key,
+                    "p_triggered_by": triggered_by,
+                },
+            )
+        )
+
+    def ingest(self, run_id: int, batch: dict[str, Any]) -> dict[str, Any]:
+        return self.rpc("ingest_football_batch", {"p_run_id": run_id, "p_batch": batch})
+
+    def report_issues(self, run_id: int, issues: list[dict[str, Any]]) -> None:
+        if issues:
+            self.rpc("report_quality_issues", {"p_run_id": run_id, "p_issues": issues})
+
+    def finish_run(
+        self,
+        run_id: int,
+        status: str,
+        *,
+        requests_used: int,
+        rows_upserted: int,
+        error_count: int,
+        error_summary: str | None,
+    ) -> None:
+        self.rpc(
+            "finish_ingestion_run",
+            {
+                "p_run_id": run_id,
+                "p_status": status,
+                "p_requests_used": requests_used,
+                "p_quota_remaining": None,
+                "p_rows_upserted": rows_upserted,
+                "p_error_count": error_count,
+                "p_error_summary": error_summary,
+                "p_resume_cursor": None,
+            },
+        )
