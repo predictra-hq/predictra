@@ -13,3 +13,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0006](0006-next-senza-cache-components.md)      | Next.js 16 senza Cache Components (per ora)                       | Accettata |
 | [0007](0007-cartella-supabase-e-test-rls.md)     | Cartella `supabase/` e test RLS su Postgres embedded              | Accettata |
 | [0008](0008-niente-email-e-deploy-automatico.md) | Nessuna email e deploy automatico da GitHub Actions               | Accettata |
+| [0009](0009-lavoro-in-parallelo.md)              | Lavoro in parallelo per corsie                                    | Accettata |
