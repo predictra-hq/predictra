@@ -6,6 +6,7 @@ Una scheda per ogni provider: termini d'uso, copertura, limiti, autenticazione. 
 | ------------------------- | ----------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------- |
 | football-data.org         | stagione in corso: calendario, risultati, classifiche | verificati il 7/11/2026                              | [football-data-org.md](football-data-org.md) |
 | API-Football (API-SPORTS) | storico 2022–2024 per i modelli                       | **NON VERIFICATI**: sito non leggibile in automatico | [api-football.md](api-football.md)           |
+| The Odds API              | quote 1X2 (M3)                                        | verificati il 7/11/2026                              | [the-odds-api.md](the-odds-api.md)           |
 | football-data.co.uk       | —                                                     | **escluso** (ADR 0004)                               | —                                            |
 
 Quando una verifica cambia l'esito, aggiorna la scheda, il campo `terms_verified_at` della tabella `providers` (con una migrazione nuova) e, se cambia una decisione, l'ADR collegato.

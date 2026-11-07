@@ -37,7 +37,13 @@ export type StandingType = (typeof STANDING_TYPES)[number];
 export const FOOTBALL_ENTITY_TYPES = ["competition", "season", "team", "match"] as const;
 export type FootballEntityType = (typeof FOOTBALL_ENTITY_TYPES)[number];
 
-export const FOOTBALL_DATA_KINDS = ["competitions", "teams", "matches", "standings"] as const;
+export const FOOTBALL_DATA_KINDS = [
+  "competitions",
+  "teams",
+  "matches",
+  "standings",
+  "odds",
+] as const;
 export type FootballDataKind = (typeof FOOTBALL_DATA_KINDS)[number];
 
 export const INGESTION_RUN_STATUSES = ["RUNNING", "SUCCEEDED", "PARTIAL", "FAILED"] as const;
@@ -54,7 +60,7 @@ export const SOURCE_HEALTH_STATES = ["NO_DATA", "OK", "DEGRADED"] as const;
 export type SourceHealthState = (typeof SOURCE_HEALTH_STATES)[number];
 
 /** Codici dei provider presenti nella tabella `providers`. */
-export const FOOTBALL_PROVIDERS = ["football-data-org", "api-football"] as const;
+export const FOOTBALL_PROVIDERS = ["football-data-org", "api-football", "the-odds-api"] as const;
 export type FootballProvider = (typeof FOOTBALL_PROVIDERS)[number];
 
 /** Stati in cui il risultato della partita è definitivo. */
