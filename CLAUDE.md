@@ -4,12 +4,15 @@ Piattaforma privata di football intelligence. Specifica completa: il "Prompt Mas
 
 ## Stato
 
+**Dove siamo e cosa fare dopo:** `docs/operations/punto-della-situazione.md`.
+
 | Milestone                                                                 | Stato                                                                                                                                                                                     |
 | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0 Audit e piano                                                          | ✅                                                                                                                                                                                        |
 | M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ in servizio su DEV (https://predictra-dev.vercel.app); ambienti: `docs/operations/ambienti.md`                                                                                         |
 | M2 Football data                                                          | ✅ in servizio su DEV: contratto, collector `services/data-collector`, Match Center e Data Center. Fase A3 (API-Football) bloccata dai termini d'uso: `docs/data-sources/api-football.md` |
-| **M3–M8**                                                                 | ⏭️ prossime: M3 e M4 possono partire (contratto M2 su `dev`), M6 è indipendente. Piani in `docs/roadmap/`                                                                                 |
+| **M3 Statistiche e quote**                                                | 🔄 corsie 0 e A fatte (quote reali su DEV); prossima: **corsia B** (Market, Statistics e League Intelligence, pagina alias). Dettagli: `docs/operations/punto-della-situazione.md`        |
+| M4–M8                                                                     | M4 e M6 possono partire; piani in `docs/roadmap/`                                                                                                                                         |
 
 ## Lavoro in parallelo (leggere prima di iniziare)
 

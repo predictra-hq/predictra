@@ -1,6 +1,6 @@
 # M3 — Statistiche e quote: piano e corsie
 
-**Stato:** in corso (corsia 0) · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; manca la corsia B · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
