@@ -1,6 +1,6 @@
 # Checklist di messa in servizio — da zero
 
-Si fa una sola volta. Per i dettagli tecnici e il funzionamento della pipeline vedi [setup.md](setup.md).
+Si fa una sola volta, **tutta dal browser**: niente da installare né da eseguire sul proprio computer. Per i dettagli tecnici e il funzionamento della pipeline vedi [setup.md](setup.md).
 
 Durante la procedura tieni un blocco note **temporaneo, mai salvato nel repository**, dove annotare i valori segnati con 📝. Alla fine cancellalo.
 
@@ -29,7 +29,10 @@ Se vedi solo le chiavi "legacy": `anon` corrisponde alla publishable e `service_
 ### A3. Crea il token per la pipeline
 
 1. Apri https://supabase.com/dashboard/account/tokens (avatar → _Account → Access Tokens_).
-2. _Generate new token_, nome `github-actions-predictra`.
+2. _Generate new token_, nome `github-actions-predictra`:
+   - _Expires in_: la durata **più lunga** disponibile (la pipeline lo usa a ogni deploy: alla scadenza i deploy si fermano). Segna in calendario quando rinnovarlo;
+   - _Resource access_: **Project** → organizzazione e progetto `predictra-dev` (aggiungi `predictra-prod` quando esisterà);
+   - _Permissions_: lettura del progetto, scrittura su **Database** (migrazioni) e su **Application services / Auth** (impostazioni Auth). Se il passo _Supabase — migrazioni_ fallisce per permessi, usa _Create legacy token_.
 3. 📝 Copialo (= `SUPABASE_ACCESS_TOKEN`). Viene mostrato una volta sola.
 
 Su Supabase **non serve altro**: niente SQL e niente impostazioni Auth, ci pensa la pipeline.
@@ -38,53 +41,43 @@ Su Supabase **non serve altro**: niente SQL e niente impostazioni Auth, ci pensa
 
 ## FASE B — Vercel (hosting dell'app)
 
-### B1. Crea il progetto (scegli un'opzione)
+### B1. Crea il progetto
 
-**Opzione 1 — dal sito.** Su https://vercel.com/new importa il repository `gennpalm/predictra`. Se il repository non compare, il tuo account Vercel non ha accesso al GitHub di `gennpalm`: usa l'opzione 2.
+Su https://vercel.com/new importa il repository `gennpalm/predictra`. Se il repository non compare, autorizza l'app Vercel sull'account GitHub `gennpalm` (_Adjust GitHub App Permissions_).
 
+- _Vercel Team_: il team del progetto (es. **Predictra**)
 - _Project Name_: `predictra-dev`
 - _Framework Preset_: **Next.js**
 - _Root Directory_: **Edit → `apps/web`**
 
+⚠️ **Non attivare integrazioni** (sezione _Optional Integrations_, in particolare **Supabase**): aggiungono variabili `POSTGRES_*` e `NEXT_PUBLIC_SUPABASE_*` di tipo _Secret_ che rompono la build. Supabase lo collega già la pipeline.
+
 Se il primo deploy automatico fallisce perché mancano le variabili, è normale. I deploy li farà la pipeline.
-
-**Opzione 2 — dal PC, senza collegare GitHub.** Nella cartella del progetto:
-
-```powershell
-npx vercel@65.2.0 login
-npx vercel@65.2.0 link
-```
-
-Rispondi così:
-
-- _Link to existing project?_ **No**
-- nome `predictra-dev`
-- directory `./`
-
-Poi su vercel.com apri il progetto → _Settings → Build and Deployment →_ **Root Directory** = `apps/web` → _Save_.
 
 ### B2. Variabili d'ambiente dell'app
 
-Progetto → _Settings → Environment Variables_. Per ognuna seleziona **solo "Production"**:
+Progetto → _Settings → Environment Variables_ → _Add Environment Variable_. Per ognuna seleziona **solo "Production"** e il _Type_ indicato:
 
-| Nome                                   | Valore                                              |
-| -------------------------------------- | --------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | 📝 `SUPABASE_URL`                                   |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 📝 `PUBLISHABLE_KEY`                                |
-| `SUPABASE_SECRET_KEY`                  | 📝 `SECRET_KEY`, con l'opzione **Sensitive** attiva |
-| `APP_BASE_URL`                         | `https://predictra-dev.vercel.app` (vedi nota)      |
+| Nome                                   | Tipo       | Valore                                         |
+| -------------------------------------- | ---------- | ---------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`             | **Config** | 📝 `SUPABASE_URL`                              |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | **Config** | 📝 `PUBLISHABLE_KEY`                           |
+| `SUPABASE_SECRET_KEY`                  | **Secret** | 📝 `SECRET_KEY`                                |
+| `APP_BASE_URL`                         | **Config** | `https://predictra-dev.vercel.app` (vedi nota) |
+
+> **Config o Secret?** Le variabili _Secret_ non sono leggibili dalla pipeline, che fa la build su GitHub Actions: se `NEXT_PUBLIC_SUPABASE_URL` è _Secret_ la build fallisce con "Invalid URL". Le tre variabili _Config_ sono pubbliche per natura (finiscono nel browser). Un tipo già salvato non si cambia: elimina la variabile e ricreala.
 
 > **Nota su `APP_BASE_URL`:** è l'indirizzo pubblico dell'app, senza `/` finale. Di solito è `https://<nome-progetto>.vercel.app`. Il dominio esatto si vede in _Settings → Domains_, a volte solo dopo il primo deploy. Se risulta diverso, correggilo qui e nel segreto `DEV_APP_BASE_URL` (C1).
 
 ### B3. Recupera i valori Vercel
 
-| Valore                 | Dove si trova                                                                                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 📝 `VERCEL_PROJECT_ID` | Progetto → _Settings → General →_ **Project ID** (`prj_…`)                                                                                     |
-| 📝 `VERCEL_ORG_ID`     | Account personale: avatar → _Account Settings → General →_ **Vercel ID**. Account di team: _Team Settings → General →_ **Team ID** (`team_…`)  |
-| 📝 `VERCEL_TOKEN`      | Avatar → _Account Settings → Tokens → Create_. Nome `github-actions-predictra`, _Scope_ = account o team del progetto. Mostrato una sola volta |
+| Valore                 | Dove si trova                                                                                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 📝 `VERCEL_PROJECT_ID` | Progetto → _Settings → General →_ **Project ID** (`prj_…`)                                                                                                     |
+| 📝 `VERCEL_ORG_ID`     | Team del progetto → _Settings → General →_ **Team ID** (`team_…`). Solo se il progetto è su un account personale: _Account Settings → General →_ **Vercel ID** |
+| 📝 `VERCEL_TOKEN`      | Avatar → _Account Settings → Tokens → Create_. Nome `github-actions-predictra`, _Scope_ = **il team del progetto**, scadenza lunga. Mostrato una sola volta    |
 
-Con l'opzione 2, Project ID e Org ID sono anche in `.vercel/project.json`, creato da `vercel link` e già escluso da git.
+Se `VERCEL_ORG_ID` o lo scope del token non corrispondono al team del progetto, il deploy fallisce con "Project not found".
 
 ---
 
@@ -99,10 +92,13 @@ Vai su https://github.com/gennpalm/predictra → _Settings → Secrets and varia
 | `SUPABASE_ACCESS_TOKEN`    | 📝 `SUPABASE_ACCESS_TOKEN` (A3)      |
 | `DEV_SUPABASE_PROJECT_ID`  | 📝 `PROJECT_ID` (A2)                 |
 | `DEV_SUPABASE_DB_PASSWORD` | 📝 `DB_PASSWORD` (A1)                |
+| `DEV_SUPABASE_SECRET_KEY`  | 📝 `SECRET_KEY` (A2)                 |
 | `DEV_APP_BASE_URL`         | stesso valore di `APP_BASE_URL` (B2) |
 | `VERCEL_TOKEN`             | 📝 `VERCEL_TOKEN` (B3)               |
 | `VERCEL_ORG_ID`            | 📝 `VERCEL_ORG_ID` (B3)              |
 | `DEV_VERCEL_PROJECT_ID`    | 📝 `VERCEL_PROJECT_ID` (B3)          |
+
+Sono **8**: controlla che la lista li mostri tutti, con i nomi identici. `DEV_SUPABASE_SECRET_KEY` serve solo al workflow dei Super Admin (FASE D).
 
 ### C2. Primo deploy
 
@@ -121,34 +117,27 @@ Da qui in poi ogni push su `dev` aggiorna da solo Supabase e Vercel.
 
 ## FASE D — Primi Super Admin
 
-### D1. Prepara il PC (una volta sola, serve Node.js ≥ 22)
+### D1. Crea i link di attivazione (solo `gennpalm`)
 
-```powershell
-cd <cartella del progetto>
-git pull
-npm i -g pnpm@10
-pnpm install
-```
+Lo fa il workflow **Bootstrap Super Admin**, su GitHub Actions: nessuna chiave da copiare, nessun comando da eseguire.
 
-### D2. Crea i link di attivazione
+1. Su GitHub: _Actions → Bootstrap Super Admin → Run workflow_.
+2. _Use workflow from_: `main` · _Ambiente_: `dev` · _Email del Super Admin_: l'email della persona → **Run workflow**.
+3. Ripeti per la seconda persona.
+4. Apri ogni run concluso: il **link di attivazione** è nel riquadro _Summary_ (non nei log). Vale 24 ore, è monouso: consegnalo solo a quella persona.
 
-Le variabili restano solo in questa finestra del terminale:
+Note:
 
-```powershell
-$env:NEXT_PUBLIC_SUPABASE_URL = "<SUPABASE_URL>"
-$env:SUPABASE_SECRET_KEY = "<SECRET_KEY>"
-$env:APP_BASE_URL = "<APP_BASE_URL>"
-node apps/web/scripts/bootstrap-super-admin.mjs prima.persona@esempio.it
-node apps/web/scripts/bootstrap-super-admin.mjs seconda.persona@esempio.it
-```
+- il workflow lo può avviare solo il proprietario del repository;
+- compare in _Actions_ solo se il file `.github/workflows/bootstrap-super-admin.yml` è sul branch di default (`main`);
+- se esiste già un invito attivo per quell'email, il workflow si ferma senza fare nulla.
 
-Ogni comando stampa un **link** valido 24 ore: consegnalo solo a quella persona. Poi chiudi il terminale.
-
-### D3. Attivazione (ognuno per sé)
+### D2. Attivazione (ognuno per sé)
 
 1. Apri il link e scegli nome e password (almeno 12 caratteri) → _Attiva account_.
 2. _Impostazioni → Sicurezza → Attiva 2FA_.
 3. Scansiona il QR con un'app di autenticazione, inserisci il codice → _Conferma_.
+4. Quando entrambi hanno attivato l'account, `gennpalm` elimina i due run del workflow (menu ⋯ → _Delete workflow run_), così i link non restano su GitHub.
 
 ---
 
@@ -166,7 +155,7 @@ Ogni comando stampa un **link** valido 24 ore: consegnalo solo a quella persona.
 ## FASE F — Far lavorare un collega
 
 1. `gennpalm` lo aggiunge al repository: _Settings → Collaborators → Add people_.
-2. Il collega clona il repository, fa `git checkout dev` e `pnpm install`, poi apre Claude Code nella cartella. Claude legge da solo [CLAUDE.md](../../CLAUDE.md), che contiene regole, struttura e prossimo passo.
+2. Il collega lavora da **Claude Code sul web** (claude.ai/code) collegato al repository, sul branch `dev`; in alternativa clona il repository in locale. Claude legge da solo [CLAUDE.md](../../CLAUDE.md), che contiene regole, struttura e prossimo passo.
 3. Non gli servono le chiavi di Supabase o di Vercel: pubblica facendo push su `dev` e la pipeline fa il resto.
 
 ---

@@ -44,35 +44,38 @@ Non serve eseguire SQL né cambiare impostazioni Auth a mano: lo fa la pipeline.
    - _Framework Preset_: **Next.js**;
    - _Root Directory_: **`apps/web`**.
 
-   I deploy automatici di Vercel al push sono disattivati da `apps/web/vercel.json`: i deploy li fa la pipeline, dopo i controlli e le migrazioni.
+   I deploy automatici di Vercel al push sono disattivati da `apps/web/vercel.json`: i deploy li fa la pipeline, dopo i controlli e le migrazioni. Non attivare l'integrazione Supabase di Vercel: le sue variabili _Secret_ rompono la build.
 
 2. _Settings → Environment Variables_, ambiente **Production**:
 
-   | Nome                                   | Valore                                                                          |
-   | -------------------------------------- | ------------------------------------------------------------------------------- |
-   | `NEXT_PUBLIC_SUPABASE_URL`             | Project URL di Supabase                                                         |
-   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chiave publishable                                                              |
-   | `SUPABASE_SECRET_KEY`                  | chiave secret (**mai** con prefisso `NEXT_PUBLIC_`)                             |
-   | `APP_BASE_URL`                         | dominio del progetto, es. `https://predictra-dev.vercel.app` (senza `/` finale) |
+   | Nome                                   | Tipo   | Valore                                                                          |
+   | -------------------------------------- | ------ | ------------------------------------------------------------------------------- |
+   | `NEXT_PUBLIC_SUPABASE_URL`             | Config | Project URL di Supabase                                                         |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Config | chiave publishable                                                              |
+   | `SUPABASE_SECRET_KEY`                  | Secret | chiave secret (**mai** con prefisso `NEXT_PUBLIC_`)                             |
+   | `APP_BASE_URL`                         | Config | dominio del progetto, es. `https://predictra-dev.vercel.app` (senza `/` finale) |
+
+   La pipeline scarica le variabili con `vercel pull` e fa la build su GitHub Actions: le variabili di tipo _Secret_ arrivano come `[SENSITIVE]`. Per questo quelle usate in build (`NEXT_PUBLIC_*`) devono essere _Config_. `SUPABASE_SECRET_KEY` serve solo a runtime, sui server Vercel, e resta _Secret_.
 
 3. Annota:
    - **Project ID**: _Settings → General → Project ID_ (`prj_…`);
-   - **Team/Account ID**: _Account/Team Settings → General_ → _Vercel ID_ o _Team ID_ (`team_…`);
-   - **Token**: _Account Settings → Tokens → Create_ (nome: `github-actions-predictra`).
+   - **Team ID**: _Team Settings → General_ → _Team ID_ (`team_…`); solo per un account personale, _Account Settings → General_ → _Vercel ID_;
+   - **Token**: _Account Settings → Tokens → Create_ (nome: `github-actions-predictra`, scope = il team del progetto).
 
 ## 3. GitHub — segreti della pipeline
 
 Repository → _Settings → Secrets and variables → Actions → New repository secret_:
 
-| Segreto                    | Valore                                 |
-| -------------------------- | -------------------------------------- |
-| `SUPABASE_ACCESS_TOKEN`    | access token Supabase (passo 1.3)      |
-| `DEV_SUPABASE_PROJECT_ID`  | Project ID/Reference Supabase DEV      |
-| `DEV_SUPABASE_DB_PASSWORD` | password del database DEV              |
-| `DEV_APP_BASE_URL`         | lo stesso `APP_BASE_URL` di Vercel DEV |
-| `VERCEL_TOKEN`             | token Vercel                           |
-| `VERCEL_ORG_ID`            | Team/Account ID Vercel                 |
-| `DEV_VERCEL_PROJECT_ID`    | Project ID Vercel DEV                  |
+| Segreto                    | Valore                                                             |
+| -------------------------- | ------------------------------------------------------------------ |
+| `SUPABASE_ACCESS_TOKEN`    | access token Supabase (passo 1.3)                                  |
+| `DEV_SUPABASE_PROJECT_ID`  | Project ID/Reference Supabase DEV                                  |
+| `DEV_SUPABASE_DB_PASSWORD` | password del database DEV                                          |
+| `DEV_SUPABASE_SECRET_KEY`  | chiave secret Supabase DEV (solo per il bootstrap dei Super Admin) |
+| `DEV_APP_BASE_URL`         | lo stesso `APP_BASE_URL` di Vercel DEV                             |
+| `VERCEL_TOKEN`             | token Vercel                                                       |
+| `VERCEL_ORG_ID`            | Team ID Vercel                                                     |
+| `DEV_VERCEL_PROJECT_ID`    | Project ID Vercel DEV                                              |
 
 Con GitHub Free sui repository privati gli _Environments_ non sono disponibili: per questo i segreti usano i prefissi `DEV_` e `PROD_`.
 
@@ -93,22 +96,16 @@ Se mancano dei segreti, il deploy viene **saltato** con un avviso che li elenca.
 
 ## 5. Primi Super Admin (una volta sola)
 
-Il primo accesso non può nascere da un invito in app. Dalla cartella del progetto, in **PowerShell**, imposta le variabili solo nella sessione del terminale:
+Il primo accesso non può nascere da un invito in app. Lo crea il workflow **Bootstrap Super Admin** (`.github/workflows/bootstrap-super-admin.yml`), avviabile solo dal proprietario del repository:
 
-```powershell
-$env:NEXT_PUBLIC_SUPABASE_URL = "https://<ref>.supabase.co"
-$env:SUPABASE_SECRET_KEY = "<chiave secret>"
-$env:APP_BASE_URL = "https://predictra-dev.vercel.app"
-node apps/web/scripts/bootstrap-super-admin.mjs prima.persona@example.com
-node apps/web/scripts/bootstrap-super-admin.mjs seconda.persona@example.com
-```
+1. _Actions → Bootstrap Super Admin → Run workflow_ → ambiente `dev` ed email della persona;
+2. il run esegue `apps/web/scripts/bootstrap-super-admin.mjs` con i segreti `DEV_SUPABASE_PROJECT_ID`, `DEV_SUPABASE_SECRET_KEY` e `DEV_APP_BASE_URL`;
+3. il **link di attivazione** compare solo nel riepilogo (_Summary_) del run, mai nel log. Consegnalo solo a quella persona, che poi:
+   1. apre il link → _Attiva account_ (nome e password, minimo 12 caratteri);
+   2. va in _Impostazioni → Sicurezza_ → attiva la **2FA** (obbligatoria per l'area Administration);
+4. dopo l'attivazione elimina il run (menu ⋯ → _Delete workflow run_).
 
-Ogni comando stampa un **link di attivazione**. Consegnalo solo a quella persona, che poi:
-
-1. apre il link → _Attiva account_ (nome e password, minimo 12 caratteri);
-2. va in _Impostazioni → Sicurezza_ → attiva la **2FA** (obbligatoria per l'area Administration).
-
-Chiudi il terminale al termine, per eliminare le variabili.
+I workflow ad avvio manuale compaiono in _Actions_ solo se il file è sul branch di default (`main`).
 
 ## 6. Uso quotidiano degli account (nessuna email)
 
@@ -128,9 +125,9 @@ Se un invito scade (24 h) senza essere usato: _Revoca_ e poi _Crea invito_ di nu
 Quando servirà l'ambiente PROD:
 
 1. ripeti i passi 1 e 2 con un nuovo progetto Supabase e un nuovo progetto Vercel (es. `predictra-prod`);
-2. aggiungi i segreti `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_APP_BASE_URL` e `PROD_VERCEL_PROJECT_ID`;
+2. aggiungi i segreti `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_SUPABASE_SECRET_KEY`, `PROD_APP_BASE_URL` e `PROD_VERCEL_PROJECT_ID` (e lo scope del token Supabase sul nuovo progetto);
 3. fai il merge di `dev` in `main` (tramite Pull Request): il job _Deploy PROD_ parte da solo;
-4. esegui il bootstrap dei Super Admin con le variabili del progetto PROD.
+4. esegui il workflow **Bootstrap Super Admin** con ambiente `prod`.
 
 ## 8. Protezione dei branch
 
@@ -156,7 +153,9 @@ Per la protezione vera il proprietario del repo (`gennpalm`) può passare a GitH
 - [ ] Sospensione: l'utente viene bloccato. Riattivazione.
 - [ ] _Administration → Audit_ mostra le azioni.
 
-## Sviluppo locale (facoltativo)
+## Sviluppo locale (facoltativo, non necessario)
+
+Tutto il ciclo (controlli, migrazioni, deploy, Super Admin) gira in cloud. In locale servono Node.js ≥ 22 e pnpm 10:
 
 ```bash
 pnpm install
