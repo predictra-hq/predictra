@@ -19,7 +19,7 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 | --------------- | --------- | ----- | ----------------------------------------------------------------------------------------------------------------------- |
 | 0 — contratto   | Alfry1299 | —     | in revisione (PR `feature/m2-0-modello-dati`)                                                                           |
 | A — ingestion   | Alfry1299 | —     | A1, A2, A4 (controlli di base) e A5 in revisione (PR `feature/m2-a-data-collector`); A3 bloccata (termini API-Football) |
-| B — interfaccia | —         | —     | da iniziare                                                                                                             |
+| B — interfaccia | Alfry1299 | —     | B1–B4 in revisione (PR `feature/m2-b-match-center`)                                                                     |
 
 Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 
