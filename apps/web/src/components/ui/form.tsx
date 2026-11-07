@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/errors";
 import { Alert, Button } from "./primitives";
@@ -28,9 +28,40 @@ export function SubmitButton({
   );
 }
 
+/** Mostra un link monouso da copiare e consegnare a mano. */
+export function OneTimeLink({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="mt-2 flex flex-col gap-2 rounded-lg border border-warning/40 bg-warning-soft p-3 text-left">
+      <p className="text-xs text-warning">
+        Link personale e monouso: consegnalo solo al destinatario con un canale sicuro. Non verrà
+        mostrato di nuovo.
+      </p>
+      <code className="block break-all rounded-md bg-bg px-2 py-1 font-mono text-xs text-fg">
+        {url}
+      </code>
+      <Button
+        type="button"
+        variant="secondary"
+        className="h-8 self-start px-3 text-xs"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+          } catch {
+            setCopied(false);
+          }
+        }}
+      >
+        {copied ? "Copiato" : "Copia link"}
+      </Button>
+    </div>
+  );
+}
+
 /**
- * Form collegato a una Server Action con stato `{ ok, message }`. Mostra l'esito
- * in un'area live per gli screen reader.
+ * Form collegato a una Server Action con stato `{ ok, message, link? }`. Mostra
+ * l'esito in un'area live per gli screen reader.
  */
 export function ActionForm({
   action,
@@ -45,8 +76,9 @@ export function ActionForm({
   return (
     <form action={formAction} className={className ?? "flex flex-col gap-4"} noValidate>
       {children}
-      <div aria-live="polite">
+      <div aria-live="polite" className="sm:col-span-full">
         {state ? <Alert tone={state.ok ? "positive" : "negative"}>{state.message}</Alert> : null}
+        {state?.link ? <OneTimeLink url={state.link} /> : null}
       </div>
     </form>
   );

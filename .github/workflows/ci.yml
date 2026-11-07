@@ -9,7 +9,8 @@ on:
 # Un solo run per branch/PR: annulla quelli superati (risparmia minuti free tier).
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Le PR superate vengono annullate; i push (che fanno deploy) no.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -66,3 +67,42 @@ jobs:
       # Immagine ufficiale gitleaks (nessuna licenza richiesta, a differenza della action per le org).
       - name: gitleaks
         run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --redact --verbose
+
+  # ---------------------------------------------------------------------------
+  # Deploy automatico: solo su push (non sulle PR) e solo se i controlli sono verdi.
+  # dev  → progetto Supabase DEV  + progetto Vercel DEV
+  # main → progetto Supabase PROD + progetto Vercel PROD (saltato finché i segreti PROD_* non esistono)
+  # ---------------------------------------------------------------------------
+  deploy-dev:
+    name: Deploy DEV
+    needs: [checks, secrets]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/deploy-target.yml
+    with:
+      environment: dev
+      ref: ${{ github.sha }}
+    secrets:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
+      APP_BASE_URL: ${{ secrets.DEV_APP_BASE_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.DEV_VERCEL_PROJECT_ID }}
+
+  deploy-prod:
+    name: Deploy PROD
+    needs: [checks, secrets]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy-target.yml
+    with:
+      environment: prod
+      ref: ${{ github.sha }}
+    secrets:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.PROD_SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}
+      APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.PROD_VERCEL_PROJECT_ID }}

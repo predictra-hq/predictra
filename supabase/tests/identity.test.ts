@@ -372,6 +372,48 @@ describe("gestione account", () => {
   });
 });
 
+describe("reset password generato dall'amministratore", () => {
+  it("un Super Admin autorizza il reset di un utente e viene registrato in audit", async () => {
+    const email = await asUser(
+      db,
+      superA,
+      async (tx) =>
+        (await tx.query<{ e: string }>("select public.authorize_password_reset($1) e", [alice.id]))
+          .rows[0]?.e,
+    );
+    expect(email).toBe("alice@example.test");
+    const { rows } = await db.query<{ action: string }>(
+      "select action from public.audit_logs where target_id = $1",
+      [alice.id],
+    );
+    expect(rows.map((r) => r.action)).toContain("user.password_reset_link");
+  });
+
+  it("richiede la 2FA, un ruolo superiore e non vale su se stessi", async () => {
+    await expect(
+      asUser(
+        db,
+        superA,
+        (tx) => tx.query("select public.authorize_password_reset($1)", [alice.id]),
+        "aal1",
+      ),
+    ).rejects.toThrow(/due fattori/);
+    await expect(
+      asUser(db, admin, (tx) =>
+        tx.query("select public.authorize_password_reset($1)", [superA.id]),
+      ),
+    ).rejects.toThrow(/Permessi insufficienti/);
+    await expect(
+      asUser(db, alice, (tx) => tx.query("select public.authorize_password_reset($1)", [bob.id])),
+    ).rejects.toThrow(/Permessi insufficienti/);
+    await expect(
+      asUser(db, superA, (tx) =>
+        tx.query("select public.authorize_password_reset($1)", [superA.id]),
+      ),
+    ).rejects.toThrow(/Impostazioni/);
+  });
+});
+
 describe("rate limiting", () => {
   it("consente fino al massimo per finestra, poi blocca", async () => {
     const results = await asServiceRole(db, async (tx) => {

@@ -13,7 +13,7 @@ import { Badge, Card, PageHeader, Select } from "@/components/ui/primitives";
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
-import { setAccountStatus, setUserRole } from "./actions";
+import { createPasswordResetLink, setAccountStatus, setUserRole } from "./actions";
 
 export const metadata: Metadata = { title: "Utenti" };
 
@@ -128,6 +128,17 @@ export default async function UsersPage() {
                           className="h-8 px-3 text-xs"
                         >
                           {u.status === "ACTIVE" ? m.admin.suspend : m.admin.reactivate}
+                        </SubmitButton>
+                      </ActionForm>
+                    ) : null}
+                    {manageable && u.status === "ACTIVE" ? (
+                      <ActionForm
+                        action={createPasswordResetLink}
+                        className="mt-2 flex flex-col items-end gap-1"
+                      >
+                        <input type="hidden" name="userId" value={u.id} />
+                        <SubmitButton variant="ghost" className="h-8 px-3 text-xs">
+                          {m.admin.resetLink}
                         </SubmitButton>
                       </ActionForm>
                     ) : null}

@@ -14,8 +14,8 @@ const DEFAULT_NEXT: Partial<Record<EmailOtpType, string>> = {
 
 /**
  * Verifica i link inviati per email (invito, recupero password, cambio email)
- * con il flusso token_hash, lato server. I template email di Supabase devono
- * puntare qui: vedi supabase/templates e docs/operations/setup.md.
+ * con il flusso token_hash, lato server. I link sono generati da lib/auth/links.ts
+ * (nessuna email: vengono consegnati a mano, vedi ADR 0008).
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

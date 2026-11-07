@@ -106,7 +106,7 @@ export default async function InvitationsPage() {
                   <td className="px-4 py-3">
                     {inv.email}
                     {inv.send_error ? (
-                      <p className="text-xs text-negative-strong">{m.admin.sendFailed}</p>
+                      <p className="text-xs text-negative-strong">{m.admin.linkFailed}</p>
                     ) : null}
                   </td>
                   <td className="px-4 py-3">{m.roles[inv.role]}</td>

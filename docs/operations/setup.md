@@ -1,101 +1,165 @@
-# Setup e deploy — Milestone 1
+# Guida di messa in servizio — PREDICTRA
 
-Guida passo-passo per attivare l'accesso privato. Account, chiavi e configurazioni cloud li crea **il proprietario del progetto**: nessuna chiave va scritta nel repository o condivisa in chat.
+Questa guida porta da zero a un ambiente **DEV** funzionante e aggiornato in automatico a ogni push.
+Account, chiavi e impostazioni cloud li crea **il proprietario del progetto**: nessuna chiave va scritta nel repository, in chat o in un file versionato.
 
-## 0. Prerequisiti locali
+## Come funziona
 
-| Strumento                  | Comando di verifica  | Note                                     |
-| -------------------------- | -------------------- | ---------------------------------------- |
-| Node.js ≥ 22               | `node --version`     | CI usa Node 22 (`.nvmrc`)                |
-| pnpm 10                    | `pnpm --version`     | `npm i -g pnpm@10` se manca              |
-| Python 3.12+               | `python --version`   | serve da Milestone 2                     |
-| Supabase CLI (facoltativo) | `supabase --version` | per applicare le migrazioni da terminale |
+```text
+git push su dev
+   └─ GitHub Actions "CI"
+        ├─ checks:   format, lint, typecheck, test (migrazioni + RLS), build, audit
+        ├─ secrets:  scansione segreti (gitleaks)
+        └─ deploy-dev (solo se i due job sopra sono verdi)
+             1. supabase db push      → applica le nuove migrazioni SQL   (nessun SQL a mano)
+             2. supabase config push  → applica le impostazioni Auth di supabase/config.toml
+             3. vercel build + deploy → pubblica l'app sul progetto Vercel DEV
+```
+
+| Branch | Supabase          | Vercel                                               | Stato                                                   |
+| ------ | ----------------- | ---------------------------------------------------- | ------------------------------------------------------- |
+| `dev`  | progetto **DEV**  | progetto **DEV** (deploy di produzione del progetto) | da attivare ora                                         |
+| `main` | progetto **PROD** | progetto **PROD**                                    | saltato in automatico finché mancano i segreti `PROD_*` |
+
+**PREDICTRA non invia email.** Inviti e reset password generano un link personale che l'amministratore copia e consegna a mano (es. dal gestionale). Il link vale 24 ore ed è monouso.
+
+---
+
+## 1. Supabase — progetto DEV
+
+1. Crea il progetto (es. `predictra-dev`), regione UE (es. Frankfurt). **Annota la password del database** scelta in creazione.
+2. Da _Project Settings_ annota:
+   - **Project ID / Reference** (es. `abcd1234efgh5678ijkl`);
+   - **Project URL** (`https://<ref>.supabase.co`);
+   - in _API Keys_: la chiave **publishable** (`sb_publishable_…`) e la chiave **secret** (`sb_secret_…`). Sui progetti legacy sono "anon" e "service_role".
+3. Crea un **Access Token** personale: avatar in alto a destra → _Account_ → _Access Tokens_ → _Generate new token_ (nome: `github-actions-predictra`).
+
+Non serve eseguire SQL né cambiare impostazioni Auth a mano: lo fa la pipeline. Serve una sola eccezione, al passo 1: la password del database.
+
+## 2. Vercel — progetto DEV
+
+1. Crea il progetto (es. `predictra-dev`) importando il repository GitHub `gennpalm/predictra`:
+   - _Framework Preset_: **Next.js**;
+   - _Root Directory_: **`apps/web`**.
+
+   I deploy automatici di Vercel al push sono disattivati da `apps/web/vercel.json`: i deploy li fa la pipeline, dopo i controlli e le migrazioni.
+
+2. _Settings → Environment Variables_, ambiente **Production**:
+
+   | Nome                                   | Valore                                                                          |
+   | -------------------------------------- | ------------------------------------------------------------------------------- |
+   | `NEXT_PUBLIC_SUPABASE_URL`             | Project URL di Supabase                                                         |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chiave publishable                                                              |
+   | `SUPABASE_SECRET_KEY`                  | chiave secret (**mai** con prefisso `NEXT_PUBLIC_`)                             |
+   | `APP_BASE_URL`                         | dominio del progetto, es. `https://predictra-dev.vercel.app` (senza `/` finale) |
+
+3. Annota:
+   - **Project ID**: _Settings → General → Project ID_ (`prj_…`);
+   - **Team/Account ID**: _Account/Team Settings → General_ → _Vercel ID_ o _Team ID_ (`team_…`);
+   - **Token**: _Account Settings → Tokens → Create_ (nome: `github-actions-predictra`).
+
+## 3. GitHub — segreti della pipeline
+
+Repository → _Settings → Secrets and variables → Actions → New repository secret_:
+
+| Segreto                    | Valore                                 |
+| -------------------------- | -------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN`    | access token Supabase (passo 1.3)      |
+| `DEV_SUPABASE_PROJECT_ID`  | Project ID/Reference Supabase DEV      |
+| `DEV_SUPABASE_DB_PASSWORD` | password del database DEV              |
+| `DEV_APP_BASE_URL`         | lo stesso `APP_BASE_URL` di Vercel DEV |
+| `VERCEL_TOKEN`             | token Vercel                           |
+| `VERCEL_ORG_ID`            | Team/Account ID Vercel                 |
+| `DEV_VERCEL_PROJECT_ID`    | Project ID Vercel DEV                  |
+
+Con GitHub Free sui repository privati gli _Environments_ non sono disponibili: per questo i segreti usano i prefissi `DEV_` e `PROD_`.
+
+## 4. Primo deploy
+
+Avvia la pipeline in uno di due modi:
+
+- fai un push su `dev`;
+- apri _Actions → CI_ → l'ultimo run su `dev` → _Re-run all jobs_.
+
+Nel job **Deploy DEV** devono risultare verdi:
+
+1. _Supabase — migrazioni_: crea tabelle, RLS e funzioni.
+2. _Supabase — impostazioni Auth_: registrazione pubblica disattivata, password minima di 12 caratteri, 2FA TOTP attiva, link validi 24 h, Site URL.
+3. _Vercel — build_ e _Vercel — deploy_.
+
+Se mancano dei segreti, il deploy viene **saltato** con un avviso che li elenca.
+
+## 5. Primi Super Admin (una volta sola)
+
+Il primo accesso non può nascere da un invito in app. Dalla cartella del progetto, in **PowerShell**, imposta le variabili solo nella sessione del terminale:
+
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL = "https://<ref>.supabase.co"
+$env:SUPABASE_SECRET_KEY = "<chiave secret>"
+$env:APP_BASE_URL = "https://predictra-dev.vercel.app"
+node apps/web/scripts/bootstrap-super-admin.mjs prima.persona@example.com
+node apps/web/scripts/bootstrap-super-admin.mjs seconda.persona@example.com
+```
+
+Ogni comando stampa un **link di attivazione**. Consegnalo solo a quella persona, che poi:
+
+1. apre il link → _Attiva account_ (nome e password, minimo 12 caratteri);
+2. va in _Impostazioni → Sicurezza_ → attiva la **2FA** (obbligatoria per l'area Administration).
+
+Chiudi il terminale al termine, per eliminare le variabili.
+
+## 6. Uso quotidiano degli account (nessuna email)
+
+| Operazione              | Dove                                            | Note                                                  |
+| ----------------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| Invitare un utente      | _Administration → Inviti → Crea invito_         | appare un link da copiare e consegnare; scade in 24 h |
+| Annullare un invito     | _Inviti → Revoca_                               | il link smette di funzionare                          |
+| Password dimenticata    | _Administration → Utenti → Link reset password_ | link da consegnare; vale 24 h                         |
+| Sospendere / riattivare | _Utenti → Sospendi / Riattiva_                  | la sospensione blocca subito l'accesso                |
+| Cambiare ruolo          | _Utenti → Applica ruolo_                        | un Admin gestisce solo utenti `USER`                  |
+| Storico azioni          | _Administration → Audit_                        | registro non modificabile                             |
+
+Se un invito scade (24 h) senza essere usato: _Revoca_ e poi _Crea invito_ di nuovo.
+
+## 7. Produzione (più avanti)
+
+Quando servirà l'ambiente PROD:
+
+1. ripeti i passi 1 e 2 con un nuovo progetto Supabase e un nuovo progetto Vercel (es. `predictra-prod`);
+2. aggiungi i segreti `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_APP_BASE_URL` e `PROD_VERCEL_PROJECT_ID`;
+3. fai il merge di `dev` in `main` (tramite Pull Request): il job _Deploy PROD_ parte da solo;
+4. esegui il bootstrap dei Super Admin con le variabili del progetto PROD.
+
+## 8. Protezione dei branch
+
+Su **GitHub Free** i repository **privati** non hanno la protezione dei branch (disponibile con GitHub Pro/Team). Fonte: https://docs.github.com/en/get-started/learning-about-github/githubs-plans.
+
+Senza protezione restano comunque questi controlli:
+
+- il deploy parte **solo** se lint, typecheck, test, build e scansione segreti sono verdi;
+- le migrazioni sono testate in CI prima di arrivare su Supabase.
+
+Regola di lavoro concordata: ogni modifica arriva su `dev` tramite Pull Request da un branch `feature/*`, e `main` riceve solo merge da `dev`.
+
+Per la protezione vera il proprietario del repo (`gennpalm`) può passare a GitHub Pro. Poi: _Settings → Branches → Add rule_ per `main` e `dev`, con PR obbligatoria e check obbligatori "Lint, typecheck, test, build" e "Scansione segreti".
+
+## 9. Verifica finale (manuale)
+
+- [ ] Job _Deploy DEV_ verde su GitHub Actions.
+- [ ] `APP_BASE_URL` apre la pagina di login.
+- [ ] Super Admin: attivazione da link, attivazione 2FA, logout e nuovo login con codice.
+- [ ] Invito di un `USER` → link → attivazione → l'utente non vede _Administration_.
+- [ ] Revoca di un invito: il link non funziona più.
+- [ ] Link reset password generato da un Super Admin → nuova password funzionante.
+- [ ] Sospensione: l'utente viene bloccato. Riattivazione.
+- [ ] _Administration → Audit_ mostra le azioni.
+
+## Sviluppo locale (facoltativo)
 
 ```bash
 pnpm install
 pnpm check
-```
-
-`pnpm check` esegue lint, typecheck, test (inclusi i test di migrazione e RLS su Postgres embedded) e build.
-
-## 1. Progetti Supabase (staging e produzione)
-
-Piano Free: 2 progetti attivi, pausa dopo 7 giorni di inattività, nessun backup automatico (vedi ADR 0002).
-
-1. Crea due progetti: `predictra-staging` e `predictra-prod`, regione UE (es. Frankfurt).
-2. **Migrazioni.** Applica in ordine i file di `supabase/migrations/`:
-   - con la CLI: `supabase link --project-ref <ref>` e poi `supabase db push`, oppure
-   - dalla Dashboard → SQL Editor, incollando ogni file nell'ordine del nome.
-3. **Authentication → Sign In / Providers → Email:**
-   - _Allow new users to sign up_: **OFF** (nessuna registrazione pubblica).
-   - _Confirm email_: ON.
-   - Password minima: **12** caratteri.
-4. **Authentication → Multi-Factor:** TOTP abilitato (enroll + verify).
-5. **Authentication → URL Configuration:**
-   - _Site URL_ = `APP_BASE_URL` (es. `https://predictra-xxx.vercel.app`).
-   - _Redirect URLs_: aggiungi `http://localhost:3000/**` solo nel progetto di staging.
-6. **Authentication → Email Templates:** sostituisci i template con quelli di `supabase/templates/`:
-   - `invite.html` → _Invite user_
-   - `recovery.html` → _Reset Password_
-   - `email-change.html` → _Change Email Address_
-
-   I template puntano a `/auth/confirm` con `token_hash`, verificato lato server.
-
-7. **Scadenza link email** (_Email OTP Expiration_): imposta una durata adatta agli inviti, ad esempio 24 ore. Verifica nella Dashboard il massimo consentito.
-8. **SMTP:** il server email integrato di Supabase ha limiti di invio bassi (**limite esatto NON VERIFICATO**). Per uso reale configura un SMTP esterno in _Authentication → SMTP Settings_, con un provider con piano gratuito da verificare in quel momento.
-9. **Data API:** lo schema esposto deve restare solo `public`. Lo schema `app_private` non va esposto.
-10. Annota URL, chiave _publishable_ e chiave _secret_ (Project Settings → API Keys) per i passi 2 e 3.
-
-## 2. Esecuzione locale
-
-Crea `apps/web/.env.local` partendo da `.env.example`, con i valori del progetto **staging**. Il file è ignorato da git.
-
-```bash
 pnpm dev
 ```
 
-L'app è su http://localhost:3000. Senza sessione reindirizza a `/login`.
-
-## 3. Deploy su Vercel (piano Hobby)
-
-1. Importa il repository GitHub in Vercel. _Root Directory_: `apps/web` (Vercel rileva pnpm e il monorepo).
-2. Imposta le variabili d'ambiente per ambiente:
-   - **Preview** → valori di staging.
-   - **Production** → valori di produzione.
-
-   `SUPABASE_SECRET_KEY` non deve mai avere il prefisso `NEXT_PUBLIC_`.
-
-3. _Production Branch_: `main`. I deploy di `dev` sono Preview.
-4. Il piano Hobby è per uso **personale e non commerciale** (ADR 0002).
-
-## 4. Super Admin iniziali (bootstrap)
-
-Si esegue una volta per ciascun Super Admin iniziale, con le variabili d'ambiente di **quel** progetto impostate nel terminale (non salvate su file):
-
-```bash
-node apps/web/scripts/bootstrap-super-admin.mjs persona@example.com
-```
-
-Ogni persona riceve l'email e la attiva:
-
-1. clic sul link → `/accept-invite`;
-2. imposta nome e password;
-3. attiva la 2FA (obbligatoria per l'area Administration).
-
-Da quel momento gli inviti successivi si fanno dall'app (_Administration → Inviti_). Tutti i Super Admin hanno privilegi identici: non c'è un proprietario unico.
-
-## 5. GitHub
-
-- **Branch protection** su `main` e `dev`: PR obbligatoria, check "CI / Lint, typecheck, test, build" e "CI / Scansione segreti" obbligatori, niente force push. Si imposta in Settings → Branches.
-- I minuti di GitHub Actions sui repo privati sono limitati (~2.000 min/mese Linux). La CI annulla i run superati per risparmiarli.
-
-## Verifica di fine Milestone 1 (manuale, su staging)
-
-- [ ] Login di un Super Admin; attivazione TOTP; logout e login con richiesta del codice.
-- [ ] Invito di un `USER` da _Administration → Inviti_; email ricevuta; attivazione.
-- [ ] Revoca di un invito in attesa: il link non funziona più.
-- [ ] Sospensione dell'utente: al refresh viene mandato a `/suspended` e non può più accedere. Riattivazione.
-- [ ] L'utente `USER` non vede l'area Administration; aprendo `/admin/users` torna alla dashboard.
-- [ ] Recupero password via email.
-- [ ] _Esci dagli altri dispositivi_ chiude le altre sessioni.
-- [ ] Audit: le azioni compaiono in _Administration → Audit_.
+`pnpm check` esegue tutti i controlli. Per `pnpm dev` serve `apps/web/.env.local` creato da `.env.example` con i valori DEV.

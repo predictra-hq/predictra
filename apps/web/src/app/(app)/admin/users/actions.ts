@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/dal";
+import { generateAuthLink } from "@/lib/auth/links";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -59,4 +60,31 @@ export async function setUserRole(_prev: ActionState, formData: FormData): Promi
 
   revalidatePath("/admin/users");
   return { ok: true, message: m.admin.updated };
+}
+
+/**
+ * Genera un link di reimpostazione password da consegnare a mano (nessuna email).
+ * Il database autorizza l'operazione (gerarchia, 2FA) e registra l'audit.
+ */
+export async function createPasswordResetLink(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages();
+  await requirePermission("users.manage");
+  const userId = uuidSchema.safeParse(formData.get("userId"));
+  if (!userId.success) return { ok: false, message: m.common.genericError };
+
+  const supabase = await createClient();
+  const { data: email, error } = await supabase.rpc("authorize_password_reset", {
+    p_user_id: userId.data,
+  });
+  if (error || typeof email !== "string") return { ok: false, message: toUserMessage(error) };
+
+  try {
+    const link = await generateAuthLink("recovery", email);
+    return { ok: true, message: m.admin.linkReady, link: link.url };
+  } catch {
+    return { ok: false, message: m.admin.linkFailed };
+  }
 }

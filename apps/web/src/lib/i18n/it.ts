@@ -29,9 +29,7 @@ export const it = {
     backToLogin: "Torna al login",
     forgotTitle: "Recupero password",
     forgotSubtitle:
-      "Inserisci l'email del tuo account: riceverai un link per reimpostare la password.",
-    forgotButton: "Invia link",
-    forgotSent: "Se l'indirizzo è registrato, riceverai a breve un'email con le istruzioni.",
+      "Per motivi di sicurezza il link di reimpostazione viene generato da un amministratore. Contatta un amministratore della piattaforma.",
     resetTitle: "Nuova password",
     resetButton: "Aggiorna password",
     passwordRules: "Almeno 12 caratteri.",
@@ -124,16 +122,17 @@ export const it = {
   admin: {
     invitationsTitle: "Inviti",
     invitationsDescription:
-      "Invita nuovi utenti. L'invito scade dopo 7 giorni; il link email segue la scadenza configurata in Supabase Auth.",
-    invite: "Invia invito",
+      "Invita nuovi utenti: PREDICTRA genera un link personale che consegni tu con un canale esterno (nessuna email viene inviata). L'invito scade dopo 7 giorni, il link secondo la scadenza configurata in Supabase Auth.",
+    invite: "Crea invito",
     role: "Ruolo",
     status: "Stato",
     createdAt: "Creato",
     expiresAt: "Scade",
     revoke: "Revoca",
     revoked: "Invito revocato.",
-    sent: "Invito inviato.",
-    sendFailed: "Invito registrato ma email non inviata",
+    linkFailed: "Invito registrato ma link non generato",
+    linkReady: "Link generato: copialo e consegnalo al destinatario.",
+    resetLink: "Link reset password",
     noInvitations: "Nessun invito.",
     usersTitle: "Utenti",
     usersDescription:

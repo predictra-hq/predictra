@@ -6,11 +6,11 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 
 ## Stato
 
-| Milestone                                                        | Stato                                                                                                |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| M0 — Audit e piano                                               | ✅ approvata                                                                                         |
-| M1 — Fondazioni (monorepo, auth, inviti, ruoli, 2FA, RLS, shell) | ✅ codice completato; attivazione su Supabase/Vercel da eseguire ([setup](docs/operations/setup.md)) |
-| M2 — Football data                                               | da iniziare                                                                                          |
+| Milestone                                                                      | Stato                                                                      |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| M0 — Audit e piano                                                             | ✅ approvata                                                               |
+| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ codice completato; messa in servizio: [setup](docs/operations/setup.md) |
+| M2 — Football data                                                             | da iniziare                                                                |
 
 ## Struttura
 
@@ -20,9 +20,9 @@ packages/shared-types/    ruoli, permessi e regole di dominio condivise (con tes
 packages/config/          tsconfig condivisi
 supabase/migrations/      migrazioni SQL versionate (schema, RLS, RPC)
 supabase/tests/           test di migrazione, RLS e isolamento (Postgres embedded)
-supabase/templates/       template email di Supabase Auth
+supabase/config.toml      impostazioni Auth applicate dalla pipeline
 docs/                     architettura, ADR, data dictionary, operations
-.github/workflows/        CI (lint, typecheck, test, build, audit, gitleaks)
+.github/workflows/        CI + deploy automatico (Supabase migrazioni/config, Vercel)
 ```
 
 ## Comandi
@@ -35,6 +35,8 @@ pnpm format        # formattazione Prettier
 ```
 
 ## Documentazione
+
+- **Istruzioni per sviluppatori e agenti: [CLAUDE.md](CLAUDE.md)**
 
 - Piano tecnico e matrici free tier: [docs/architecture/M0-piano-tecnico.md](docs/architecture/M0-piano-tecnico.md)
 - Decisioni architetturali: [docs/decisions/](docs/decisions/README.md)

@@ -19,4 +19,8 @@ export function toUserMessage(
   return m.common.genericError;
 }
 
-export type ActionState = { ok: boolean; message: string } | null;
+/**
+ * Esito di una Server Action. `link` contiene un link monouso (invito o reset
+ * password) da mostrare UNA volta all'amministratore: non viene salvato.
+ */
+export type ActionState = { ok: boolean; message: string; link?: string } | null;

@@ -1,6 +1,6 @@
 # Data dictionary — identità e accessi
 
-Migrazione: `supabase/migrations/20261107000001_identity.sql`. Tutte le tabelle hanno RLS attiva. Il ruolo `anon` non ha alcun privilegio.
+Migrazioni: `supabase/migrations/20261107000001_identity.sql`, `20261107000002_admin_password_reset.sql`. Tutte le tabelle hanno RLS attiva. Il ruolo `anon` non ha alcun privilegio.
 
 | Tabella                   | PK                      | FK                                                                 | Vincoli / indici                                               | Ownership e RLS                                                                 | Retention / cancellazione               | Dati sensibili                            |
 | ------------------------- | ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------- |
@@ -15,14 +15,15 @@ Migrazione: `supabase/migrations/20261107000001_identity.sql`. Tutte le tabelle 
 
 ## Funzioni RPC (schema `public`)
 
-| Funzione                               | Chi           | Controlli                                                                              |
-| -------------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
-| `create_invitation(email, role)`       | authenticated | utente attivo, admin, `aal2`, gerarchia ruoli, nessun account esistente, 20 inviti/ora |
-| `revoke_invitation(id)`                | authenticated | come sopra; solo inviti PENDING; restituisce l'`auth_user_id` da eliminare             |
-| `accept_invitation()`                  | authenticated | invito PENDING per l'email del JWT, non scaduto, profilo attivo                        |
-| `set_account_status(user, status)`     | authenticated | admin, `aal2`, mai su se stessi, gerarchia                                             |
-| `set_user_role(user, role)`            | authenticated | admin, `aal2`, mai su se stessi, gerarchia, almeno un Super Admin attivo               |
-| `consume_rate_limit(key, max, window)` | service_role  | —                                                                                      |
+| Funzione                               | Chi           | Controlli                                                                                   |
+| -------------------------------------- | ------------- | ------------------------------------------------------------------------------------------- |
+| `create_invitation(email, role)`       | authenticated | utente attivo, admin, `aal2`, gerarchia ruoli, nessun account esistente, 20 inviti/ora      |
+| `revoke_invitation(id)`                | authenticated | come sopra; solo inviti PENDING; restituisce l'`auth_user_id` da eliminare                  |
+| `accept_invitation()`                  | authenticated | invito PENDING per l'email del JWT, non scaduto, profilo attivo                             |
+| `set_account_status(user, status)`     | authenticated | admin, `aal2`, mai su se stessi, gerarchia                                                  |
+| `set_user_role(user, role)`            | authenticated | admin, `aal2`, mai su se stessi, gerarchia, almeno un Super Admin attivo                    |
+| `authorize_password_reset(user)`       | authenticated | admin, `aal2`, mai su se stessi, gerarchia; audit; restituisce l'email per il link di reset |
+| `consume_rate_limit(key, max, window)` | service_role  | —                                                                                           |
 
 ## Helper (schema `app_private`, non esposto)
 
