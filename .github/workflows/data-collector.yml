@@ -1,10 +1,13 @@
 name: Data collector
 
-# M2 corsia A — raccolta dati football-data.org (ADR 0010).
+# Raccolta dati verso Supabase DEV (ADR 0010, ADR 0015).
 # - Test e lint del servizio Python a ogni PR o push che lo tocca.
-# - Raccolta programmata ogni 3 ore verso Supabase DEV, più l'avvio manuale.
-#   Lo schedule e l'avvio manuale funzionano solo quando questo file è sul branch
-#   di default (main); il codice eseguito è sempre quello di `dev`.
+# - football-data.org ogni 3 ore; quote The Odds API: snapshot giornaliero
+#   alle 07:23 UTC e aggiornamento pre-partita alle 16:37 UTC.
+# - Avvio manuale con la scelta del lavoro.
+#   Schedule e avvio manuale funzionano solo quando questo file è sul branch
+#   di default (main). Lo schedule esegue il codice di `dev`; l'avvio manuale
+#   quello del branch scelto (usare `dev`).
 # Runbook: docs/operations/data-collector.md
 
 on:
@@ -18,9 +21,16 @@ on:
       - "services/data-collector/**"
       - ".github/workflows/data-collector.yml"
   schedule:
-    - cron: "17 */3 * * *"
+    - cron: "17 */3 * * *" # football-data.org
+    - cron: "23 7 * * *" # quote: snapshot giornaliero
+    - cron: "37 16 * * *" # quote: pre-partita
   workflow_dispatch:
     inputs:
+      job:
+        description: "Lavoro"
+        type: choice
+        options: [football-data, odds-daily, odds-prematch]
+        default: football-data
       competitions:
         description: "Codici separati da virgola (vuoto = tutte le competizioni della v1)"
         type: string
@@ -60,12 +70,18 @@ jobs:
         run: uv run pytest
 
   ingest:
-    name: Raccolta football-data.org (DEV)
+    name: Raccolta (DEV)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      JOB: >-
+        ${{ github.event_name == 'workflow_dispatch' && inputs.job
+        || github.event.schedule == '23 7 * * *' && 'odds-daily'
+        || github.event.schedule == '37 16 * * *' && 'odds-prematch'
+        || 'football-data' }}
       FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
       SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
     steps:
@@ -73,19 +89,25 @@ jobs:
         id: secrets
         working-directory: .
         run: |
+          case "$JOB" in
+            football-data) needed="FOOTBALL_DATA_API_KEY" ;;
+            odds-*) needed="ODDS_API_KEY" ;;
+            *) echo "::error::Lavoro sconosciuto: $JOB"; exit 1 ;;
+          esac
           missing=""
-          for v in FOOTBALL_DATA_API_KEY SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
+          for v in $needed SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
             if [ -z "${!v}" ]; then missing="$missing $v"; fi
           done
           if [ -n "$missing" ]; then
-            echo "::warning title=Raccolta saltata::Segreti mancanti:$missing (vedi docs/operations/data-collector.md)"
+            echo "::warning title=Raccolta saltata ($JOB)::Segreti mancanti:$missing (vedi docs/operations/data-collector.md)"
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v4
         if: steps.secrets.outputs.skip != 'true'
         with:
-          ref: dev
+          # Schedule: sempre il codice di dev. Avvio manuale: il branch scelto in "Run workflow".
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
 
       - uses: astral-sh/setup-uv@v6
         if: steps.secrets.outputs.skip != 'true'
@@ -102,7 +124,12 @@ jobs:
           TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
         run: |
           export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
-          args=(run --triggered-by "$TRIGGERED_BY")
+          case "$JOB" in
+            football-data) args=(run) ;;
+            odds-daily) args=(odds --mode daily) ;;
+            odds-prematch) args=(odds --mode prematch) ;;
+          esac
+          args+=(--triggered-by "$TRIGGERED_BY")
           if [ -n "$COMPETITIONS" ]; then args+=(--competitions "$COMPETITIONS"); fi
           if [ -n "$DRY_RUN" ]; then args+=("$DRY_RUN"); fi
           uv run python -m predictra_collector "${args[@]}"

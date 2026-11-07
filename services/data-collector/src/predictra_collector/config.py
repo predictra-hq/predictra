@@ -8,6 +8,18 @@ from dataclasses import dataclass
 # Competizioni della v1 (ADR 0010 §3): codici football-data.org.
 V1_COMPETITIONS: tuple[str, ...] = ("SA", "PL", "PD", "BL1", "FL1", "DED", "PPL", "CL")
 
+# Chiavi The Odds API delle competizioni della v1 (ADR 0015 §1).
+ODDS_SPORT_KEYS: dict[str, str] = {
+    "SA": "soccer_italy_serie_a",
+    "PL": "soccer_epl",
+    "PD": "soccer_spain_la_liga",
+    "BL1": "soccer_germany_bundesliga",
+    "FL1": "soccer_france_ligue_one",
+    "DED": "soccer_netherlands_eredivisie",
+    "PPL": "soccer_portugal_primeira_liga",
+    "CL": "soccer_uefa_champs_league",
+}
+
 
 class ConfigError(RuntimeError):
     """Configurazione mancante o non valida."""
@@ -15,7 +27,8 @@ class ConfigError(RuntimeError):
 
 @dataclass(frozen=True)
 class Settings:
-    football_data_api_key: str
+    football_data_api_key: str | None
+    odds_api_key: str | None
     supabase_url: str | None
     supabase_secret_key: str | None
 
@@ -27,20 +40,34 @@ class Settings:
             )
         return self.supabase_url.rstrip("/"), self.supabase_secret_key
 
+    def require_football_data(self) -> str:
+        if not self.football_data_api_key:
+            raise ConfigError("Variabile FOOTBALL_DATA_API_KEY mancante.")
+        return self.football_data_api_key
+
+    def require_odds(self) -> str:
+        if not self.odds_api_key:
+            raise ConfigError("Variabile ODDS_API_KEY mancante.")
+        return self.odds_api_key
+
+    def secrets(self) -> tuple[str, ...]:
+        return tuple(
+            s
+            for s in (self.football_data_api_key, self.odds_api_key, self.supabase_secret_key)
+            if s
+        )
+
 
 def load_settings(env: dict[str, str] | None = None) -> Settings:
     source = os.environ if env is None else env
-    key = (source.get("FOOTBALL_DATA_API_KEY") or "").strip()
-    if not key:
-        raise ConfigError("Variabile FOOTBALL_DATA_API_KEY mancante.")
     url = (source.get("SUPABASE_URL") or source.get("NEXT_PUBLIC_SUPABASE_URL") or "").strip()
     if url and not url.startswith("https://"):
         raise ConfigError("SUPABASE_URL deve iniziare con https://")
-    secret = (source.get("SUPABASE_SECRET_KEY") or "").strip()
     return Settings(
-        football_data_api_key=key,
+        football_data_api_key=(source.get("FOOTBALL_DATA_API_KEY") or "").strip() or None,
+        odds_api_key=(source.get("ODDS_API_KEY") or "").strip() or None,
         supabase_url=url or None,
-        supabase_secret_key=secret or None,
+        supabase_secret_key=(source.get("SUPABASE_SECRET_KEY") or "").strip() or None,
     )
 
 

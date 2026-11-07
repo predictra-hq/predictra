@@ -146,7 +146,9 @@ def test_store_usa_solo_apikey_per_le_chiavi_sb_secret():
 
 def test_configurazione():
     with pytest.raises(ConfigError):
-        load_settings({})
+        load_settings({}).require_football_data()
+    with pytest.raises(ConfigError):
+        load_settings({}).require_odds()
     s = load_settings(
         {"FOOTBALL_DATA_API_KEY": "x", "NEXT_PUBLIC_SUPABASE_URL": "https://a.supabase.co"}
     )
