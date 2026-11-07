@@ -99,7 +99,20 @@ jobs:
       - name: Vercel — deploy
         if: steps.config.outputs.ready == 'true'
         run: |
-          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          # Piano Hobby: Vercel blocca i deploy il cui autore git non è membro del team
+          # e la CLI resta in attesa senza errore. Il deploy è già autorizzato dal token:
+          # si pubblica senza metadati git (vedi docs/operations/ambienti.md).
+          rm -rf .git
+          set +e
+          url=$(timeout 600 vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          code=$?
+          set -e
+          if [ "$code" -eq 124 ]; then
+            echo "::error title=Vercel — deploy::Nessuna risposta da Vercel in 10 minuti: controlla il deploy su vercel.com."
+            exit 1
+          elif [ "$code" -ne 0 ]; then
+            exit "$code"
+          fi
           echo "Deploy ${{ inputs.environment }}: $url"
           echo "### Deploy ${{ inputs.environment }} completato" >> "$GITHUB_STEP_SUMMARY"
           echo "App: ${APP_BASE_URL}" >> "$GITHUB_STEP_SUMMARY"
