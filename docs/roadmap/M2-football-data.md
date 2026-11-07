@@ -15,22 +15,22 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona | Issue | Stato       |
-| --------------- | ------- | ----- | ----------- |
-| 0 — contratto   | —       | —     | da iniziare |
-| A — ingestion   | —       | —     | da iniziare |
-| B — interfaccia | —       | —     | da iniziare |
+| Corsia          | Persona   | Issue | Stato                                         |
+| --------------- | --------- | ----- | --------------------------------------------- |
+| 0 — contratto   | Alfry1299 | —     | in revisione (PR `feature/m2-0-modello-dati`) |
+| A — ingestion   | —         | —     | da iniziare                                   |
+| B — interfaccia | —         | —     | da iniziare                                   |
 
 Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                                                             | Chi        | Serve a           |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
-| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                                                             | `gennpalm` | corsia A, fase A2 |
-| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                                                       | `gennpalm` | corsia A, fase A3 |
-| P3  | Lettura dei termini d'uso di football-data.org e API-Football (nel piano M0 risultano NON VERIFICATI), registrati in `docs/data-sources/` come chiede l'ADR 0004 | corsia 0   | tutte             |
-| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)                                             | `gennpalm` | ordine            |
+| #   | Cosa                                                                                                                                                                                                                                                       | Chi                   | Serve a             |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------- |
+| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                                                                                                                                                       | `gennpalm`            | corsia A, fase A2   |
+| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                                                                                                                                                 | `gennpalm`            | corsia A, fase A3   |
+| P3  | Lettura dei termini d'uso, registrata in `docs/data-sources/`: football-data.org ✅ verificato; API-Football ⛔ **non verificato** (sito non leggibile in automatico): lo legge a mano `gennpalm`, vedi [api-football.md](../data-sources/api-football.md) | corsia 0 / `gennpalm` | tutte (A3 bloccata) |
+| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)                                                                                                                                       | `gennpalm`            | ordine              |
 
 Le corsie possono partire anche senza P1 e P2: i test usano fixture. Le fixture sono **risposte reali registrate** (o esempi della documentazione ufficiale del provider), salvate con fonte e data di registrazione; mai costruite a mano.
 

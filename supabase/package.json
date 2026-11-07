@@ -12,6 +12,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
     "@predictra/config": "workspace:*",
+    "@predictra/shared-types": "workspace:*",
     "@types/node": "^20.19.43"
   }
 }

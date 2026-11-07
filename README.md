@@ -47,7 +47,8 @@ pnpm format        # formattazione Prettier
 - **Checklist di messa in servizio (da zero):** [docs/operations/checklist-messa-in-servizio.md](docs/operations/checklist-messa-in-servizio.md)
 - Setup e deploy: [docs/operations/setup.md](docs/operations/setup.md)
 - Controlli di sicurezza: [docs/operations/security.md](docs/operations/security.md)
-- Data dictionary: [docs/data-dictionary/identity.md](docs/data-dictionary/identity.md)
+- Data dictionary: [identità](docs/data-dictionary/identity.md), [calcio](docs/data-dictionary/football.md)
+- Fonti dati e termini d'uso: [docs/data-sources/](docs/data-sources/README.md)
 
 ## Branch
 
