@@ -1,0 +1,12 @@
+<!-- Template "Invite user" di Supabase Auth. Copiarlo in Dashboard → Authentication → Email Templates → Invite user. -->
+<h2>Invito a PREDICTRA</h2>
+<p>
+  Sei stato invitato ad accedere a <strong>PREDICTRA — Football Intelligence Engine</strong>,
+  piattaforma privata.
+</p>
+<p>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/accept-invite">
+    Attiva il tuo account
+  </a>
+</p>
+<p>Il link è personale e ha una scadenza. Se non aspettavi questo invito, ignora questa email.</p>

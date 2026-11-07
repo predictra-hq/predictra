@@ -1,0 +1,12 @@
+<!-- Template "Change Email Address" di Supabase Auth. -->
+<h2>Conferma il nuovo indirizzo email</h2>
+<p>
+  Conferma l'aggiornamento dell'email del tuo account PREDICTRA da {{ .Email }} a {{ .NewEmail }}.
+</p>
+<p>
+  <a
+    href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change&next=/settings/security"
+  >
+    Conferma nuovo indirizzo
+  </a>
+</p>

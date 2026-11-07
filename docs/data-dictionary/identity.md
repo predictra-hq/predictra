@@ -1,0 +1,29 @@
+# Data dictionary — identità e accessi
+
+Migrazione: `supabase/migrations/20261107000001_identity.sql`. Tutte le tabelle hanno RLS attiva. Il ruolo `anon` non ha alcun privilegio.
+
+| Tabella                   | PK                      | FK                                                                 | Vincoli / indici                                               | Ownership e RLS                                                                 | Retention / cancellazione               | Dati sensibili                            |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------- |
+| `roles`                   | `code` (enum)           | —                                                                  | `rank` unico                                                   | lettura: utenti attivi                                                          | statica                                 | no                                        |
+| `profiles`                | `id` → `auth.users`     | `suspended_by` → profiles                                          | email unica (lower); coerenza stato/sospensione                | lettura propria; admin attivi leggono tutti; update solo `display_name` proprio | cascade con l'utente auth               | email, nome                               |
+| `user_roles`              | (`user_id`, `role`)     | profiles, roles                                                    | indice per ruolo                                               | lettura propria e admin; scrittura solo RPC                                     | cascade                                 | no                                        |
+| `invitations`             | `id`                    | `invited_by`, `revoked_by` → profiles; `auth_user_id` → auth.users | un solo PENDING per email; formato email; scadenza > creazione | lettura admin; scrittura solo RPC / server                                      | conservati (storico); da definire in M8 | email                                     |
+| `user_preferences`        | `user_id`               | profiles                                                           | locale, timezone, formato quote vincolati                      | **solo proprietario** (nessun accesso admin)                                    | cascade                                 | no                                        |
+| `user_dashboard_settings` | `user_id`               | profiles                                                           | `settings` deve essere un oggetto JSON                         | **solo proprietario**                                                           | cascade                                 | no                                        |
+| `audit_logs`              | `id` (identity)         | `actor_id` → profiles (set null)                                   | indici per data e attore                                       | lettura Super Admin; **append-only** (trigger)                                  | da definire in M8 (default: illimitata) | metadati (email negli eventi invito)      |
+| `app_private.rate_limits` | (`key`, `window_start`) | —                                                                  | —                                                              | solo `service_role`                                                             | pulizia automatica > 1 giorno           | IP; email solo come hash SHA-256 troncato |
+
+## Funzioni RPC (schema `public`)
+
+| Funzione                               | Chi           | Controlli                                                                              |
+| -------------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `create_invitation(email, role)`       | authenticated | utente attivo, admin, `aal2`, gerarchia ruoli, nessun account esistente, 20 inviti/ora |
+| `revoke_invitation(id)`                | authenticated | come sopra; solo inviti PENDING; restituisce l'`auth_user_id` da eliminare             |
+| `accept_invitation()`                  | authenticated | invito PENDING per l'email del JWT, non scaduto, profilo attivo                        |
+| `set_account_status(user, status)`     | authenticated | admin, `aal2`, mai su se stessi, gerarchia                                             |
+| `set_user_role(user, role)`            | authenticated | admin, `aal2`, mai su se stessi, gerarchia, almeno un Super Admin attivo               |
+| `consume_rate_limit(key, max, window)` | service_role  | —                                                                                      |
+
+## Helper (schema `app_private`, non esposto)
+
+`current_roles()`, `is_active_user()`, `has_role()`, `is_admin()`, `max_rank()`, `is_aal2()`, `audit()`, `assert_admin_session()`. Agli utenti autenticati è concesso solo l'esecuzione dei primi quattro, che servono alle policy.

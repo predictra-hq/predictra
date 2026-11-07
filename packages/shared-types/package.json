@@ -1,0 +1,18 @@
+{
+  "name": "@predictra/shared-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tipi e regole di dominio condivisi (ruoli, permessi, stati)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@predictra/config": "workspace:*"
+  }
+}
