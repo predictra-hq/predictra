@@ -14,7 +14,7 @@ export const MAIN_NAV: readonly NavItem[] = [
   { key: "dashboard", href: "/dashboard" },
   { key: "matchCenter", href: "/match-center" },
   { key: "statisticsCenter", href: "/statistics" },
-  { key: "betBuilder", href: "/bet-builder", milestone: 5 },
+  { key: "betBuilder", href: "/bet-builder" },
   { key: "marketIntelligence", href: "/markets" },
   { key: "leagueIntelligence", href: "/leagues" },
   { key: "bankroll", href: "/bankroll", milestone: 6 },
