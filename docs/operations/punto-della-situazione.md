@@ -43,13 +43,16 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — secondo job, quote The Odds API:** unito (#41) e attivo da `main`.
 
-**M7 corsia A, fase A5 — terzo job: previsioni M4** · branch `feature/m7-a-coda-previsioni` · PR: [#42](https://github.com/gennpalm/predictra/pull/42), in attesa di CI e merge; poi merge di `dev` in `main`. Dopo l'attivazione: misurare i minuti per ciclo (contatore `github-actions`). Ultimo job A5: proposte del Bet Builder.
+**M7 corsia A, fase A5 — terzo job, previsioni M4:** unito (#42) e attivo da `main`.
 
-| Passo | Contenuto                                                                                                                                                                                           | Stato                                                                                                    |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 1     | Job `predictions.run` (`predictra_engine.pipeline.run`): finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra; `CODE_COMMIT` obbligatorio (ADR 0020); `max_attempts` 2 | fatto: `predictra_agent/predictions.py`, 14 test (compreso il controllo delle versioni di numpy e scipy) |
-| 2     | Workflow: `--plan predictions` nello schedule dell'agente, storia git completa per `CODE_COMMIT`; tolti gli schedule da _Prediction engine_ (restano run, tune, diagnose a mano)                    | fatto: `--plan predictions` e `fetch-depth: 0` nello schedule; tolti gli schedule da _Prediction engine_ |
-| 3     | Test, documentazione (runbook agente e motore, piano), `pnpm check`, PR                                                                                                                             | fatto: `pnpm check` verde, 64 test agente; PR aperta                                                     |
+**M7 corsia A, fase A5 — quarto e ultimo job: proposte del Bet Builder** · branch `feature/m7-a-coda-proposte` · PR: non ancora aperta.
+
+| Passo | Contenuto                                                                                                                                                                       | Stato                                                                                  |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1     | Job `bet-builder.run` (`predictra_bet_builder.pipeline.run`): finestre `morning` 06–15 e `evening` 15–21 UTC, nello stesso ciclo e dopo le quote; `max_attempts` 2              | fatto: `predictra_agent/bet_builder.py`, 11 test                                       |
+| 2     | Versioni separate: `PREDICTION_ENGINE_COMMIT` (previsioni) e `BET_BUILDER_COMMIT` (proposte), ognuna dall'ultimo commit del proprio servizio, al posto dell'unico `CODE_COMMIT` | fatto nel codice: `PREDICTION_ENGINE_COMMIT` e `BET_BUILDER_COMMIT`; manca il workflow |
+| 3     | Workflow: `--plan bet-builder` nello schedule dell'agente; tolti gli schedule da _Bet Builder_ (resta l'avvio manuale)                                                          | da fare                                                                                |
+| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                          | da fare                                                                                |
 
 ## Punti aperti
 

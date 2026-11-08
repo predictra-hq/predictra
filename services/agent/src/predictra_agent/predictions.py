@@ -6,10 +6,11 @@ ADR 0020-0022): qui solo l'adattatore alla coda.
 - Due finestre al giorno (UTC), come gli schedule precedenti (05:40 e 14:40):
   `morning` dalle 03 alle 12 e `afternoon` dalle 12 alle 21. Nel ciclo il job viene dopo
   la raccolta football-data della stessa finestra (accodata prima, quindi prelevata prima)
-  e prima del Bet Builder delle 07:53 e delle 17:07.
+  e prima delle proposte del Bet Builder (cicli delle 06:47 e delle 15:47).
   Chiave `predictions.run:<finestra>:<AAAA-MM-GG>`: una esecuzione per finestra.
-- Riproducibilità (ADR 0020): la versione del modello dipende da `CODE_COMMIT`, l'ultimo
-  commit che ha toccato `services/prediction-engine`, calcolato dal workflow come prima.
+- Riproducibilità (ADR 0020): la versione del modello dipende da
+  `PREDICTION_ENGINE_COMMIT`, l'ultimo commit che ha toccato `services/prediction-engine`,
+  calcolato dal workflow come prima.
   Senza un SHA valido il job va in dead-letter: nessuna previsione con versione sbagliata.
 - Ogni esecuzione scrive un nuovo insieme di previsioni (tabella immutabile): per questo
   `MAX_ATTEMPTS` = 2 e una finestra già passata si chiude senza eseguire il motore.
@@ -80,10 +81,11 @@ def make_handler(
         if not start <= current < end:
             return {"skipped": "fuori finestra", "window": name, "date": day.isoformat()}
 
-        commit = (env.get("CODE_COMMIT") or "").strip().lower()
+        commit = (env.get("PREDICTION_ENGINE_COMMIT") or "").strip().lower()
         if not COMMIT_RE.fullmatch(commit):
             raise PermanentJobError(
-                "CODE_COMMIT mancante o non valido: serve lo SHA dell'ultimo commit del motore"
+                "PREDICTION_ENGINE_COMMIT mancante o non valido: serve lo SHA dell'ultimo "
+                "commit del motore"
             )
 
         store = SupabaseStore(supabase_url, supabase_secret_key)

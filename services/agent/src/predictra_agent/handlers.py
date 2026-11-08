@@ -3,8 +3,8 @@
 I job reali di M2-M5 si collegano nella fase A5, uno per PR (piano M7):
 - `football-data.collect` (raccolta football-data.org, M2): `football_data.py`;
 - `odds.collect` (quote The Odds API, M3): `odds.py`;
-- `predictions.run` (previsioni del motore, M4): `predictions.py`.
-Le proposte del Bet Builder arrivano con la PR successiva. Un tipo senza gestore
+- `predictions.run` (previsioni del motore, M4): `predictions.py`;
+- `bet-builder.run` (proposte dello Smart Bet Builder, M5): `bet_builder.py`. Un tipo senza gestore
 non viene prelevato: resta in coda.
 """
 
@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from . import football_data, odds, predictions
+from . import bet_builder, football_data, odds, predictions
 from .worker import Handler, JobContext, PermanentJobError
 
 
@@ -57,6 +57,9 @@ def build_handlers(
             env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
         ),
         predictions.JOB_TYPE: predictions.make_handler(
+            env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
+        ),
+        bet_builder.JOB_TYPE: bet_builder.make_handler(
             env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
         ),
     }

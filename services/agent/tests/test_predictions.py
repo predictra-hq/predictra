@@ -1,4 +1,4 @@
-"""Job `predictions.run` (fase A5): finestre, CODE_COMMIT, ordine nel ciclo, tentativi."""
+"""Job `predictions.run` (fase A5): finestre, commit del motore, ordine nel ciclo, tentativi."""
 
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ class FakeEngine:
 
 
 def handlers(engine: FakeEngine, now: datetime, env: dict[str, str] | None = None):
-    env = {"CODE_COMMIT": COMMIT} if env is None else env
+    env = {"PREDICTION_ENGINE_COMMIT": COMMIT} if env is None else env
     return {
         predictions.JOB_TYPE: predictions.make_handler(
             env, supabase_url=URL, supabase_secret_key=SECRET, now=lambda: now, engine=engine
@@ -148,10 +148,13 @@ def test_code_commit_non_valido_va_in_dead(queue: FakeQueue, commit: str) -> Non
     engine = FakeEngine()
     [job_id] = plan(queue, MORNING)
     run_cycle(
-        queue, handlers(engine, MORNING, env={"CODE_COMMIT": commit}), config(), clock=queue.clock
+        queue,
+        handlers(engine, MORNING, env={"PREDICTION_ENGINE_COMMIT": commit}),
+        config(),
+        clock=queue.clock,
     )
     assert queue.jobs[job_id].status == "dead"
-    assert "CODE_COMMIT" in (queue.jobs[job_id].last_error or "")
+    assert "PREDICTION_ENGINE_COMMIT" in (queue.jobs[job_id].last_error or "")
     assert engine.calls == []
 
 
