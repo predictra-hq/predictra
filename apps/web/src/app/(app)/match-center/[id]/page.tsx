@@ -96,7 +96,11 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
         </Card>
       </div>
 
-      <MatchPredictions matchId={match.match_id} />
+      <MatchPredictions
+        matchId={match.match_id}
+        status={match.status}
+        kickoffAt={match.kickoff_at}
+      />
 
       <Card className="mt-4">
         <CardTitle>{m.matchCenter.openIssues}</CardTitle>

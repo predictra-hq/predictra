@@ -1,8 +1,9 @@
-import type { ActivePredictionRow, ConfidenceBand } from "@predictra/shared-types";
+import type { ActivePredictionRow, ConfidenceBand, MatchStatus } from "@predictra/shared-types";
 import { confidenceBand } from "@predictra/shared-types";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
   confidenceTone,
+  emptyPredictionsReason,
   formatFairOdds,
   formatLine,
   formatPercent,
@@ -11,7 +12,7 @@ import {
   sortSelections,
   type PredictionGroup,
 } from "@/lib/predictions/format";
-import { getMatchPredictions } from "@/lib/predictions/queries";
+import { getMatchPredictions, hasActiveModel } from "@/lib/predictions/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
 type Components = Partial<Record<"sample" | "calibration" | "agreement" | "data", number>>;
@@ -57,16 +58,29 @@ function GroupTable({ group }: { group: PredictionGroup }) {
 }
 
 /** Pannello "Previsioni PREDICTRA" del dettaglio partita: solo il modello attivo (v_active_predictions). */
-export async function MatchPredictions({ matchId }: { matchId: number }) {
+export async function MatchPredictions({
+  matchId,
+  status,
+  kickoffAt,
+}: {
+  matchId: number;
+  status: MatchStatus;
+  kickoffAt: string;
+}) {
   const m = getMessages();
   const p = m.predictions;
   const rows: ActivePredictionRow[] = await getMatchPredictions(matchId);
 
   if (rows.length === 0) {
+    const reason = emptyPredictionsReason({
+      hasActiveModel: await hasActiveModel(),
+      status,
+      kickoffAt,
+    });
     return (
       <Card className="mt-4">
         <CardTitle>{p.title}</CardTitle>
-        <p className="mt-2 text-sm text-muted">{p.noPredictions}</p>
+        <p className="mt-2 text-sm text-muted">{p.emptyReasons[reason]}</p>
       </Card>
     );
   }

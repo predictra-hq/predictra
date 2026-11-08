@@ -53,6 +53,21 @@ class SupabaseStore:
     def select(self, relation: str, query: dict[str, str]) -> list[dict[str, Any]]:
         return self._request("GET", relation, relation, params=query) or []
 
+    def count(self, relation: str, query: dict[str, str]) -> int:
+        """Numero di righe (header Content-Range di PostgREST con ``Prefer: count=exact``)."""
+        headers = {**self._headers(), "Prefer": "count=exact"}
+        try:
+            response = self.http.get(
+                f"{self.url}/rest/v1/{relation}",
+                headers=headers,
+                params={**query, "limit": "1"},
+            )
+        except httpx.HTTPError as exc:
+            raise StoreError(f"Supabase {relation}: {type(exc).__name__}") from None
+        self._check(response, relation)
+        total = response.headers.get("content-range", "").rpartition("/")[2]
+        return int(total) if total.isdigit() else 0
+
     def _paged(self, fetch) -> list[dict[str, Any]]:  # type: ignore[no-untyped-def]
         rows: list[dict[str, Any]] = []
         while True:

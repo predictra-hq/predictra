@@ -1,6 +1,6 @@
 # M4 — Prediction engine: piano e corsie
 
-**Stato:** in corso (corsia A) · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev`; l'addestramento reale richiede lo storico caricato dalla corsia A di M2 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata, in servizio su DEV dall'8/11/2026 (modello attivo: Poisson) · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev`; l'addestramento reale richiede lo storico caricato dalla corsia A di M2 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -16,11 +16,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona   | Issue | Stato                                                     |
-| --------------- | --------- | ----- | --------------------------------------------------------- |
-| 0 — contratto   | Alfry1299 | —     | unita (#17)                                               |
-| A — motore      | Alfry1299 | —     | A1–A5 in revisione (PR `feature/m4-a-motore`)             |
-| B — interfaccia | Alfry1299 | —     | B1–B4 in revisione (PR `feature/m4-b-model-intelligence`) |
+| Corsia          | Persona   | Issue | Stato            |
+| --------------- | --------- | ----- | ---------------- |
+| 0 — contratto   | Alfry1299 | —     | unita (#17)      |
+| A — motore      | Alfry1299 | —     | unita (#18, #22) |
+| B — interfaccia | Alfry1299 | —     | unita (#23)      |
 
 ## Prerequisiti
 
@@ -94,6 +94,23 @@ M4 **non** dipende da M3: si può fare in parallelo a M3.
 
 - Con i dati gratuiti della stagione in corso ci sono solo i risultati: i modelli sono basati sui gol. Mercati su corner, cartellini e giocatori restano "non valutabili" (ADR 0005).
 - I minuti di GitHub Actions sono limitati: addestramenti pesanti vanno fatti con parsimonia.
+
+## Esito (8/11/2026)
+
+| Criterio                                                         | Esito                                                                                                                                                                    |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Brier e Log Loss migliori della baseline, fuori campione         | ✅ backtest walk-forward su 560 partite reali: Poisson Brier 0,6121 e Log Loss 1,0238, contro 0,6592 e 1,0902 della baseline; Dixon-Coles ed Elo migliori della baseline |
+| Anti-leakage                                                     | ✅ `training_results(as_of)` e trigger che rifiuta previsioni con `as_of` successivo al calcio d'inizio (test)                                                           |
+| Probabilità coerenti (somme a 1, complementi, push, mezze linee) | ✅ test del motore su tutti i mercati                                                                                                                                    |
+| Riproducibilità                                                  | ✅ versione + `as_of` + `features_hash`; adattamento deterministico (test)                                                                                               |
+| Probabilità solo dai modelli, mai da un LLM                      | ✅                                                                                                                                                                       |
+| Previsioni reali visibili su DEV                                 | ✅ Poisson attivo; previsioni per le 11 partite in programma verificate con `diagnose` e nel dettaglio partita                                                           |
+
+Note:
+
+- La taratura dei modelli gol (L2 = 3) è documentata nel [runbook](../operations/prediction-engine.md). Va ripetuta quando lo storico cresce.
+- Diagnosi in sola lettura: _Actions → Prediction engine → Run workflow_ con `command = diagnose`.
+- Con una sola stagione di storico il Confidence Score è spesso basso: è voluto (ADR 0022).
 
 ## Chiusura di M4
 

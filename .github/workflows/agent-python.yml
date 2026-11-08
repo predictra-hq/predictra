@@ -1,0 +1,132 @@
+name: Agent (Python)
+
+# Worker Python dell'agente autonomo (M7 corsia A, ADR 0003 e 0035).
+# - Test e lint del servizio a ogni PR o push che lo tocca.
+# - Schedule ogni 3 ore al minuto 47 (ADR 0035 §1, fase A5): il ciclo accoda la finestra
+#   corrente di raccolta football-data.org e poi preleva i job pronti. Sostituisce lo
+#   schedule football-data di "Data collector": stessi cicli, stessi minuti.
+# - Avvio manuale di un ciclo su DEV, con l'opzione di accodare un job di verifica.
+# Schedule e avvio manuale funzionano solo quando questo file è sul branch di default
+# (main). Lo schedule esegue il codice di `dev`; l'avvio manuale quello del branch scelto.
+# Runbook: docs/operations/agent.md
+
+on:
+  pull_request:
+    paths:
+      - "services/agent/**"
+      - "services/data-collector/**"
+      - ".github/workflows/agent-python.yml"
+  push:
+    branches: [dev, main]
+    paths:
+      - "services/agent/**"
+      - "services/data-collector/**"
+      - ".github/workflows/agent-python.yml"
+  schedule:
+    - cron: "47 */3 * * *" # ciclo dell'agente: raccolta football-data.org e job in coda
+  workflow_dispatch:
+    inputs:
+      selftest:
+        description: "Prima del ciclo accoda un job agent.selftest.python (non legge né scrive dati)"
+        type: choice
+        options: [nessuno, riuscito, fallisce-una-volta, non-recuperabile]
+        default: nessuno
+      max_jobs:
+        description: "Job massimi del ciclo"
+        type: number
+        default: 10
+      plan_football_data:
+        description: "Accoda la finestra corrente di raccolta football-data.org (come lo schedule)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-python-${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'cycle' || github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: services/agent
+
+jobs:
+  test:
+    name: Python — lint e test
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Dipendenze
+        run: uv sync --locked
+      - name: Formattazione
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest
+
+  cycle:
+    name: Ciclo dell'agente (DEV)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+    steps:
+      - name: Verifica segreti
+        id: secrets
+        working-directory: .
+        run: |
+          missing=""
+          for v in SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning title=Ciclo saltato::Segreti mancanti:$missing (vedi docs/operations/agent.md)"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.skip != 'true'
+        with:
+          # Schedule: sempre il codice di dev. Avvio manuale: il branch scelto in "Run workflow".
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.secrets.outputs.skip != 'true'
+
+      - name: Dipendenze
+        if: steps.secrets.outputs.skip != 'true'
+        run: uv sync --locked --no-dev
+
+      - name: Job di verifica
+        if: steps.secrets.outputs.skip != 'true' && github.event_name == 'workflow_dispatch' && inputs.selftest != 'nessuno'
+        env:
+          SELFTEST: ${{ inputs.selftest }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          case "$SELFTEST" in
+            riuscito) payload='{}' ;;
+            fallisce-una-volta) payload='{"fail_attempts": 1}' ;;
+            non-recuperabile) payload='{"permanent": true}' ;;
+          esac
+          uv run python -m predictra_agent enqueue --type agent.selftest.python \
+            --key "agent.selftest.python:${GITHUB_RUN_ID}" --payload "$payload"
+
+      - name: Ciclo
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          MAX_JOBS: ${{ github.event_name == 'schedule' && 10 || inputs.max_jobs }}
+          PLAN: ${{ (github.event_name == 'schedule' || inputs.plan_football_data) && 'football-data' || '' }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          args=(cycle --source github_actions --schedule agent-python --max-jobs "$MAX_JOBS")
+          if [ -n "$PLAN" ]; then args+=(--plan "$PLAN"); fi
+          # Budget di minuti dell'agente: ADR 0035 §2.
+          uv run python -m predictra_agent "${args[@]}" --minutes-quota 900
