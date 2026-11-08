@@ -28,11 +28,13 @@ oppure "Data collector" (solo avvio manuale)
 Decisioni: [ADR 0015](../decisions/0015-quote-v1.md). Scheda della fonte: [the-odds-api.md](../data-sources/the-odds-api.md).
 
 ```text
-07:23 UTC  odds --mode daily     → /odds per le 8 competizioni (1 credito ciascuna, 0 se non ci sono eventi)
-16:37 UTC  odds --mode prematch  → /events (gratuito); /odds solo per le competizioni con partite nelle 6 ore successive
+06:47 UTC  daily     → /odds per le 8 competizioni (1 credito ciascuna, 0 se non ci sono eventi)
+15:47 UTC  prematch  → /events (gratuito); /odds solo per le competizioni con partite nelle 6 ore successive
+(job odds.collect dell'agente; se un ciclo salta lo fa il successivo nella finestra, mai due volte al giorno)
   per ogni competizione: start_ingestion_run → ingest_odds_batch → report_quality_issues → finish_ingestion_run
 ```
 
+- **Dall'8/11/2026** le raccolte automatiche delle quote passano dalla coda dell'agente (job `odds.collect`, schedule di _Agent (Python)_; [runbook](agent.md)). Finestre: `daily` 06–15 UTC, `prematch` 15–21 UTC. Un tentativo che ha già speso crediti non si ripete; senza crediti spesi si ritenta una volta sola. _Data collector_ resta per l'avvio manuale.
 - **Budget:** al massimo 16 crediti al giorno, circa 480 al mese su 500.
   - Il client legge `x-requests-remaining` e si ferma sotto la riserva di 20 crediti; l'esecuzione risulta `FAILED` con il motivo.
   - Crediti usati e residui finiscono in `ingestion_runs` (`requests_used`, `quota_remaining`) e nel Data Center.
