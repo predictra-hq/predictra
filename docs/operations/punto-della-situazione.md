@@ -20,9 +20,10 @@
    - aggiungere dalla pagina gli alias per i nomi di The Odds API non riconosciuti (57 eventi non abbinati nella prima raccolta). L'abbinamento avviene alla raccolta successiva; gli eventi già giocati non tornano più dal provider e restano non abbinati;
    - poi la chiusura di M3 (piano M3, _Chiusura_).
 2. **M4 (modelli)** può partire in parallelo a M3 corsia B. Lo storico disponibile è solo la stagione in corso finché la fase A3 di M2 resta bloccata.
-3. **M5 corsia 0 (contratto dello Smart Bet Builder): PR aperta** da `feature/m5-0-contratto`, in attesa del merge di `gennpalm`. Contiene gli ADR 0025–0027 (stato _Proposta_: regole, correlazioni, motore, ranking e categorie), la migrazione `20261108120000_bet_builder.sql`, i test RLS e i tipi in `packages/shared-types/src/bet-builder.ts`. Dopo il merge:
-   - confermare le scelte degli ADR (soglie iniziali, niente combinazioni sulla stessa partita in v1, servizio Python separato `services/bet-builder/`);
-   - corsie A e B di M5 in parallelo; la A produce proposte reali solo quando su DEV c'è un modello `ACTIVE` con le sue previsioni (M4).
+3. **M5 (Smart Bet Builder), tutta a `gennpalm`.** Corsia 0 unita (#19): ADR 0025–0027 in stato _Proposta_, da confermare (soglie iniziali, niente combinazioni sulla stessa partita in v1, servizio Python separato). Corsia A: PR aperta da `feature/m5-a-motore` con `services/bet-builder/` e il workflow _Bet Builder_ ([runbook](bet-builder.md)). Dopo il merge:
+   - unire `dev` in `main`, così lo schedule del workflow parte (07:53 e 17:07 UTC);
+   - le proposte reali arrivano solo con un modello `ACTIVE` del motore M4; all'inizio è probabile che siano zero (Confidence Score basso), ed è corretto;
+   - poi la corsia B (interfaccia).
 4. **M6 (bankroll)** è indipendente da tutto il resto.
 
 ## Punti aperti

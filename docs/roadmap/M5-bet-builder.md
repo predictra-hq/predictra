@@ -1,6 +1,6 @@
 # M5 — Smart Bet Builder: piano e corsie
 
-**Stato:** in corso (corsia 0) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia 0 unita, corsia A in revisione) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -14,11 +14,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona    | Issue | Stato                                      |
-| --------------- | ---------- | ----- | ------------------------------------------ |
-| 0 — contratto   | `gennpalm` | —     | in revisione (PR `feature/m5-0-contratto`) |
-| A — motore      | —          | —     | da iniziare                                |
-| B — interfaccia | —          | —     | da iniziare                                |
+| Corsia          | Persona    | Issue | Stato                                   |
+| --------------- | ---------- | ----- | --------------------------------------- |
+| 0 — contratto   | `gennpalm` | —     | unita (#19)                             |
+| A — motore      | `gennpalm` | —     | in revisione (PR `feature/m5-a-motore`) |
+| B — interfaccia | `gennpalm` | —     | da iniziare                             |
 
 ## Prerequisiti
 
@@ -53,7 +53,7 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 
 ## Corsia A — motore delle combinazioni
 
-**File di proprietà:** `services/bet-builder/**` (servizio Python separato, ADR 0027) con i suoi test, e il workflow che lo avvia dopo le raccolte delle quote.
+**File di proprietà:** `services/bet-builder/**` (servizio Python separato, ADR 0027) con i suoi test, e il workflow `.github/workflows/bet-builder.yml`, avviato dopo le raccolte delle quote. Runbook: [bet-builder.md](../operations/bet-builder.md).
 
 | Fase | Contenuto                                                                                       |
 | ---- | ----------------------------------------------------------------------------------------------- |
