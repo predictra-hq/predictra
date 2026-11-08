@@ -11,12 +11,12 @@ Fotografia di cosa è in servizio e di chi lo gestisce. Qui **non** vanno mai va
 
 ## Account
 
-| Servizio      | Account                                                          | Note                                                                                                                         |
-| ------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| GitHub        | repository `gennpalm/predictra`, proprietario `gennpalm`         | collaboratore: `Alfry1299`. Piano Free: niente protezione dei branch                                                         |
-| Supabase      | predictra.mail@gmail.com                                         | piano Free: 2 progetti attivi al massimo, nessun backup automatico                                                           |
-| Vercel        | predictra.mail@gmail.com, team **Predictra** (Hobby)             | solo uso non commerciale; niente collaborazione su repository privati: si pubblicano solo commit del proprietario (ADR 0050) |
-| App PREDICTRA | 2 Super Admin su DEV, creati il 7/11/2026 col workflow Bootstrap | nuovi utenti solo su invito dall'area Administration                                                                         |
+| Servizio      | Account                                                          | Note                                                                                                                                                                 |
+| ------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub        | repository `gennpalm/predictra`, proprietario `gennpalm`         | collaboratore: `Alfry1299`. Piano Free: niente protezione dei branch. Impostazioni: merge solo da `gennpalm` (ADR 0050), _Automatically delete head branches_ attivo |
+| Supabase      | predictra.mail@gmail.com                                         | piano Free: 2 progetti attivi al massimo, nessun backup automatico                                                                                                   |
+| Vercel        | predictra.mail@gmail.com, team **Predictra** (Hobby)             | solo uso non commerciale; niente collaborazione su repository privati: si pubblicano solo commit del proprietario (ADR 0050)                                         |
+| App PREDICTRA | 2 Super Admin su DEV, creati il 7/11/2026 col workflow Bootstrap | nuovi utenti solo su invito dall'area Administration                                                                                                                 |
 
 ## Segreti GitHub Actions
 
