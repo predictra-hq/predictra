@@ -1,6 +1,6 @@
 # M6 — Bankroll e tracker: piano e corsie
 
-**Stato:** in corso (corsia B) · **Dipende da:** M1 (base), M4 (stake suggeriti), M3 (CLV) · **Può partire quando:** **subito** per contratto, registrazione manuale e metriche di base; lo stake con Kelly aspetta le previsioni di M4 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata, in servizio su DEV dall'8/11/2026 · **Dipende da:** M1 (base), M4 (stake suggeriti), M3 (CLV) · **Può partire quando:** **subito** per contratto, registrazione manuale e metriche di base; lo stake con Kelly aspetta le previsioni di M4 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 È la milestone più indipendente: si può fare in parallelo a M2, M3 o M4.
 
@@ -16,11 +16,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                 | Persona   | Issue | Stato                                              |
-| ---------------------- | --------- | ----- | -------------------------------------------------- |
-| 0 — contratto          | Alfry1299 | —     | unita (#25)                                        |
-| A — metriche e staking | Alfry1299 | —     | unita (#27)                                        |
-| B — interfaccia        | Alfry1299 | —     | B1–B4 in revisione (PR `feature/m6-b-interfaccia`) |
+| Corsia                 | Persona   | Issue | Stato       |
+| ---------------------- | --------- | ----- | ----------- |
+| 0 — contratto          | Alfry1299 | —     | unita (#25) |
+| A — metriche e staking | Alfry1299 | —     | unita (#27) |
+| B — interfaccia        | Alfry1299 | —     | unita (#28) |
 
 ## Prerequisiti
 
@@ -79,6 +79,19 @@ Nessun account o segreto nuovo.
 | B4   | Stake suggerito (dopo M4) e avvisi sui limiti                               |
 
 **Fatto quando:** due voci di menu attive, isolamento verificato su DEV con due utenti di prova.
+
+## Esito (8/11/2026)
+
+| Criterio                                                        | Esito                                                                                                                                                                                             |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Isolamento RLS: ogni utente vede solo i propri dati             | ✅ test sul database (12) e verifica automatica su DEV con account temporanei (workflow _Verifica DEV_, `bankroll-isolation`): un utente non vede, non modifica e non cancella i dati di un altro |
+| Nessun admin, nemmeno un Super Admin, accede al bankroll altrui | ✅ nessuna policy per gli admin (test) e verifica su DEV: il Super Admin vede 0 righe                                                                                                             |
+| Giocate reali e simulate distinte ovunque                       | ✅ tipo del bankroll ereditato dalle giocate; metriche e interfaccia separate                                                                                                                     |
+| Limiti personali                                                | ✅ blocco nel database verificato su DEV ("Limite personale superato: stake massimo")                                                                                                             |
+
+Verifica su DEV: 15 controlli superati, 3 account di prova creati e cancellati. Per ripeterla: _Actions → Verifica DEV → Run workflow_.
+
+Resta da collegare lo **stake con Kelly** nel Tracker: richiede di legare una giocata a una previsione del modello attivo (M4). Le funzioni sono già pronte in `@predictra/bankroll`.
 
 ## Chiusura di M6
 

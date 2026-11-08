@@ -1,6 +1,6 @@
 # ADR 0030 — Bankroll: modello dati, limiti personali e privacy
 
-**Stato:** Proposta (diventa Accettata con il merge della PR di M6 corsia 0) · **Data:** 2026-11-08
+**Stato:** Accettata (PR #25; verificata con la chiusura di M6, 8/11/2026) · **Data:** 2026-11-08
 
 ## Contesto
 
