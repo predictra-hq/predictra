@@ -53,7 +53,7 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 
 ## Corsia A — motore delle combinazioni
 
-**File di proprietà:** `services/bet-builder/**` (servizio Python separato, ADR 0027) con i suoi test, e il workflow che lo avvia dopo il motore delle previsioni.
+**File di proprietà:** `services/bet-builder/**` (servizio Python separato, ADR 0027) con i suoi test, e il workflow che lo avvia dopo le raccolte delle quote.
 
 | Fase | Contenuto                                                                                       |
 | ---- | ----------------------------------------------------------------------------------------------- |
