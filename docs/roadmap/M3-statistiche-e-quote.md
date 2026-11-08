@@ -1,6 +1,6 @@
 # M3 — Statistiche e quote: piano e corsie
 
-**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; corsia B in revisione · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; corsia B unita (#16), manca la chiusura · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,11 +15,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia              | Persona                  | Issue | Stato                                                             |
-| ------------------- | ------------------------ | ----- | ----------------------------------------------------------------- |
-| 0 — contratto       | Alfry1299                | —     | unita (#9)                                                        |
-| A — quote e calcoli | Alfry1299                | —     | unita (#10): A1–A4 su DEV                                         |
-| B — interfaccia     | Claude Code per gennpalm | —     | B1–B4 e pagina alias in revisione (PR `feature/m3-b-interfaccia`) |
+| Corsia              | Persona                  | Issue | Stato                             |
+| ------------------- | ------------------------ | ----- | --------------------------------- |
+| 0 — contratto       | Alfry1299                | —     | unita (#9)                        |
+| A — quote e calcoli | Alfry1299                | —     | unita (#10): A1–A4 su DEV         |
+| B — interfaccia     | Claude Code per gennpalm | —     | unita (#16): B1–B4 e pagina alias |
 
 ## Prerequisiti
 
