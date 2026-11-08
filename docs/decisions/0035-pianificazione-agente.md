@@ -11,20 +11,15 @@ L'agente non ha un processo sempre attivo (ADR 0002): lavora a cicli, e la coda 
 - quanto budget gratuito si può consumare;
 - come la cadenza si adatta al calendario delle partite.
 
-### Limiti gratuiti: verifica non riuscita (punto aperto)
+### Limiti gratuiti verificati l'8/11/2026
 
-L'8/11/2026 ho provato a riverificare i limiti sulle pagine ufficiali. Dall'ambiente cloud di Claude Code la rete non le raggiunge: il proxy rifiuta la connessione a `upstash.com` e `docs.github.com`. I limiti **non sono quindi riverificati**. Qui sotto riporto i valori del piano M0, verificati il 7/11/2026, e li uso solo come tetto provvisorio:
+Ho letto le pagine ufficiali l'8/11/2026. I valori coincidono con quelli del piano M0 del 7/11/2026.
 
-| Servizio       | Valore in M0 (7/11/2026, **da riverificare**)                                                                                     | Fonte da consultare                                                                                                                                                                                                                                                      |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Upstash QStash | 1.000 messaggi al giorno, 10 schedule, risposta HTTP fino a 15 min. Ogni retry consuma un messaggio                               | https://upstash.com/pricing/qstash, https://upstash.com/docs/qstash/overall/pricing                                                                                                                                                                                      |
-| GitHub Actions | circa 2.000 minuti Linux al mese nei repo privati. Cron con intervallo minimo di 5 minuti, con ritardi o salti nelle ore di punta | https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-actions/about-billing-for-github-actions, https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#schedule |
-
-Prima di accettare questo ADR, `gennpalm` (o una sessione con accesso a quei siti) deve:
-
-1. aprire le pagine;
-2. aggiornare la tabella con la data della verifica;
-3. correggere i budget qui sotto se i limiti sono cambiati.
+| Servizio                                   | Limite del piano gratuito (verificato l'8/11/2026)                                                                                                                                                                                                                                                                                                                                         | Fonte                                                                                                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Upstash QStash (Free)                      | 1.000 messaggi al giorno; 10 schedule attivi; messaggio fino a 1 MB; risposta HTTP fino a 15 minuti; ritardo massimo 7 giorni; DLQ conservata 3 giorni; 10 code. **Ogni tentativo di consegna conta come un messaggio**, retry compresi. Il limite giornaliero è "soft": picchi occasionali non bloccano; se il superamento è costante, Upstash contatta l'utente e poi può rispondere 429 | https://upstash.com/pricing/qstash                                                                                                              |
+| GitHub Actions (GitHub Free, repo privati) | $12 al mese di calcolo incluso, cioè 2.000 minuti di runner Linux 2-core a $0,006 al minuto. Ogni job è arrotondato per eccesso al minuto intero. Senza metodo di pagamento, finito il credito l'uso si blocca fino al ciclo successivo. Nei repo pubblici i runner standard sono gratuiti                                                                                                 | https://docs.github.com/en/billing/concepts/product-billing/github-actions, https://docs.github.com/en/billing/reference/actions-runner-pricing |
+| GitHub Actions, `schedule`                 | Intervallo minimo di 5 minuti. Nei periodi di carico, soprattutto all'inizio di ogni ora, l'avvio può ritardare e alcuni job in coda possono essere scartati. Lo schedule gira solo sul branch di default. La disattivazione dopo 60 giorni senza attività vale solo per i repo pubblici                                                                                                   | https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows                                                |
 
 I budget sono **frazioni** del limite: se il limite cambia, cambiano in proporzione.
 
@@ -107,7 +102,6 @@ Le notifiche sono righe di `notifications`, private per utente, e la dashboard l
 
 ## Punti aperti
 
-1. **Limiti gratuiti da riverificare** (vedi sopra): bloccano l'accettazione dell'ADR, non la corsia 0.
-2. **Avvio dei job Python da QStash** (`workflow_dispatch` via API GitHub) per la cadenza vicino ai calci d'inizio. Servirebbe un token GitHub con permesso `actions: write`, salvato come segreto su Vercel. Per ora è escluso: si decide dopo le misure della fase A2.
-3. **Durate reali** dei job Python: da misurare in A2 per sostituire i tetti della tabella del §2.
-4. **Fuso della finestra giornaliera di QStash:** il contatore usa giorni UTC. Va verificato che il limite di QStash si azzeri allo stesso orario.
+1. **Avvio dei job Python da QStash** (`workflow_dispatch` via API GitHub) per la cadenza vicino ai calci d'inizio. Servirebbe un token GitHub con permesso `actions: write`, salvato come segreto su Vercel. Per ora è escluso: si decide dopo le misure della fase A2.
+2. **Durate reali** dei job Python: da misurare in A2 per sostituire i tetti della tabella del §2.
+3. **Fuso della finestra giornaliera di QStash:** il contatore usa giorni UTC. La pagina dei prezzi non dice a che ora si azzera il limite di QStash. Il budget di 600 lascia margine anche se l'orario non coincide.

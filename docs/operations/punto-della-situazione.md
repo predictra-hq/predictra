@@ -26,8 +26,8 @@
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
 4. **M6 (bankroll): completata** (#25, #27, #28). Isolamento verificato su DEV con account temporanei: _Actions → Verifica DEV → Run workflow_. Da collegare in seguito: lo stake con Kelly nel Tracker.
 5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Prossime fasi di M8: hardening di sicurezza (A2–A3) e ambiente PROD (A4).
-6. **M7 (agente autonomo):** corsia 0 unita (#26) e migrazione `20261108150000_agent.sql` applicata su DEV. [ADR 0035](../decisions/0035-pianificazione-agente.md) ancora da confermare (runbook: [agent.md](agent.md)): prima `gennpalm` riverifica da browser i limiti gratuiti di QStash e GitHub Actions (punto aperto sotto). Corsia A in corso: vedi _Lavoro in corso_.
-   - Per la fase A3 `gennpalm` prepara: account gratuito Upstash con QStash, i segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_). Nessun valore va scritto in chat, issue o file. `DATABASE_URL` **non serve**: i worker Python usano le RPC via PostgREST con `SUPABASE_SECRET_KEY`, come i collector.
+6. **M7 (agente autonomo):** corsie 0 (#26) e A fasi A1–A3 (#33, #35) unite. [ADR 0035](../decisions/0035-pianificazione-agente.md) in proposta, con i limiti gratuiti verificati l'8/11/2026: resta da confermare da `gennpalm`. Runbook: [agent.md](agent.md).
+   - Endpoint `/api/jobs/cycle` attivo su DEV, con le chiavi QStash su Vercel: senza firma risponde 401 (verificato l'8/11/2026). **Manca lo schedule QStash**, che crea `gennpalm` dalla console (runbook, _Endpoint QStash_, passi 6–7).
 
 ## Lavoro in corso (per chi riprende)
 
@@ -35,15 +35,9 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fasi A1–A2:** unite (#33). Worker Python `services/agent` e TypeScript `apps/web/src/lib/agent/`, workflow _Agent (Python)_ (ciclo manuale, senza schedule).
 
-**M7 corsia A, fase A3 (endpoint QStash)** · branch `feature/m7-a-endpoint-jobs` · PR: [#35](https://github.com/gennpalm/predictra/pull/35), in attesa di CI e merge. Dopo il merge: attivazione QStash da parte di `gennpalm` (runbook [agent.md](agent.md), _Endpoint QStash_), poi fase A5 (job reali in coda) o A4 (cadenza adattiva).
+**M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
 
-| Passo | Contenuto                                                                                                                                                   | Stato                                                                         |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1     | Verifica della firma QStash (`apps/web/src/lib/agent/qstash.ts`) con test; senza segreti l'endpoint risponde 503 "non configurato"                          | fatto: `qstash.ts` (SDK 2.12.1, `devMode: false`), test in `endpoint.test.ts` |
-| 2     | Endpoint `POST /api/jobs/cycle`: firma, budget giornaliero QStash (ADR 0035 §2), ciclo del worker TypeScript                                                | fatto: `app/api/jobs/cycle/route.ts` + `lib/agent/endpoint.ts`, 8 test        |
-| 3     | Esclusione di `/api/jobs/*` dal proxy della sessione; variabili in `.env.example` e `env.server.ts`                                                         | fatto                                                                         |
-| 4     | Runbook: creare lo schedule su QStash (lo fa `gennpalm`, con retry 0). Lo schedule GitHub Actions resta spento fino ad A5, per non consumare minuti a vuoto | fatto: runbook `agent.md`, sezione _Endpoint QStash_                          |
-| 5     | `pnpm check`, PR verso `dev`                                                                                                                                | fatto: `pnpm check` verde; PR aperta                                          |
+**Prossimo:** fase A5, i job reali di M2–M5 nella coda, una PR per job; oppure A4, la cadenza adattiva. Lo schedule GitHub Actions del worker Python si accende con la prima PR di A5.
 
 ## Punti aperti
 
@@ -53,7 +47,6 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 | Deploy Vercel fermo su `Building…` per i commit di `Alfry1299` | risolto in modo conforme al piano gratuito: merge solo da `gennpalm` con _Create a merge commit_ e controllo dell'autore nel deploy (ADR 0050)                                                                | `gennpalm` fa i merge                                                  |
 | `score.fullTime` con supplementari e rigori                    | da verificare sui dati reali (segnalato come `match.score_non_regular`)                                                                                                                                       | M2 corsia A                                                            |
 | Fixture con risposte reali registrate                          | i test usano gli esempi ufficiali delle documentazioni                                                                                                                                                        | collector                                                              |
-| Limiti gratuiti di QStash e GitHub Actions (ADR 0035)          | non riverificati l'8/11/2026: le pagine ufficiali non sono raggiungibili dall'ambiente cloud. Per ora l'ADR usa i valori di M0 (7/11/2026) come tetto provvisorio                                             | `gennpalm`, da browser, prima di accettare l'ADR 0035                  |
 | GitHub Actions su Node 20 (deprecato)                          | solo avvisi, GitHub le esegue già su Node 24. Aggiornare `checkout`, `setup-node`, `pnpm/action-setup`, `setup-uv` e `supabase/setup-cli` alle major nuove in una PR dedicata, leggendo i cambi incompatibili | chiunque, bassa priorità                                               |
 
 ## Come lavorare in sessione
