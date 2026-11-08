@@ -59,8 +59,29 @@ uv run python -m predictra_engine run --dry-run
 
 La stima dell'ADR 0020 è di circa 220 minuti al mese di GitHub Actions; va verificata con le prime esecuzioni reali.
 
+## Taratura dei modelli gol
+
+Comando in sola lettura: `python -m predictra_engine tune [--l2 2,3,4] [--xi 0,0.005]`, oppure _Run workflow_ con `command` = `tune` e `tune_args`. Per ogni combinazione esegue lo stesso backtest walk-forward delle versioni, sulle stesse partite della baseline.
+
+**8/11/2026:** 744 partite di addestramento, backtest su 560.
+
+| Modello                                      | Brier      | Log Loss   | ECE       |
+| -------------------------------------------- | ---------- | ---------- | --------- |
+| baseline                                     | 0,6592     | 1,0902     | 0,035     |
+| Elo (K 20, vantaggio 60)                     | 0,6294     | 1,0486     | 0,047     |
+| Poisson, L2 0,1 (primo valore)               | 0,6556     | 1,1216     | 0,090     |
+| **Poisson, L2 3**                            | **0,6121** | **1,0238** | **0,027** |
+| Dixon-Coles, L2 0,1, ξ 0,0019 (primo valore) | 0,6564     | 1,1301     | 0,088     |
+| **Dixon-Coles, L2 3, ξ 0,005**               | **0,6133** | **1,0280** | **0,032** |
+
+- Con L2 0,1 i modelli gol erano troppo sicuri di sé, con poche partite per squadra.
+- Il risultato è stabile tra L2 2,5 e 5. Oltre 10 i modelli diventano troppo prudenti.
+- Valori adottati: **L2 = 3** per Poisson e Dixon-Coles, **ξ = 0,005/giorno** per Dixon-Coles.
+- Cambiare gli iperparametri crea versioni nuove, ciascuna con il proprio backtest.
+- Ripetere la taratura quando lo storico cresce, per esempio a metà stagione, per non adattare i valori a un solo periodo.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
 - Squadre senza partite nella competizione (per esempio all'inizio della Champions League) hanno forza media.
-- Gli iperparametri iniziali (Elo K = 20 e vantaggio casalingo 60; Dixon-Coles ξ = 0,0019/giorno; penalità L2 0,1) non sono ancora ottimizzati: si rivedono con i backtest reali, e ogni modifica crea una versione nuova.
+- Elo (K = 20, vantaggio casalingo 60) non è ancora tarato.

@@ -140,10 +140,15 @@ class GoalsModel(Model):
         return GoalsFit(teams, float(mu), float(home), att, dfn, float(rho), len(results))
 
 
+# Valori scelti con la taratura dell'8/11/2026 (docs/operations/prediction-engine.md):
+# L2 = 3 minimizza il Log Loss del backtest walk-forward su 560 partite reali.
+DEFAULT_L2 = 3.0
+
+
 def poisson_model() -> GoalsModel:
-    return GoalsModel("poisson", dixon_coles=False, xi=0.0)
+    return GoalsModel("poisson", dixon_coles=False, xi=0.0, l2=DEFAULT_L2)
 
 
 def dixon_coles_model() -> GoalsModel:
-    # ξ = 0,0019 al giorno: emivita di circa un anno (ordine di grandezza di Dixon e Coles, 1997).
-    return GoalsModel("dixon_coles", dixon_coles=True, xi=0.0019)
+    # ξ = 0,005 al giorno (emivita di circa 140 giorni): il migliore nella taratura.
+    return GoalsModel("dixon_coles", dixon_coles=True, xi=0.005, l2=DEFAULT_L2)
