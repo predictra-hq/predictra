@@ -2,14 +2,14 @@
 
 - ``python -m predictra_agent cycle --source github_actions --schedule agent-python``:
   un ciclo del worker (heartbeat, prelievo, esecuzione, retry, dead-letter).
-  Con ``--plan football-data``, ``--plan odds`` e ``--plan predictions`` prima accoda,
-  in modo idempotente, i job della finestra corrente (fase A5).
+  Con ``--plan football-data``, ``odds``, ``predictions`` e ``bet-builder`` prima accoda,
+  in modo idempotente e in quest'ordine, i job della finestra corrente (fase A5).
 - ``python -m predictra_agent enqueue --type <tipo> --key <chiave> [--payload JSON]``:
   accoda un job in modo idempotente (es. ``--type agent.selftest.python``).
 
 Variabili: ``SUPABASE_URL`` (o ``NEXT_PUBLIC_SUPABASE_URL``) e ``SUPABASE_SECRET_KEY``;
-``FOOTBALL_DATA_API_KEY`` e ``ODDS_API_KEY`` per i job di raccolta, ``CODE_COMMIT``
-(SHA dell'ultimo commit del motore) per ``predictions.run``.
+``FOOTBALL_DATA_API_KEY`` e ``ODDS_API_KEY`` per i job di raccolta, ``PREDICTION_ENGINE_COMMIT``
+e ``BET_BUILDER_COMMIT`` (SHA dell'ultimo commit di ciascun servizio) per previsioni e proposte.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ import sys
 from datetime import UTC, datetime
 from typing import cast
 
-from . import football_data, odds, predictions
+from . import bet_builder, football_data, odds, predictions
 from .handlers import build_handlers
 from .queue import QueueError, RunSource, SupabaseQueue
 from .worker import CycleConfig, MinutesBudget, run_cycle
@@ -72,6 +72,9 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
     if "predictions" in args.plan:
         # Dopo football-data: nello stesso ciclo viene prelevato dopo la raccolta.
         planned.extend(predictions.planned_jobs(now))
+    if "bet-builder" in args.plan:
+        # Ultimo: nello stesso ciclo viene prelevato dopo quote e previsioni.
+        planned.extend(bet_builder.planned_jobs(now))
     for job_type, key, payload, max_attempts in planned:
         try:
             result = queue.enqueue(job_type, key, payload, max_attempts=max_attempts)
@@ -126,7 +129,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     cycle.add_argument(
         "--plan",
         action="append",
-        choices=["football-data", "odds", "predictions"],
+        choices=["football-data", "odds", "predictions", "bet-builder"],
         default=[],
         help="accoda il job della finestra corrente prima del ciclo (ripetibile)",
     )

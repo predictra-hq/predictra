@@ -4,8 +4,11 @@ Servizio Python in `services/bet-builder/`. Decisioni: [ADR 0025](../decisions/0
 
 ## Come funziona
 
+Dall'8/11/2026 (M7 fase A5, ADR 0035) le esecuzioni programmate passano dalla coda dell'agente: finestre `morning` 06–15 UTC ed `evening` 15–21 UTC, nello stesso ciclo delle quote e dopo di loro, una esecuzione per finestra, al massimo 2 tentativi. La versione del codice è `BET_BUILDER_COMMIT`, l'ultimo commit di `services/bet-builder`, calcolato come prima. Gli orari dell'ADR 0027 (07:53 e 17:07) valgono fino a questo passaggio. [Runbook dell'agente](agent.md).
+
 ```text
-GitHub Actions "Bet Builder" (07:53 e 17:07 UTC, dopo le raccolte delle quote; più l'avvio manuale)
+GitHub Actions "Agent (Python)" (06:47 e 15:47 UTC: job bet-builder.run della coda, dopo quote e previsioni dello stesso ciclo, M7)
+oppure "Bet Builder" (solo avvio manuale)
   1. modello attivo (model_versions.status = ACTIVE); se non c'è, nessuna run
   2. v_match_center: partite SCHEDULED dei prossimi 7 giorni (calcio d'inizio tra almeno 15 minuti)
   3. predictions: l'1X2 più recente del modello attivo per partita ed esito

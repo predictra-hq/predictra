@@ -185,6 +185,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
+    { name = "predictra-bet-builder" },
     { name = "predictra-data-collector" },
     { name = "predictra-prediction-engine" },
 ]
@@ -198,9 +199,27 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.28,<1" },
+    { name = "predictra-bet-builder", editable = "../bet-builder" },
     { name = "predictra-data-collector", editable = "../data-collector" },
     { name = "predictra-prediction-engine", editable = "../prediction-engine" },
 ]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3,<9" },
+    { name = "ruff", specifier = ">=0.11,<1" },
+]
+
+[[package]]
+name = "predictra-bet-builder"
+version = "0.1.0"
+source = { editable = "../bet-builder" }
+dependencies = [
+    { name = "httpx" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "httpx", specifier = ">=0.28,<1" }]
 
 [package.metadata.requires-dev]
 dev = [
