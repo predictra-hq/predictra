@@ -16,7 +16,7 @@ from .data import MatchResult
 from .models import all_models
 from .pipeline import run
 from .store import SupabaseStore
-from .tuning import tune
+from .tuning import L2_GRID, XI_GRID, candidates, tune
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -28,7 +28,11 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--dry-run", action="store_true", help="legge i dati ma non scrive nulla")
     cmd.add_argument("--horizon-days", type=int, default=7, help="giorni di partite da prevedere")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
-    sub.add_parser("tune", help="confronta gli iperparametri dei modelli gol (sola lettura)")
+    tune_cmd = sub.add_parser(
+        "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
+    )
+    tune_cmd.add_argument("--l2", help="valori di L2 separati da virgola")
+    tune_cmd.add_argument("--xi", help="valori di xi separati da virgola")
     args = parser.parse_args(argv)
 
     url = (
@@ -43,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     store = SupabaseStore(url.rstrip("/"), key)
     if args.command == "tune":
-        return _tune(store)
+        return _tune(store, args.l2, args.xi)
     if not re.fullmatch(r"[0-9a-f]{7,40}", commit):
         print("Configurazione: CODE_COMMIT deve essere lo SHA git del codice.", file=sys.stderr)
         return 2
@@ -76,11 +80,16 @@ def main(argv: list[str] | None = None) -> int:
     return 1 if summary.failed else 0
 
 
-def _tune(store: SupabaseStore) -> int:
+def _grid(value: str | None, default: tuple[float, ...]) -> tuple[float, ...]:
+    return tuple(float(x) for x in value.split(",")) if value else default
+
+
+def _tune(store: SupabaseStore, l2: str | None, xi: str | None) -> int:
     as_of = datetime.now(UTC).replace(microsecond=0)
     results = [MatchResult.from_row(r) for r in store.training_results(as_of)]
     print(f"Taratura (sola lettura) — as_of {as_of.isoformat()} — partite {len(results)}")
-    for row in tune(results):
+    models = candidates(_grid(l2, L2_GRID), _grid(xi, XI_GRID))
+    for row in tune(results, models):
         mark = "  batte la baseline" if row.beats_baseline else ""
         print(
             f"  {row.label:<34} partite={row.matches} Brier={row.brier:.4f}"

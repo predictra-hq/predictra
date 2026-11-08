@@ -28,6 +28,10 @@ on:
         type: choice
         options: [run, tune]
         default: run
+      tune_args:
+        description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
+        type: string
+        required: false
       dry_run:
         description: "Solo lettura: calcola backtest e previsioni senza scrivere"
         type: boolean
@@ -108,13 +112,15 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
           HORIZON: ${{ inputs.horizon_days || '7' }}
           TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+          TUNE_ARGS: ${{ inputs.tune_args }}
         run: |
           export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           # La versione dipende dal codice del motore, non da ogni commit del repository:
           # una versione attivata continua a ricevere previsioni finché il motore non cambia.
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
           if [ "${{ inputs.command || 'run' }}" = "tune" ]; then
-            uv run python -m predictra_engine tune
+            # shellcheck disable=SC2086
+            uv run python -m predictra_engine tune $TUNE_ARGS
             exit 0
           fi
           args=(run --triggered-by "$TRIGGERED_BY" --horizon-days "$HORIZON")
