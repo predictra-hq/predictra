@@ -1,6 +1,6 @@
 # M5 — Smart Bet Builder: piano e corsie
 
-**Stato:** in corso (corsia 0 unita, corsie A e B in revisione) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata, **in servizio su DEV** dall'8/11/2026 (proposte reali quando c'è un modello M4 attivo) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -14,11 +14,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona    | Issue | Stato                                        |
-| --------------- | ---------- | ----- | -------------------------------------------- |
-| 0 — contratto   | `gennpalm` | —     | unita (#19)                                  |
-| A — motore      | `gennpalm` | —     | in revisione (PR `feature/m5-a-motore`)      |
-| B — interfaccia | `gennpalm` | —     | in revisione (PR `feature/m5-b-interfaccia`) |
+| Corsia          | Persona    | Issue | Stato       |
+| --------------- | ---------- | ----- | ----------- |
+| 0 — contratto   | `gennpalm` | —     | unita (#19) |
+| A — motore      | `gennpalm` | —     | unita (#20) |
+| B — interfaccia | `gennpalm` | —     | unita (#21) |
 
 ## Prerequisiti
 
@@ -32,7 +32,7 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 | M4  | `predictions` e la **matrice dei risultati esatti** per partita              | chiedere il merge della corsia 0 di M4; test con fixture                                     |
 | M4  | Confidence Score                                                             | usare il campo del contratto anche se ancora vuoto                                           |
 
-## Decisioni (ADR 0025–0027, proposte nella corsia 0)
+## Decisioni (ADR 0025–0027, accettate)
 
 - **[ADR 0025](../decisions/0025-regole-combinazioni.md) — Regole delle combinazioni:** tipi ammessi (singole, multiple, più selezioni sulla stessa partita), numero massimo di selezioni, soglie minime (EV, probabilità, Confidence Score, freschezza delle quote).
 - **[ADR 0026](../decisions/0026-correlazioni.md) — Correlazioni:** stessa partita → probabilità congiunta calcolata dalla matrice dei risultati di M4; partite diverse → indipendenza dichiarata; casi non modellabili → combinazione esclusa.
@@ -81,6 +81,12 @@ Pagine: `/bet-builder` (proposte per giornata e categoria, stato vuoto con l'ult
 
 ## Chiusura di M5
 
-1. Corsie unite su `dev`, deploy DEV verde.
-2. Verifica dei tre criteri di completamento su DEV.
-3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md).
+1. Corsie unite su `dev`, deploy DEV verde. ✅ (#19, #20, #21)
+2. Verifica dei tre criteri di completamento. ✅ garantiti dal database e coperti dai test (`supabase/tests/bet-builder.test.ts`, `services/bet-builder/tests/`):
+   - **nessuna schedina forzata:** `record_bet_proposals` rifiuta ogni proposta sotto soglia; una run riuscita con zero proposte svuota `v_active_bet_proposals` e la pagina mostra lo stato vuoto;
+   - **correlazioni:** il database rifiuta selezioni sulla stessa partita o con una squadra in comune; tra partite diverse l'indipendenza è dichiarata;
+   - **versioni immutabili:** trigger su proposte e selezioni, con il riferimento a modello, previsioni e quote usate.
+
+   La verifica con proposte reali su DEV richiede un modello M4 attivo: è tra i punti aperti del [punto della situazione](../operations/punto-della-situazione.md).
+
+3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md). ✅
