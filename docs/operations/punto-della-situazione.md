@@ -33,15 +33,17 @@
 
 Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
-**M7 corsia A, fasi A1–A2** · branch `feature/m7-a-worker` · PR: [#33](https://github.com/gennpalm/predictra/pull/33), in attesa di CI e merge.
+**M7 corsia A, fasi A1–A2:** unite (#33). Worker Python `services/agent` e TypeScript `apps/web/src/lib/agent/`, workflow _Agent (Python)_ (ciclo manuale, senza schedule).
 
-| Passo | Contenuto                                                                                                                                                  | Stato                                               |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| 1     | Servizio Python `services/agent` (`predictra_agent`): client della coda via RPC, ciclo del worker (heartbeat, prelievo, retry, dead-letter, budget minuti) | fatto                                               |
-| 2     | Test Python del worker (idempotenza, job interrotto ripreso dopo il lease, dead-letter, budget esaurito)                                                   | fatto: 25 test, `uv run pytest` in `services/agent` |
-| 3     | Worker TypeScript `apps/web/src/lib/agent/` (stesso ciclo, per gli endpoint di A3) con test                                                                | fatto: 13 test (`worker.test.ts`)                   |
-| 4     | Workflow `.github/workflows/agent-python.yml`: test a ogni PR, ciclo manuale su DEV (lo schedule arriva in A3)                                             | fatto                                               |
-| 5     | Documentazione (runbook `docs/operations/agent.md`, piano M7), `pnpm check`, PR verso `dev`                                                                | fatto: `pnpm check` verde, PR #33 aperta            |
+**M7 corsia A, fase A3 (endpoint QStash)** · branch `feature/m7-a-endpoint-jobs` · PR: [#35](https://github.com/gennpalm/predictra/pull/35), in attesa di CI e merge. Dopo il merge: attivazione QStash da parte di `gennpalm` (runbook [agent.md](agent.md), _Endpoint QStash_), poi fase A5 (job reali in coda) o A4 (cadenza adattiva).
+
+| Passo | Contenuto                                                                                                                                                   | Stato                                                                         |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1     | Verifica della firma QStash (`apps/web/src/lib/agent/qstash.ts`) con test; senza segreti l'endpoint risponde 503 "non configurato"                          | fatto: `qstash.ts` (SDK 2.12.1, `devMode: false`), test in `endpoint.test.ts` |
+| 2     | Endpoint `POST /api/jobs/cycle`: firma, budget giornaliero QStash (ADR 0035 §2), ciclo del worker TypeScript                                                | fatto: `app/api/jobs/cycle/route.ts` + `lib/agent/endpoint.ts`, 8 test        |
+| 3     | Esclusione di `/api/jobs/*` dal proxy della sessione; variabili in `.env.example` e `env.server.ts`                                                         | fatto                                                                         |
+| 4     | Runbook: creare lo schedule su QStash (lo fa `gennpalm`, con retry 0). Lo schedule GitHub Actions resta spento fino ad A5, per non consumare minuti a vuoto | fatto: runbook `agent.md`, sezione _Endpoint QStash_                          |
+| 5     | `pnpm check`, PR verso `dev`                                                                                                                                | fatto: `pnpm check` verde; PR aperta                                          |
 
 ## Punti aperti
 
