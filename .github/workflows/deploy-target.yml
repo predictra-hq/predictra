@@ -59,6 +59,23 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Verifica autore del commit (piano Vercel Hobby)
+        if: steps.config.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ inputs.ref }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          # Sul piano Hobby Vercel pubblica solo i commit dell'account proprietario: niente
+          # collaborazione su repository privati. Il merge su dev e main lo fa il proprietario
+          # con "Create a merge commit" (ADR 0050). Si controlla prima delle migrazioni, cosi
+          # database e app restano allineati.
+          author=$(gh api "repos/${{ github.repository }}/commits/$REF" --jq '.author.login // ""')
+          if [ "$author" != "$OWNER" ]; then
+            echo "::error title=Deploy ${{ inputs.environment }} bloccato::Il commit $REF ha come autore '${author:-sconosciuto}', non '$OWNER'. Sul piano Vercel Hobby si pubblicano solo commit del proprietario: il merge va fatto da $OWNER con 'Create a merge commit' (ADR 0050, docs/operations/collaborazione.md)."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
         if: steps.config.outputs.ready == 'true'
         with:
@@ -99,7 +116,18 @@ jobs:
       - name: Vercel — deploy
         if: steps.config.outputs.ready == 'true'
         run: |
-          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          # Se Vercel rifiuta il deploy (per esempio per l'autore del commit) la CLI resta in
+          # attesa senza errore: dopo 10 minuti ci si ferma con un messaggio chiaro.
+          set +e
+          url=$(timeout 600 vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          code=$?
+          set -e
+          if [ "$code" -eq 124 ]; then
+            echo "::error title=Vercel — deploy::Nessuna risposta da Vercel in 10 minuti: controlla il deploy su vercel.com (deploy bloccato? vedi ADR 0050)."
+            exit 1
+          elif [ "$code" -ne 0 ]; then
+            exit "$code"
+          fi
           echo "Deploy ${{ inputs.environment }}: $url"
           echo "### Deploy ${{ inputs.environment }} completato" >> "$GITHUB_STEP_SUMMARY"
           echo "App: ${APP_BASE_URL}" >> "$GITHUB_STEP_SUMMARY"

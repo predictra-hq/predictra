@@ -6,11 +6,13 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 
 ## Stato
 
-| Milestone                                                                      | Stato                                                                      |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| M0 — Audit e piano                                                             | ✅ approvata                                                               |
-| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ codice completato; messa in servizio: [setup](docs/operations/setup.md) |
-| M2 — Football data                                                             | da iniziare                                                                |
+| Milestone                                                                      | Stato                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                      |
+| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                           |
+| M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football rimandato: [piano](docs/roadmap/M2-football-data.md) |
+| M3 — Statistiche e quote                                                       | in corso: quote reali su DEV, manca l'interfaccia ([punto della situazione](docs/operations/punto-della-situazione.md))                           |
+| M4–M8                                                                          | [roadmap](docs/roadmap/README.md)                                                                                                                 |
 
 ## Struttura
 
@@ -18,6 +20,7 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 apps/web/                 Next.js 16 (App Router), TypeScript strict, Tailwind 4 — UI + Server Actions
 packages/shared-types/    ruoli, permessi e regole di dominio condivise (con test)
 packages/config/          tsconfig condivisi
+services/data-collector/  raccolta dati calcio in Python (football-data.org → Supabase), con test
 supabase/migrations/      migrazioni SQL versionate (schema, RLS, RPC)
 supabase/tests/           test di migrazione, RLS e isolamento (Postgres embedded)
 supabase/config.toml      impostazioni Auth applicate dalla pipeline
@@ -37,13 +40,18 @@ pnpm format        # formattazione Prettier
 ## Documentazione
 
 - **Istruzioni per sviluppatori e agenti: [CLAUDE.md](CLAUDE.md)**
+- **Dove siamo arrivati: [punto della situazione](docs/operations/punto-della-situazione.md)**
+- **Lavorare in parallelo (regole del team):** [docs/operations/collaborazione.md](docs/operations/collaborazione.md)
+- **Roadmap, dipendenze e corsie:** [docs/roadmap/](docs/roadmap/README.md)
 
+- Ambienti, account, segreti e scadenze: [docs/operations/ambienti.md](docs/operations/ambienti.md)
 - Piano tecnico e matrici free tier: [docs/architecture/M0-piano-tecnico.md](docs/architecture/M0-piano-tecnico.md)
 - Decisioni architetturali: [docs/decisions/](docs/decisions/README.md)
 - **Checklist di messa in servizio (da zero):** [docs/operations/checklist-messa-in-servizio.md](docs/operations/checklist-messa-in-servizio.md)
 - Setup e deploy: [docs/operations/setup.md](docs/operations/setup.md)
 - Controlli di sicurezza: [docs/operations/security.md](docs/operations/security.md)
-- Data dictionary: [docs/data-dictionary/identity.md](docs/data-dictionary/identity.md)
+- Data dictionary: [identità](docs/data-dictionary/identity.md), [calcio](docs/data-dictionary/football.md), [quote e statistiche](docs/data-dictionary/odds.md)
+- Fonti dati e termini d'uso: [docs/data-sources/](docs/data-sources/README.md)
 
 ## Branch
 
@@ -52,3 +60,5 @@ pnpm format        # formattazione Prettier
 | `main`      | produzione stabile       |
 | `dev`       | integrazione             |
 | `feature/*` | sviluppo, PR verso `dev` |
+
+Nomi dei branch di sviluppo: `feature/m<N>-<0|a|b>-<slug>` (milestone e corsia), oppure `feature/docs-<slug>`. Dettagli in [collaborazione.md](docs/operations/collaborazione.md).

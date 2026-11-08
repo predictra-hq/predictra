@@ -4,12 +4,24 @@ Piattaforma privata di football intelligence. Specifica completa: il "Prompt Mas
 
 ## Stato
 
-| Milestone                                                                 | Stato                                                                                                                 |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| M0 Audit e piano                                                          | ✅                                                                                                                    |
-| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ codice; messa in servizio: `docs/operations/checklist-messa-in-servizio.md`                                        |
-| **M2 Football data**                                                      | ⏭️ prossima: modello canonico, adapter football-data.org e API-Football (backfill), data quality, Source Intelligence |
-| M3–M8                                                                     | vedi `docs/architecture/M0-piano-tecnico.md` §6                                                                       |
+**Dove siamo e cosa fare dopo:** `docs/operations/punto-della-situazione.md`.
+
+| Milestone                                                                 | Stato                                                                                                                                                                                     |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 Audit e piano                                                          | ✅                                                                                                                                                                                        |
+| M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ in servizio su DEV (https://predictra-dev.vercel.app); ambienti: `docs/operations/ambienti.md`                                                                                         |
+| M2 Football data                                                          | ✅ in servizio su DEV: contratto, collector `services/data-collector`, Match Center e Data Center. Fase A3 (API-Football) bloccata dai termini d'uso: `docs/data-sources/api-football.md` |
+| **M3 Statistiche e quote**                                                | 🔄 corsie 0 e A fatte (quote reali su DEV); prossima: **corsia B** (Market, Statistics e League Intelligence, pagina alias). Dettagli: `docs/operations/punto-della-situazione.md`        |
+| M4–M8                                                                     | M4 e M6 possono partire; piani in `docs/roadmap/`                                                                                                                                         |
+
+## Lavoro in parallelo (leggere prima di iniziare)
+
+Più persone lavorano contemporaneamente, ognuna con il proprio Claude Code. Regole complete: `docs/operations/collaborazione.md` (ADR 0009).
+
+- All'inizio della sessione identifica **milestone e corsia** (0 = contratto, A = dati/backend, B = interfaccia). Se non sono chiare, chiedile prima di scrivere codice.
+- Leggi il piano della milestone in `docs/roadmap/` e tocca **solo i file della tua corsia**. Se serve modificare un file di un'altra corsia o il contratto, fermati e segnalalo: si fa con una PR dedicata.
+- Branch `feature/m<N>-<0|a|b>-<slug>` da `dev` aggiornato; PR piccole verso `dev` con il modello `.github/pull_request_template.md`.
+- Migrazioni: timestamp successivo all'ultimo già su `dev` al momento del merge, altrimenti il deploy si ferma.
 
 ## Regole vincolanti (dal Prompt Master)
 
@@ -50,14 +62,17 @@ pnpm --filter web dev                   # app locale (richiede apps/web/.env.loc
   - ogni tabella con dati utente ha RLS e test in `supabase/tests/`;
   - i dati personali (bankroll, puntate) **non** sono visibili agli admin.
 - Impostazioni Auth di Supabase: `supabase/config.toml` (applicato dalla pipeline; dichiara solo ciò che vuoi controllare).
-- Python (M2+): servizi in `services/<nome>/` con `pyproject.toml`. Python non è ancora installato sulla macchina del proprietario.
+- Python (M2+): servizi in `services/<nome>/` con `pyproject.toml`.
+- Si lavora soprattutto in cloud (Claude Code sul web): non dare per scontati strumenti installati sulle macchine del team. Controlli, test, migrazioni e deploy girano su GitHub Actions.
 
 ## Flusso Git e deploy
 
 - `main` = produzione, `dev` = integrazione, `feature/*` = sviluppo con PR verso `dev`. La protezione dei branch non è disponibile (GitHub Free, repo privato): rispetta il flusso a mano.
-- Push su `dev` con CI verde → deploy automatico: migrazioni Supabase, config Auth, Vercel (`.github/workflows/ci.yml` + `deploy-target.yml`).
+- Merge su `dev` e su `main` solo da `gennpalm`, con **Create a merge commit** e CI verde: sul piano Vercel Hobby si pubblicano solo commit del proprietario e il deploy lo verifica (ADR 0050). Niente push diretti su `dev` o `main`.
+- Push su `dev` con CI verde → deploy automatico: migrazioni Supabase, config Auth, Vercel (`.github/workflows/ci.yml` + `deploy-target.yml`). `dev` deve restare sempre verde.
+- I workflow avviabili a mano (es. _Bootstrap Super Admin_) compaiono in _Actions_ solo se il file è anche su `main`.
 - Commit in italiano, descrittivi. Non fare push di modifiche con `pnpm check` rosso.
 
 ## Documentazione da aggiornare insieme al codice
 
-`README.md`, `docs/operations/setup.md`, `docs/operations/security.md`, `docs/data-dictionary/`, e un nuovo ADR in `docs/decisions/` per ogni scelta architetturale.
+`README.md`, `docs/roadmap/` (stato e assegnazione delle corsie), `docs/operations/setup.md`, `docs/operations/ambienti.md` (ambienti, segreti, scadenze), `docs/operations/security.md`, `docs/data-dictionary/`, e un nuovo ADR in `docs/decisions/` per ogni scelta architetturale.
