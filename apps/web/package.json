@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@predictra/bankroll": "workspace:*",
     "@predictra/quant": "workspace:*",
     "@predictra/shared-types": "workspace:*",
     "@supabase/ssr": "^0.12.7",

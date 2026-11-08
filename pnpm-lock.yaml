@@ -32,6 +32,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@predictra/bankroll':
+        specifier: workspace:*
+        version: link:../../packages/bankroll
       '@predictra/quant':
         specifier: workspace:*
         version: link:../../packages/quant
