@@ -18,7 +18,7 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 | Corsia              | Persona                  | Issue | Stato                                                             |
 | ------------------- | ------------------------ | ----- | ----------------------------------------------------------------- |
 | 0 — contratto       | Alfry1299                | —     | unita (#9)                                                        |
-| A — quote e calcoli | Alfry1299                | —     | unita (#10)                                                       |
+| A — quote e calcoli | Alfry1299                | —     | unita (#10): A1–A4 su DEV                                         |
 | B — interfaccia     | Claude Code per gennpalm | —     | B1–B4 e pagina alias in revisione (PR `feature/m3-b-interfaccia`) |
 
 ## Prerequisiti
