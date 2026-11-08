@@ -50,6 +50,13 @@ Le previsioni non si modificano né si cancellano: una nuova stima è una nuova 
 - **Riaddestramento e backtest:** una volta alla settimana, circa 10 minuti: circa 40 minuti al mese.
 - Totale stimato: circa 220 minuti al mese, da verificare con le prime esecuzioni reali. Se il budget non basta, si riducono le esecuzioni delle previsioni.
 
+## Precisazione (M4 corsia A, 8/11/2026)
+
+- Una **versione** è famiglia + iperparametri + commit del codice del motore: `version` = `<famiglia>-<hash degli iperparametri>-<commit>`. Il commit è l'ultimo che ha modificato `services/prediction-engine`, non l'ultimo del repository.
+- A ogni esecuzione la versione si **riadatta in modo deterministico** sui dati di `training_results(as_of)`. Versione e `as_of` riproducono la previsione, e `features_hash` lo verifica.
+- `parameters`, `training_window_*`, `training_data_hash` e `training_matches` descrivono l'adattamento al momento della registrazione della versione, che è anche il dataset del suo backtest.
+- Motivo: con una versione nuova a ogni cambio dei dati, la versione attivata dal Super Admin smetterebbe di ricevere previsioni il giorno dopo.
+
 ## Conseguenze
 
 - Ogni numero mostrato si può ricondurre a versione, codice e dati.
