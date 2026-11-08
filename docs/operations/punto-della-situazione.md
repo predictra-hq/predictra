@@ -39,7 +39,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia B:** unita (#38). Card _Stato agente_, pagina `/admin/agent` e notifiche in dashboard: da controllare su DEV con i dati reali.
 
-**M7 corsia A, fase A5 — primo job: raccolta football-data.org** · branch `feature/m7-a-coda-football-data` · PR: non ancora aperta.
+**M7 corsia A, fase A5 — primo job: raccolta football-data.org** · branch `feature/m7-a-coda-football-data` · PR: [#40](https://github.com/gennpalm/predictra/pull/40), in attesa di CI e merge; poi merge di `dev` in `main` per attivare lo schedule. Prossimi job A5: quote, previsioni, proposte.
 
 | Passo | Contenuto                                                                                                                                                                               | Stato                                                                            |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
