@@ -32,15 +32,15 @@
 
 Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
-**M7 corsia A, fasi A1–A2** · branch `feature/m7-a-worker` · PR: non ancora aperta.
+**M7 corsia A, fasi A1–A2** · branch `feature/m7-a-worker` · PR: [#33](https://github.com/gennpalm/predictra/pull/33), in attesa di CI e merge.
 
-| Passo | Contenuto                                                                                                                                                  | Stato                                                              |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 1     | Servizio Python `services/agent` (`predictra_agent`): client della coda via RPC, ciclo del worker (heartbeat, prelievo, retry, dead-letter, budget minuti) | fatto                                                              |
-| 2     | Test Python del worker (idempotenza, job interrotto ripreso dopo il lease, dead-letter, budget esaurito)                                                   | fatto: 25 test, `uv run pytest` in `services/agent`                |
-| 3     | Worker TypeScript `apps/web/src/lib/agent/` (stesso ciclo, per gli endpoint di A3) con test                                                                | fatto: 13 test (`worker.test.ts`)                                  |
-| 4     | Workflow `.github/workflows/agent-python.yml`: test a ogni PR, ciclo manuale su DEV (lo schedule arriva in A3)                                             | fatto                                                              |
-| 5     | Documentazione (runbook `docs/operations/agent.md`, piano M7), `pnpm check`, PR verso `dev`                                                                | fatto: `pnpm check` verde; PR aperta (vedi piano M7, Assegnazione) |
+| Passo | Contenuto                                                                                                                                                  | Stato                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1     | Servizio Python `services/agent` (`predictra_agent`): client della coda via RPC, ciclo del worker (heartbeat, prelievo, retry, dead-letter, budget minuti) | fatto                                               |
+| 2     | Test Python del worker (idempotenza, job interrotto ripreso dopo il lease, dead-letter, budget esaurito)                                                   | fatto: 25 test, `uv run pytest` in `services/agent` |
+| 3     | Worker TypeScript `apps/web/src/lib/agent/` (stesso ciclo, per gli endpoint di A3) con test                                                                | fatto: 13 test (`worker.test.ts`)                   |
+| 4     | Workflow `.github/workflows/agent-python.yml`: test a ogni PR, ciclo manuale su DEV (lo schedule arriva in A3)                                             | fatto                                               |
+| 5     | Documentazione (runbook `docs/operations/agent.md`, piano M7), `pnpm check`, PR verso `dev`                                                                | fatto: `pnpm check` verde, PR #33 aperta            |
 
 ## Punti aperti
 
