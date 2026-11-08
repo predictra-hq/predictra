@@ -1,6 +1,6 @@
 # ADR 0022 — Confidence Score
 
-**Stato:** Proposta (diventa Accettata con il merge della PR di M4 corsia 0) · **Data:** 2026-11-08
+**Stato:** Accettata (PR #17; verificata con la chiusura di M4, 8/11/2026) · **Data:** 2026-11-08
 
 ## Contesto
 

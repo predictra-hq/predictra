@@ -1,4 +1,5 @@
 import {
+  type MatchStatus,
   confidenceBand,
   type ActivePredictionRow,
   type ConfidenceBand,
@@ -99,4 +100,19 @@ export function modelStatusTone(status: ModelStatus): Tone {
 export function relativeDelta(value: number | null, baseline: number | null): number | null {
   if (value === null || baseline === null || Number(baseline) === 0) return null;
   return (Number(value) - Number(baseline)) / Number(baseline);
+}
+
+export type EmptyReason = "NO_ACTIVE_MODEL" | "NOT_UPCOMING" | "NOT_YET_EVALUATED";
+
+/** Perché il pannello delle previsioni è vuoto (le previsioni esistono solo per partite non iniziate). */
+export function emptyPredictionsReason(input: {
+  hasActiveModel: boolean;
+  status: MatchStatus;
+  kickoffAt: string;
+  now?: Date;
+}): EmptyReason {
+  if (!input.hasActiveModel) return "NO_ACTIVE_MODEL";
+  const now = input.now ?? new Date();
+  if (input.status !== "SCHEDULED" || new Date(input.kickoffAt) <= now) return "NOT_UPCOMING";
+  return "NOT_YET_EVALUATED";
 }

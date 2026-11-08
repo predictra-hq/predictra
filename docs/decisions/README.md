@@ -17,9 +17,9 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0010](0010-modello-dati-calcio.md)                 | Modello dati del calcio e ingestion v1                            | Accettata |
 | [0015](0015-quote-v1.md)                            | Quote v1: The Odds API, 1X2, regione eu                           | Proposta  |
 | [0016](0016-de-margin.md)                           | Margine e probabilità implicite (de-margin)                       | Proposta  |
-| [0020](0020-versioning-previsioni.md)               | Versioning e riproducibilità delle previsioni                     | Proposta  |
-| [0021](0021-modelli-v1.md)                          | Modelli della v1 e mercati derivati                               | Proposta  |
-| [0022](0022-confidence-score.md)                    | Confidence Score                                                  | Proposta  |
+| [0020](0020-versioning-previsioni.md)               | Versioning e riproducibilità delle previsioni                     | Accettata |
+| [0021](0021-modelli-v1.md)                          | Modelli della v1 e mercati derivati                               | Accettata |
+| [0022](0022-confidence-score.md)                    | Confidence Score                                                  | Accettata |
 | [0025](0025-regole-combinazioni.md)                 | Regole delle combinazioni (Bet Builder)                           | Accettata |
 | [0026](0026-correlazioni.md)                        | Correlazioni tra selezioni                                        | Accettata |
 | [0027](0027-motore-ranking-categorie.md)            | Motore delle combinazioni, ranking e categorie                    | Accettata |
