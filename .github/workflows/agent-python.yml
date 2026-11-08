@@ -7,7 +7,9 @@ name: Agent (Python)
 #   - raccolta football-data.org, una per finestra di 3 ore;
 #   - quote The Odds API: `daily` una volta al giorno dalle 06 UTC (ciclo delle 06:47) e
 #     `prematch` dalle 15 UTC (ciclo delle 15:47), mai due volte nello stesso giorno.
-#   Sostituisce gli schedule di "Data collector": stessi cicli, stessi minuti, stessi crediti.
+#   - previsioni del motore M4: `morning` dalle 03 UTC (ciclo delle 03:47) e `afternoon`
+#     dalle 12 UTC (ciclo delle 12:47), dopo la raccolta dello stesso ciclo.
+#   Sostituisce gli schedule di "Data collector" e "Prediction engine".
 # - Avvio manuale di un ciclo su DEV, con l'opzione di accodare un job di verifica.
 # Schedule e avvio manuale funzionano solo quando questo file è sul branch di default
 # (main). Lo schedule esegue il codice di `dev`; l'avvio manuale quello del branch scelto.
@@ -18,12 +20,14 @@ on:
     paths:
       - "services/agent/**"
       - "services/data-collector/**"
+      - "services/prediction-engine/**"
       - ".github/workflows/agent-python.yml"
   push:
     branches: [dev, main]
     paths:
       - "services/agent/**"
       - "services/data-collector/**"
+      - "services/prediction-engine/**"
       - ".github/workflows/agent-python.yml"
   schedule:
     - cron: "47 */3 * * *" # ciclo dell'agente: raccolta football-data.org e job in coda
@@ -44,6 +48,10 @@ on:
         default: false
       plan_odds:
         description: "Accoda le quote della finestra corrente (daily 06-15 UTC, prematch 15-21 UTC; consuma crediti The Odds API)"
+        type: boolean
+        default: false
+      plan_predictions:
+        description: "Accoda le previsioni della finestra corrente (morning 03-12 UTC, afternoon 12-21 UTC)"
         type: boolean
         default: false
 
@@ -105,6 +113,8 @@ jobs:
         with:
           # Schedule: sempre il codice di dev. Avvio manuale: il branch scelto in "Run workflow".
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          # Storia completa: CODE_COMMIT è l'ultimo commit che ha toccato il motore (ADR 0020).
+          fetch-depth: 0
 
       - uses: astral-sh/setup-uv@v6
         if: steps.secrets.outputs.skip != 'true'
@@ -133,10 +143,15 @@ jobs:
           MAX_JOBS: ${{ github.event_name == 'schedule' && 10 || inputs.max_jobs }}
           PLAN_FOOTBALL_DATA: ${{ github.event_name == 'schedule' || inputs.plan_football_data }}
           PLAN_ODDS: ${{ github.event_name == 'schedule' || inputs.plan_odds }}
+          PLAN_PREDICTIONS: ${{ github.event_name == 'schedule' || inputs.plan_predictions }}
         run: |
           export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          # Versione dei modelli: dipende dal codice del motore, non da ogni commit (ADR 0020).
+          CODE_COMMIT="$(git log -1 --format=%H -- ../prediction-engine)"
+          export CODE_COMMIT
           args=(cycle --source github_actions --schedule agent-python --max-jobs "$MAX_JOBS")
           if [ "$PLAN_FOOTBALL_DATA" = "true" ]; then args+=(--plan football-data); fi
           if [ "$PLAN_ODDS" = "true" ]; then args+=(--plan odds); fi
+          if [ "$PLAN_PREDICTIONS" = "true" ]; then args+=(--plan predictions); fi
           # Budget di minuti dell'agente: ADR 0035 §2.
           uv run python -m predictra_agent "${args[@]}" --minutes-quota 900

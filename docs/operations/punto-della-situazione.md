@@ -41,14 +41,15 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — primo job, raccolta football-data.org:** unito (#40) e attivo da `main` (schedule _Agent (Python)_ ogni 3 h al minuto 47).
 
-**M7 corsia A, fase A5 — secondo job: quote The Odds API** · branch `feature/m7-a-coda-quote` · PR: [#41](https://github.com/gennpalm/predictra/pull/41), in attesa di CI e merge; poi merge di `dev` in `main`. Prossimi job A5: previsioni, proposte.
+**M7 corsia A, fase A5 — secondo job, quote The Odds API:** unito (#41) e attivo da `main`.
 
-| Passo | Contenuto                                                                                                                                                                                                       | Stato                                                                             |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| 1     | Job `odds.collect` nel worker Python (`predictra_collector.odds_runner.run_odds`): `daily` una volta al giorno dalle 06 UTC, `prematch` dalle 15 UTC; chiavi per data; finestra superata → chiuso senza crediti | fatto: `predictra_agent/odds.py`                                                  |
-| 2     | Regola di spesa: crediti già spesi → completato con esito parziale, mai ritentato; nessun credito speso e tutto fallito → un solo nuovo tentativo (`max_attempts` 2), poi dead-letter con notifica              | fatto: 13 test in `test_odds.py`                                                  |
-| 3     | Workflow: `--plan odds` nello schedule dell'agente; tolti gli schedule quote da _Data collector_ (resta l'avvio manuale). Crediti al massimo 16 al giorno, come prima                                           | fatto: `--plan odds` nello schedule; tolti gli schedule quote da _Data collector_ |
-| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                                                          | fatto: `pnpm check` verde, 50 test agente; PR aperta                              |
+**M7 corsia A, fase A5 — terzo job: previsioni M4** · branch `feature/m7-a-coda-previsioni` · PR: [#42](https://github.com/gennpalm/predictra/pull/42), in attesa di CI e merge; poi merge di `dev` in `main`. Dopo l'attivazione: misurare i minuti per ciclo (contatore `github-actions`). Ultimo job A5: proposte del Bet Builder.
+
+| Passo | Contenuto                                                                                                                                                                                           | Stato                                                                                                    |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1     | Job `predictions.run` (`predictra_engine.pipeline.run`): finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra; `CODE_COMMIT` obbligatorio (ADR 0020); `max_attempts` 2 | fatto: `predictra_agent/predictions.py`, 14 test (compreso il controllo delle versioni di numpy e scipy) |
+| 2     | Workflow: `--plan predictions` nello schedule dell'agente, storia git completa per `CODE_COMMIT`; tolti gli schedule da _Prediction engine_ (restano run, tune, diagnose a mano)                    | fatto: `--plan predictions` e `fetch-depth: 0` nello schedule; tolti gli schedule da _Prediction engine_ |
+| 3     | Test, documentazione (runbook agente e motore, piano), `pnpm check`, PR                                                                                                                             | fatto: `pnpm check` verde, 64 test agente; PR aperta                                                     |
 
 ## Punti aperti
 
