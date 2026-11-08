@@ -12,7 +12,7 @@ Stato delle milestone, dipendenze e piani di lavoro. Ogni milestone ha un piano 
 | M3        | Statistiche e quote    | M2          | contratto di M2 su `dev`                                             | **in corso**: corsie 0, A e B unite, manca la chiusura          | [M3](M3-statistiche-e-quote.md)           |
 | M4        | Prediction engine      | M2          | contratto di M2 su `dev` (addestramento reale: storico di M2 su DEV) | completata, **in servizio su DEV** dall'8/11/2026               | [M4](M4-prediction-engine.md)             |
 | M5        | Smart Bet Builder      | M3, M4      | contratti di M3 e M4 su `dev`                                        | completata, **in servizio su DEV** dall'8/11/2026               | [M5](M5-bet-builder.md)                   |
-| M6        | Bankroll e tracker     | M1 (M3, M4) | subito per la base; Kelly dopo M4, CLV dopo M3                       | **in corso**: corsia 0                                          | [M6](M6-bankroll-e-tracker.md)            |
+| M6        | Bankroll e tracker     | M1 (M3, M4) | subito per la base; Kelly dopo M4, CLV dopo M3                       | completata, **in servizio su DEV** dall'8/11/2026               | [M6](M6-bankroll-e-tracker.md)            |
 | M7        | Agente autonomo        | M2–M5       | contratto della coda subito; collegamento dei job quando esistono    | **in corso**: corsia 0 in revisione (ADR 0035 proposto)         | [M7](M7-agente-autonomo.md)               |
 | M8        | Hardening e produzione | tutte       | backup e restore subito; il resto alla fine                          | da iniziare                                                     | [M8](M8-hardening-e-produzione.md)        |
 
