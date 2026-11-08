@@ -35,7 +35,8 @@ Anche **milestone indipendenti possono andare in parallelo** (per esempio M3 e M
 - Ogni branch parte da `dev` aggiornato e la PR va verso `dev`. `main` riceve solo merge da `dev`.
 - **PR piccole**: una fase del piano per PR (indicativamente meno di 400 righe modificate). Più sono piccole, meno conflitti.
 - Si fa il merge **solo con CI verde**. L'altra persona dà un'occhiata quando può; per la sola documentazione non serve aspettare.
-- Metodo di merge: **Squash and merge** da `feature/*` a `dev` (un commit per PR); **Create a merge commit** da `dev` a `main`.
+- Metodo di merge: **Create a merge commit**, eseguito **solo da `gennpalm`** (proprietario), sia da `feature/*` a `dev` sia da `dev` a `main`. Sul piano Vercel Hobby si pubblicano solo commit del proprietario: un merge fatto da altri, o con _Squash and merge_, blocca il deploy ([ADR 0050](../decisions/0050-deploy-solo-commit-del-proprietario.md)).
+- Niente push diretti su `dev` o `main`: si passa sempre da una PR.
 - Dopo il merge il branch si cancella (pulsante _Delete branch_).
 - La descrizione della PR segue il modello in `.github/pull_request_template.md`.
 
@@ -80,7 +81,7 @@ Da usare solo quando non c'è alternativa:
 1. Crea il tuo branch **dal branch del collega** (es. da `feature/m2-a-adapter-football-data`), non da `dev`.
 2. Apri la PR con **base = il branch del collega** e scrivi nella descrizione `Bloccata da #<numero della PR del collega>`.
 3. Non fare il merge finché la PR del collega non è su `dev`.
-4. Quando la PR del collega è stata unita (con squash), riporta il tuo lavoro su `dev`: `git rebase --onto origin/dev <ultimo commit del branch del collega> <tuo branch>`, poi cambia la base della tua PR in `dev` (_Edit_ accanto al titolo della PR). In cloud basta chiederlo a Claude con queste parole.
+4. Quando la PR del collega è stata unita, porta `dev` nel tuo branch (merge di `dev`) e cambia la base della tua PR in `dev` (_Edit_ accanto al titolo della PR). I merge sono commit di merge, quindi non serve riscrivere la cronologia. In cloud basta chiederlo a Claude con queste parole.
 5. Ricontrolla le migrazioni: le tue devono avere un timestamp successivo a tutte quelle unite nel frattempo.
 
 ### 6.3 Spazi riservati per milestone
