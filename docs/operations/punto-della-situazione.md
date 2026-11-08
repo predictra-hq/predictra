@@ -4,15 +4,15 @@
 
 ## Cosa è in servizio su DEV
 
-| Area                                                                              | Stato                                                                                                                                  | Dove                                                         |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                                                                     | https://predictra-dev.vercel.app                             |
-| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                                                                        | Match Center, Data Center                                    |
-| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                                                                                | `docs/data-dictionary/odds.md`                               |
-| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui                                                     | PR #10, runbook [data-collector.md](data-collector.md)       |
-| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`). Football-data passa alla coda dell'agente con la fase A5 (dopo il merge di `dev` in `main`) | _Actions → Data collector_; poi _Actions → Agent (Python)_   |
-| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                                                                         | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
-| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                                                                      | `/bet-builder`, _Actions → Bet Builder_                      |
+| Area                                                                              | Stato                                                                                                                     | Dove                                                         |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                                                        | https://predictra-dev.vercel.app                             |
+| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                                                           | Match Center, Data Center                                    |
+| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                                                                   | `docs/data-dictionary/odds.md`                               |
+| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui                                        | PR #10, runbook [data-collector.md](data-collector.md)       |
+| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`). Football-data dalla coda dell'agente (#40); quote con la PR del secondo job A5 | _Actions → Data collector_; poi _Actions → Agent (Python)_   |
+| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                                                            | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
+| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                                                         | `/bet-builder`, _Actions → Bet Builder_                      |
 
 ## Cosa resta da fare, in ordine
 
@@ -43,12 +43,12 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — secondo job: quote The Odds API** · branch `feature/m7-a-coda-quote` · PR: non ancora aperta.
 
-| Passo | Contenuto                                                                                                                                                                                                       | Stato                            |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| 1     | Job `odds.collect` nel worker Python (`predictra_collector.odds_runner.run_odds`): `daily` una volta al giorno dalle 06 UTC, `prematch` dalle 15 UTC; chiavi per data; finestra superata → chiuso senza crediti | fatto: `predictra_agent/odds.py` |
-| 2     | Regola di spesa: crediti già spesi → completato con esito parziale, mai ritentato; nessun credito speso e tutto fallito → un solo nuovo tentativo (`max_attempts` 2), poi dead-letter con notifica              | fatto: 13 test in `test_odds.py` |
-| 3     | Workflow: `--plan odds` nello schedule dell'agente; tolti gli schedule quote da _Data collector_ (resta l'avvio manuale). Crediti al massimo 16 al giorno, come prima                                           | da fare                          |
-| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                                                          | da fare                          |
+| Passo | Contenuto                                                                                                                                                                                                       | Stato                                                                             |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1     | Job `odds.collect` nel worker Python (`predictra_collector.odds_runner.run_odds`): `daily` una volta al giorno dalle 06 UTC, `prematch` dalle 15 UTC; chiavi per data; finestra superata → chiuso senza crediti | fatto: `predictra_agent/odds.py`                                                  |
+| 2     | Regola di spesa: crediti già spesi → completato con esito parziale, mai ritentato; nessun credito speso e tutto fallito → un solo nuovo tentativo (`max_attempts` 2), poi dead-letter con notifica              | fatto: 13 test in `test_odds.py`                                                  |
+| 3     | Workflow: `--plan odds` nello schedule dell'agente; tolti gli schedule quote da _Data collector_ (resta l'avvio manuale). Crediti al massimo 16 al giorno, come prima                                           | fatto: `--plan odds` nello schedule; tolti gli schedule quote da _Data collector_ |
+| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                                                          | fatto: `pnpm check` verde, 50 test agente; PR aperta                              |
 
 ## Punti aperti
 
