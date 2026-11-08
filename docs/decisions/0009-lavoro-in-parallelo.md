@@ -1,6 +1,6 @@
 # ADR 0009 — Lavoro in parallelo per corsie
 
-**Stato:** Accettata · **Data:** 2026-11-07
+**Stato:** Accettata · **Data:** 2026-11-07 · **Metodo di merge modificato da:** [ADR 0050](0050-deploy-solo-commit-del-proprietario.md)
 
 ## Contesto
 
@@ -13,7 +13,7 @@
 
 - Ogni milestone si divide in **corsia 0** (contratto: ADR, data dictionary, migrazione con RLS e test, tipi condivisi), poi **corsie A e B** in parallelo (di regola dati/backend e interfaccia), poi chiusura. Le corsie comunicano solo attraverso il contratto.
 - Il piano di ogni milestone (`docs/roadmap/M<N>-*.md`) elenca per ogni corsia i file di sua proprietà, le fasi e i criteri di completamento.
-- Branch `feature/m<N>-<0|a|b>-<slug>`, PR piccole verso `dev`, merge solo con CI verde, **Squash and merge** verso `dev`.
+- Branch `feature/m<N>-<0|a|b>-<slug>`, PR piccole verso `dev`, merge solo con CI verde. Il metodo di merge è stabilito dall'ADR 0050 (_Create a merge commit_, eseguito dal proprietario).
 - Migrazioni: sempre file nuovi, con timestamp successivo all'ultimo presente su `dev` al momento del merge (si rinomina se serve).
 - File condivisi ad alto rischio di conflitto (i18n, menu, tipi condivisi, lockfile, workflow) hanno un proprietario o una regola, descritti in `docs/operations/collaborazione.md`.
 - Assegnazione delle corsie tramite issue GitHub (etichette `M<N>`, `corsia:*`) e tabella _Assegnazione_ nel piano.

@@ -68,7 +68,7 @@ pnpm --filter web dev                   # app locale (richiede apps/web/.env.loc
 ## Flusso Git e deploy
 
 - `main` = produzione, `dev` = integrazione, `feature/*` = sviluppo con PR verso `dev`. La protezione dei branch non è disponibile (GitHub Free, repo privato): rispetta il flusso a mano.
-- Merge `feature/*` → `dev` con **Squash and merge**, solo con CI verde; `dev` → `main` con merge commit.
+- Merge su `dev` e su `main` solo da `gennpalm`, con **Create a merge commit** e CI verde: sul piano Vercel Hobby si pubblicano solo commit del proprietario e il deploy lo verifica (ADR 0050). Niente push diretti su `dev` o `main`.
 - Push su `dev` con CI verde → deploy automatico: migrazioni Supabase, config Auth, Vercel (`.github/workflows/ci.yml` + `deploy-target.yml`). `dev` deve restare sempre verde.
 - I workflow avviabili a mano (es. _Bootstrap Super Admin_) compaiono in _Actions_ solo se il file è anche su `main`.
 - Commit in italiano, descrittivi. Non fare push di modifiche con `pnpm check` rosso.
