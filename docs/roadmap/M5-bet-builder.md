@@ -1,6 +1,6 @@
 # M5 — Smart Bet Builder: piano e corsie
 
-**Stato:** in corso (corsia 0 unita, corsia A in revisione) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia 0 unita, corsie A e B in revisione) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -14,11 +14,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona    | Issue | Stato                                   |
-| --------------- | ---------- | ----- | --------------------------------------- |
-| 0 — contratto   | `gennpalm` | —     | unita (#19)                             |
-| A — motore      | `gennpalm` | —     | in revisione (PR `feature/m5-a-motore`) |
-| B — interfaccia | `gennpalm` | —     | da iniziare                             |
+| Corsia          | Persona    | Issue | Stato                                        |
+| --------------- | ---------- | ----- | -------------------------------------------- |
+| 0 — contratto   | `gennpalm` | —     | unita (#19)                                  |
+| A — motore      | `gennpalm` | —     | in revisione (PR `feature/m5-a-motore`)      |
+| B — interfaccia | `gennpalm` | —     | in revisione (PR `feature/m5-b-interfaccia`) |
 
 ## Prerequisiti
 
@@ -76,6 +76,8 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 | B4   | Salvataggio privato delle combinazioni dell'utente; stato vuoto quando non ci sono proposte                  |
 
 **Fatto quando:** voce Smart Bet Builder attiva, dati reali su DEV, disclaimer sempre visibile.
+
+Pagine: `/bet-builder` (proposte per giornata e categoria, stato vuoto con l'ultima elaborazione), `/bet-builder/<id>` (dettaglio con quote usate e attuali), `/bet-builder/builder` (costruzione manuale con avvisi), `/bet-builder/slips` (schedine private, valori ricalcolati con previsioni e quote attuali).
 
 ## Chiusura di M5
 
