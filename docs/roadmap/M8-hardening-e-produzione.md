@@ -1,6 +1,6 @@
 # M8 — Hardening e produzione: piano e corsie
 
-**Stato:** in corso (ADR 0040 backup proposto) · **Dipende da:** tutte · **Può partire quando:** backup e test di restore **subito** (servono già per DEV); il resto quando M2–M7 sono su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (A1 backup) · **Dipende da:** tutte · **Può partire quando:** backup e test di restore **subito** (servono già per DEV); il resto quando M2–M7 sono su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -10,11 +10,11 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 ## Assegnazione
 
-| Corsia                      | Persona | Issue | Stato       |
-| --------------------------- | ------- | ----- | ----------- |
-| 0 — criteri e checklist     | —       | —     | da iniziare |
-| A — sicurezza, backup, PROD | —       | —     | da iniziare |
-| B — accessibilità e runbook | —       | —     | da iniziare |
+| Corsia                      | Persona   | Issue | Stato                                               |
+| --------------------------- | --------- | ----- | --------------------------------------------------- |
+| 0 — criteri e checklist     | —         | —     | da iniziare                                         |
+| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup) in revisione (PR `feature/m8-a-backup`) |
+| B — accessibilità e runbook | —         | —     | da iniziare                                         |
 
 ## Prerequisiti
 

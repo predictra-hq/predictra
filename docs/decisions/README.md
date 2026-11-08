@@ -26,5 +26,5 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0030](0030-bankroll-dati-e-privacy.md)             | Bankroll: modello dati, limiti personali e privacy                | Proposta  |
 | [0031](0031-staking.md)                             | Stake suggerito: flat e Kelly frazionario limitato                | Proposta  |
 | [0035](0035-pianificazione-agente.md)               | Pianificazione dell'agente: QStash, GitHub Actions, budget        | Proposta  |
-| [0040](0040-backup.md)                              | Backup del database e test di ripristino                          | Proposta  |
+| [0040](0040-backup.md)                              | Backup del database e test di ripristino                          | Accettata |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |
