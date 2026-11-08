@@ -155,7 +155,7 @@ Note:
 ## FASE F — Far lavorare un collega
 
 1. `gennpalm` lo aggiunge al repository: _Settings → Collaborators → Add people_.
-2. Il collega lavora da **Claude Code sul web** (claude.ai/code) collegato al repository, sul branch `dev`; in alternativa clona il repository in locale. Claude legge da solo [CLAUDE.md](../../CLAUDE.md), che contiene regole, struttura e prossimo passo.
+2. Il collega lavora da **Claude Code sul web** (claude.ai/code) collegato al repository; in alternativa clona il repository in locale. Lavora **solo su branch `feature/*`** partiti da `dev` e apre una PR: il merge lo fa `gennpalm` e GitHub cancella poi il branch da solo. Claude legge da solo [CLAUDE.md](../../CLAUDE.md), che contiene regole, struttura e prossimo passo.
 3. Non gli servono le chiavi di Supabase o di Vercel: pubblica facendo push su `dev` e la pipeline fa il resto.
 
 ---

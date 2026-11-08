@@ -15,6 +15,7 @@
 - Niente push diretti su `dev` o `main`: si passa sempre da una PR.
 - Il workflow di deploy controlla l'autore del commit **prima** delle migrazioni. Se non è il proprietario si ferma subito con un errore che spiega cosa fare.
 - Il collega lavora su `feature/*` e apre le PR; il proprietario le guarda e le unisce.
+- GitHub cancella automaticamente il branch dopo il merge (_Automatically delete head branches_). Così l'elenco dei branch mostra a colpo d'occhio cosa non è ancora in `dev`.
 
 ## Conseguenze
 

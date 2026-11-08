@@ -50,7 +50,7 @@ pnpm format        # formattazione Prettier
 - **Checklist di messa in servizio (da zero):** [docs/operations/checklist-messa-in-servizio.md](docs/operations/checklist-messa-in-servizio.md)
 - Setup e deploy: [docs/operations/setup.md](docs/operations/setup.md)
 - Controlli di sicurezza: [docs/operations/security.md](docs/operations/security.md)
-- Data dictionary: [identità](docs/data-dictionary/identity.md), [calcio](docs/data-dictionary/football.md), [quote e statistiche](docs/data-dictionary/odds.md)
+- Data dictionary: [identità](docs/data-dictionary/identity.md), [calcio](docs/data-dictionary/football.md), [quote e statistiche](docs/data-dictionary/odds.md), [previsioni](docs/data-dictionary/predictions.md)
 - Fonti dati e termini d'uso: [docs/data-sources/](docs/data-sources/README.md)
 
 ## Branch
@@ -61,4 +61,6 @@ pnpm format        # formattazione Prettier
 | `dev`       | integrazione             |
 | `feature/*` | sviluppo, PR verso `dev` |
 
-Nomi dei branch di sviluppo: `feature/m<N>-<0|a|b>-<slug>` (milestone e corsia), oppure `feature/docs-<slug>`. Dettagli in [collaborazione.md](docs/operations/collaborazione.md).
+Nomi dei branch di sviluppo: `feature/m<N>-<0|a|b>-<slug>` (milestone e corsia), oppure `feature/docs-<slug>`.
+
+**Regola dei branch:** il collega (o chiunque sviluppi) lavora **solo su branch `feature/*`** e apre una PR verso `dev`; il merge lo fa `gennpalm`. GitHub **cancella automaticamente il branch** appena la PR viene unita (_Settings → General → Automatically delete head branches_, attivo dall'8/11/2026). Quindi nella pagina _Branches_ restano solo `main`, `dev` e il lavoro **non ancora unito**: se esiste un branch `feature/*`, quel lavoro non è ancora in `dev`. Dopo un merge non si continua sullo stesso branch: si riparte da `dev` aggiornato con un branch nuovo. Dettagli in [collaborazione.md](docs/operations/collaborazione.md).
