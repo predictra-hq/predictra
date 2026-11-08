@@ -11,7 +11,8 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 | M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                      |
 | M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                           |
 | M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football rimandato: [piano](docs/roadmap/M2-football-data.md) |
-| M3–M8                                                                          | [roadmap](docs/roadmap/README.md)                                                                                                                 |
+| M3 — Statistiche e quote                                                       | in corso: quote reali su DEV, manca l'interfaccia ([punto della situazione](docs/operations/punto-della-situazione.md))                           |
+| M4–M8                                                                          | [roadmap](docs/roadmap/README.md)                                                                                                                 |
 
 ## Struttura
 
@@ -39,6 +40,7 @@ pnpm format        # formattazione Prettier
 ## Documentazione
 
 - **Istruzioni per sviluppatori e agenti: [CLAUDE.md](CLAUDE.md)**
+- **Dove siamo arrivati: [punto della situazione](docs/operations/punto-della-situazione.md)**
 - **Lavorare in parallelo (regole del team):** [docs/operations/collaborazione.md](docs/operations/collaborazione.md)
 - **Roadmap, dipendenze e corsie:** [docs/roadmap/](docs/roadmap/README.md)
 
