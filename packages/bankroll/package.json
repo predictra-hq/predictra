@@ -1,0 +1,21 @@
+{
+  "name": "@predictra/bankroll",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Metriche del bankroll, stake suggerito, limiti personali e CLV (ADR 0030, ADR 0031)",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@predictra/config": "workspace:*"
+  },
+  "dependencies": {
+    "@predictra/shared-types": "workspace:*"
+  }
+}

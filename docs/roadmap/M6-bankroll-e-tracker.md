@@ -1,6 +1,6 @@
 # M6 — Bankroll e tracker: piano e corsie
 
-**Stato:** in corso (corsia 0) · **Dipende da:** M1 (base), M4 (stake suggeriti), M3 (CLV) · **Può partire quando:** **subito** per contratto, registrazione manuale e metriche di base; lo stake con Kelly aspetta le previsioni di M4 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia A) · **Dipende da:** M1 (base), M4 (stake suggeriti), M3 (CLV) · **Può partire quando:** **subito** per contratto, registrazione manuale e metriche di base; lo stake con Kelly aspetta le previsioni di M4 · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 È la milestone più indipendente: si può fare in parallelo a M2, M3 o M4.
 
@@ -16,11 +16,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                 | Persona   | Issue | Stato                                      |
-| ---------------------- | --------- | ----- | ------------------------------------------ |
-| 0 — contratto          | Alfry1299 | —     | in revisione (PR `feature/m6-0-contratto`) |
-| A — metriche e staking | —         | —     | da iniziare                                |
-| B — interfaccia        | —         | —     | da iniziare                                |
+| Corsia                 | Persona   | Issue | Stato                                           |
+| ---------------------- | --------- | ----- | ----------------------------------------------- |
+| 0 — contratto          | Alfry1299 | —     | unita (#25)                                     |
+| A — metriche e staking | Alfry1299 | —     | A1–A4 in revisione (PR `feature/m6-a-metriche`) |
+| B — interfaccia        | —         | —     | da iniziare                                     |
 
 ## Prerequisiti
 
