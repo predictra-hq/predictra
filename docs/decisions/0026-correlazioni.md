@@ -1,6 +1,6 @@
 # ADR 0026 — Correlazioni tra selezioni
 
-**Stato:** Proposta (diventa Accettata con il merge della PR di M5 corsia 0) · **Data:** 2026-11-08
+**Stato:** Accettata (confermata dal proprietario l'8/11/2026, chiusura di M5) · **Data:** 2026-11-08
 
 ## Contesto
 

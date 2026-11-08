@@ -12,7 +12,8 @@ Piattaforma privata di football intelligence. Specifica completa: il "Prompt Mas
 | M1 Fondazioni (auth su invito senza email, ruoli, 2FA, RLS, admin, CI/CD) | ✅ in servizio su DEV (https://predictra-dev.vercel.app); ambienti: `docs/operations/ambienti.md`                                                                                         |
 | M2 Football data                                                          | ✅ in servizio su DEV: contratto, collector `services/data-collector`, Match Center e Data Center. Fase A3 (API-Football) bloccata dai termini d'uso: `docs/data-sources/api-football.md` |
 | **M3 Statistiche e quote**                                                | 🔄 corsie 0 e A fatte (quote reali su DEV); prossima: **corsia B** (Market, Statistics e League Intelligence, pagina alias). Dettagli: `docs/operations/punto-della-situazione.md`        |
-| M4–M8                                                                     | M4 e M6 possono partire; piani in `docs/roadmap/`                                                                                                                                         |
+| M5 Smart Bet Builder                                                      | ✅ in servizio su DEV: contratto, motore `services/bet-builder` (workflow _Bet Builder_), pagine `/bet-builder`. ADR 0025–0027. Proposte reali quando c'è un modello M4 attivo            |
+| M4, M6–M8                                                                 | M4 in corso, M6 può partire; piani in `docs/roadmap/`                                                                                                                                     |
 
 ## Lavoro in parallelo (leggere prima di iniziare)
 
