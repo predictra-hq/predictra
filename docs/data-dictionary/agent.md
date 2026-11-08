@@ -1,6 +1,6 @@
 # Data dictionary — Agente autonomo (M7)
 
-Migrazione: `supabase/migrations/20261108130000_agent.sql` · Decisioni: [ADR 0003](../decisions/0003-coda-su-postgres.md) (coda), [ADR 0035](../decisions/0035-pianificazione-agente.md) (pianificazione e budget) · Tipi: `packages/shared-types/src/agent.ts`, verificati da `supabase/tests/agent.test.ts`.
+Migrazione: `supabase/migrations/20261108150000_agent.sql` · Decisioni: [ADR 0003](../decisions/0003-coda-su-postgres.md) (coda), [ADR 0035](../decisions/0035-pianificazione-agente.md) (pianificazione e budget) · Tipi: `packages/shared-types/src/agent.ts`, verificati da `supabase/tests/agent.test.ts`.
 
 Regole comuni:
 

@@ -1,7 +1,7 @@
 /**
  * Contratto M7 — agente autonomo: coda dei job, cicli, contatori di budget, notifiche.
  *
- * Specchia `supabase/migrations/20261108130000_agent.sql` (verificato da
+ * Specchia `supabase/migrations/20261108150000_agent.sql` (verificato da
  * `supabase/tests/agent.test.ts`). Dizionario: docs/data-dictionary/agent.md.
  * Decisioni: ADR 0003 (coda su Postgres), ADR 0035 (pianificazione e budget).
  */

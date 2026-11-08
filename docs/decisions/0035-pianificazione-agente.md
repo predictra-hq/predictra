@@ -4,7 +4,7 @@
 
 ## Contesto
 
-L'agente non ha un processo sempre attivo (ADR 0002): lavora a cicli, e la coda su Postgres è già decisa (ADR 0003, implementata in `20261108130000_agent.sql`). Restano da decidere:
+L'agente non ha un processo sempre attivo (ADR 0002): lavora a cicli, e la coda su Postgres è già decisa (ADR 0003, implementata in `20261108150000_agent.sql`). Restano da decidere:
 
 - chi avvia i cicli;
 - quali job girano dove;
