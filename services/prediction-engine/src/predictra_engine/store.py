@@ -9,9 +9,7 @@ from typing import Any
 import httpx
 
 PAGE = 1000
-FIXTURE_COLUMNS = (
-    "match_id,competition_id,kickoff_at,home_team_id,away_team_id,quality,freshness"
-)
+FIXTURE_COLUMNS = "match_id,competition_id,kickoff_at,home_team_id,away_team_id,quality,freshness"
 
 
 class StoreError(RuntimeError):
