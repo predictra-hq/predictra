@@ -4,15 +4,15 @@
 
 ## Cosa è in servizio su DEV
 
-| Area                                                                              | Stato                                                                                                                     | Dove                                                         |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                                                        | https://predictra-dev.vercel.app                             |
-| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                                                           | Match Center, Data Center                                    |
-| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                                                                   | `docs/data-dictionary/odds.md`                               |
-| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui                                        | PR #10, runbook [data-collector.md](data-collector.md)       |
-| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`). Football-data dalla coda dell'agente (#40); quote con la PR del secondo job A5 | _Actions → Data collector_; poi _Actions → Agent (Python)_   |
-| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                                                            | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
-| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                                                         | `/bet-builder`, _Actions → Bet Builder_                      |
+| Area                                                                                                                                                          | Stato                                                                                  | Dove                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| M1: accesso su invito, ruoli, 2FA, amministrazione                                                                                                            | ✅                                                                                     | https://predictra-dev.vercel.app                             |
+| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)                                                                                   | ✅ 2.508 partite, raccolte da football-data.org                                        | Match Center, Data Center                                    |
+| M3 corsia 0: contratto quote, margine e statistiche                                                                                                           | ✅ migrazioni applicate                                                                | `docs/data-dictionary/odds.md`                               |
+| M3 corsia A: raccolta quote The Odds API, `packages/quant`                                                                                                    | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui     | PR #10, runbook [data-collector.md](data-collector.md)       |
+| Raccolte e calcoli automatici dall'agente: football-data ogni 3 ore; quote alle 06:47 e 15:47; previsioni alle 03:47 e 12:47; proposte alle 06:47 e 15:47 UTC | ✅ football-data (#40), quote (#41), previsioni (#42) attivi da `main`; proposte (#43) | _Actions → Agent (Python)_, _Amministrazione → Agente_       |
+| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias                                                                               | ✅ unita (#16)                                                                         | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
+| M5: Smart Bet Builder (contratto, motore, interfaccia)                                                                                                        | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                      | `/bet-builder`, _Actions → Bet Builder_                      |
 
 ## Cosa resta da fare, in ordine
 
@@ -20,9 +20,9 @@
    - verificare su DEV le tre pagine e la pagina admin _Alias squadre_ (`/admin/team-aliases`, solo Super Admin con 2FA);
    - aggiungere dalla pagina gli alias per i nomi di The Odds API non riconosciuti (57 eventi non abbinati nella prima raccolta). L'abbinamento avviene alla raccolta successiva; gli eventi già giocati non tornano più dal provider e restano non abbinati;
    - poi la chiusura di M3 (piano M3, _Chiusura_).
-2. **M4 (modelli): completata** (#17, #18, #22, #23). Modello attivo: Poisson. Il motore gira alle 05:40 e alle 14:40 UTC e prevede le partite dei 7 giorni successivi ([runbook](prediction-engine.md)). Per controllare cosa vede l'app: _Run workflow_ con `command = diagnose`.
+2. **M4 (modelli): completata** (#17, #18, #22, #23). Modello attivo: Poisson. Il motore gira dalla coda dell'agente alle 03:47 e alle 12:47 UTC (M7, #42) e prevede le partite dei 7 giorni successivi ([runbook](prediction-engine.md)). Per controllare cosa vede l'app: _Run workflow_ con `command = diagnose`.
 3. **M5 (Smart Bet Builder): completata** (#19, #20, #21), ADR 0025–0027 accettati. Restano due passi operativi per vedere proposte reali:
-   - unire `dev` in `main`, così lo schedule del workflow _Bet Builder_ parte (07:53 e 17:07 UTC; [runbook](bet-builder.md));
+   - le proposte programmate passano dalla coda dell'agente (06:47 e 15:47 UTC, dopo le quote; [runbook](bet-builder.md)) dal merge in `main` della #43;
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
 4. **M6 (bankroll): completata** (#25, #27, #28). Isolamento verificato su DEV con account temporanei: _Actions → Verifica DEV → Run workflow_. Da collegare in seguito: lo stake con Kelly nel Tracker.
 5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Prossime fasi di M8: hardening di sicurezza (A2–A3) e ambiente PROD (A4).
@@ -43,13 +43,16 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — secondo job, quote The Odds API:** unito (#41) e attivo da `main`.
 
-**M7 corsia A, fase A5 — terzo job: previsioni M4** · branch `feature/m7-a-coda-previsioni` · PR: [#42](https://github.com/gennpalm/predictra/pull/42), in attesa di CI e merge; poi merge di `dev` in `main`. Dopo l'attivazione: misurare i minuti per ciclo (contatore `github-actions`). Ultimo job A5: proposte del Bet Builder.
+**M7 corsia A, fase A5 — terzo job, previsioni M4:** unito (#42) e attivo da `main`.
 
-| Passo | Contenuto                                                                                                                                                                                           | Stato                                                                                                    |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 1     | Job `predictions.run` (`predictra_engine.pipeline.run`): finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra; `CODE_COMMIT` obbligatorio (ADR 0020); `max_attempts` 2 | fatto: `predictra_agent/predictions.py`, 14 test (compreso il controllo delle versioni di numpy e scipy) |
-| 2     | Workflow: `--plan predictions` nello schedule dell'agente, storia git completa per `CODE_COMMIT`; tolti gli schedule da _Prediction engine_ (restano run, tune, diagnose a mano)                    | fatto: `--plan predictions` e `fetch-depth: 0` nello schedule; tolti gli schedule da _Prediction engine_ |
-| 3     | Test, documentazione (runbook agente e motore, piano), `pnpm check`, PR                                                                                                                             | fatto: `pnpm check` verde, 64 test agente; PR aperta                                                     |
+**M7 corsia A, fase A5 — quarto e ultimo job: proposte del Bet Builder** · branch `feature/m7-a-coda-proposte` · PR: [#43](https://github.com/gennpalm/predictra/pull/43), in attesa di CI e merge; poi merge di `dev` in `main`. Con questa PR la fase A5 è completa: restano A4 (cadenza adattiva) e la chiusura di M7.
+
+| Passo | Contenuto                                                                                                                                                                       | Stato                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1     | Job `bet-builder.run` (`predictra_bet_builder.pipeline.run`): finestre `morning` 06–15 e `evening` 15–21 UTC, nello stesso ciclo e dopo le quote; `max_attempts` 2              | fatto: `predictra_agent/bet_builder.py`, 11 test                            |
+| 2     | Versioni separate: `PREDICTION_ENGINE_COMMIT` (previsioni) e `BET_BUILDER_COMMIT` (proposte), ognuna dall'ultimo commit del proprio servizio, al posto dell'unico `CODE_COMMIT` | fatto: codice e workflow (`PREDICTION_ENGINE_COMMIT`, `BET_BUILDER_COMMIT`) |
+| 3     | Workflow: `--plan bet-builder` nello schedule dell'agente; tolti gli schedule da _Bet Builder_ (resta l'avvio manuale)                                                          | fatto: `--plan bet-builder`; tolti gli schedule da _Bet Builder_            |
+| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                          | fatto: `pnpm check` verde, 75 test agente; PR aperta                        |
 
 ## Punti aperti
 

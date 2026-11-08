@@ -3,7 +3,12 @@ name = "predictra-agent"
 version = "0.1.0"
 description = "PREDICTRA — worker Python dell'agente autonomo (M7 corsia A): coda su Postgres via RPC"
 requires-python = ">=3.12"
-dependencies = ["httpx>=0.28,<1", "predictra-data-collector", "predictra-prediction-engine"]
+dependencies = [
+  "httpx>=0.28,<1",
+  "predictra-data-collector",
+  "predictra-prediction-engine",
+  "predictra-bet-builder",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.3,<9", "ruff>=0.11,<1"]
@@ -12,6 +17,7 @@ dev = ["pytest>=8.3,<9", "ruff>=0.11,<1"]
 # Job reali di M2 (fase A5): la raccolta resta nel suo servizio, il worker la richiama.
 predictra-data-collector = { path = "../data-collector", editable = true }
 predictra-prediction-engine = { path = "../prediction-engine", editable = true }
+predictra-bet-builder = { path = "../bet-builder", editable = true }
 
 [project.scripts]
 predictra-agent = "predictra_agent.__main__:main"
