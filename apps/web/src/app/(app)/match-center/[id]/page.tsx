@@ -8,6 +8,7 @@ import {
   ProviderAttribution,
   QualityBadge,
 } from "@/components/football/badges";
+import { MatchPredictions } from "@/components/predictions/match-predictions";
 import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { formatScore, parseId, severityTone } from "@/lib/football/format";
@@ -94,6 +95,8 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
           </dl>
         </Card>
       </div>
+
+      <MatchPredictions matchId={match.match_id} />
 
       <Card className="mt-4">
         <CardTitle>{m.matchCenter.openIssues}</CardTitle>

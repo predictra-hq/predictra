@@ -19,7 +19,7 @@ export const MAIN_NAV: readonly NavItem[] = [
   { key: "leagueIntelligence", href: "/leagues" },
   { key: "bankroll", href: "/bankroll", milestone: 6 },
   { key: "tracker", href: "/tracker", milestone: 6 },
-  { key: "modelIntelligence", href: "/models", milestone: 4 },
+  { key: "modelIntelligence", href: "/models" },
   { key: "dataCenter", href: "/data-center" },
   { key: "askPredictra", href: "/ask", milestone: 8 },
 ];
