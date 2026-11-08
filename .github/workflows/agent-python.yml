@@ -1,0 +1,115 @@
+name: Agent (Python)
+
+# Worker Python dell'agente autonomo (M7 corsia A, ADR 0003 e 0035).
+# - Test e lint del servizio a ogni PR o push che lo tocca.
+# - Avvio manuale di un ciclo su DEV, con l'opzione di accodare un job di verifica.
+#   Lo schedule (un ciclo ogni 3 ore, ADR 0035 §1) arriva con la fase A3.
+#   L'avvio manuale compare in Actions solo quando questo file è anche su main.
+# Runbook: docs/operations/agent.md
+
+on:
+  pull_request:
+    paths:
+      - "services/agent/**"
+      - ".github/workflows/agent-python.yml"
+  push:
+    branches: [dev, main]
+    paths:
+      - "services/agent/**"
+      - ".github/workflows/agent-python.yml"
+  workflow_dispatch:
+    inputs:
+      selftest:
+        description: "Prima del ciclo accoda un job agent.selftest.python (non legge né scrive dati)"
+        type: choice
+        options: [nessuno, riuscito, fallisce-una-volta, non-recuperabile]
+        default: nessuno
+      max_jobs:
+        description: "Job massimi del ciclo"
+        type: number
+        default: 10
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-python-${{ github.event_name == 'workflow_dispatch' && 'cycle' || github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: services/agent
+
+jobs:
+  test:
+    name: Python — lint e test
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Dipendenze
+        run: uv sync --locked
+      - name: Formattazione
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest
+
+  cycle:
+    name: Ciclo dell'agente (DEV)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Verifica segreti
+        id: secrets
+        working-directory: .
+        run: |
+          missing=""
+          for v in SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning title=Ciclo saltato::Segreti mancanti:$missing (vedi docs/operations/agent.md)"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.skip != 'true'
+
+      - uses: astral-sh/setup-uv@v6
+        if: steps.secrets.outputs.skip != 'true'
+
+      - name: Dipendenze
+        if: steps.secrets.outputs.skip != 'true'
+        run: uv sync --locked --no-dev
+
+      - name: Job di verifica
+        if: steps.secrets.outputs.skip != 'true' && inputs.selftest != 'nessuno'
+        env:
+          SELFTEST: ${{ inputs.selftest }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          case "$SELFTEST" in
+            riuscito) payload='{}' ;;
+            fallisce-una-volta) payload='{"fail_attempts": 1}' ;;
+            non-recuperabile) payload='{"permanent": true}' ;;
+          esac
+          uv run python -m predictra_agent enqueue --type agent.selftest.python \
+            --key "agent.selftest.python:${GITHUB_RUN_ID}" --payload "$payload"
+
+      - name: Ciclo
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          MAX_JOBS: ${{ inputs.max_jobs }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          # Budget di minuti dell'agente: ADR 0035 §2 (provvisorio finché l'ADR non è accettato).
+          uv run python -m predictra_agent cycle --source github_actions --schedule agent-python \
+            --max-jobs "$MAX_JOBS" --minutes-quota 900

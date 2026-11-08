@@ -26,10 +26,22 @@
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
 4. **M6 (bankroll): completata** (#25, #27, #28). Isolamento verificato su DEV con account temporanei: _Actions → Verifica DEV → Run workflow_. Da collegare in seguito: lo stake con Kelly nel Tracker.
 5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Prossime fasi di M8: hardening di sicurezza (A2–A3) e ambiente PROD (A4).
-6. **M7 (agente autonomo), corsia 0:** contratto della coda in revisione (PR `feature/m7-0-contratto`): migrazione `20261108150000_agent.sql`, [ADR 0035](../decisions/0035-pianificazione-agente.md) proposto, [data dictionary](../data-dictionary/agent.md). Dopo il merge:
-   - `gennpalm` conferma o corregge le scelte dell'ADR 0035 e riverifica da un browser i limiti gratuiti di QStash e GitHub Actions (punto aperto sotto);
-   - per la corsia A `gennpalm` prepara: account gratuito Upstash con QStash, i segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_), e `DATABASE_URL` del progetto DEV come segreto GitHub solo se i worker Python si collegano direttamente a Postgres. Nessun valore va scritto in chat, issue o file;
-   - corsie A (coda e scheduler) e B (monitoraggio e notifiche) in parallelo, piano in [M7](../roadmap/M7-agente-autonomo.md).
+6. **M7 (agente autonomo):** corsia 0 unita (#26) e migrazione `20261108150000_agent.sql` applicata su DEV. [ADR 0035](../decisions/0035-pianificazione-agente.md) ancora da confermare (runbook: [agent.md](agent.md)): prima `gennpalm` riverifica da browser i limiti gratuiti di QStash e GitHub Actions (punto aperto sotto). Corsia A in corso: vedi _Lavoro in corso_.
+   - Per la fase A3 `gennpalm` prepara: account gratuito Upstash con QStash, i segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_). Nessun valore va scritto in chat, issue o file. `DATABASE_URL` **non serve**: i worker Python usano le RPC via PostgREST con `SUPABASE_SECRET_KEY`, come i collector.
+
+## Lavoro in corso (per chi riprende)
+
+Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
+
+**M7 corsia A, fasi A1–A2** · branch `feature/m7-a-worker` · PR: [#33](https://github.com/gennpalm/predictra/pull/33), in attesa di CI e merge.
+
+| Passo | Contenuto                                                                                                                                                  | Stato                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1     | Servizio Python `services/agent` (`predictra_agent`): client della coda via RPC, ciclo del worker (heartbeat, prelievo, retry, dead-letter, budget minuti) | fatto                                               |
+| 2     | Test Python del worker (idempotenza, job interrotto ripreso dopo il lease, dead-letter, budget esaurito)                                                   | fatto: 25 test, `uv run pytest` in `services/agent` |
+| 3     | Worker TypeScript `apps/web/src/lib/agent/` (stesso ciclo, per gli endpoint di A3) con test                                                                | fatto: 13 test (`worker.test.ts`)                   |
+| 4     | Workflow `.github/workflows/agent-python.yml`: test a ogni PR, ciclo manuale su DEV (lo schedule arriva in A3)                                             | fatto                                               |
+| 5     | Documentazione (runbook `docs/operations/agent.md`, piano M7), `pnpm check`, PR verso `dev`                                                                | fatto: `pnpm check` verde, PR #33 aperta            |
 
 ## Punti aperti
 
