@@ -1,6 +1,6 @@
 # M7 — Agente autonomo: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia 0) · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -13,19 +13,19 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona | Issue | Stato       |
-| ---------------------------- | ------- | ----- | ----------- |
-| 0 — contratto                | —       | —     | da iniziare |
-| A — coda e scheduler         | —       | —     | da iniziare |
-| B — monitoraggio e notifiche | —       | —     | da iniziare |
+| Corsia                       | Persona  | Issue | Stato                                      |
+| ---------------------------- | -------- | ----- | ------------------------------------------ |
+| 0 — contratto                | gennpalm | —     | in revisione (PR `feature/m7-0-contratto`) |
+| A — coda e scheduler         | —        | —     | da iniziare                                |
+| B — monitoraggio e notifiche | —        | —     | da iniziare                                |
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                                                     | Chi        | Serve a           |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
-| P1  | Account gratuito Upstash e QStash; segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_) | `gennpalm` | corsia A, fase A3 |
-| P2  | Riverifica dei limiti gratuiti di QStash (M0 §3: 1.000 messaggi al giorno, 10 schedule) e dei minuti GitHub Actions disponibili                          | corsia 0   | ADR 0035          |
-| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub, se i worker Python si collegano direttamente a Postgres (`.env.example`)                            | `gennpalm` | corsia A          |
+| #   | Cosa                                                                                                                                                                                                                                                                           | Chi        | Serve a           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------------- |
+| P1  | Account gratuito Upstash e QStash; segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_). Nessun valore in chat, issue o file                                                                                  | `gennpalm` | corsia A, fase A3 |
+| P2  | Riverifica dei limiti gratuiti di QStash (M0 §3: 1.000 messaggi al giorno, 10 schedule) e dei minuti GitHub Actions disponibili. **Aperto:** l'8/11/2026 le pagine ufficiali non erano raggiungibili dall'ambiente cloud; va fatta da un browser prima di accettare l'ADR 0035 | `gennpalm` | ADR 0035          |
+| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub, se i worker Python si collegano direttamente a Postgres (`.env.example`)                                                                                                                                                  | `gennpalm` | corsia A          |
 
 ## Cosa serve dalle altre milestone
 

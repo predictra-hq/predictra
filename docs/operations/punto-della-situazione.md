@@ -24,7 +24,11 @@
 3. **M5 (Smart Bet Builder): completata** (#19, #20, #21), ADR 0025–0027 accettati. Restano due passi operativi per vedere proposte reali:
    - unire `dev` in `main`, così lo schedule del workflow _Bet Builder_ parte (07:53 e 17:07 UTC; [runbook](bet-builder.md));
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
-4. **M6 (bankroll)** è indipendente da tutto il resto.
+4. **M6 (bankroll)** è indipendente da tutto il resto: la fa il collega (ADR 0030–0034).
+5. **M7 (agente autonomo), corsia 0:** contratto della coda in revisione (PR `feature/m7-0-contratto`): migrazione `20261108150000_agent.sql`, [ADR 0035](../decisions/0035-pianificazione-agente.md) proposto, [data dictionary](../data-dictionary/agent.md). Dopo il merge:
+   - `gennpalm` conferma o corregge le scelte dell'ADR 0035 e riverifica da un browser i limiti gratuiti di QStash e GitHub Actions (punto aperto sotto);
+   - per la corsia A `gennpalm` prepara: account gratuito Upstash con QStash, i segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_), e `DATABASE_URL` del progetto DEV come segreto GitHub solo se i worker Python si collegano direttamente a Postgres. Nessun valore va scritto in chat, issue o file;
+   - corsie A (coda e scheduler) e B (monitoraggio e notifiche) in parallelo, piano in [M7](../roadmap/M7-agente-autonomo.md).
 
 ## Punti aperti
 
@@ -35,6 +39,7 @@
 | Deploy Vercel fermo su `Building…` per i commit di `Alfry1299` | risolto in modo conforme al piano gratuito: merge solo da `gennpalm` con _Create a merge commit_ e controllo dell'autore nel deploy (ADR 0050)                                                                                                                                                                                    | `gennpalm` fa i merge                                                  |
 | `score.fullTime` con supplementari e rigori                    | da verificare sui dati reali (segnalato come `match.score_non_regular`)                                                                                                                                                                                                                                                           | M2 corsia A                                                            |
 | Fixture con risposte reali registrate                          | i test usano gli esempi ufficiali delle documentazioni                                                                                                                                                                                                                                                                            | collector                                                              |
+| Limiti gratuiti di QStash e GitHub Actions (ADR 0035)          | non riverificati l'8/11/2026: le pagine ufficiali non sono raggiungibili dall'ambiente cloud. Per ora l'ADR usa i valori di M0 (7/11/2026) come tetto provvisorio                                                                                                                                                                 | `gennpalm`, da browser, prima di accettare l'ADR 0035                  |
 | GitHub Actions su Node 20 (deprecato)                          | solo avvisi, GitHub le esegue già su Node 24. Aggiornare `checkout`, `setup-node`, `pnpm/action-setup`, `setup-uv` e `supabase/setup-cli` alle major nuove in una PR dedicata, leggendo i cambi incompatibili                                                                                                                     | chiunque, bassa priorità                                               |
 
 ## Come lavorare in sessione
