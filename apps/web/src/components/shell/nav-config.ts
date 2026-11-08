@@ -29,6 +29,7 @@ export const ADMIN_NAV: readonly NavItem[] = [
   { key: "invitations", href: "/admin/invitations", permission: "invitations.manage" },
   { key: "audit", href: "/admin/audit", permission: "audit.read" },
   { key: "teamAliases", href: "/admin/team-aliases", permission: "providers.manage" },
+  { key: "agent", href: "/admin/agent", permission: "agents.monitor" },
 ];
 
 export const SETTINGS_NAV: readonly NavItem[] = [

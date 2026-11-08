@@ -39,13 +39,13 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: non ancora aperta.
 
-| Passo | Contenuto                                                                                                                        | Stato                                                                  |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| 1     | Letture lato server (`apps/web/src/lib/agent/queries.ts`) e logica di stato pura con test (`components/agent/status.ts`)         | fatto: `lib/agent/queries.ts`, `components/agent/status.ts` con 6 test |
-| 2     | B1: card _Stato agente_ in dashboard (solo `agents.monitor` vede i dati; gli altri un messaggio)                                 | da fare                                                                |
-| 3     | B2: pagina `/admin/agent` (stato per sorgente, code, budget, cicli, job falliti e dead-letter) con ripresa manuale (RPC + audit) | da fare                                                                |
-| 4     | B3: notifiche in dashboard, segna come lette                                                                                     | da fare                                                                |
-| 5     | Voce di menu, testi in `it.ts` (chiave `agent`), documentazione, `pnpm check`, PR verso `dev`                                    | da fare                                                                |
+| Passo | Contenuto                                                                                                                        | Stato                                                                                 |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1     | Letture lato server (`apps/web/src/lib/agent/queries.ts`) e logica di stato pura con test (`components/agent/status.ts`)         | fatto: `lib/agent/queries.ts`, `components/agent/status.ts` con 6 test                |
+| 2     | B1: card _Stato agente_ in dashboard (solo `agents.monitor` vede i dati; gli altri un messaggio)                                 | fatto: `components/agent/agent-status-card.tsx`                                       |
+| 3     | B2: pagina `/admin/agent` (stato per sorgente, code, budget, cicli, job falliti e dead-letter) con ripresa manuale (RPC + audit) | fatto: `app/(app)/admin/agent/` (pagina e azione di ripresa)                          |
+| 4     | B3: notifiche in dashboard, segna come lette                                                                                     | fatto: `components/agent/notifications-card.tsx`, `dashboard/notification-actions.ts` |
+| 5     | Voce di menu, testi in `it.ts` (chiave `agent`), documentazione, `pnpm check`, PR verso `dev`                                    | in corso: menu e testi fatti; manca verifica visiva, documentazione e PR              |
 
 **Dopo la corsia B:** fase A5, i job reali di M2–M5 nella coda, una PR per job; poi A4, la cadenza adattiva.
 

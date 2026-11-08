@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { highestRole } from "@predictra/shared-types";
+import { hasPermission, highestRole } from "@predictra/shared-types";
+import { AgentStatusCard } from "@/components/agent/agent-status-card";
+import { NotificationsCard } from "@/components/agent/notifications-card";
 import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { FreshnessBadge } from "@/components/football/badges";
@@ -31,10 +33,7 @@ export default async function DashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">{m.dashboard.agentStatus}</p>
-          <p className="mt-2 text-sm">{m.dashboard.agentNotConfigured}</p>
-        </Card>
+        <AgentStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
         <Card>
           <p className="text-xs uppercase tracking-wide text-muted">{m.dashboard.dataFreshness}</p>
           {lastSuccess ? (
@@ -63,6 +62,8 @@ export default async function DashboardPage() {
           </div>
         </Card>
       </div>
+
+      <NotificationsCard />
 
       <Card className="mt-6">
         <CardTitle>{m.dashboard.emptyTitle}</CardTitle>
