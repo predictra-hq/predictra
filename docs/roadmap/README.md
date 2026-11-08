@@ -14,7 +14,7 @@ Stato delle milestone, dipendenze e piani di lavoro. Ogni milestone ha un piano 
 | M5        | Smart Bet Builder      | M3, M4      | contratti di M3 e M4 su `dev`                                        | completata, **in servizio su DEV** dall'8/11/2026               | [M5](M5-bet-builder.md)                   |
 | M6        | Bankroll e tracker     | M1 (M3, M4) | subito per la base; Kelly dopo M4, CLV dopo M3                       | completata, **in servizio su DEV** dall'8/11/2026               | [M6](M6-bankroll-e-tracker.md)            |
 | M7        | Agente autonomo        | M2–M5       | contratto della coda subito; collegamento dei job quando esistono    | **in corso**: corsia 0 in revisione (ADR 0035 proposto)         | [M7](M7-agente-autonomo.md)               |
-| M8        | Hardening e produzione | tutte       | backup e restore subito; il resto alla fine                          | da iniziare                                                     | [M8](M8-hardening-e-produzione.md)        |
+| M8        | Hardening e produzione | tutte       | backup e restore subito; il resto alla fine                          | **in corso**: ADR 0040 (backup) proposto                        | [M8](M8-hardening-e-produzione.md)        |
 
 "Contratto" è la corsia 0 della milestone: tabelle, viste, RLS e tipi condivisi. Si unisce su `dev` per prima proprio per sbloccare chi viene dopo (collaborazione.md §6).
 
