@@ -28,12 +28,13 @@ A budget esaurito il ciclo si chiude come `failed` senza prelevare nulla.
 
 ## Job disponibili
 
-| Tipo                    | Worker     | Cosa fa                                                                                                                                              |
-| ----------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `agent.selftest.python` | Python     | verifica del ciclo: non legge né scrive dati. Payload `{"fail_attempts": n}` fallisce i primi n tentativi; `{"permanent": true}` va subito in `dead` |
-| `agent.selftest.web`    | TypeScript | come sopra, eseguito da `POST /api/jobs/cycle`                                                                                                       |
+| Tipo                    | Worker     | Cosa fa                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agent.selftest.python` | Python     | verifica del ciclo: non legge né scrive dati. Payload `{"fail_attempts": n}` fallisce i primi n tentativi; `{"permanent": true}` va subito in `dead`                                                                                                                                                                                                                                                                    |
+| `agent.selftest.web`    | TypeScript | come sopra, eseguito da `POST /api/jobs/cycle`                                                                                                                                                                                                                                                                                                                                                                          |
+| `football-data.collect` | Python     | raccolta football-data.org della finestra di 3 ore (`payload.window_start`), con il codice di `services/data-collector`. Accodato dal ciclo con `--plan football-data` (schedule ogni 3 ore al minuto 47). Finestra già superata → chiuso senza chiamate. `FOOTBALL_DATA_API_KEY` mancante o payload non valido → dead-letter. Competizione fallita → nuovo tentativo con backoff. Scritture idempotenti (upsert di M2) |
 
-I job reali di M2–M5 si collegano nella fase A5, uno per PR. Fino ad allora restano attivi i workflow attuali (_Data collector_, _Prediction engine_, _Bet Builder_).
+I job reali di M2–M5 si collegano nella fase A5, uno per PR. Collegato: raccolta football-data.org. Ancora sui loro workflow: quote (_Data collector_), previsioni (_Prediction engine_), proposte (_Bet Builder_).
 
 ## Segreti
 

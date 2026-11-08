@@ -4,15 +4,15 @@
 
 ## Cosa è in servizio su DEV
 
-| Area                                                                              | Stato                                                                              | Dove                                                         |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                 | https://predictra-dev.vercel.app                             |
-| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                    | Match Center, Data Center                                    |
-| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                            | `docs/data-dictionary/odds.md`                               |
-| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui | PR #10, runbook [data-collector.md](data-collector.md)       |
-| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`)                                          | _Actions → Data collector_                                   |
-| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                     | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
-| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                  | `/bet-builder`, _Actions → Bet Builder_                      |
+| Area                                                                              | Stato                                                                                                                                  | Dove                                                         |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                                                                     | https://predictra-dev.vercel.app                             |
+| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                                                                        | Match Center, Data Center                                    |
+| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                                                                                | `docs/data-dictionary/odds.md`                               |
+| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui                                                     | PR #10, runbook [data-collector.md](data-collector.md)       |
+| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`). Football-data passa alla coda dell'agente con la fase A5 (dopo il merge di `dev` in `main`) | _Actions → Data collector_; poi _Actions → Agent (Python)_   |
+| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                                                                         | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
+| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                                                                      | `/bet-builder`, _Actions → Bet Builder_                      |
 
 ## Cosa resta da fare, in ordine
 
@@ -37,17 +37,18 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
 
-**M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: [#38](https://github.com/gennpalm/predictra/pull/38), in attesa di CI e merge. Dopo il merge: controllare su DEV la dashboard e `/admin/agent`.
+**M7 corsia B:** unita (#38). Card _Stato agente_, pagina `/admin/agent` e notifiche in dashboard: da controllare su DEV con i dati reali.
 
-| Passo | Contenuto                                                                                                                        | Stato                                                                                 |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1     | Letture lato server (`apps/web/src/lib/agent/queries.ts`) e logica di stato pura con test (`components/agent/status.ts`)         | fatto: `lib/agent/queries.ts`, `components/agent/status.ts` con 6 test                |
-| 2     | B1: card _Stato agente_ in dashboard (solo `agents.monitor` vede i dati; gli altri un messaggio)                                 | fatto: `components/agent/agent-status-card.tsx`                                       |
-| 3     | B2: pagina `/admin/agent` (stato per sorgente, code, budget, cicli, job falliti e dead-letter) con ripresa manuale (RPC + audit) | fatto: `app/(app)/admin/agent/` (pagina e azione di ripresa)                          |
-| 4     | B3: notifiche in dashboard, segna come lette                                                                                     | fatto: `components/agent/notifications-card.tsx`, `dashboard/notification-actions.ts` |
-| 5     | Voce di menu, testi in `it.ts` (chiave `agent`), documentazione, `pnpm check`, PR verso `dev`                                    | fatto: `pnpm check` verde, PR aperta                                                  |
+**M7 corsia A, fase A5 — primo job: raccolta football-data.org** · branch `feature/m7-a-coda-football-data` · PR: [#40](https://github.com/gennpalm/predictra/pull/40), in attesa di CI e merge; poi merge di `dev` in `main` per attivare lo schedule. Prossimi job A5: quote, previsioni, proposte.
 
-**Dopo la corsia B:** fase A5, i job reali di M2–M5 nella coda, una PR per job; poi A4, la cadenza adattiva.
+| Passo | Contenuto                                                                                                                                                                               | Stato                                                                            |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1     | Job `football-data.collect` nel worker Python: usa `predictra_collector.run` (dipendenza locale `../data-collector`); finestra superata → chiuso senza chiamate; chiave mancante → dead | fatto: `predictra_agent/football_data.py`, 12 test                               |
+| 2     | Pianificazione nel ciclo Python (`cycle --plan football-data`): accoda la finestra di 3 h corrente con chiave idempotente, senza dipendere da QStash                                    | fatto: `cycle --plan football-data`                                              |
+| 3     | Workflow: schedule ogni 3 h in _Agent (Python)_ (minuto 47, codice di `dev`); tolto lo schedule football-data da _Data collector_ (quote e avvio manuale restano). Minuti invariati     | fatto: `agent-python.yml` (schedule 47 */3), `data-collector.yml` (tolto 17 */3) |
+| 4     | Test, documentazione (runbook, data-collector.md, piano), `pnpm check`, PR                                                                                                              | fatto: `pnpm check` verde, 37 test agente; PR aperta                             |
+
+Gli schedule usano i workflow presenti su `main`: il cambio diventa effettivo solo dopo il merge di `dev` in `main` (prima resta attivo il vecchio schedule, senza doppioni).
 
 ## Punti aperti
 

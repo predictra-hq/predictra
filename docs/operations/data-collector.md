@@ -4,8 +4,11 @@ Servizio Python in `services/data-collector/` che scarica partite e classifiche 
 
 ## Come funziona
 
+Dall'8/11/2026 (M7 fase A5) la raccolta automatica ogni 3 ore passa dalla coda dell'agente: il workflow _Agent (Python)_ accoda la finestra di 3 ore corrente (`football-data.collect:<AAAA-MM-GG>T<HH>`) e la esegue con lo stesso codice di questo servizio, con retry, dead-letter e stato in _Amministrazione → Agente_ ([runbook dell'agente](agent.md)). Il workflow _Data collector_ resta per le quote e per l'avvio manuale. Il cambio vale dal merge di `dev` in `main`.
+
 ```text
-GitHub Actions "Data collector" (ogni 3 ore, minuto 17, più l'avvio manuale)
+GitHub Actions "Agent (Python)" (ogni 3 ore, minuto 47: job football-data.collect della coda, M7)
+oppure "Data collector" (solo avvio manuale)
   └─ per ogni competizione della v1 (SA, PL, PD, BL1, FL1, DED, PPL, CL)
        1. start_ingestion_run        → apre l'esecuzione (rifiutata se i termini non sono verificati)
        2. GET /competitions/{code}/matches e /standings   (≥ 6,5 s tra le richieste: 10/minuto)

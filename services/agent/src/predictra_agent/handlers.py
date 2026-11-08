@@ -1,14 +1,17 @@
 """Gestori dei job eseguiti dal worker Python.
 
-I job reali di M2-M5 (raccolta football-data.org, quote, previsioni, proposte) si
-collegano nella fase A5, uno per PR (piano M7). Finché non sono qui, il worker
-non li preleva: la coda li lascia ad altri worker o in attesa.
+I job reali di M2-M5 si collegano nella fase A5, uno per PR (piano M7):
+- `football-data.collect` (raccolta football-data.org, M2): `football_data.py`.
+Quote, previsioni e proposte arrivano con le PR successive. Un tipo senza gestore
+non viene prelevato: resta in coda.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
+from . import football_data
 from .worker import Handler, JobContext, PermanentJobError
 
 
@@ -37,3 +40,15 @@ def selftest(ctx: JobContext) -> dict[str, Any]:
 HANDLERS: dict[str, Handler] = {
     "agent.selftest.python": selftest,
 }
+
+
+def build_handlers(
+    env: Mapping[str, str], *, supabase_url: str, supabase_secret_key: str
+) -> dict[str, Handler]:
+    """Tutti i gestori del worker, con la configurazione presa dall'ambiente."""
+    return {
+        **HANDLERS,
+        football_data.JOB_TYPE: football_data.make_handler(
+            env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
+        ),
+    }
