@@ -49,7 +49,7 @@ def test_ciclo_vuoto_registra_comunque_il_heartbeat(queue: FakeQueue, clock: Fak
 
 
 def test_selftest_completato(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:1")
+    queue.enqueue("agent.selftest.python", "demo:1")
     summary = run_cycle(queue, HANDLERS, config(), clock=clock)
     assert (summary.status, summary.claimed, summary.done) == ("succeeded", 1, 1)
     assert queue.jobs[1].status == "done"
@@ -122,7 +122,7 @@ def test_extend_lease_tiene_il_job(queue: FakeQueue, clock: FakeClock) -> None:
 
 
 def test_retry_con_backoff_poi_dead(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:retry", {"fail_attempts": 10}, max_attempts=3)
+    queue.enqueue("agent.selftest.python", "demo:retry", {"fail_attempts": 10}, max_attempts=3)
 
     first = run_cycle(queue, HANDLERS, config(), clock=clock)
     assert (first.status, first.failed, first.dead) == ("partial", 1, 0)
@@ -140,7 +140,7 @@ def test_retry_con_backoff_poi_dead(queue: FakeQueue, clock: FakeClock) -> None:
 
 
 def test_selftest_riesce_dopo_i_fallimenti_richiesti(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:recupero", {"fail_attempts": 1})
+    queue.enqueue("agent.selftest.python", "demo:recupero", {"fail_attempts": 1})
     run_cycle(queue, HANDLERS, config(), clock=clock)
     clock.advance(3600)
     summary = run_cycle(queue, HANDLERS, config(), clock=clock)
@@ -149,7 +149,7 @@ def test_selftest_riesce_dopo_i_fallimenti_richiesti(queue: FakeQueue, clock: Fa
 
 
 def test_errore_non_recuperabile_va_subito_in_dead(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:fatale", {"permanent": True})
+    queue.enqueue("agent.selftest.python", "demo:fatale", {"permanent": True})
     summary = run_cycle(queue, HANDLERS, config(), clock=clock)
     assert (summary.failed, summary.dead) == (1, 1)
     assert queue.jobs[1].status == "dead"
@@ -157,7 +157,7 @@ def test_errore_non_recuperabile_va_subito_in_dead(queue: FakeQueue, clock: Fake
 
 
 def test_payload_non_valido_e_non_recuperabile(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:payload", {"fail_attempts": "tre"})
+    queue.enqueue("agent.selftest.python", "demo:payload", {"fail_attempts": "tre"})
     run_cycle(queue, HANDLERS, config(), clock=clock)
     assert queue.jobs[1].status == "dead"
 
@@ -171,14 +171,16 @@ def test_il_worker_preleva_solo_i_tipi_che_sa_eseguire(queue: FakeQueue, clock: 
 
 def test_max_jobs_e_tempo_a_disposizione(queue: FakeQueue, clock: FakeClock) -> None:
     for i in range(5):
-        queue.enqueue("agent.selftest", f"demo:{i}")
+        queue.enqueue("agent.selftest.python", f"demo:{i}")
     assert run_cycle(queue, HANDLERS, config(max_jobs=2), clock=clock).done == 2
 
     def lento(ctx: JobContext) -> None:
         clock.advance(600)
 
     # Con 1.800 s e lease di 900 s: dopo il primo job (600 s) ne resta spazio per un altro solo.
-    summary = run_cycle(queue, {"agent.selftest": lento}, config(lease_seconds=900), clock=clock)
+    summary = run_cycle(
+        queue, {"agent.selftest.python": lento}, config(lease_seconds=900), clock=clock
+    )
     assert summary.done == 2
 
 
@@ -204,7 +206,7 @@ def test_errore_della_coda_chiude_il_ciclo_come_fallito(queue: FakeQueue, clock:
 
 
 def test_budget_di_minuti_esaurito_salta_il_ciclo(queue: FakeQueue, clock: FakeClock) -> None:
-    queue.enqueue("agent.selftest", "demo:budget")
+    queue.enqueue("agent.selftest.python", "demo:budget")
     queue.quota_used[("github-actions", "month")] = 900
     summary = run_cycle(queue, HANDLERS, config(minutes=MinutesBudget(quota=900)), clock=clock)
     assert summary.budget_exhausted

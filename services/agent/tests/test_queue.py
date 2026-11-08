@@ -28,14 +28,14 @@ def make_queue(handler: Any) -> tuple[SupabaseQueue, list[httpx.Request]]:
 def test_claim_invia_i_parametri_e_legge_i_job() -> None:
     row = {
         "id": 7,
-        "type": "agent.selftest",
+        "type": "agent.selftest.python",
         "idempotency_key": "demo:7",
         "payload": {"a": 1},
         "attempts": 1,
         "max_attempts": 5,
     }
     queue, seen = make_queue(lambda r: httpx.Response(200, json=[row]))
-    jobs = queue.claim("w", limit=1, lease_seconds=900, types=["agent.selftest"], run_id=3)
+    jobs = queue.claim("w", limit=1, lease_seconds=900, types=["agent.selftest.python"], run_id=3)
     assert jobs[0].id == 7 and jobs[0].payload == {"a": 1}
     request = seen[0]
     assert request.url.path == "/rest/v1/rpc/claim_agent_jobs"
@@ -45,7 +45,7 @@ def test_claim_invia_i_parametri_e_legge_i_job() -> None:
         "p_worker_id": "w",
         "p_limit": 1,
         "p_lease_seconds": 900,
-        "p_types": ["agent.selftest"],
+        "p_types": ["agent.selftest.python"],
         "p_run_id": 3,
     }
 
@@ -54,7 +54,7 @@ def test_enqueue_restituisce_se_creato() -> None:
     queue, _ = make_queue(
         lambda r: httpx.Response(200, json=[{"job_id": 4, "created": False, "status": "done"}])
     )
-    result = queue.enqueue("agent.selftest", "demo:4")
+    result = queue.enqueue("agent.selftest.python", "demo:4")
     assert (result.job_id, result.created, result.status) == (4, False, "done")
 
 
@@ -100,6 +100,8 @@ def test_configurazione_mancante(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_payload_non_valido(capsys: pytest.CaptureFixture[str]) -> None:
     env = {"SUPABASE_URL": "https://demo.supabase.co", "SUPABASE_SECRET_KEY": KEY}
-    code = main(["enqueue", "--type", "agent.selftest", "--key", "k", "--payload", "[1]"], env=env)
+    code = main(
+        ["enqueue", "--type", "agent.selftest.python", "--key", "k", "--payload", "[1]"], env=env
+    )
     assert code == 2
     assert KEY not in capsys.readouterr().err

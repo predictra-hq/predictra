@@ -21,15 +21,15 @@ def selftest(ctx: JobContext) -> dict[str, Any]:
     """
     payload = ctx.job.payload
     if payload.get("permanent"):
-        raise PermanentJobError("agent.selftest: errore non recuperabile richiesto dal payload")
+        raise PermanentJobError("agent.selftest.python: errore non recuperabile richiesto dal payload")
     fail_attempts = payload.get("fail_attempts", 0)
     if not isinstance(fail_attempts, int) or isinstance(fail_attempts, bool) or fail_attempts < 0:
-        raise PermanentJobError("agent.selftest: fail_attempts deve essere un intero >= 0")
+        raise PermanentJobError("agent.selftest.python: fail_attempts deve essere un intero >= 0")
     if ctx.job.attempts <= fail_attempts:
-        raise RuntimeError(f"agent.selftest: fallimento richiesto (tentativo {ctx.job.attempts})")
+        raise RuntimeError(f"agent.selftest.python: fallimento richiesto (tentativo {ctx.job.attempts})")
     return {"ok": True, "attempt": ctx.job.attempts}
 
 
 HANDLERS: dict[str, Handler] = {
-    "agent.selftest": selftest,
+    "agent.selftest.python": selftest,
 }
