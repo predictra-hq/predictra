@@ -24,9 +24,9 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "run = previsioni; tune = confronto degli iperparametri (sola lettura)"
+        description: "run = previsioni; tune = taratura; diagnose = verifica (entrambi in sola lettura)"
         type: choice
-        options: [run, tune]
+        options: [run, tune, diagnose]
         default: run
       tune_args:
         description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
@@ -118,6 +118,10 @@ jobs:
           # La versione dipende dal codice del motore, non da ogni commit del repository:
           # una versione attivata continua a ricevere previsioni finché il motore non cambia.
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
+          if [ "${{ inputs.command || 'run' }}" = "diagnose" ]; then
+            uv run python -m predictra_engine diagnose
+            exit 0
+          fi
           if [ "${{ inputs.command || 'run' }}" = "tune" ]; then
             # shellcheck disable=SC2086
             uv run python -m predictra_engine tune $TUNE_ARGS

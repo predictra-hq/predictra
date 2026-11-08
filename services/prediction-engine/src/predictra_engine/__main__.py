@@ -13,6 +13,7 @@ import sys
 from datetime import UTC, datetime
 
 from .data import MatchResult
+from .diagnose import diagnose
 from .models import all_models
 from .pipeline import run
 from .store import SupabaseStore
@@ -28,6 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--dry-run", action="store_true", help="legge i dati ma non scrive nulla")
     cmd.add_argument("--horizon-days", type=int, default=7, help="giorni di partite da prevedere")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -46,6 +48,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
     store = SupabaseStore(url.rstrip("/"), key)
+    if args.command == "diagnose":
+        result = diagnose(store, datetime.now(UTC).replace(microsecond=0))
+        print("Diagnosi (sola lettura)")
+        for line in result.lines:
+            print(line)
+        print(f"ESITO: {result.verdict}")
+        return 0
     if args.command == "tune":
         return _tune(store, args.l2, args.xi)
     if not re.fullmatch(r"[0-9a-f]{7,40}", commit):
