@@ -2,8 +2,8 @@
 
 - ``python -m predictra_agent cycle --source github_actions --schedule agent-python``:
   un ciclo del worker (heartbeat, prelievo, esecuzione, retry, dead-letter).
-- ``python -m predictra_agent enqueue --type agent.selftest.python --key <chiave> [--payload JSON]``:
-  accoda un job in modo idempotente.
+- ``python -m predictra_agent enqueue --type <tipo> --key <chiave> [--payload JSON]``:
+  accoda un job in modo idempotente (es. ``--type agent.selftest.python``).
 
 Variabili: ``SUPABASE_URL`` (o ``NEXT_PUBLIC_SUPABASE_URL``) e ``SUPABASE_SECRET_KEY``.
 """
