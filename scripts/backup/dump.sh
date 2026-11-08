@@ -28,7 +28,9 @@ done
 remote=(--remote="$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD")
 supabase db dump "${remote[@]}" --role-only -f "$work/backup/roles.sql"
 supabase db dump "${remote[@]}" -f "$work/backup/schema.sql"
-supabase db dump "${remote[@]}" --data-only --use-copy -f "$work/backup/data.sql"
+# Dati: solo gli schemi usati da PREDICTRA (public) e gli account (auth). Gli schemi
+# gestiti da Supabase (storage, realtime, ...) non contengono dati dell'app.
+supabase db dump "${remote[@]}" --data-only --use-copy --schema public,auth -f "$work/backup/data.sql"
 
 sha() { sha256sum "$1" | cut -d' ' -f1; }
 jq -n \
