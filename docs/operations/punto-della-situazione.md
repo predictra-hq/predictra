@@ -41,7 +41,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — primo job, raccolta football-data.org:** unito (#40) e attivo da `main` (schedule _Agent (Python)_ ogni 3 h al minuto 47).
 
-**M7 corsia A, fase A5 — secondo job: quote The Odds API** · branch `feature/m7-a-coda-quote` · PR: non ancora aperta.
+**M7 corsia A, fase A5 — secondo job: quote The Odds API** · branch `feature/m7-a-coda-quote` · PR: [#41](https://github.com/gennpalm/predictra/pull/41), in attesa di CI e merge; poi merge di `dev` in `main`. Prossimi job A5: previsioni, proposte.
 
 | Passo | Contenuto                                                                                                                                                                                                       | Stato                                                                             |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
