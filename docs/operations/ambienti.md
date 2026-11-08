@@ -22,16 +22,16 @@ Fotografia di cosa è in servizio e di chi lo gestisce. Qui **non** vanno mai va
 
 Si gestiscono in _Settings → Secrets and variables → Actions_ (solo `gennpalm`).
 
-| Segreto                    | Usato da                         | Origine                                       |
-| -------------------------- | -------------------------------- | --------------------------------------------- |
-| `SUPABASE_ACCESS_TOKEN`    | deploy (migrazioni, config Auth) | token personale Supabase, con scadenza        |
-| `DEV_SUPABASE_PROJECT_ID`  | deploy DEV, bootstrap            | Supabase → Project Settings                   |
-| `DEV_SUPABASE_DB_PASSWORD` | deploy DEV                       | password del database DEV                     |
-| `DEV_SUPABASE_SECRET_KEY`  | workflow Bootstrap Super Admin   | Supabase → API Keys → Secret key              |
-| `DEV_APP_BASE_URL`         | deploy DEV, bootstrap            | `https://predictra-dev.vercel.app`            |
-| `VERCEL_TOKEN`             | deploy                           | token Vercel con scope sul team, con scadenza |
-| `VERCEL_ORG_ID`            | deploy                           | Team ID del team Predictra                    |
-| `DEV_VERCEL_PROJECT_ID`    | deploy DEV                       | Vercel → progetto → Settings → General        |
+| Segreto                    | Usato da                         | Origine                                         |
+| -------------------------- | -------------------------------- | ----------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN`    | deploy (migrazioni, config Auth) | token personale Supabase, senza scadenza        |
+| `DEV_SUPABASE_PROJECT_ID`  | deploy DEV, bootstrap            | Supabase → Project Settings                     |
+| `DEV_SUPABASE_DB_PASSWORD` | deploy DEV                       | password del database DEV                       |
+| `DEV_SUPABASE_SECRET_KEY`  | workflow Bootstrap Super Admin   | Supabase → API Keys → Secret key                |
+| `DEV_APP_BASE_URL`         | deploy DEV, bootstrap            | `https://predictra-dev.vercel.app`              |
+| `VERCEL_TOKEN`             | deploy                           | token Vercel con scope sul team, senza scadenza |
+| `VERCEL_ORG_ID`            | deploy                           | Team ID del team Predictra                      |
+| `DEV_VERCEL_PROJECT_ID`    | deploy DEV                       | Vercel → progetto → Settings → General          |
 
 Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Supabase con `DEV_SUPABASE_SECRET_KEY`):
 
@@ -41,16 +41,16 @@ Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Su
 | `ODDS_API_KEY`          | The Odds API (piano Starter, 500 crediti/mese) | presente dal 7/11/2026                         |
 | `API_FOOTBALL_KEY`      | API-Football                                   | non creato: termini da verificare (M2 fase A3) |
 
-## Credenziali con scadenza
+## Credenziali da rinnovare
 
-Quando una di queste scade i deploy si fermano. Alla creazione o al rinnovo scrivi qui la data.
+I due token usati dai deploy sono stati creati **senza scadenza** (verificato dal proprietario l'8/11/2026). Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
 
-| Credenziale                               | Dove si rinnova                        | Scadenza    |
-| ----------------------------------------- | -------------------------------------- | ----------- |
-| Token Supabase `github-actions-predictra` | supabase.com → Account → Access Tokens | da annotare |
-| Token Vercel `github-actions-predictra`   | vercel.com → Account Settings → Tokens | da annotare |
+| Credenziale                               | Dove si rinnova                        | Scadenza |
+| ----------------------------------------- | -------------------------------------- | -------- |
+| Token Supabase `github-actions-predictra` | supabase.com → Account → Access Tokens | nessuna  |
+| Token Vercel `github-actions-predictra`   | vercel.com → Account Settings → Tokens | nessuna  |
 
-Dopo il rinnovo aggiorna il segreto GitHub con lo stesso nome e rilancia l'ultimo run della CI su `dev`.
+Dopo la sostituzione aggiorna il segreto GitHub con lo stesso nome e rilancia l'ultimo run della CI su `dev`.
 
 ## Workflow manuali
 
