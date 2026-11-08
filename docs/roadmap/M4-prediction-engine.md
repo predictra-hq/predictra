@@ -16,11 +16,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona   | Issue | Stato                                         |
-| --------------- | --------- | ----- | --------------------------------------------- |
-| 0 — contratto   | Alfry1299 | —     | unita (#17)                                   |
-| A — motore      | Alfry1299 | —     | A1–A5 in revisione (PR `feature/m4-a-motore`) |
-| B — interfaccia | —         | —     | da iniziare                                   |
+| Corsia          | Persona   | Issue | Stato                                                     |
+| --------------- | --------- | ----- | --------------------------------------------------------- |
+| 0 — contratto   | Alfry1299 | —     | unita (#17)                                               |
+| A — motore      | Alfry1299 | —     | A1–A5 in revisione (PR `feature/m4-a-motore`)             |
+| B — interfaccia | Alfry1299 | —     | B1–B4 in revisione (PR `feature/m4-b-model-intelligence`) |
 
 ## Prerequisiti
 
