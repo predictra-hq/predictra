@@ -31,7 +31,7 @@ A budget esaurito il ciclo si chiude come `failed` senza prelevare nulla.
 | Tipo                    | Worker     | Cosa fa                                                                                                                                              |
 | ----------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `agent.selftest.python` | Python     | verifica del ciclo: non legge né scrive dati. Payload `{"fail_attempts": n}` fallisce i primi n tentativi; `{"permanent": true}` va subito in `dead` |
-| `agent.selftest.web`    | TypeScript | come sopra, per gli endpoint di A3                                                                                                                   |
+| `agent.selftest.web`    | TypeScript | come sopra, eseguito da `POST /api/jobs/cycle`                                                                                                       |
 
 I job reali di M2–M5 si collegano nella fase A5, uno per PR. Fino ad allora restano attivi i workflow attuali (_Data collector_, _Prediction engine_, _Bet Builder_).
 
@@ -39,7 +39,54 @@ I job reali di M2–M5 si collegano nella fase A5, uno per PR. Fino ad allora re
 
 Il worker Python usa gli stessi segreti GitHub dei collector: `DEV_SUPABASE_PROJECT_ID` e `DEV_SUPABASE_SECRET_KEY`. Non serve `DATABASE_URL`, perché le RPC passano da PostgREST.
 
-## Verifica su DEV (dopo il merge in `main`)
+## Endpoint QStash (fase A3)
+
+`POST /api/jobs/cycle` esegue un ciclo del worker TypeScript (`source = qstash`, `schedule = jobs-light`):
+
+| Situazione                  | Risposta | Effetto                                                                |
+| --------------------------- | -------- | ---------------------------------------------------------------------- |
+| chiavi QStash non impostate | 503      | nessuno                                                                |
+| firma assente o non valida  | 401      | nessuno: il database non viene toccato                                 |
+| firma valida                | 200      | +1 messaggio nel budget giornaliero `qstash` (600, ADR 0035), un ciclo |
+
+- La firma si verifica con le chiavi passate esplicitamente e `devMode: false`. Una variabile `QSTASH_DEV` non disattiva il controllo.
+- L'URL firmato deve essere esattamente `APP_BASE_URL` + `/api/jobs/cycle`.
+- Il proxy della sessione esclude `/api/jobs/*`: lì non c'è login, l'autorizzazione è la firma.
+- La risposta è 200 anche se il ciclo fallisce. QStash non deve ritentare; l'esito è in `agent_runs`.
+
+### Attivazione su DEV (`gennpalm`)
+
+I nomi delle voci nella console di Upstash non sono verificati: da questo ambiente il sito non si raggiunge.
+
+1. Crea l'account gratuito Upstash e apri QStash. Copia le due chiavi di firma (_current_ e _next_ signing key).
+2. Vercel, progetto DEV → _Settings → Environment Variables_. Aggiungi `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY`:
+   - tipo _Secret_;
+   - ambiente _Production_, perché il deploy di DEV usa `--prod`.
+
+   Non scrivere i valori in chat, issue o file.
+
+3. Le variabili valgono dal deploy successivo: il prossimo merge su `dev`, oppure _Re-run_ dell'ultimo deploy.
+4. Controlla che `APP_BASE_URL` su Vercel sia l'URL pubblico di DEV, senza slash finale.
+5. Verifica da terminale:
+
+   ```bash
+   curl -s -X POST https://predictra-dev.vercel.app/api/jobs/cycle
+   ```
+
+   Atteso `{"error":"Firma non valida"}`. Se invece risponde `QStash non configurato`, le chiavi non sono arrivate al deploy.
+
+6. In QStash crea uno schedule:
+   - destinazione `https://predictra-dev.vercel.app/api/jobs/cycle`, metodo `POST`;
+   - cron `*/15 * * * *`;
+   - **retry 0**.
+
+   Sono 96 messaggi al giorno, entro il budget di 600. La cadenza adattiva (ADR 0035 §3) arriva con la fase A4.
+
+7. Dopo 15 minuti, in `agent_runs` compare un ciclo `qstash` / `jobs-light` `succeeded`. In `agent_rate_limits` (`qstash`, `day`) compare il conteggio.
+
+Lo schedule di GitHub Actions per il worker Python resta spento fino alla fase A5. Finché i job reali non passano dalla coda consumerebbe minuti a vuoto (circa 2 per ciclo).
+
+## Verifica del worker Python su DEV (dopo il merge in `main`)
 
 L'avvio manuale compare in _Actions_ solo quando il workflow è anche su `main`.
 
