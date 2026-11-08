@@ -2,10 +2,13 @@
 
 - ``python -m predictra_agent cycle --source github_actions --schedule agent-python``:
   un ciclo del worker (heartbeat, prelievo, esecuzione, retry, dead-letter).
+  Con ``--plan football-data`` prima accoda, in modo idempotente, il job della
+  finestra corrente di raccolta football-data.org (fase A5).
 - ``python -m predictra_agent enqueue --type <tipo> --key <chiave> [--payload JSON]``:
   accoda un job in modo idempotente (es. ``--type agent.selftest.python``).
 
-Variabili: ``SUPABASE_URL`` (o ``NEXT_PUBLIC_SUPABASE_URL``) e ``SUPABASE_SECRET_KEY``.
+Variabili: ``SUPABASE_URL`` (o ``NEXT_PUBLIC_SUPABASE_URL``) e ``SUPABASE_SECRET_KEY``;
+``FOOTBALL_DATA_API_KEY`` per il job ``football-data.collect``.
 """
 
 from __future__ import annotations
@@ -15,10 +18,12 @@ import json
 import os
 import socket
 import sys
+from datetime import UTC, datetime
 from typing import cast
 
-from .handlers import HANDLERS
-from .queue import RunSource, SupabaseQueue
+from . import football_data
+from .handlers import build_handlers
+from .queue import QueueError, RunSource, SupabaseQueue
 from .worker import CycleConfig, MinutesBudget, run_cycle
 
 
@@ -57,7 +62,20 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
         time_budget_seconds=args.time_budget,
         minutes=minutes,
     )
-    summary = run_cycle(queue, HANDLERS, config, secrets=secrets)
+    for plan in args.plan:
+        if plan == "football-data":
+            job_type, key, payload = football_data.planned_job(datetime.now(UTC))
+            try:
+                result = queue.enqueue(job_type, key, payload)
+                state = "accodato" if result.created else f"già presente ({result.status})"
+                print(f"Piano: {key} {state}")
+            except QueueError as exc:
+                # Il ciclo parte comunque: preleva i job già in coda.
+                print(f"Piano non riuscito per {key}: {exc}")
+    football_key = (env.get("FOOTBALL_DATA_API_KEY") or "").strip()
+    handlers = build_handlers(env, supabase_url=queue.url, supabase_secret_key=queue.secret_key)
+    secrets = (*secrets, football_key) if football_key else secrets
+    summary = run_cycle(queue, handlers, config, secrets=secrets)
     print(
         f"Ciclo {summary.run_id} ({config.source}/{config.schedule}) — {summary.status}: "
         f"prelevati={summary.claimed} completati={summary.done} falliti={summary.failed} "
@@ -93,6 +111,13 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     cycle.add_argument("--max-jobs", type=int, default=10)
     cycle.add_argument("--lease-seconds", type=int, default=900)
     cycle.add_argument("--time-budget", type=int, default=1800, help="secondi massimi del ciclo")
+    cycle.add_argument(
+        "--plan",
+        action="append",
+        choices=["football-data"],
+        default=[],
+        help="accoda il job della finestra corrente prima del ciclo (ripetibile)",
+    )
     cycle.add_argument(
         "--minutes-quota",
         type=int,

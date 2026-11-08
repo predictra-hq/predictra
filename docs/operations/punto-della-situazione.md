@@ -37,17 +37,18 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
 
-**M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: [#38](https://github.com/gennpalm/predictra/pull/38), in attesa di CI e merge. Dopo il merge: controllare su DEV la dashboard e `/admin/agent`.
+**M7 corsia B:** unita (#38). Card _Stato agente_, pagina `/admin/agent` e notifiche in dashboard: da controllare su DEV con i dati reali.
 
-| Passo | Contenuto                                                                                                                        | Stato                                                                                 |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1     | Letture lato server (`apps/web/src/lib/agent/queries.ts`) e logica di stato pura con test (`components/agent/status.ts`)         | fatto: `lib/agent/queries.ts`, `components/agent/status.ts` con 6 test                |
-| 2     | B1: card _Stato agente_ in dashboard (solo `agents.monitor` vede i dati; gli altri un messaggio)                                 | fatto: `components/agent/agent-status-card.tsx`                                       |
-| 3     | B2: pagina `/admin/agent` (stato per sorgente, code, budget, cicli, job falliti e dead-letter) con ripresa manuale (RPC + audit) | fatto: `app/(app)/admin/agent/` (pagina e azione di ripresa)                          |
-| 4     | B3: notifiche in dashboard, segna come lette                                                                                     | fatto: `components/agent/notifications-card.tsx`, `dashboard/notification-actions.ts` |
-| 5     | Voce di menu, testi in `it.ts` (chiave `agent`), documentazione, `pnpm check`, PR verso `dev`                                    | fatto: `pnpm check` verde, PR aperta                                                  |
+**M7 corsia A, fase A5 — primo job: raccolta football-data.org** · branch `feature/m7-a-coda-football-data` · PR: non ancora aperta.
 
-**Dopo la corsia B:** fase A5, i job reali di M2–M5 nella coda, una PR per job; poi A4, la cadenza adattiva.
+| Passo | Contenuto                                                                                                                                                                               | Stato                                              |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| 1     | Job `football-data.collect` nel worker Python: usa `predictra_collector.run` (dipendenza locale `../data-collector`); finestra superata → chiuso senza chiamate; chiave mancante → dead | fatto: `predictra_agent/football_data.py`, 12 test |
+| 2     | Pianificazione nel ciclo Python (`cycle --plan football-data`): accoda la finestra di 3 h corrente con chiave idempotente, senza dipendere da QStash                                    | fatto: `cycle --plan football-data`                |
+| 3     | Workflow: schedule ogni 3 h in _Agent (Python)_ (minuto 47, codice di `dev`); tolto lo schedule football-data da _Data collector_ (quote e avvio manuale restano). Minuti invariati     | da fare                                            |
+| 4     | Test, documentazione (runbook, data-collector.md, piano), `pnpm check`, PR                                                                                                              | da fare                                            |
+
+Gli schedule usano i workflow presenti su `main`: il cambio diventa effettivo solo dopo il merge di `dev` in `main` (prima resta attivo il vecchio schedule, senza doppioni).
 
 ## Punti aperti
 
