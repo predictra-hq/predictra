@@ -89,6 +89,25 @@ Verificato sulla documentazione di Upstash l'8/11/2026 (https://upstash.com/docs
 
 Lo schedule di GitHub Actions per il worker Python resta spento fino alla fase A5. Finché i job reali non passano dalla coda consumerebbe minuti a vuoto (circa 2 per ciclo).
 
+## Monitoraggio (corsia B)
+
+- **Dashboard → card _Stato agente_**, solo per chi ha `agents.monitor` (Admin e Super Admin): stato complessivo, ultimo ciclo riuscito e frequenza reale per sorgente.
+  - _Operativo_: l'ultimo ciclo riuscito è entro la soglia.
+  - _Degradato_: nessun ciclo riuscito oltre 3 volte la cadenza attesa (ADR 0035).
+  - _Mai avviato_: nessun ciclo registrato.
+
+  Una sorgente non ancora pianificata, come GitHub Actions prima della fase A5, non rende l'agente degradato. Gli altri utenti vedono solo un messaggio: la RLS non mostra loro i dati.
+
+- **Amministrazione → _Agente_** (`/admin/agent`), con 2FA:
+  - stato per sorgente, code per tipo e stato;
+  - budget gratuiti della finestra corrente (`qstash` giornaliero, `github-actions` mensile);
+  - ultimi 30 cicli con gli errori;
+  - ultimi 50 job, filtrabili per stato.
+
+  Un job in _dead-letter_ ha il pulsante **Riprendi**: lo rimette in coda con i tentativi azzerati. L'operazione è registrata nell'audit come `agent.job_retried`.
+
+- **Dashboard → _Notifiche_**, per ogni utente e solo le proprie. Quando un job finisce in dead-letter, Admin e Super Admin ricevono una notifica con il link alla pagina dell'agente. Si possono segnare come lette una alla volta o tutte insieme. Nessuna email (ADR 0008).
+
 ## Verifica del worker Python su DEV (dopo il merge in `main`)
 
 L'avvio manuale compare in _Actions_ solo quando il workflow è anche su `main`.

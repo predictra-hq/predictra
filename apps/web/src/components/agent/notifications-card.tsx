@@ -1,0 +1,77 @@
+import Link from "next/link";
+import { markNotificationsRead } from "@/app/(app)/dashboard/notification-actions";
+import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { Badge, Card, CardTitle } from "@/components/ui/primitives";
+import { listMyNotifications } from "@/lib/agent/queries";
+import { formatDateTime, getMessages } from "@/lib/i18n";
+
+const SEVERITY_TONE = { info: "neutral", warning: "warning", error: "negative" } as const;
+
+/**
+ * Notifiche in dashboard (M7 B3). Solo le proprie (RLS); la piattaforma non
+ * invia email (ADR 0008). I link sono solo percorsi interni (vincolo in tabella).
+ */
+export async function NotificationsCard() {
+  const a = getMessages().agent;
+  const data = await listMyNotifications().catch(() => null);
+  if (!data) return null;
+  const { items, unread } = data;
+
+  return (
+    <Card className="mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <CardTitle>
+          {a.notificationsTitle}
+          {unread > 0 ? (
+            <Badge tone="warning" className="ml-2 align-middle">
+              {unread} {a.unread}
+            </Badge>
+          ) : null}
+        </CardTitle>
+        {unread > 0 ? (
+          <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
+            <SubmitButton variant="secondary" className="h-8 text-xs">
+              {a.markAllRead}
+            </SubmitButton>
+          </ActionForm>
+        ) : null}
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{a.notificationsEmpty}</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-border">
+          {items.map((n) => (
+            <li key={n.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
+              <div className={n.read_at ? "text-muted" : undefined}>
+                <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                  <Badge tone={SEVERITY_TONE[n.severity]}>{a.severity[n.severity]}</Badge>
+                  {n.title}
+                </p>
+                {n.body ? <p className="mt-1 text-sm text-muted">{n.body}</p> : null}
+                <p className="mt-1 text-xs text-subtle">
+                  {formatDateTime(n.created_at)}
+                  {n.link ? (
+                    <>
+                      {" · "}
+                      <Link href={n.link} className="underline">
+                        {a.open}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+              {n.read_at ? null : (
+                <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
+                  <input type="hidden" name="id" value={n.id} />
+                  <SubmitButton variant="ghost" className="h-8 text-xs">
+                    {a.markRead}
+                  </SubmitButton>
+                </ActionForm>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}

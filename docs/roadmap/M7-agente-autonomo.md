@@ -17,7 +17,7 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 | ---------------------------- | -------- | ----- | ------------------------------------------------------------------ |
 | 0 — contratto                | gennpalm | —     | unita (#26)                                                        |
 | A — coda e scheduler         | gennpalm | —     | A1–A3 unite (#33, #35); manca lo schedule QStash su DEV; poi A4–A5 |
-| B — monitoraggio e notifiche | —        | —     | da iniziare                                                        |
+| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 in revisione (#38)                                           |
 
 ## Prerequisiti
 

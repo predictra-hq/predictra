@@ -37,7 +37,17 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
 
-**Prossimo:** fase A5, i job reali di M2–M5 nella coda, una PR per job; oppure A4, la cadenza adattiva. Lo schedule GitHub Actions del worker Python si accende con la prima PR di A5.
+**M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: [#38](https://github.com/gennpalm/predictra/pull/38), in attesa di CI e merge. Dopo il merge: controllare su DEV la dashboard e `/admin/agent`.
+
+| Passo | Contenuto                                                                                                                        | Stato                                                                                 |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1     | Letture lato server (`apps/web/src/lib/agent/queries.ts`) e logica di stato pura con test (`components/agent/status.ts`)         | fatto: `lib/agent/queries.ts`, `components/agent/status.ts` con 6 test                |
+| 2     | B1: card _Stato agente_ in dashboard (solo `agents.monitor` vede i dati; gli altri un messaggio)                                 | fatto: `components/agent/agent-status-card.tsx`                                       |
+| 3     | B2: pagina `/admin/agent` (stato per sorgente, code, budget, cicli, job falliti e dead-letter) con ripresa manuale (RPC + audit) | fatto: `app/(app)/admin/agent/` (pagina e azione di ripresa)                          |
+| 4     | B3: notifiche in dashboard, segna come lette                                                                                     | fatto: `components/agent/notifications-card.tsx`, `dashboard/notification-actions.ts` |
+| 5     | Voce di menu, testi in `it.ts` (chiave `agent`), documentazione, `pnpm check`, PR verso `dev`                                    | fatto: `pnpm check` verde, PR aperta                                                  |
+
+**Dopo la corsia B:** fase A5, i job reali di M2–M5 nella coda, una PR per job; poi A4, la cadenza adattiva.
 
 ## Punti aperti
 
