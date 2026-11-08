@@ -35,7 +35,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fasi A1–A2:** unite (#33). Worker Python `services/agent` e TypeScript `apps/web/src/lib/agent/`, workflow _Agent (Python)_ (ciclo manuale, senza schedule).
 
-**M7 corsia A, fase A3 (endpoint QStash)** · branch `feature/m7-a-endpoint-jobs` · PR: non ancora aperta.
+**M7 corsia A, fase A3 (endpoint QStash)** · branch `feature/m7-a-endpoint-jobs` · PR: [#35](https://github.com/gennpalm/predictra/pull/35), in attesa di CI e merge. Dopo il merge: attivazione QStash da parte di `gennpalm` (runbook [agent.md](agent.md), _Endpoint QStash_), poi fase A5 (job reali in coda) o A4 (cadenza adattiva).
 
 | Passo | Contenuto                                                                                                                                                   | Stato                                                                         |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |

@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                                                |
-| ---------------------------- | -------- | ----- | -------------------------------------------------------------------- |
-| 0 — contratto                | gennpalm | —     | unita (#26)                                                          |
-| A — coda e scheduler         | gennpalm | —     | A1–A2 unite (#33); A3 in revisione (PR `feature/m7-a-endpoint-jobs`) |
-| B — monitoraggio e notifiche | —        | —     | da iniziare                                                          |
+| Corsia                       | Persona  | Issue | Stato                                    |
+| ---------------------------- | -------- | ----- | ---------------------------------------- |
+| 0 — contratto                | gennpalm | —     | unita (#26)                              |
+| A — coda e scheduler         | gennpalm | —     | A1–A2 unite (#33); A3 in revisione (#35) |
+| B — monitoraggio e notifiche | —        | —     | da iniziare                              |
 
 ## Prerequisiti
 
