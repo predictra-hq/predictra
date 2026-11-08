@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivePredictionRow } from "@predictra/shared-types";
 import {
   confidenceTone,
+  emptyPredictionsReason,
   formatFairOdds,
   formatLine,
   formatPercent,
@@ -77,5 +78,43 @@ describe("formattazione", () => {
     expect(confidenceTone(0.8)).toBe("positive");
     expect(relativeDelta(1.0238, 1.0902)).toBeCloseTo(-0.0609, 4);
     expect(relativeDelta(null, 1)).toBeNull();
+  });
+});
+
+describe("pannello vuoto", () => {
+  const now = new Date("2026-11-08T16:00:00Z");
+  it("spiega il motivo", () => {
+    expect(
+      emptyPredictionsReason({
+        hasActiveModel: false,
+        status: "SCHEDULED",
+        kickoffAt: "2026-11-09T20:00:00Z",
+        now,
+      }),
+    ).toBe("NO_ACTIVE_MODEL");
+    expect(
+      emptyPredictionsReason({
+        hasActiveModel: true,
+        status: "FINISHED",
+        kickoffAt: "2026-11-01T20:00:00Z",
+        now,
+      }),
+    ).toBe("NOT_UPCOMING");
+    expect(
+      emptyPredictionsReason({
+        hasActiveModel: true,
+        status: "SCHEDULED",
+        kickoffAt: "2026-11-08T15:00:00Z",
+        now,
+      }),
+    ).toBe("NOT_UPCOMING");
+    expect(
+      emptyPredictionsReason({
+        hasActiveModel: true,
+        status: "SCHEDULED",
+        kickoffAt: "2026-11-20T20:00:00Z",
+        now,
+      }),
+    ).toBe("NOT_YET_EVALUATED");
   });
 });

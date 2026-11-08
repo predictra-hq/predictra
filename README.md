@@ -13,7 +13,9 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 | M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football rimandato: [piano](docs/roadmap/M2-football-data.md)                                    |
 | M3 — Statistiche e quote                                                       | in corso: quote reali su DEV, manca l'interfaccia ([punto della situazione](docs/operations/punto-della-situazione.md))                                                              |
 | M5 — Smart Bet Builder                                                         | ✅ in servizio su DEV: proposte da modello attivo e quote reali FRESH, nessuna schedina forzata ([piano](docs/roadmap/M5-bet-builder.md), [runbook](docs/operations/bet-builder.md)) |
-| M4, M6–M8                                                                      | [roadmap](docs/roadmap/README.md)                                                                                                                                                    |
+| M4 — Prediction engine                                                         | ✅ in servizio su DEV (modello attivo: Poisson; [runbook](docs/operations/prediction-engine.md))                                                                                     |
+| M6 — Bankroll e tracker                                                        | ✅ in servizio su DEV (isolamento verificato con il workflow _Verifica DEV_)                                                                                                         |
+| M7–M8                                                                          | [roadmap](docs/roadmap/README.md)                                                                                                                                                    |
 
 ## Struttura
 

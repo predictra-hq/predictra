@@ -1,0 +1,134 @@
+name: Backup
+
+# M8 — backup cifrato del database DEV su Backblaze B2 e test di ripristino (ADR 0040).
+# - backup: ogni giorno alle 02:30 UTC (dump → cifratura AES-256 → B2 + copia artifact 7 giorni)
+# - restore-test: il giorno 1 di ogni mese alle 03:30 UTC (ultimo backup da B2 → ripristino locale)
+# Avvio manuale: Actions → Backup → Run workflow (branch dev).
+# Schedule e pulsante esistono solo quando questo file è anche su main.
+# Runbook: docs/operations/backup-restore.md
+
+on:
+  pull_request:
+    paths:
+      - "scripts/backup/**"
+      - ".github/workflows/backup.yml"
+  schedule:
+    - cron: "30 2 * * *"
+    - cron: "30 3 1 * *"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Azione"
+        type: choice
+        options: [backup, restore-test, check]
+        default: backup
+      upload:
+        description: "backup: carica su B2 (se disattivato resta solo un artifact di 1 giorno)"
+        type: boolean
+        default: true
+      verify:
+        description: "backup: prova subito il ripristino del backup appena creato"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-${{ github.event_name == 'pull_request' && github.ref || 'run' }}
+  cancel-in-progress: false
+
+env:
+  ENVIRONMENT: dev
+  ACTION: >-
+    ${{ github.event_name == 'workflow_dispatch' && inputs.action
+    || github.event.schedule == '30 3 1 * *' && 'restore-test'
+    || 'backup' }}
+
+jobs:
+  syntax:
+    name: Sintassi degli script
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: for f in scripts/backup/*.sh; do bash -n "$f"; done
+
+  run:
+    name: Backup (${{ github.event_name == 'workflow_dispatch' && inputs.action || 'programmato' }})
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
+      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_ENDPOINT: ${{ secrets.B2_ENDPOINT }}
+      B2_BUCKET: ${{ secrets.B2_BUCKET }}
+      UPLOAD: ${{ github.event_name != 'workflow_dispatch' || inputs.upload }}
+      VERIFY: ${{ github.event_name == 'workflow_dispatch' && inputs.verify }}
+    steps:
+      - name: Verifica segreti
+        run: |
+          missing=""
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_ID SUPABASE_DB_PASSWORD SUPABASE_SECRET_KEY BACKUP_PASSPHRASE B2_KEY_ID B2_APPLICATION_KEY B2_ENDPOINT B2_BUCKET; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Backup::Segreti mancanti:$missing (docs/operations/backup-restore.md)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.0.0
+
+      - name: Verifica chiavi B2
+        if: env.ACTION == 'check'
+        run: |
+          source scripts/backup/b2-env.sh
+          echo "Regione B2: $B2_REGION"
+          key="check/$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_RUN_ID}.txt"
+          echo "PREDICTRA check ${GITHUB_RUN_ID}" > /tmp/check.txt
+          s3 cp /tmp/check.txt "s3://${B2_BUCKET}/${key}" --only-show-errors
+          s3 cp "s3://${B2_BUCKET}/${key}" /tmp/check-back.txt --only-show-errors
+          cmp /tmp/check.txt /tmp/check-back.txt
+          s3 rm "s3://${B2_BUCKET}/${key}" --only-show-errors
+          echo "B2: scrittura, lettura e cancellazione riuscite"
+
+      - name: Dump cifrato
+        id: dump
+        if: env.ACTION == 'backup'
+        run: |
+          file="$(bash scripts/backup/dump.sh "$RUNNER_TEMP/backup")"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      - name: Copia come artifact
+        if: env.ACTION == 'backup'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ env.ENVIRONMENT }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/backup/
+          retention-days: ${{ env.UPLOAD == 'true' && 7 || 1 }}
+          if-no-files-found: error
+
+      - name: Caricamento su B2 e rotazione
+        if: env.ACTION == 'backup' && env.UPLOAD == 'true'
+        run: bash scripts/backup/upload.sh "${{ steps.dump.outputs.file }}"
+
+      - name: Prova di ripristino del backup appena creato
+        if: env.ACTION == 'backup' && env.VERIFY == 'true'
+        run: bash scripts/backup/restore-verify.sh "${{ steps.dump.outputs.file }}"
+
+      - name: Test di ripristino dell'ultimo backup su B2
+        if: env.ACTION == 'restore-test'
+        run: |
+          file="$(bash scripts/backup/download-latest.sh "$RUNNER_TEMP/restore")"
+          bash scripts/backup/restore-verify.sh "$file"

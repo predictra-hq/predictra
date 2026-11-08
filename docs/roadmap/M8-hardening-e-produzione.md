@@ -1,6 +1,6 @@
 # M8 — Hardening e produzione: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** tutte · **Può partire quando:** backup e test di restore **subito** (servono già per DEV); il resto quando M2–M7 sono su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (A1 backup) · **Dipende da:** tutte · **Può partire quando:** backup e test di restore **subito** (servono già per DEV); il resto quando M2–M7 sono su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -10,18 +10,18 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 ## Assegnazione
 
-| Corsia                      | Persona | Issue | Stato       |
-| --------------------------- | ------- | ----- | ----------- |
-| 0 — criteri e checklist     | —       | —     | da iniziare |
-| A — sicurezza, backup, PROD | —       | —     | da iniziare |
-| B — accessibilità e runbook | —       | —     | da iniziare |
+| Corsia                      | Persona   | Issue | Stato                                               |
+| --------------------------- | --------- | ----- | --------------------------------------------------- |
+| 0 — criteri e checklist     | —         | —     | da iniziare                                         |
+| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup) in revisione (PR `feature/m8-a-backup`) |
+| B — accessibilità e runbook | —         | —     | da iniziare                                         |
 
 ## Prerequisiti
 
 | #   | Cosa                                                                                                                                                                            | Chi        | Serve a  |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- |
 | P1  | Aggiungere al repository i criteri §23.3 e §26 del Prompt Master (o l'intero documento in `docs/architecture/`)                                                                 | `gennpalm` | corsia 0 |
-| P2  | Scelta dello storage separato per i backup (gratuito, privato, cifrato)                                                                                                         | corsia 0   | ADR 0040 |
+| P2  | Scelta dello storage separato per i backup (gratuito, privato, cifrato): opzioni e proposta nell'[ADR 0040](../decisions/0040-backup.md), **decide `gennpalm`**                 | `gennpalm` | ADR 0040 |
 | P3  | Nuovo progetto Supabase `predictra-prod` e nuovo progetto Vercel `predictra-prod`, con i segreti `PROD_*` (setup.md §7)                                                         | `gennpalm` | fase A4  |
 | P4  | Decisione su Ask PREDICTRA: disattivata in v1 (decisione D6 del piano M0); un LLM a pagamento richiede l'approvazione esplicita del proprietario e non deve mai produrre numeri | `gennpalm` | ADR 0042 |
 
