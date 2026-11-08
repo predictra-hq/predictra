@@ -4,21 +4,21 @@
 
 ## Cosa è in servizio su DEV
 
-| Area                                                                              | Stato                                                                              | Dove                                                   |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                 | https://predictra-dev.vercel.app                       |
-| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                    | Match Center, Data Center                              |
-| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                            | `docs/data-dictionary/odds.md`                         |
-| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui | PR #10, runbook [data-collector.md](data-collector.md) |
-| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`)                                          | _Actions → Data collector_                             |
+| Area                                                                              | Stato                                                                              | Dove                                                         |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| M1: accesso su invito, ruoli, 2FA, amministrazione                                | ✅                                                                                 | https://predictra-dev.vercel.app                             |
+| M2: partite e classifiche delle 8 competizioni della v1 (stagione in corso)       | ✅ 2.508 partite, raccolte da football-data.org                                    | Match Center, Data Center                                    |
+| M3 corsia 0: contratto quote, margine e statistiche                               | ✅ migrazioni applicate                                                            | `docs/data-dictionary/odds.md`                               |
+| M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui | PR #10, runbook [data-collector.md](data-collector.md)       |
+| Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`)                                          | _Actions → Data collector_                                   |
+| M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                     | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
 
 ## Cosa resta da fare, in ordine
 
-1. **M3 corsia B (interfaccia).** Piano: [M3](../roadmap/M3-statistiche-e-quote.md), corsia B. Tutte le viste sono già su DEV.
-   - Market Intelligence: `v_match_odds_h2h`, `v_best_odds_h2h`, `v_odds_coverage`. Per il metodo della potenza si usa `@predictra/quant`.
-   - Statistics Center: `v_team_season_stats`, `v_team_form`.
-   - League Intelligence: `v_league_season_stats`, `v_latest_standings`.
-   - **Pagina admin degli alias**, proposta da inserire in questa corsia. Mostra i problemi `odds.event_unmatched` (con i nomi ricevuti da The Odds API) e permette di scegliere la squadra e salvare l'alias con `add_team_alias` (Super Admin con 2FA). Serve a recuperare i **57 eventi non abbinati** della prima raccolta.
+1. **M3 corsia B (interfaccia): unita (#16).** Da fare ora:
+   - verificare su DEV le tre pagine e la pagina admin _Alias squadre_ (`/admin/team-aliases`, solo Super Admin con 2FA);
+   - aggiungere dalla pagina gli alias per i nomi di The Odds API non riconosciuti (57 eventi non abbinati nella prima raccolta). L'abbinamento avviene alla raccolta successiva; gli eventi già giocati non tornano più dal provider e restano non abbinati;
+   - poi la chiusura di M3 (piano M3, _Chiusura_).
 2. **M4 (modelli)** può partire in parallelo a M3 corsia B. Lo storico disponibile è solo la stagione in corso finché la fase A3 di M2 resta bloccata.
 3. **M6 (bankroll)** è indipendente da tutto il resto.
 

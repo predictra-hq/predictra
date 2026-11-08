@@ -11,6 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@predictra/quant": "workspace:*",
     "@predictra/shared-types": "workspace:*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.0",
