@@ -24,6 +24,8 @@ Anche **milestone indipendenti possono andare in parallelo** (per esempio M3 e M
 
 ## 3. Branch e Pull Request
 
+**Regola dei branch:** il collega (o chiunque sviluppi) lavora **solo su branch `feature/*`** e apre una PR verso `dev`; il merge lo fa `gennpalm`. GitHub **cancella automaticamente il branch** appena la PR viene unita (_Settings → General → Automatically delete head branches_, attivo dall'8/11/2026). Quindi nella pagina _Branches_ restano solo `main`, `dev` e il lavoro **non ancora unito**: se esiste un branch `feature/*`, quel lavoro non è ancora in `dev`. Dopo un merge non si continua sullo stesso branch: si riparte da `dev` aggiornato con un branch nuovo.
+
 | Lavoro                     | Nome del branch         | Esempio                              |
 | -------------------------- | ----------------------- | ------------------------------------ |
 | Contratto della milestone  | `feature/m<N>-0-<slug>` | `feature/m2-0-modello-dati`          |
@@ -37,7 +39,7 @@ Anche **milestone indipendenti possono andare in parallelo** (per esempio M3 e M
 - Si fa il merge **solo con CI verde**. L'altra persona dà un'occhiata quando può; per la sola documentazione non serve aspettare.
 - Metodo di merge: **Create a merge commit**, eseguito **solo da `gennpalm`** (proprietario), sia da `feature/*` a `dev` sia da `dev` a `main`. Sul piano Vercel Hobby si pubblicano solo commit del proprietario: un merge fatto da altri, o con _Squash and merge_, blocca il deploy ([ADR 0050](../decisions/0050-deploy-solo-commit-del-proprietario.md)).
 - Niente push diretti su `dev` o `main`: si passa sempre da una PR.
-- Dopo il merge il branch si cancella (pulsante _Delete branch_).
+- Dopo il merge GitHub **cancella da solo il branch** (impostazione _Automatically delete head branches_). Per altro lavoro si riparte da `dev` aggiornato con un branch nuovo: mai continuare su un branch già unito.
 - La descrizione della PR segue il modello in `.github/pull_request_template.md`.
 
 ## 4. Restare allineati
