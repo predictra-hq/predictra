@@ -12,6 +12,7 @@ Milestone / corsia / fase:
 - [ ] Nessun segreto nel codice o nei log, nessun dato inventato (eventuali dati di prova etichettati `DEMO`)
 - [ ] Documentazione aggiornata dove serve (ADR, data dictionary, setup, roadmap)
 - [ ] CI verde
+- [ ] Il merge lo fa `gennpalm` con _Create a merge commit_; dopo il merge GitHub cancella il branch e il lavoro successivo riparte da `dev` con un branch nuovo
 
 ## Note per chi lavora sull'altra corsia
 
