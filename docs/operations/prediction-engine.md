@@ -5,7 +5,8 @@ Servizio Python in `services/prediction-engine/`. Decisioni: [ADR 0020](../decis
 ## Come funziona
 
 ```text
-GitHub Actions "Prediction engine" (05:40 e 14:40 UTC, dopo le raccolte football-data; più l'avvio manuale)
+GitHub Actions "Agent (Python)" (03:47 e 12:47 UTC: job predictions.run della coda, dopo la raccolta dello stesso ciclo, M7)
+oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   1. training_results(as_of = adesso)              → partite concluse fino a ora
   2. v_match_center: partite SCHEDULED dei prossimi 7 giorni
   3. per ogni modello (baseline, elo, poisson, dixon_coles), adattato per competizione:
@@ -38,7 +39,7 @@ _Actions → Prediction engine → Run workflow_, branch `dev`.
 - `dry_run`: calcola backtest e previsioni senza scrivere nulla e stampa le metriche.
 - `horizon_days`: quanti giorni di partite prevedere (predefinito 7).
 
-Come per il Data collector, schedule e pulsante esistono solo quando il workflow è su `main`.
+Dall'8/11/2026 (M7 fase A5) le esecuzioni programmate passano dalla coda dell'agente: finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra, al massimo 2 tentativi, `CODE_COMMIT` calcolato come prima (ultimo commit di `services/prediction-engine`, ADR 0020). Le versioni di numpy e scipy dell'agente sono verificate uguali a quelle del motore da un test ([runbook dell'agente](agent.md)). Come per il Data collector, il pulsante _Run workflow_ esiste solo quando il workflow è su `main`.
 
 ## Uso in locale (facoltativo)
 
