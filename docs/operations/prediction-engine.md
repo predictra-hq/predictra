@@ -59,6 +59,19 @@ uv run python -m predictra_engine run --dry-run
 
 La stima dell'ADR 0020 è di circa 220 minuti al mese di GitHub Actions; va verificata con le prime esecuzioni reali.
 
+## Diagnosi: cosa vede l'app
+
+Se il pannello "Previsioni PREDICTRA" resta vuoto: _Run workflow_ con `command = diagnose`, oppure `python -m predictra_engine diagnose`. Il comando gira in sola lettura con la chiave secret e mostra:
+
+- versioni, stato, backtest e numero di previsioni;
+- la versione attiva;
+- le partite in programma nei 7 giorni;
+- quante di queste la vista `v_active_predictions` restituisce.
+
+Chiude con un **esito**: nessun modello attivo, versione attiva senza previsioni, vista che non restituisce righe, oppure dati corretti (problema lato utente).
+
+Il pannello stesso indica il motivo quando è vuoto: nessun modello attivo, partita già iniziata o conclusa, oppure partita non ancora valutata dal motore.
+
 ## Taratura dei modelli gol
 
 Comando in sola lettura: `python -m predictra_engine tune [--l2 2,3,4] [--xi 0,0.005]`, oppure _Run workflow_ con `command` = `tune` e `tune_args`. Per ogni combinazione esegue lo stesso backtest walk-forward delle versioni, sulle stesse partite della baseline.

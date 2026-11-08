@@ -55,6 +55,17 @@ export async function listPredictionRuns(limit = 20): Promise<PredictionRunRow[]
   return (data ?? []) as unknown as PredictionRunRow[];
 }
 
+/** Vero se esiste una versione di modello ACTIVE. */
+export async function hasActiveModel(): Promise<boolean> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("model_versions")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "ACTIVE");
+  if (error) throw new PredictionsUnavailable("modello attivo", error);
+  return (count ?? 0) > 0;
+}
+
 /** Previsioni del modello attivo per una partita (vuoto se nessun modello è attivo). */
 export async function getMatchPredictions(matchId: number): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();

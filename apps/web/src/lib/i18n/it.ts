@@ -649,6 +649,14 @@ export const it = {
     title: "Previsioni PREDICTRA",
     noPredictions:
       "Nessuna previsione disponibile per questa partita: nessun modello attivo, oppure il motore non l'ha ancora valutata.",
+    emptyReasons: {
+      NO_ACTIVE_MODEL:
+        "Nessun modello attivo: un Super Admin può attivarne uno da Model Intelligence.",
+      NOT_UPCOMING:
+        "Le previsioni riguardano solo le partite non ancora iniziate: questa è già iniziata, conclusa o non in programma.",
+      NOT_YET_EVALUATED:
+        "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 7 giorni, due volte al giorno (05:40 e 14:40 UTC).",
+    },
     disclaimer:
       "Probabilità stimate da un modello quantitativo sui risultati storici: sono stime incerte, non garanzie.",
     modelVersion: "Modello",
