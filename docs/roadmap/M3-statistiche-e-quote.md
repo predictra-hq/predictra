@@ -1,6 +1,6 @@
 # M3 — Statistiche e quote: piano e corsie
 
-**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; manca la corsia B · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; corsia B in revisione · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,11 +15,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia              | Persona   | Issue | Stato                                        |
-| ------------------- | --------- | ----- | -------------------------------------------- |
-| 0 — contratto       | Alfry1299 | —     | unita (#9)                                   |
-| A — quote e calcoli | Alfry1299 | —     | A1–A4 in revisione (PR `feature/m3-a-quote`) |
-| B — interfaccia     | —         | —     | da iniziare                                  |
+| Corsia              | Persona                  | Issue | Stato                                                             |
+| ------------------- | ------------------------ | ----- | ----------------------------------------------------------------- |
+| 0 — contratto       | Alfry1299                | —     | unita (#9)                                                        |
+| A — quote e calcoli | Alfry1299                | —     | unita (#10)                                                       |
+| B — interfaccia     | Claude Code per gennpalm | —     | B1–B4 e pagina alias in revisione (PR `feature/m3-b-interfaccia`) |
 
 ## Prerequisiti
 
@@ -74,14 +74,15 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Corsia B — interfaccia
 
-**File di proprietà:** `apps/web/src/app/(app)/markets/**`, `apps/web/src/app/(app)/statistics/**`, `apps/web/src/app/(app)/leagues/**`, `apps/web/src/lib/odds/**`, `apps/web/src/components/odds/**`, le chiavi `marketIntelligence`, `statisticsCenter` e `leagueIntelligence` di `it.ts`, le righe delle tre voci in `nav-config.ts`.
+**File di proprietà:** `apps/web/src/app/(app)/markets/**`, `apps/web/src/app/(app)/statistics/**`, `apps/web/src/app/(app)/leagues/**`, `apps/web/src/app/(app)/admin/team-aliases/**`, `apps/web/src/lib/odds/**`, `apps/web/src/components/odds/**`, le chiavi `marketIntelligence`, `statisticsCenter`, `leagueIntelligence` e `teamAliases` di `it.ts`, le righe delle tre voci e della voce admin _Alias squadre_ in `nav-config.ts`.
 
-| Fase | Contenuto                                                                                                                   |
-| ---- | --------------------------------------------------------------------------------------------------------------------------- |
-| B1   | Market Intelligence: quote per partita e bookmaker, margine, probabilità implicite, FRESH/STALE, copertura reale dichiarata |
-| B2   | Statistics Center: statistiche di squadra calcolate dai risultati, con provenienza dei dati                                 |
-| B3   | League Intelligence: classifiche, medie gol, vantaggio casalingo per lega                                                   |
-| B4   | Mercati non valutabili (corner, cartellini, tiri, marcatori) mostrati come "non valutabile" con il motivo (ADR 0005)        |
+| Fase | Contenuto                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| B1   | Market Intelligence: quote per partita e bookmaker, margine, probabilità implicite, FRESH/STALE, copertura reale dichiarata                      |
+| B2   | Statistics Center: statistiche di squadra calcolate dai risultati, con provenienza dei dati                                                      |
+| B3   | League Intelligence: classifiche, medie gol, vantaggio casalingo per lega                                                                        |
+| B4   | Mercati non valutabili (corner, cartellini, tiri, marcatori) mostrati come "non valutabile" con il motivo (ADR 0005)                             |
+| —    | Pagina admin degli alias (`/admin/team-aliases`): nomi di The Odds API non riconosciuti, scelta della squadra e salvataggio con `add_team_alias` |
 
 **Fatto quando:** tre voci di menu attive, dati reali su DEV, nessun bookmaker o mercato mostrato come disponibile se non lo è.
 
