@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { connection } from "next/server";
 import { DEFAULT_LOCALE, getMessages } from "@/lib/i18n";
 import "./globals.css";
 
@@ -20,7 +21,9 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Il nonce della CSP si applica solo al rendering dinamico: nessuna pagina statica.
+  await connection();
   return (
     <html
       lang={DEFAULT_LOCALE}

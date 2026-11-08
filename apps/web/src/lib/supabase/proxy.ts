@@ -13,8 +13,17 @@ function isPublic(pathname: string) {
  * login chi non è autenticato. È solo un primo filtro: l'autorizzazione vera
  * avviene nel Data Access Layer e nel database (RLS).
  */
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+export async function updateSession(
+  request: NextRequest,
+  extraRequestHeaders: Record<string, string> = {},
+) {
+  // Prosegue verso la pagina con i cookie aggiornati e gli header aggiuntivi (nonce CSP).
+  const next = () => {
+    const headers = new Headers(request.headers);
+    for (const [k, v] of Object.entries(extraRequestHeaders)) headers.set(k, v);
+    return NextResponse.next({ request: { headers } });
+  };
+  let response = next();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) {
@@ -28,7 +37,7 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet, headers) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        response = next();
         for (const { name, value, options } of cookiesToSet)
           response.cookies.set(name, value, options);
         for (const [k, v] of Object.entries(headers ?? {})) response.headers.set(k, v);
