@@ -43,7 +43,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A5 — secondo job, quote The Odds API:** unito (#41) e attivo da `main`.
 
-**M7 corsia A, fase A5 — terzo job: previsioni M4** · branch `feature/m7-a-coda-previsioni` · PR: non ancora aperta.
+**M7 corsia A, fase A5 — terzo job: previsioni M4** · branch `feature/m7-a-coda-previsioni` · PR: [#42](https://github.com/gennpalm/predictra/pull/42), in attesa di CI e merge; poi merge di `dev` in `main`. Dopo l'attivazione: misurare i minuti per ciclo (contatore `github-actions`). Ultimo job A5: proposte del Bet Builder.
 
 | Passo | Contenuto                                                                                                                                                                                           | Stato                                                                                                    |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
