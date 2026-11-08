@@ -37,7 +37,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
 
-**M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: non ancora aperta.
+**M7 corsia B (monitoraggio e notifiche)** · branch `feature/m7-b-monitoraggio` · PR: [#38](https://github.com/gennpalm/predictra/pull/38), in attesa di CI e merge. Dopo il merge: controllare su DEV la dashboard e `/admin/agent`.
 
 | Passo | Contenuto                                                                                                                        | Stato                                                                                 |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
