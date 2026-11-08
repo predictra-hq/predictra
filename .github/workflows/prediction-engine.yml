@@ -23,6 +23,11 @@ on:
     - cron: "40 14 * * *"
   workflow_dispatch:
     inputs:
+      command:
+        description: "run = previsioni; tune = confronto degli iperparametri (sola lettura)"
+        type: choice
+        options: [run, tune]
+        default: run
       dry_run:
         description: "Solo lettura: calcola backtest e previsioni senza scrivere"
         type: boolean
@@ -108,6 +113,10 @@ jobs:
           # La versione dipende dal codice del motore, non da ogni commit del repository:
           # una versione attivata continua a ricevere previsioni finché il motore non cambia.
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
+          if [ "${{ inputs.command || 'run' }}" = "tune" ]; then
+            uv run python -m predictra_engine tune
+            exit 0
+          fi
           args=(run --triggered-by "$TRIGGERED_BY" --horizon-days "$HORIZON")
           if [ -n "$DRY_RUN" ]; then args+=("$DRY_RUN"); fi
           uv run python -m predictra_engine "${args[@]}"

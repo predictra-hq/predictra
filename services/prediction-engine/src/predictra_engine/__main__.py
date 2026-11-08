@@ -12,9 +12,11 @@ import re
 import sys
 from datetime import UTC, datetime
 
+from .data import MatchResult
 from .models import all_models
 from .pipeline import run
 from .store import SupabaseStore
+from .tuning import tune
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--dry-run", action="store_true", help="legge i dati ma non scrive nulla")
     cmd.add_argument("--horizon-days", type=int, default=7, help="giorni di partite da prevedere")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    sub.add_parser("tune", help="confronta gli iperparametri dei modelli gol (sola lettura)")
     args = parser.parse_args(argv)
 
     url = (
@@ -38,11 +41,13 @@ def main(argv: list[str] | None = None) -> int:
             "Configurazione: servono SUPABASE_URL (https) e SUPABASE_SECRET_KEY.", file=sys.stderr
         )
         return 2
+    store = SupabaseStore(url.rstrip("/"), key)
+    if args.command == "tune":
+        return _tune(store)
     if not re.fullmatch(r"[0-9a-f]{7,40}", commit):
         print("Configurazione: CODE_COMMIT deve essere lo SHA git del codice.", file=sys.stderr)
         return 2
 
-    store = SupabaseStore(url.rstrip("/"), key)
     summary = run(
         store,
         all_models(),
@@ -69,6 +74,19 @@ def main(argv: list[str] | None = None) -> int:
             line += f" errore={m.error}"
         print(line)
     return 1 if summary.failed else 0
+
+
+def _tune(store: SupabaseStore) -> int:
+    as_of = datetime.now(UTC).replace(microsecond=0)
+    results = [MatchResult.from_row(r) for r in store.training_results(as_of)]
+    print(f"Taratura (sola lettura) — as_of {as_of.isoformat()} — partite {len(results)}")
+    for row in tune(results):
+        mark = "  batte la baseline" if row.beats_baseline else ""
+        print(
+            f"  {row.label:<34} partite={row.matches} Brier={row.brier:.4f}"
+            f" LogLoss={row.log_loss:.4f} ECE={row.ece:.4f}{mark}"
+        )
+    return 0
 
 
 if __name__ == "__main__":
