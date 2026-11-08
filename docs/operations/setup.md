@@ -138,7 +138,7 @@ Senza protezione restano comunque questi controlli:
 - il deploy parte **solo** se lint, typecheck, test, build e scansione segreti sono verdi;
 - le migrazioni sono testate in CI prima di arrivare su Supabase.
 
-Regola di lavoro concordata: ogni modifica arriva su `dev` tramite Pull Request da un branch `feature/*`, e `main` riceve solo merge da `dev`.
+Regola di lavoro concordata: ogni modifica arriva su `dev` tramite Pull Request da un branch `feature/*`, e `main` riceve solo merge da `dev`. I merge li fa `gennpalm` con _Create a merge commit_ (ADR 0050). GitHub cancella il branch dopo il merge (_Settings → General → Automatically delete head branches_): i branch `feature/*` che restano sono lavoro non ancora unito.
 
 Per la protezione vera il proprietario del repo (`gennpalm`) può passare a GitHub Pro. Poi: _Settings → Branches → Add rule_ per `main` e `dev`, con PR obbligatoria e check obbligatori "Lint, typecheck, test, build" e "Scansione segreti".
 
