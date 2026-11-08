@@ -1,0 +1,59 @@
+# Data dictionary — Agente autonomo (M7)
+
+Migrazione: `supabase/migrations/20261108130000_agent.sql` · Decisioni: [ADR 0003](../decisions/0003-coda-su-postgres.md) (coda), [ADR 0035](../decisions/0035-pianificazione-agente.md) (pianificazione e budget) · Tipi: `packages/shared-types/src/agent.ts`, verificati da `supabase/tests/agent.test.ts`.
+
+Regole comuni:
+
+- **Coda, cicli e contatori:** leggibili solo con `agents.monitor` (ADMIN e SUPER_ADMIN con account attivo, `app_private.can_monitor_agents()`). Le scritture passano **solo** dalle funzioni `SECURITY DEFINER`. Nessuno ha `INSERT`, `UPDATE` o `DELETE` diretti, nemmeno la chiave secret (`service_role`).
+- **Notifiche:** private. Il proprietario le vede e cambia solo `read_at`. Non c'è nessuna policy per Admin o Super Admin. Le crea solo `service_role`, tramite funzione.
+- **Anon:** nessun accesso.
+- **Dati di prova:** i test usano job e utenti etichettati `DEMO`, che non arrivano mai su DEV.
+
+## Tabelle
+
+| Tabella             | PK                                          | FK                                                                      | Vincoli e indici                                                                                                                                                                                                                                                                                                                 | Retention         |
+| ------------------- | ------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| `agent_jobs`        | `id`                                        | agent_runs (`last_run_id`, `on delete set null`)                        | `idempotency_key` UNIQUE (1–200 caratteri); `type` minuscolo (`demo.ping`, `odds.prematch`…); `payload` oggetto JSON; `attempts` ≤ `max_attempts` (1–20, predefinito 5); `running` ⇔ `locked_by` e `locked_until` presenti; `done`/`dead` ⇔ `finished_at` presente; indice sui job pronti (`queued`, `failed`) per `next_run_at` | da definire in M8 |
+| `agent_runs`        | `id`                                        | —                                                                       | `source` (`qstash`, `github_actions`, `manual`); `schedule` minuscolo; `running` ⇔ `finished_at` vuoto; i cicli aperti da più di 1 h si chiudono come `failed` all'avvio successivo                                                                                                                                              | da definire in M8 |
+| `agent_rate_limits` | (`provider`, `window_kind`, `window_start`) | —                                                                       | `window_kind` ∈ `minute`, `hour`, `day`, `month`; finestre in UTC; `used` ≤ `quota`                                                                                                                                                                                                                                              | da definire in M8 |
+| `notifications`     | `id`                                        | profiles (`user_id`, cascata), agent_jobs (`source_job_id`, `set null`) | UNIQUE (`user_id`, `dedupe_key`); `link` solo percorso interno (`/…`); `title` 1–200, `body` ≤ 2.000; si cambia solo `read_at` (trigger)                                                                                                                                                                                         | da definire in M8 |
+
+### Stati di un job
+
+```text
+queued ──claim──▶ running ──complete──▶ done
+   ▲                 │
+   │                 ├─fail (tentativi rimasti)─▶ failed ──(next_run_at)──▶ claim
+   │                 ├─fail (esauriti o non recuperabile)─▶ dead
+   │                 └─lease scaduto─▶ failed (o dead se esauriti)
+   └──── retry_dead_agent_job (agents.monitor, 2FA, audit) ◀── dead
+```
+
+- Ogni prelievo conta un tentativo.
+- Attesa prima del tentativo successivo, con backoff esponenziale e jitter: base = 30 s · 2^(tentativo − 1), al massimo 6 ore; attesa casuale tra base/2 e base.
+
+## Viste (`security_invoker`)
+
+| Vista                   | Contenuto                                                                                                                                                                                                                                                                                                        | Usata da               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `v_agent_status`        | una riga per sorgente pianificata (`qstash`, `github_actions`): cadenza attesa, soglia di degrado (ADR 0035), ultimo ciclo e suo esito, ultimo ciclo riuscito (`succeeded` o `partial`), cicli e cicli falliti nelle 24 ore, **frequenza reale osservata** (media degli intervalli tra gli avvii), `is_degraded` | M7 corsia B (card B1)  |
+| `v_agent_queue_summary` | per tipo e stato: numero di job, pronti, con lease scaduto, prossima esecuzione, ultimo cambiamento                                                                                                                                                                                                              | M7 corsia B (admin B2) |
+
+Per chi non ha `agents.monitor`, `v_agent_status` restituisce le righe delle sorgenti senza dati (zero cicli, `is_degraded` vero), e `v_agent_queue_summary` non restituisce righe.
+
+## Funzioni
+
+| Funzione                                                                                                                                 | Chi                                        | Scopo                                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enqueue_agent_job(type, idempotency_key, payload, run_at, max_attempts)`                                                                | `service_role`                             | accoda; la stessa chiave restituisce il job esistente (`created = false`), qualunque sia il suo stato. Una chiave già usata da un altro tipo è un errore. Per ripetere un job periodico, la chiave contiene la finestra (es. `odds.prematch:2026-11-08T16`) |
+| `claim_agent_jobs(worker_id, limit, lease_seconds, types, run_id)`                                                                       | `service_role`                             | riprende prima i lease scaduti, poi preleva fino a `limit` (1–50) job pronti con `FOR UPDATE SKIP LOCKED` e lease di `lease_seconds` (10–3600)                                                                                                              |
+| `extend_agent_job_lease(job_id, worker_id, lease_seconds)`                                                                               | `service_role`                             | prolunga il lease di un job lungo; errore se il worker non lo possiede più                                                                                                                                                                                  |
+| `complete_agent_job(job_id, worker_id, result)`                                                                                          | `service_role`                             | `done`; solo il worker che possiede il lease                                                                                                                                                                                                                |
+| `fail_agent_job(job_id, worker_id, error, retryable)`                                                                                    | `service_role`                             | `failed` con backoff, oppure `dead` (tentativi esauriti o `retryable = false`) con notifica ai monitor; restituisce il nuovo stato                                                                                                                          |
+| `recover_expired_agent_jobs()`                                                                                                           | `service_role`                             | i job `running` con lease scaduto tornano `failed` e sono subito prelevabili, oppure diventano `dead` se i tentativi sono esauriti                                                                                                                          |
+| `retry_dead_agent_job(job_id)`                                                                                                           | `authenticated` con `agents.monitor` e 2FA | riporta un job `dead` in `queued` con `attempts = 0`; audit `agent.job_retried`                                                                                                                                                                             |
+| `start_agent_run(source, schedule, worker_id)` / `finish_agent_run(run_id, status, jobs_claimed, jobs_done, jobs_failed, error_summary)` | `service_role`                             | heartbeat del ciclo                                                                                                                                                                                                                                         |
+| `consume_agent_quota(provider, window, quota, cost)`                                                                                     | `service_role`                             | consuma `cost` unità nella finestra corrente (UTC); `false` senza consumare nulla se il budget sarebbe superato                                                                                                                                             |
+| `notify_user(user_id, kind, title, body, severity, link, dedupe_key)`                                                                    | `service_role`                             | notifica in dashboard; con `dedupe_key` non duplica                                                                                                                                                                                                         |
+
+Errori: `55000` = lease perso o job non in dead-letter; `42501` = permessi; `22023` = parametri non validi.
