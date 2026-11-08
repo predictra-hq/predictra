@@ -39,16 +39,16 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 
 **M7 corsia B:** unita (#38). Card _Stato agente_, pagina `/admin/agent` e notifiche in dashboard: da controllare su DEV con i dati reali.
 
-**M7 corsia A, fase A5 — primo job: raccolta football-data.org** · branch `feature/m7-a-coda-football-data` · PR: [#40](https://github.com/gennpalm/predictra/pull/40), in attesa di CI e merge; poi merge di `dev` in `main` per attivare lo schedule. Prossimi job A5: quote, previsioni, proposte.
+**M7 corsia A, fase A5 — primo job, raccolta football-data.org:** unito (#40) e attivo da `main` (schedule _Agent (Python)_ ogni 3 h al minuto 47).
 
-| Passo | Contenuto                                                                                                                                                                               | Stato                                                                            |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1     | Job `football-data.collect` nel worker Python: usa `predictra_collector.run` (dipendenza locale `../data-collector`); finestra superata → chiuso senza chiamate; chiave mancante → dead | fatto: `predictra_agent/football_data.py`, 12 test                               |
-| 2     | Pianificazione nel ciclo Python (`cycle --plan football-data`): accoda la finestra di 3 h corrente con chiave idempotente, senza dipendere da QStash                                    | fatto: `cycle --plan football-data`                                              |
-| 3     | Workflow: schedule ogni 3 h in _Agent (Python)_ (minuto 47, codice di `dev`); tolto lo schedule football-data da _Data collector_ (quote e avvio manuale restano). Minuti invariati     | fatto: `agent-python.yml` (schedule 47 */3), `data-collector.yml` (tolto 17 */3) |
-| 4     | Test, documentazione (runbook, data-collector.md, piano), `pnpm check`, PR                                                                                                              | fatto: `pnpm check` verde, 37 test agente; PR aperta                             |
+**M7 corsia A, fase A5 — secondo job: quote The Odds API** · branch `feature/m7-a-coda-quote` · PR: non ancora aperta.
 
-Gli schedule usano i workflow presenti su `main`: il cambio diventa effettivo solo dopo il merge di `dev` in `main` (prima resta attivo il vecchio schedule, senza doppioni).
+| Passo | Contenuto                                                                                                                                                                                                       | Stato                            |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| 1     | Job `odds.collect` nel worker Python (`predictra_collector.odds_runner.run_odds`): `daily` una volta al giorno dalle 06 UTC, `prematch` dalle 15 UTC; chiavi per data; finestra superata → chiuso senza crediti | fatto: `predictra_agent/odds.py` |
+| 2     | Regola di spesa: crediti già spesi → completato con esito parziale, mai ritentato; nessun credito speso e tutto fallito → un solo nuovo tentativo (`max_attempts` 2), poi dead-letter con notifica              | fatto: 13 test in `test_odds.py` |
+| 3     | Workflow: `--plan odds` nello schedule dell'agente; tolti gli schedule quote da _Data collector_ (resta l'avvio manuale). Crediti al massimo 16 al giorno, come prima                                           | da fare                          |
+| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                                                          | da fare                          |
 
 ## Punti aperti
 

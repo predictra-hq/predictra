@@ -2,13 +2,13 @@
 
 - ``python -m predictra_agent cycle --source github_actions --schedule agent-python``:
   un ciclo del worker (heartbeat, prelievo, esecuzione, retry, dead-letter).
-  Con ``--plan football-data`` prima accoda, in modo idempotente, il job della
-  finestra corrente di raccolta football-data.org (fase A5).
+  Con ``--plan football-data`` e ``--plan odds`` prima accoda, in modo idempotente,
+  i job della finestra corrente (raccolta football-data.org e quote, fase A5).
 - ``python -m predictra_agent enqueue --type <tipo> --key <chiave> [--payload JSON]``:
   accoda un job in modo idempotente (es. ``--type agent.selftest.python``).
 
 Variabili: ``SUPABASE_URL`` (o ``NEXT_PUBLIC_SUPABASE_URL``) e ``SUPABASE_SECRET_KEY``;
-``FOOTBALL_DATA_API_KEY`` per il job ``football-data.collect``.
+``FOOTBALL_DATA_API_KEY`` e ``ODDS_API_KEY`` per i job di raccolta.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import sys
 from datetime import UTC, datetime
 from typing import cast
 
-from . import football_data
+from . import football_data, odds
 from .handlers import build_handlers
 from .queue import QueueError, RunSource, SupabaseQueue
 from .worker import CycleConfig, MinutesBudget, run_cycle
@@ -62,19 +62,27 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
         time_budget_seconds=args.time_budget,
         minutes=minutes,
     )
-    for plan in args.plan:
-        if plan == "football-data":
-            job_type, key, payload = football_data.planned_job(datetime.now(UTC))
-            try:
-                result = queue.enqueue(job_type, key, payload)
-                state = "accodato" if result.created else f"già presente ({result.status})"
-                print(f"Piano: {key} {state}")
-            except QueueError as exc:
-                # Il ciclo parte comunque: preleva i job già in coda.
-                print(f"Piano non riuscito per {key}: {exc}")
-    football_key = (env.get("FOOTBALL_DATA_API_KEY") or "").strip()
+    now = datetime.now(UTC)
+    planned: list[tuple[str, str, dict[str, object], int]] = []
+    if "football-data" in args.plan:
+        planned.append((*football_data.planned_job(now), 5))
+    if "odds" in args.plan:
+        planned.extend(odds.planned_jobs(now))
+    for job_type, key, payload, max_attempts in planned:
+        try:
+            result = queue.enqueue(job_type, key, payload, max_attempts=max_attempts)
+            state = "accodato" if result.created else f"già presente ({result.status})"
+            print(f"Piano: {key} {state}")
+        except QueueError as exc:
+            # Il ciclo parte comunque: preleva i job già in coda.
+            print(f"Piano non riuscito per {key}: {exc}")
+    provider_keys = tuple(
+        k
+        for k in ((env.get(n) or "").strip() for n in ("FOOTBALL_DATA_API_KEY", "ODDS_API_KEY"))
+        if k
+    )
     handlers = build_handlers(env, supabase_url=queue.url, supabase_secret_key=queue.secret_key)
-    secrets = (*secrets, football_key) if football_key else secrets
+    secrets = (*secrets, *provider_keys)
     summary = run_cycle(queue, handlers, config, secrets=secrets)
     print(
         f"Ciclo {summary.run_id} ({config.source}/{config.schedule}) — {summary.status}: "
@@ -114,7 +122,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     cycle.add_argument(
         "--plan",
         action="append",
-        choices=["football-data"],
+        choices=["football-data", "odds"],
         default=[],
         help="accoda il job della finestra corrente prima del ciclo (ripetibile)",
     )
