@@ -62,6 +62,9 @@ class SupabaseStore:
     def ingest(self, run_id: int, batch: dict[str, Any]) -> dict[str, Any]:
         return self.rpc("ingest_football_batch", {"p_run_id": run_id, "p_batch": batch})
 
+    def ingest_odds(self, run_id: int, batch: dict[str, Any]) -> dict[str, Any]:
+        return self.rpc("ingest_odds_batch", {"p_run_id": run_id, "p_batch": batch})
+
     def report_issues(self, run_id: int, issues: list[dict[str, Any]]) -> None:
         if issues:
             self.rpc("report_quality_issues", {"p_run_id": run_id, "p_issues": issues})
@@ -75,6 +78,7 @@ class SupabaseStore:
         rows_upserted: int,
         error_count: int,
         error_summary: str | None,
+        quota_remaining: int | None = None,
     ) -> None:
         self.rpc(
             "finish_ingestion_run",
@@ -82,7 +86,7 @@ class SupabaseStore:
                 "p_run_id": run_id,
                 "p_status": status,
                 "p_requests_used": requests_used,
-                "p_quota_remaining": None,
+                "p_quota_remaining": quota_remaining,
                 "p_rows_upserted": rows_upserted,
                 "p_error_count": error_count,
                 "p_error_summary": error_summary,

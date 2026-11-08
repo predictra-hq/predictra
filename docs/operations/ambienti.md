@@ -33,7 +33,13 @@ Si gestiscono in _Settings → Secrets and variables → Actions_ (solo `gennpal
 | `VERCEL_ORG_ID`            | deploy                           | Team ID del team Predictra                    |
 | `DEV_VERCEL_PROJECT_ID`    | deploy DEV                       | Vercel → progetto → Settings → General        |
 
-Segreti previsti per M2: `FOOTBALL_DATA_API_KEY`, `API_FOOTBALL_KEY` (vedi [piano M2](../roadmap/M2-football-data.md)). Il collector scriverà su Supabase con `DEV_SUPABASE_SECRET_KEY`, già presente (ADR 0010).
+Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Supabase con `DEV_SUPABASE_SECRET_KEY`):
+
+| Segreto                 | Provider                                       | Stato                                          |
+| ----------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| `FOOTBALL_DATA_API_KEY` | football-data.org (piano Free)                 | presente dal 7/11/2026                         |
+| `ODDS_API_KEY`          | The Odds API (piano Starter, 500 crediti/mese) | presente dal 7/11/2026                         |
+| `API_FOOTBALL_KEY`      | API-Football                                   | non creato: termini da verificare (M2 fase A3) |
 
 ## Credenziali con scadenza
 

@@ -40,7 +40,7 @@ Fonti: https://the-odds-api.com/#get-access e https://the-odds-api.com/liveapi/g
 | `last_update`    | va usato quello del **mercato**; quello del bookmaker è deprecato                                |
 | Partite concluse | non restituite da `/odds`                                                                        |
 
-L'esempio di risposta nella documentazione riguarda l'NFL (due esiti). Il nome esatto dell'esito "pareggio" nel JSON del calcio **non è verificato** (probabilmente `Draw`): va confermato con la prima risposta reale. L'adapter lo riconosce come l'esito che non coincide con nessuna delle due squadre.
+L'esempio di risposta nella documentazione riguarda l'NFL (due esiti). Nel calcio il pareggio si chiama **`Draw`**: confermato con una risposta reale il 7/11/2026 (Serie A: 16 eventi, 24 bookmaker, 1 credito).
 
 ## Bookmaker della regione `eu`
 
@@ -61,6 +61,5 @@ Fonte: https://the-odds-api.com/sports-odds-data/sports-apis.html. La tabella di
 
 ## Da confermare con la chiave
 
-- Il nome dell'esito pareggio nel JSON del calcio.
 - I nomi delle squadre restituiti, da abbinare con `team_aliases`.
-- Il consumo reale di crediti per chiamata (atteso: 1).
+- ~~Il consumo reale di crediti per chiamata~~: 1 credito per `h2h` su `eu`, confermato.
