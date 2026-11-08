@@ -1,6 +1,6 @@
 # M7 — Agente autonomo: piano e corsie
 
-**Stato:** in corso (corsia 0) · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in corso (corsia 0 unita, corsia A) · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                      |
-| ---------------------------- | -------- | ----- | ------------------------------------------ |
-| 0 — contratto                | gennpalm | —     | in revisione (PR `feature/m7-0-contratto`) |
-| A — coda e scheduler         | —        | —     | da iniziare                                |
-| B — monitoraggio e notifiche | —        | —     | da iniziare                                |
+| Corsia                       | Persona  | Issue | Stato                    |
+| ---------------------------- | -------- | ----- | ------------------------ |
+| 0 — contratto                | gennpalm | —     | unita (#26)              |
+| A — coda e scheduler         | gennpalm | —     | A1–A2 in revisione (#33) |
+| B — monitoraggio e notifiche | —        | —     | da iniziare              |
 
 ## Prerequisiti
 
@@ -25,7 +25,7 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------------- |
 | P1  | Account gratuito Upstash e QStash; segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_). Nessun valore in chat, issue o file                                                                                  | `gennpalm` | corsia A, fase A3 |
 | P2  | Riverifica dei limiti gratuiti di QStash (M0 §3: 1.000 messaggi al giorno, 10 schedule) e dei minuti GitHub Actions disponibili. **Aperto:** l'8/11/2026 le pagine ufficiali non erano raggiungibili dall'ambiente cloud; va fatta da un browser prima di accettare l'ADR 0035 | `gennpalm` | ADR 0035          |
-| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub, se i worker Python si collegano direttamente a Postgres (`.env.example`)                                                                                                                                                  | `gennpalm` | corsia A          |
+| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub. **Non serve:** i worker Python usano le RPC via PostgREST con `DEV_SUPABASE_SECRET_KEY`, come i collector                                                                                                                 | `gennpalm` | corsia A          |
 
 ## Cosa serve dalle altre milestone
 
@@ -57,7 +57,7 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Corsia A — coda e scheduler
 
-**File di proprietà:** `apps/web/src/app/api/jobs/**` (nuovo), `apps/web/src/lib/agent/**`, `services/*/agent/**` (adattatori della coda per i worker Python), `.github/workflows/agent-*.yml`, variabili in fondo a `.env.example`. Collegare i job esistenti di M2–M5 tocca i loro file: una PR per job, avvisando chi li ha scritti.
+**File di proprietà:** `apps/web/src/app/api/jobs/**` (nuovo), `apps/web/src/lib/agent/**`, `services/agent/**` (worker Python della coda, dalla fase A1), `services/*/agent/**` (adattatori della coda per i worker Python), `.github/workflows/agent-*.yml`, variabili in fondo a `.env.example`. Collegare i job esistenti di M2–M5 tocca i loro file: una PR per job, avvisando chi li ha scritti.
 
 | Fase | Contenuto                                                                                                      |
 | ---- | -------------------------------------------------------------------------------------------------------------- |
