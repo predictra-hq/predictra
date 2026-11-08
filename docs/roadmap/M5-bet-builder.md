@@ -1,6 +1,6 @@
 # M5 — Smart Bet Builder: piano e corsie
 
-**Stato:** da iniziare · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata, **in servizio su DEV** dall'8/11/2026 (proposte reali quando c'è un modello M4 attivo) · **Dipende da:** M3, M4 · **Può partire quando:** i contratti di M3 e M4 (corsie 0) sono su `dev`; i risultati reali richiedono quote (M3 A) e previsioni (M4 A) su DEV · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -14,11 +14,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona | Issue | Stato       |
-| --------------- | ------- | ----- | ----------- |
-| 0 — contratto   | —       | —     | da iniziare |
-| A — motore      | —       | —     | da iniziare |
-| B — interfaccia | —       | —     | da iniziare |
+| Corsia          | Persona    | Issue | Stato       |
+| --------------- | ---------- | ----- | ----------- |
+| 0 — contratto   | `gennpalm` | —     | unita (#19) |
+| A — motore      | `gennpalm` | —     | unita (#20) |
+| B — interfaccia | `gennpalm` | —     | unita (#21) |
 
 ## Prerequisiti
 
@@ -32,28 +32,28 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 | M4  | `predictions` e la **matrice dei risultati esatti** per partita              | chiedere il merge della corsia 0 di M4; test con fixture                                     |
 | M4  | Confidence Score                                                             | usare il campo del contratto anche se ancora vuoto                                           |
 
-## Decisioni da prendere (ADR 0025–0029)
+## Decisioni (ADR 0025–0027, accettate)
 
-- **ADR 0025 — Regole delle combinazioni:** tipi ammessi (singole, multiple, più selezioni sulla stessa partita), numero massimo di selezioni, soglie minime (EV, probabilità, Confidence Score, freschezza delle quote).
-- **ADR 0026 — Correlazioni:** stessa partita → probabilità congiunta calcolata dalla matrice dei risultati di M4; partite diverse → indipendenza dichiarata; casi non modellabili → combinazione esclusa.
-- **Ranking e categorie:** criteri del ranking multidimensionale (per esempio EV, probabilità, varianza, Confidence Score) e categorie (per esempio per profilo di rischio). Il piano M0 non le specifica: vanno definite qui.
-- Dove gira il motore: batch Python (nel `prediction-engine`) che produce i candidati, oppure calcolo su richiesta lato server in TypeScript. Scegliere considerando i minuti di GitHub Actions e i 300 s di Vercel.
+- **[ADR 0025](../decisions/0025-regole-combinazioni.md) — Regole delle combinazioni:** tipi ammessi (singole, multiple, più selezioni sulla stessa partita), numero massimo di selezioni, soglie minime (EV, probabilità, Confidence Score, freschezza delle quote).
+- **[ADR 0026](../decisions/0026-correlazioni.md) — Correlazioni:** stessa partita → probabilità congiunta calcolata dalla matrice dei risultati di M4; partite diverse → indipendenza dichiarata; casi non modellabili → combinazione esclusa.
+- **[ADR 0027](../decisions/0027-motore-ranking-categorie.md) — Ranking e categorie:** criteri del ranking multidimensionale (per esempio EV, probabilità, varianza, Confidence Score) e categorie (per esempio per profilo di rischio). Il piano M0 non le specifica: vanno definite qui.
+- **ADR 0027 — Dove gira il motore:** batch Python (nel `prediction-engine`) che produce i candidati, oppure calcolo su richiesta lato server in TypeScript. Scegliere considerando i minuti di GitHub Actions e i 300 s di Vercel.
 
 ## Corsia 0 — contratto
 
-**File:** ADR 0025–0026, `docs/data-dictionary/bet-builder.md`, `supabase/migrations/<timestamp>_bet_builder.sql`, `supabase/tests/bet-builder.test.ts`, `packages/shared-types/src/bet-builder.ts`.
+**File:** ADR 0025–0027, `docs/data-dictionary/bet-builder.md`, `supabase/migrations/<timestamp>_bet_builder.sql`, `supabase/tests/bet-builder.test.ts`, `packages/shared-types/src/bet-builder.ts`.
 
-**Contenuto proposto:**
+**Contenuto** (dettagli nel [data dictionary](../data-dictionary/bet-builder.md)):
 
-- `bet_proposals` e `bet_proposal_legs`: proposte generate dal sistema, con riferimento a versione del modello e snapshot delle quote usati; immutabili (trigger che blocca UPDATE e DELETE come per `audit_logs`);
-- `user_bet_slips`: combinazioni salvate dagli utenti, private (RLS **solo proprietario**, nessun accesso admin, come le preferenze in M1);
-- viste per l'interfaccia: proposte attive per giornata e categoria.
+- `bet_builder_runs`, `bet_proposals` e `bet_proposal_legs`: run del motore con le regole usate, proposte e selezioni con riferimento a versione del modello, previsioni e snapshot delle quote; immutabili (`app_private.forbid_mutation` di M4). Probabilità, quota combinata, EV e Confidence Score li calcola il database;
+- `user_bet_slips` e `user_bet_slip_selections`: combinazioni salvate dagli utenti, private (RLS **solo proprietario**, nessun accesso admin né `service_role`, come le preferenze in M1);
+- viste per l'interfaccia: `v_active_bet_proposals` (per giornata e categoria), `v_bet_proposal_legs`, `v_bet_builder_latest_run`.
 
 **Fatto quando:** CI verde, migrazione su DEV, test RLS (inclusa l'immutabilità e l'isolamento tra utenti).
 
 ## Corsia A — motore delle combinazioni
 
-**File di proprietà:** il modulo scelto nell'ADR (es. `services/prediction-engine/bet_builder/**` oppure `packages/bet-builder/**`), con i suoi test.
+**File di proprietà:** `services/bet-builder/**` (servizio Python separato, ADR 0027) con i suoi test, e il workflow `.github/workflows/bet-builder.yml`, avviato dopo le raccolte delle quote. Runbook: [bet-builder.md](../operations/bet-builder.md).
 
 | Fase | Contenuto                                                                                       |
 | ---- | ----------------------------------------------------------------------------------------------- |
@@ -77,8 +77,16 @@ Nessun nuovo account o segreto. Serve che su DEV ci siano quote (M3) e prevision
 
 **Fatto quando:** voce Smart Bet Builder attiva, dati reali su DEV, disclaimer sempre visibile.
 
+Pagine: `/bet-builder` (proposte per giornata e categoria, stato vuoto con l'ultima elaborazione), `/bet-builder/<id>` (dettaglio con quote usate e attuali), `/bet-builder/builder` (costruzione manuale con avvisi), `/bet-builder/slips` (schedine private, valori ricalcolati con previsioni e quote attuali).
+
 ## Chiusura di M5
 
-1. Corsie unite su `dev`, deploy DEV verde.
-2. Verifica dei tre criteri di completamento su DEV.
-3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md).
+1. Corsie unite su `dev`, deploy DEV verde. ✅ (#19, #20, #21)
+2. Verifica dei tre criteri di completamento. ✅ garantiti dal database e coperti dai test (`supabase/tests/bet-builder.test.ts`, `services/bet-builder/tests/`):
+   - **nessuna schedina forzata:** `record_bet_proposals` rifiuta ogni proposta sotto soglia; una run riuscita con zero proposte svuota `v_active_bet_proposals` e la pagina mostra lo stato vuoto;
+   - **correlazioni:** il database rifiuta selezioni sulla stessa partita o con una squadra in comune; tra partite diverse l'indipendenza è dichiarata;
+   - **versioni immutabili:** trigger su proposte e selezioni, con il riferimento a modello, previsioni e quote usate.
+
+   La verifica con proposte reali su DEV richiede un modello M4 attivo: è tra i punti aperti del [punto della situazione](../operations/punto-della-situazione.md).
+
+3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md). ✅

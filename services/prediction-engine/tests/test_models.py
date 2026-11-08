@@ -61,3 +61,13 @@ def test_backtest_walk_forward_i_modelli_gol_battono_la_baseline(league):
     assert dc.brier < base.brier
     assert dc.log_loss < base.log_loss
     assert 0 <= dc.ece < 0.2
+
+
+def test_taratura_sola_lettura(league):
+    from predictra_engine.tuning import candidates, tune
+
+    rows = tune(league, candidates(l2_grid=(0.1, 3.0), xi_grid=(0.0,)))
+    labels = {r.label for r in rows}
+    assert {"baseline", "elo", "poisson[l2=3.0]", "dixon_coles[l2=0.1,xi=0.0]"} <= labels
+    assert len({r.matches for r in rows}) == 1  # tutti sulle stesse partite
+    assert rows == sorted(rows, key=lambda r: (r.log_loss, r.brier))

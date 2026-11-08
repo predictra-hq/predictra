@@ -12,6 +12,7 @@
 | M3 corsia A: raccolta quote The Odds API, `packages/quant`                        | ✅ prima raccolta reale: 108 eventi, 51 abbinati alle partite, 491 crediti residui | PR #10, runbook [data-collector.md](data-collector.md)       |
 | Raccolte automatiche: football-data ogni 3 ore, quote alle 07:23 e alle 16:37 UTC | ✅ dall'8/11/2026 (`dev` unito in `main`)                                          | _Actions → Data collector_                                   |
 | M3 corsia B: Market Intelligence, Statistics Center, League Intelligence, alias   | ✅ unita (#16)                                                                     | `/markets`, `/statistics`, `/leagues`, `/admin/team-aliases` |
+| M5: Smart Bet Builder (contratto, motore, interfaccia)                            | ✅ unita (#19, #20, #21); proposte reali con un modello M4 attivo                  | `/bet-builder`, _Actions → Bet Builder_                      |
 
 ## Cosa resta da fare, in ordine
 
@@ -20,7 +21,10 @@
    - aggiungere dalla pagina gli alias per i nomi di The Odds API non riconosciuti (57 eventi non abbinati nella prima raccolta). L'abbinamento avviene alla raccolta successiva; gli eventi già giocati non tornano più dal provider e restano non abbinati;
    - poi la chiusura di M3 (piano M3, _Chiusura_).
 2. **M4 (modelli)** può partire in parallelo a M3 corsia B. Lo storico disponibile è solo la stagione in corso finché la fase A3 di M2 resta bloccata.
-3. **M6 (bankroll)** è indipendente da tutto il resto.
+3. **M5 (Smart Bet Builder): completata** (#19, #20, #21), ADR 0025–0027 accettati. Restano due passi operativi per vedere proposte reali:
+   - unire `dev` in `main`, così lo schedule del workflow _Bet Builder_ parte (07:53 e 17:07 UTC; [runbook](bet-builder.md));
+   - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
+4. **M6 (bankroll)** è indipendente da tutto il resto.
 
 ## Punti aperti
 

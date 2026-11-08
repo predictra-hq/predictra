@@ -20,4 +20,7 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0020](0020-versioning-previsioni.md)               | Versioning e riproducibilità delle previsioni                     | Proposta  |
 | [0021](0021-modelli-v1.md)                          | Modelli della v1 e mercati derivati                               | Proposta  |
 | [0022](0022-confidence-score.md)                    | Confidence Score                                                  | Proposta  |
+| [0025](0025-regole-combinazioni.md)                 | Regole delle combinazioni (Bet Builder)                           | Accettata |
+| [0026](0026-correlazioni.md)                        | Correlazioni tra selezioni                                        | Accettata |
+| [0027](0027-motore-ranking-categorie.md)            | Motore delle combinazioni, ranking e categorie                    | Accettata |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |
