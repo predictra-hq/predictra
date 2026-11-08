@@ -113,16 +113,17 @@ jobs:
           HORIZON: ${{ inputs.horizon_days || '7' }}
           TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
           TUNE_ARGS: ${{ inputs.tune_args }}
+          COMMAND: ${{ inputs.command || 'run' }}
         run: |
           export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           # La versione dipende dal codice del motore, non da ogni commit del repository:
           # una versione attivata continua a ricevere previsioni finché il motore non cambia.
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
-          if [ "${{ inputs.command || 'run' }}" = "diagnose" ]; then
+          if [ "$COMMAND" = "diagnose" ]; then
             uv run python -m predictra_engine diagnose
             exit 0
           fi
-          if [ "${{ inputs.command || 'run' }}" = "tune" ]; then
+          if [ "$COMMAND" = "tune" ]; then
             # shellcheck disable=SC2086
             uv run python -m predictra_engine tune $TUNE_ARGS
             exit 0

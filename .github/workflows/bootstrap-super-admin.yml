@@ -37,6 +37,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ inputs.environment == 'prod' && secrets.PROD_SUPABASE_SECRET_KEY || secrets.DEV_SUPABASE_SECRET_KEY }}
       APP_BASE_URL: ${{ inputs.environment == 'prod' && secrets.PROD_APP_BASE_URL || secrets.DEV_APP_BASE_URL }}
       INVITE_EMAIL: ${{ inputs.email }}
+      TARGET_ENV: ${{ inputs.environment }}
     steps:
       - name: Verifica configurazione
         run: |
@@ -45,7 +46,7 @@ jobs:
             if [ -z "${!v}" ]; then missing="$missing $v"; fi
           done
           if [ -n "$missing" ]; then
-            echo "::error title=Configurazione mancante::Segreti mancanti per ${{ inputs.environment }}:$missing (vedi docs/operations/setup.md)"
+            echo "::error title=Configurazione mancante::Segreti mancanti per ${TARGET_ENV}:$missing (vedi docs/operations/setup.md)"
             exit 1
           fi
 
