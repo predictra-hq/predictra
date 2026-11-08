@@ -56,9 +56,12 @@ Il worker Python usa gli stessi segreti GitHub dei collector: `DEV_SUPABASE_PROJ
 
 ### Attivazione su DEV (`gennpalm`)
 
-I nomi delle voci nella console di Upstash non sono verificati: da questo ambiente il sito non si raggiunge.
+Verificato sulla documentazione di Upstash l'8/11/2026 (https://upstash.com/docs/qstash/howto/multi-region, https://upstash.com/docs/qstash/features/schedules):
 
-1. Crea l'account gratuito Upstash e apri QStash. Copia le due chiavi di firma (_current_ e _next_ signing key).
+- token e chiavi di firma si copiano dalla sezione _Quickstart_ della console di QStash;
+- ogni regione (EU `https://qstash.upstash.io`, US `https://qstash-us-east-1.upstash.io`) ha token, chiavi, schedule e consumi propri: chiavi e schedule devono essere della stessa regione.
+
+1. Console di Upstash → _QStash_ → _Quickstart_: copia `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY` e annota la regione.
 2. Vercel, progetto DEV → _Settings → Environment Variables_. Aggiungi `QSTASH_CURRENT_SIGNING_KEY` e `QSTASH_NEXT_SIGNING_KEY`:
    - tipo _Secret_;
    - ambiente _Production_, perché il deploy di DEV usa `--prod`.

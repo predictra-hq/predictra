@@ -13,19 +13,19 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                    |
-| ---------------------------- | -------- | ----- | ---------------------------------------- |
-| 0 — contratto                | gennpalm | —     | unita (#26)                              |
-| A — coda e scheduler         | gennpalm | —     | A1–A2 unite (#33); A3 in revisione (#35) |
-| B — monitoraggio e notifiche | —        | —     | da iniziare                              |
+| Corsia                       | Persona  | Issue | Stato                                                              |
+| ---------------------------- | -------- | ----- | ------------------------------------------------------------------ |
+| 0 — contratto                | gennpalm | —     | unita (#26)                                                        |
+| A — coda e scheduler         | gennpalm | —     | A1–A3 unite (#33, #35); manca lo schedule QStash su DEV; poi A4–A5 |
+| B — monitoraggio e notifiche | —        | —     | da iniziare                                                        |
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                                                                                                                                                                           | Chi        | Serve a           |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ----------------- |
-| P1  | Account gratuito Upstash e QStash; segreti `QSTASH_TOKEN`, `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` su GitHub e su Vercel (tipo _Secret_). Nessun valore in chat, issue o file                                                                                  | `gennpalm` | corsia A, fase A3 |
-| P2  | Riverifica dei limiti gratuiti di QStash (M0 §3: 1.000 messaggi al giorno, 10 schedule) e dei minuti GitHub Actions disponibili. **Aperto:** l'8/11/2026 le pagine ufficiali non erano raggiungibili dall'ambiente cloud; va fatta da un browser prima di accettare l'ADR 0035 | `gennpalm` | ADR 0035          |
-| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub. **Non serve:** i worker Python usano le RPC via PostgREST con `DEV_SUPABASE_SECRET_KEY`, come i collector                                                                                                                 | `gennpalm` | corsia A          |
+| #   | Cosa                                                                                                                                                                                         | Chi        | Serve a           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
+| P1  | Account gratuito Upstash e QStash; chiavi `QSTASH_CURRENT_SIGNING_KEY`, `QSTASH_NEXT_SIGNING_KEY` su Vercel DEV (tipo _Secret_): **fatto l'8/11/2026**. Schedule QStash da creare in console | `gennpalm` | corsia A, fase A3 |
+| P2  | Riverifica dei limiti gratuiti di QStash e dei minuti GitHub Actions: **fatta l'8/11/2026**, valori in ADR 0035                                                                              | `gennpalm` | ADR 0035          |
+| P3  | `DATABASE_URL` del progetto DEV come segreto GitHub. **Non serve:** i worker Python usano le RPC via PostgREST con `DEV_SUPABASE_SECRET_KEY`, come i collector                               | `gennpalm` | corsia A          |
 
 ## Cosa serve dalle altre milestone
 
