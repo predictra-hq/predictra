@@ -19,6 +19,8 @@ giorno 1 di ogni mese 03:30 UTC  restore-test
   → confronto delle righe con il manifest, policy RLS presenti, nessuna tabella public senza RLS
 ```
 
+**In servizio dall'8/11/2026:** primo backup su B2 (`dev/daily/2026-11-08/`, copia mensile `dev/monthly/2026-11/`) e test di ripristino scaricando da B2 superato.
+
 **Prima prova reale (8/11/2026, branch, senza caricamento):**
 
 - dump: 3,3 MB di dati, **283 KB** cifrati;
@@ -72,7 +74,7 @@ Si fa a mano, su un progetto Supabase **nuovo o vuoto**, mai su quello in uso se
 
 ## Limiti e note
 
-- **Regione del bucket:** `us-east-005`, negli Stati Uniti. I backup sono cifrati prima di uscire da GitHub e Backblaze non può leggerli. Mantenere questa regione o spostarsi in Europa è una decisione del proprietario (vedi ADR 0040).
+- **Regione del bucket:** `us-east-005`, negli Stati Uniti, confermata l'8/11/2026. I backup sono cifrati prima di uscire da GitHub e Backblaze non può leggerli. Per spostarsi in Europa: account Backblaze nuovo con regione europea e aggiornamento dei segreti `B2_*`.
 - **Object Lock:** non disponibile con la chiave attuale ("not entitled"). La rotazione e la cancellazione dipendono dalla chiave: se la chiave trapela, un attaccante potrebbe cancellare i backup. La copia come artifact riduce il rischio per gli ultimi 7 giorni.
 - I dati degli schemi gestiti da Supabase (es. `storage`) non sono inclusi: PREDICTRA non li usa.
 - Minuti di Actions: circa 3 al giorno per il backup e circa 8 al mese per il test di ripristino.

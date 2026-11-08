@@ -1,6 +1,6 @@
 # ADR 0040 — Backup del database e test di ripristino
 
-**Stato:** Accettata (opzione A, Backblaze B2: PR #31, 8/11/2026). Regione del bucket da confermare: vedi _Attuazione_ · **Data:** 2026-11-08
+**Stato:** Accettata (opzione A, Backblaze B2: PR #31, 8/11/2026). Regione del bucket: `us-east-005`, confermata l'8/11/2026 · **Data:** 2026-11-08
 
 ## Contesto
 
@@ -66,7 +66,8 @@ Fonti:
 - Workflow `backup.yml` e script in `scripts/backup/`; runbook in [backup-restore.md](../operations/backup-restore.md).
 - I dati si salvano solo per gli schemi `public` e `auth`. Lo schema `storage` di Supabase non contiene dati dell'app e il suo ripristino falliva per i permessi.
 - **Prima prova:** dump di 3,3 MB, 283 KB cifrati. Test di ripristino superato: 18 tabelle su 18 con lo stesso numero di righe e 44 policy RLS.
-- **Regione del bucket: `us-east-005` (Stati Uniti).** I backup contengono dati personali (account, in futuro bankroll), ma sono cifrati prima di uscire da GitHub e Backblaze non ha la passphrase. Restare negli Stati Uniti o creare un account Backblaze in una regione europea (la regione si sceglie alla creazione dell'account) è una decisione del proprietario.
+- **Regione del bucket: `us-east-005` (Stati Uniti), confermata l'8/11/2026 (Alfry1299).** I backup contengono dati personali (account, in futuro bankroll), ma sono cifrati prima di uscire da GitHub e Backblaze non ha la passphrase. Spostarsi in Europa resta possibile: serve un account Backblaze nuovo con regione europea e l'aggiornamento dei segreti `B2_*`; il codice non cambia.
+- **In servizio:** primo backup reale su B2 l'8/11/2026 (282 KB, giornaliero e mensile di novembre); test di ripristino scaricando da B2 superato (18 tabelle su 18, 44 policy RLS).
 - **Object Lock** non disponibile con la chiave attuale ("not entitled"): la protezione contro la cancellazione resta da valutare.
 
 ## Conseguenze

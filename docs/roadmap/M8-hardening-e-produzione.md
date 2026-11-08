@@ -10,11 +10,11 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 ## Assegnazione
 
-| Corsia                      | Persona   | Issue | Stato                                               |
-| --------------------------- | --------- | ----- | --------------------------------------------------- |
-| 0 — criteri e checklist     | —         | —     | da iniziare                                         |
-| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup) in revisione (PR `feature/m8-a-backup`) |
-| B — accessibilità e runbook | —         | —     | da iniziare                                         |
+| Corsia                      | Persona   | Issue | Stato                                                                |
+| --------------------------- | --------- | ----- | -------------------------------------------------------------------- |
+| 0 — criteri e checklist     | —         | —     | da iniziare                                                          |
+| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup) unita (#31, #32) e in servizio su DEV; A2–A4 da iniziare |
+| B — accessibilità e runbook | —         | —     | da iniziare                                                          |
 
 ## Prerequisiti
 
