@@ -1,0 +1,31 @@
+[project]
+name = "predictra-prediction-engine"
+version = "0.1.0"
+description = "PREDICTRA — motore di previsione (M4 corsia A): baseline, Elo, Poisson, Dixon-Coles, backtest"
+requires-python = ">=3.12"
+dependencies = ["httpx>=0.28,<1", "numpy>=2.1,<3", "scipy>=1.14,<2"]
+
+[dependency-groups]
+dev = ["pytest>=8.3,<9", "ruff>=0.11,<1"]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/predictra_engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = ["S101", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]
