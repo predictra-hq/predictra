@@ -42,7 +42,7 @@ Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
 | 2     | Endpoint `POST /api/jobs/cycle`: firma, budget giornaliero QStash (ADR 0035 §2), ciclo del worker TypeScript                                                | fatto: `app/api/jobs/cycle/route.ts` + `lib/agent/endpoint.ts`, 8 test        |
 | 3     | Esclusione di `/api/jobs/*` dal proxy della sessione; variabili in `.env.example` e `env.server.ts`                                                         | fatto                                                                         |
 | 4     | Runbook: creare lo schedule su QStash (lo fa `gennpalm`, con retry 0). Lo schedule GitHub Actions resta spento fino ad A5, per non consumare minuti a vuoto | fatto: runbook `agent.md`, sezione _Endpoint QStash_                          |
-| 5     | `pnpm check`, PR verso `dev`                                                                                                                                | da fare                                                                       |
+| 5     | `pnpm check`, PR verso `dev`                                                                                                                                | fatto: `pnpm check` verde; PR aperta                                          |
 
 ## Punti aperti
 
