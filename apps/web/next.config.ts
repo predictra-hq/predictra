@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
   // Cache Components disattivato: app privata e interamente dinamica per utente
   // (ADR 0006). Si rivaluta quando esisteranno dati condivisi cacheabili (M2+).
   poweredByHeader: false,
-  transpilePackages: ["@predictra/shared-types"],
+  transpilePackages: ["@predictra/quant", "@predictra/shared-types"],
   turbopack: {
     rules: {
       "*.css": {

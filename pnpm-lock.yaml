@@ -32,6 +32,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@predictra/quant':
+        specifier: workspace:*
+        version: link:../../packages/quant
       '@predictra/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
