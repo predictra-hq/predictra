@@ -5,7 +5,13 @@ import type {
   BankrollSummaryRow,
   MatchCenterRow,
 } from "@predictra/shared-types";
-import { bankrollTotals, favourite, topProposals, withPredictions } from "./summary";
+import {
+  bankrollTotals,
+  favourite,
+  predictionExpectedFrom,
+  topProposals,
+  withPredictions,
+} from "./summary";
 
 const pred = (match_id: number, selection: string, probability: number, market = "1X2") =>
   ({
@@ -46,6 +52,14 @@ describe("prossime partite", () => {
     expect(list[1]!.prediction).toBeNull();
     expect(list[2]!.prediction).toBeNull();
     expect(favourite({ home: 0.5, draw: 0.3, away: 0.2, confidence: 1 })).toBe("HOME");
+  });
+});
+
+describe("data attesa della previsione", () => {
+  it("calcio d'inizio meno l'orizzonte di 7 giorni", () => {
+    expect(predictionExpectedFrom("2026-11-20T19:30:00Z").toISOString()).toBe(
+      "2026-11-13T19:30:00.000Z",
+    );
   });
 });
 

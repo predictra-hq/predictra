@@ -13,13 +13,27 @@ import { formatEuro } from "@/components/bankroll/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import { listBankrolls } from "@/lib/bankroll/queries";
 import { listActiveProposals } from "@/lib/bet-builder/queries";
-import { bankrollTotals, favourite, topProposals, withPredictions } from "@/lib/dashboard/summary";
+import {
+  bankrollTotals,
+  favourite,
+  PREDICTION_HORIZON_DAYS,
+  predictionExpectedFrom,
+  topProposals,
+  withPredictions,
+} from "@/lib/dashboard/summary";
 import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
 import { listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
+
+const DAY = new Intl.DateTimeFormat("it-IT", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Europe/Rome",
+});
+const formatDay = (d: Date) => DAY.format(d);
 
 /** Etichetta piccola in maiuscolo in cima ai riquadri. */
 function Kicker({ children }: { children: ReactNode }) {
@@ -179,8 +193,7 @@ export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
       ? await listPredictions1x2(calendar.map((r) => r.match_id)).catch(() => [])
       : [];
   const matches = calendar ? withPredictions(calendar, predictions) : [];
-  // Senza modello attivo il calendario resta, con una nota al posto delle probabilità.
-  const missing = hasModel ? d.predictionPending : d.predictionNoModel;
+  const anyMissing = matches.some((x) => !x.prediction);
 
   return (
     <Card className="lg:col-span-2">
@@ -191,6 +204,13 @@ export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
             {d.upcomingTitle}
           </CardTitle>
           <p className="mt-1 text-xs text-muted">{d.upcomingDescription}</p>
+          {anyMissing ? (
+            <p className="mt-1 text-xs text-muted">
+              {hasModel
+                ? fillTemplate(d.horizonHint, { days: PREDICTION_HORIZON_DAYS })
+                : d.predictionNoModel}
+            </p>
+          ) : null}
         </div>
         <Link href="/match-center" className="text-sm text-muted hover:text-fg">
           {d.seeAllMatches} →
@@ -232,7 +252,13 @@ export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
                   {p ? (
                     <ProbabilityBar home={p.home} draw={p.draw} away={p.away} />
                   ) : (
-                    <p className="text-xs text-muted sm:text-right">{missing}</p>
+                    <p className="text-xs text-muted sm:text-right">
+                      {hasModel
+                        ? fillTemplate(d.predictionFrom, {
+                            date: formatDay(predictionExpectedFrom(match.kickoffAt)),
+                          })
+                        : "–"}
+                    </p>
                   )}
                 </Link>
               </li>

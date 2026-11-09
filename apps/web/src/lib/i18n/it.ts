@@ -97,8 +97,11 @@ export const it = {
     upcomingDescription: "Calendario con le probabilità 1X2 del modello attivo, dalla più vicina.",
     upcomingEmpty: "Nessuna partita in calendario.",
     upcomingUnavailable: "Calendario non disponibile in questo momento.",
-    predictionPending: "Previsione non ancora calcolata (il modello prevede i 7 giorni successivi)",
-    predictionNoModel: "Nessun modello attivo",
+    horizonHint:
+      "Il modello calcola le probabilità per le partite dei {days} giorni successivi: le altre le mostra quando entrano nell'orizzonte.",
+    predictionFrom: "Probabilità dal {date}",
+    predictionNoModel:
+      "Nessun modello attivo: le probabilità compaiono quando un Super Admin attiva una versione in Model Intelligence.",
     seeAllMatches: "Tutte le partite",
     home: "1",
     draw: "X",
