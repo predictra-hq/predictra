@@ -113,7 +113,7 @@ export default async function TeamAliasesPage() {
       </Alert>
 
       <h2 className="mb-3 text-lg font-semibold">{m.namesTitle}</h2>
-      <Card className="mb-8 overflow-x-auto p-0">
+      <Card scrollLabel={m.namesTitle} className="mb-8 p-0">
         {names.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noIssues}</p>
         ) : (
@@ -167,7 +167,7 @@ export default async function TeamAliasesPage() {
 
       <h2 className="mb-1 text-lg font-semibold">{m.eventsTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.eventsDescription}</p>
-      <Card className="mb-8 overflow-x-auto p-0">
+      <Card scrollLabel={m.eventsTitle} className="mb-8 p-0">
         {events.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noIssues}</p>
         ) : (
@@ -202,7 +202,7 @@ export default async function TeamAliasesPage() {
       </Card>
 
       <h2 className="mb-3 text-lg font-semibold">{m.manualTitle}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={m.manualTitle} className="p-0">
         {manual.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noManual}</p>
         ) : (

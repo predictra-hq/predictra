@@ -91,7 +91,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
 
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>
-      <Card className="mb-8 overflow-x-auto p-0">
+      <Card scrollLabel={m.overviewTitle} className="mb-8 p-0">
         <table className="w-full min-w-[1040px] text-left text-sm">
           <caption className="sr-only">{m.overviewTitle}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
@@ -208,7 +208,11 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
       ) : (
         <div className="flex flex-col gap-4">
           {standingGroups.map((g) => (
-            <Card key={g.key} className="overflow-x-auto p-0">
+            <Card
+              key={g.key}
+              scrollLabel={`${m.standingsTitle} ${competition.name} ${g.title ?? ""}`.trim()}
+              className="p-0"
+            >
               {g.title ? (
                 <h3 className="px-4 pt-4 text-sm font-semibold">
                   {m.group}: {g.title}

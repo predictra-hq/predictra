@@ -99,6 +99,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
               <p className="mt-4 text-sm text-muted">{m.noMovements}</p>
             ) : (
               <table className="mt-4 w-full text-left text-sm">
+                <caption className="sr-only">{`${m.movements} · ${selected.name}`}</caption>
                 <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
                   <tr>
                     <Th>{m.date}</Th>

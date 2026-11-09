@@ -103,11 +103,12 @@ export default async function ModelsPage() {
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{mi.versions}</h2>
       {canManage ? <p className="mb-3 text-xs text-muted">{mi.activateHint}</p> : null}
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={mi.versions} className="p-0">
         {versions.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noVersions}</p>
         ) : (
           <table className="w-full min-w-[960px] text-left text-sm">
+            <caption className="sr-only">{mi.versions}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{mi.model}</Th>
@@ -175,11 +176,12 @@ export default async function ModelsPage() {
       </Card>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{mi.recentRuns}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={mi.recentRuns} className="p-0">
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noRuns}</p>
         ) : (
           <table className="w-full min-w-[640px] text-left text-sm">
+            <caption className="sr-only">{mi.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{mi.started}</Th>

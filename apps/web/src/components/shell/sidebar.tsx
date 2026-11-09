@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -72,6 +72,16 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
+  // Esc chiude il menu su mobile.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <>
       <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
@@ -94,8 +104,8 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
       <aside
         id="sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface transition-transform lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface transition-[transform,visibility] lg:translate-x-0",
+          open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
         <div className="hidden h-16 items-center px-5 lg:flex">

@@ -25,34 +25,37 @@
    - le proposte programmate passano dalla coda dell'agente (06:47 e 15:47 UTC, dopo le quote; [runbook](bet-builder.md)) dal merge in `main` della #43;
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
 4. **M6 (bankroll): completata** (#25, #27, #28). Isolamento verificato su DEV con account temporanei: _Actions → Verifica DEV → Run workflow_. Da collegare in seguito: lo stake con Kelly nel Tracker.
-5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Prossime fasi di M8: hardening di sicurezza (A2–A3) e ambiente PROD (A4).
-6. **M7 (agente autonomo):** corsie 0 (#26) e A fasi A1–A3 (#33, #35) unite. [ADR 0035](../decisions/0035-pianificazione-agente.md) in proposta, con i limiti gratuiti verificati l'8/11/2026: resta da confermare da `gennpalm`. Runbook: [agent.md](agent.md).
-   - Endpoint `/api/jobs/cycle` attivo su DEV, con le chiavi QStash su Vercel: senza firma risponde 401 (verificato l'8/11/2026). **Manca lo schedule QStash**, che crea `gennpalm` dalla console (runbook, _Endpoint QStash_, passi 6–7).
+5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Hardening (A2) e revisione di sicurezza (A3) in servizio. Accessibilità (B1): 26 controlli su 26 superati con axe, verifica ripetibile con _Verifica DEV_ → `accessibility` ([accessibilita.md](accessibilita.md)). Il check salva anche gli screenshot di dashboard e lista utenti come artefatto del run (3 giorni). Dashboard rinnovata con dati reali: prossime partite con le probabilità 1X2 del modello attivo, bankroll personale, modello attivo, proposte del Bet Builder. Corretta la lista utenti, che era vuota per una relazione ambigua tra ruoli e profili. Restano: ambiente PROD (A4, servono i segreti `PROD_*`), step-up 2FA, runbook (B2) e checklist finale (B3).
+6. **M7 (agente autonomo): in servizio su DEV, in verifica.** Corsie 0 (#26), A (#33, #35, #40–#43) e B (#38) unite e attive da `main` dal 9/11/2026. Runbook: [agent.md](agent.md).
+   - **Cosa gira:** _Agent (Python)_ ogni 3 ore al minuto 47 UTC. Ogni ciclo accoda le finestre correnti e le esegue nell'ordine indicato, con retry, dead-letter e notifiche:
+     - raccolta football-data.org: ogni ciclo;
+     - quote: 06:47 e 15:47;
+     - previsioni: 03:47 e 12:47;
+     - proposte del Bet Builder: 06:47 e 15:47.
+
+     QStash chiama `/api/jobs/cycle` ogni 15 minuti (heartbeat dei job leggeri). _Data collector_, _Prediction engine_ e _Bet Builder_ restano solo per l'avvio manuale.
+
+   - **Da verificare nei primi giorni:**
+     - in _Amministrazione → Agente_, cicli `github_actions` e `qstash` riusciti e job completati;
+     - minuti per ciclo (contatore `github-actions`, budget 900 al mese) e crediti The Odds API (al massimo 16 al giorno).
+   - **Da decidere:** conferma dell'[ADR 0035](../decisions/0035-pianificazione-agente.md) da parte di `gennpalm`. I limiti gratuiti sono verificati l'8/11/2026; il piano delle finestre per i job Python sta nel ciclo Python invece che in QStash (motivato nelle PR #40–#43).
+   - **Resta di M7:**
+     - fase A4: cadenza adattiva di QStash vicino ai calci d'inizio, da fare dopo aver misurato i minuti;
+     - chiusura (piano M7).
 
 ## Lavoro in corso (per chi riprende)
 
-Aggiornato a ogni passo, così una sessione interrotta riprende da qui.
+Nessuna PR di M7 aperta. Prossimo passo consigliato: verificare i primi cicli programmati e i minuti consumati, poi la fase A4 (piano in [M7](../roadmap/M7-agente-autonomo.md), corsia A). Le PR della milestone, in ordine:
 
-**M7 corsia A, fasi A1–A2:** unite (#33). Worker Python `services/agent` e TypeScript `apps/web/src/lib/agent/`, workflow _Agent (Python)_ (ciclo manuale, senza schedule).
-
-**M7 corsia A, fase A3:** unita (#35). Endpoint verificato su DEV (401 senza firma). Da fare: schedule QStash (`gennpalm`, console) e controllo del primo ciclo `qstash`/`jobs-light` in `agent_runs`.
-
-**M7 corsia B:** unita (#38). Card _Stato agente_, pagina `/admin/agent` e notifiche in dashboard: da controllare su DEV con i dati reali.
-
-**M7 corsia A, fase A5 — primo job, raccolta football-data.org:** unito (#40) e attivo da `main` (schedule _Agent (Python)_ ogni 3 h al minuto 47).
-
-**M7 corsia A, fase A5 — secondo job, quote The Odds API:** unito (#41) e attivo da `main`.
-
-**M7 corsia A, fase A5 — terzo job, previsioni M4:** unito (#42) e attivo da `main`.
-
-**M7 corsia A, fase A5 — quarto e ultimo job: proposte del Bet Builder** · branch `feature/m7-a-coda-proposte` · PR: [#43](https://github.com/gennpalm/predictra/pull/43), in attesa di CI e merge; poi merge di `dev` in `main`. Con questa PR la fase A5 è completa: restano A4 (cadenza adattiva) e la chiusura di M7.
-
-| Passo | Contenuto                                                                                                                                                                       | Stato                                                                       |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 1     | Job `bet-builder.run` (`predictra_bet_builder.pipeline.run`): finestre `morning` 06–15 e `evening` 15–21 UTC, nello stesso ciclo e dopo le quote; `max_attempts` 2              | fatto: `predictra_agent/bet_builder.py`, 11 test                            |
-| 2     | Versioni separate: `PREDICTION_ENGINE_COMMIT` (previsioni) e `BET_BUILDER_COMMIT` (proposte), ognuna dall'ultimo commit del proprio servizio, al posto dell'unico `CODE_COMMIT` | fatto: codice e workflow (`PREDICTION_ENGINE_COMMIT`, `BET_BUILDER_COMMIT`) |
-| 3     | Workflow: `--plan bet-builder` nello schedule dell'agente; tolti gli schedule da _Bet Builder_ (resta l'avvio manuale)                                                          | fatto: `--plan bet-builder`; tolti gli schedule da _Bet Builder_            |
-| 4     | Test, documentazione, `pnpm check`, PR                                                                                                                                          | fatto: `pnpm check` verde, 75 test agente; PR aperta                        |
+- #26: contratto;
+- #33: worker;
+- #35: endpoint QStash;
+- #37: limiti verificati;
+- #38: interfaccia;
+- #40: football-data;
+- #41: quote;
+- #42: previsioni;
+- #43: proposte.
 
 ## Punti aperti
 

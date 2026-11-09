@@ -3,8 +3,9 @@
 /*
  * PREDICTRA — tema Dark Premium.
  * Nero/carbone, verde smeraldo per indicatori positivi, rosso per rischi/perdite,
- * grigi per informazioni secondarie. Contrasti verificati per testo su superficie
- * (≥ 4.5:1 per il testo normale).
+ * grigi per informazioni secondarie. Contrasti verificati (M8, B1) su bg, surface e
+ * surface-2: testo ≥ 4.5:1 (anche `subtle`), bordo dei campi (`input`) ≥ 3:1.
+ * Test: src/lib/theme-contrast.test.ts.
  */
 @theme {
   --color-bg: #0a0b0d;
@@ -14,7 +15,8 @@
   --color-border-strong: #353b47;
   --color-fg: #eceef2;
   --color-muted: #9aa1ad;
-  --color-subtle: #6b7280;
+  --color-subtle: #8e94a0;
+  --color-input: #646b79;
 
   --color-positive: #10b981;
   --color-positive-strong: #34d399;
@@ -24,6 +26,7 @@
   --color-negative-soft: rgb(239 68 68 / 0.12);
   --color-warning: #f59e0b;
   --color-warning-soft: rgb(245 158 11 / 0.12);
+  --color-info: #60a5fa;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;

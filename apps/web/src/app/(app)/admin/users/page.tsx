@@ -9,7 +9,7 @@ import {
   type Role,
 } from "@predictra/shared-types";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import { Badge, Card, PageHeader, Select } from "@/components/ui/primitives";
+import { Alert, Badge, Card, PageHeader, Select } from "@/components/ui/primitives";
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -31,9 +31,11 @@ export default async function UsersPage() {
   const actor = await requirePermission("users.read");
   const supabase = await createClient();
   // Solo dati di identità: nessun dato finanziario personale è accessibile da qui.
-  const { data } = await supabase
+  // user_roles ha due chiavi verso profiles (user_id e granted_by): la relazione va
+  // indicata, altrimenti PostgREST risponde con un errore di ambiguità (PGRST201).
+  const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, display_name, status, created_at, user_roles(role)")
+    .select("id, email, display_name, status, created_at, user_roles!user_roles_user_id_fkey(role)")
     .order("created_at", { ascending: true })
     .limit(500);
   const users = (data ?? []) as ProfileRow[];
@@ -41,8 +43,14 @@ export default async function UsersPage() {
   return (
     <>
       <PageHeader title={m.admin.usersTitle} description={m.admin.usersDescription} />
-      <Card className="overflow-x-auto p-0">
+      {error ? (
+        <Alert tone="negative" className="mb-4">
+          {m.admin.usersLoadError}
+        </Alert>
+      ) : null}
+      <Card scrollLabel={m.admin.usersTitle} className="p-0">
         <table className="w-full min-w-[820px] text-left text-sm">
+          <caption className="sr-only">{m.admin.usersTitle}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
             <tr>
               <th scope="col" className="px-4 py-3">
