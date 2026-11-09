@@ -152,7 +152,8 @@ async function audit(page, path, label = path) {
 
   // Tastiera: il primo Tab porta al link per saltare al contenuto (pagine dell'app).
   let skipLink = null;
-  if (!path.startsWith("/login") && !path.startsWith("/forgot-password")) {
+  // Le pagine di accesso (login, 2FA) contengono solo il form: niente link per saltare.
+  if (!["/login", "/forgot-password", "/mfa"].some((p) => path.startsWith(p))) {
     // Dopo il caricamento la tabulazione parte dall'inizio del documento.
     await page.keyboard.press("Tab");
     skipLink = await page.evaluate(
