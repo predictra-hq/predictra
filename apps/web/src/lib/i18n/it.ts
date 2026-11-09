@@ -18,6 +18,7 @@ export const it = {
     signOut: "Esci",
     genericError: "Si è verificato un errore. Riprova.",
     availableFrom: "Disponibile da",
+    loading: "Caricamento in corso…",
   },
   auth: {
     loginTitle: "Accesso riservato",

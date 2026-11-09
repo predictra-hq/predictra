@@ -6,9 +6,12 @@ on:
   push:
     branches: [dev, main]
 
-# Un solo run per branch/PR: annulla quelli superati (risparmia minuti free tier).
+# Un solo run per PR o per branch: annulla quelli superati (risparmia minuti free tier).
+# PR e push hanno gruppi separati: un run di PR non può annullare un push (che fa
+# deploy). Il 9/11/2026 il run della PR #48, partito dopo il merge, aveva lo stesso
+# gruppo del push su main e lo ha annullato.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   # Le PR superate vengono annullate; i push (che fanno deploy) no.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
