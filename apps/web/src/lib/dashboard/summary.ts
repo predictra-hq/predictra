@@ -4,64 +4,61 @@ import type {
   ActivePredictionRow,
   BankrollSummaryRow,
   BetProposalCategory,
+  MatchCenterRow,
 } from "@predictra/shared-types";
+
+export interface Probabilities1x2 {
+  home: number;
+  draw: number;
+  away: number;
+  confidence: number;
+}
 
 export interface UpcomingMatch {
   matchId: number;
   kickoffAt: string;
-  competitionId: number;
+  competitionName: string;
   home: string;
   away: string;
-  /** Probabilità 1X2 del modello attivo; somma ~1. */
-  home1x2: number;
-  draw: number;
-  away1x2: number;
-  confidence: number;
+  /** Previsione 1X2 del modello attivo; null se non c'è (o è incompleta). */
+  prediction: Probabilities1x2 | null;
 }
 
 /**
- * Prossime partite con la previsione 1X2 completa (le tre selezioni), in ordine di
- * calcio d'inizio. Le partite con selezioni mancanti vengono escluse: niente dati parziali.
+ * Unisce il calendario con le previsioni 1X2: una previsione conta solo se ha tutte e tre
+ * le selezioni (niente dati parziali). L'ordine resta quello del calendario.
  */
-export function upcomingMatches(
-  rows: readonly ActivePredictionRow[],
-  limit: number,
+export function withPredictions(
+  matches: readonly MatchCenterRow[],
+  predictions: readonly ActivePredictionRow[],
 ): UpcomingMatch[] {
-  const byMatch = new Map<number, ActivePredictionRow[]>();
-  for (const r of rows) {
-    if (r.market !== "1X2") continue;
-    const list = byMatch.get(r.match_id) ?? [];
-    list.push(r);
-    byMatch.set(r.match_id, list);
-  }
-  const result: UpcomingMatch[] = [];
-  for (const [matchId, list] of byMatch) {
-    const p = (sel: string) => list.find((r) => r.selection === sel);
-    const home = p("HOME");
-    const draw = p("DRAW");
-    const away = p("AWAY");
-    if (!home || !draw || !away) continue;
-    result.push({
-      matchId,
-      kickoffAt: home.kickoff_at,
-      competitionId: home.competition_id,
-      home: home.home_team_name,
-      away: home.away_team_name,
-      home1x2: Number(home.probability),
-      draw: Number(draw.probability),
-      away1x2: Number(away.probability),
-      confidence: Number(home.confidence_score),
-    });
-  }
-  return result
-    .sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt) || a.matchId - b.matchId)
-    .slice(0, limit);
+  return matches.map((match) => {
+    const rows = predictions.filter((r) => r.match_id === match.match_id && r.market === "1X2");
+    const p = (sel: string) => rows.find((r) => r.selection === sel);
+    const [home, draw, away] = [p("HOME"), p("DRAW"), p("AWAY")];
+    return {
+      matchId: match.match_id,
+      kickoffAt: match.kickoff_at,
+      competitionName: match.competition_name,
+      home: match.home_team_short_name ?? match.home_team_name,
+      away: match.away_team_short_name ?? match.away_team_name,
+      prediction:
+        home && draw && away
+          ? {
+              home: Number(home.probability),
+              draw: Number(draw.probability),
+              away: Number(away.probability),
+              confidence: Number(home.confidence_score),
+            }
+          : null,
+    };
+  });
 }
 
 /** Esito più probabile secondo il modello. */
-export function favourite(m: UpcomingMatch): "HOME" | "DRAW" | "AWAY" {
-  if (m.home1x2 >= m.draw && m.home1x2 >= m.away1x2) return "HOME";
-  return m.away1x2 >= m.draw ? "AWAY" : "DRAW";
+export function favourite(p: Probabilities1x2): "HOME" | "DRAW" | "AWAY" {
+  if (p.home >= p.draw && p.home >= p.away) return "HOME";
+  return p.away >= p.draw ? "AWAY" : "DRAW";
 }
 
 export interface BankrollTotals {

@@ -13,9 +13,8 @@ import { formatEuro } from "@/components/bankroll/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import { listBankrolls } from "@/lib/bankroll/queries";
 import { listActiveProposals } from "@/lib/bet-builder/queries";
-import { bankrollTotals, favourite, topProposals, upcomingMatches } from "@/lib/dashboard/summary";
-import { listUpcoming1x2 } from "@/lib/dashboard/queries";
-import { listCompetitions } from "@/lib/football/queries";
+import { bankrollTotals, favourite, topProposals, withPredictions } from "@/lib/dashboard/summary";
+import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
@@ -59,8 +58,10 @@ export async function ActiveModelCard() {
       {active ? (
         <div className="mt-2 flex flex-col gap-1">
           <p className="text-lg font-semibold">
-            {m.modelIntelligence.modelNames[active.model_key]}{" "}
-            <span className="font-mono text-xs text-muted">{active.version}</span>
+            {m.modelIntelligence.modelNames[active.model_key]}
+          </p>
+          <p className="truncate font-mono text-xs text-muted" title={active.version}>
+            {active.version}
           </p>
           <p className="text-xs text-muted">
             {d.brier}{" "}
@@ -172,13 +173,14 @@ export function ProbabilityBar({ home, draw, away }: { home: number; draw: numbe
 
 export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
   const d = getMessages().dashboard;
-  const [rows, competitions] = await Promise.all([
-    hasModel ? listUpcoming1x2().catch(() => null) : Promise.resolve([]),
-    listCompetitions().catch(() => []),
-  ]);
-  const names = new Map(competitions.map((c) => [c.id, c.name]));
-  const matches = rows ? upcomingMatches(rows, 6) : [];
-  const empty = !hasModel ? d.upcomingNoModel : !rows ? d.upcomingUnavailable : d.upcomingEmpty;
+  const calendar = await listNextMatches(6).catch(() => null);
+  const predictions =
+    calendar && hasModel
+      ? await listPredictions1x2(calendar.map((r) => r.match_id)).catch(() => [])
+      : [];
+  const matches = calendar ? withPredictions(calendar, predictions) : [];
+  // Senza modello attivo il calendario resta, con una nota al posto delle probabilità.
+  const missing = hasModel ? d.predictionPending : d.predictionNoModel;
 
   return (
     <Card className="lg:col-span-2">
@@ -195,11 +197,14 @@ export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
         </Link>
       </div>
       {matches.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">{empty}</p>
+        <p className="mt-4 text-sm text-muted">
+          {calendar ? d.upcomingEmpty : d.upcomingUnavailable}
+        </p>
       ) : (
         <ul className="mt-4 divide-y divide-border">
           {matches.map((match) => {
-            const fav = favourite(match);
+            const p = match.prediction;
+            const fav = p ? favourite(p) : null;
             return (
               <li key={match.matchId}>
                 <Link
@@ -216,15 +221,19 @@ export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
                     </p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
                       <span>{formatDateTime(match.kickoffAt)}</span>
-                      {names.get(match.competitionId) ? (
-                        <span>· {names.get(match.competitionId)}</span>
+                      <span>· {match.competitionName}</span>
+                      {p ? (
+                        <Badge tone={confidenceTone(p.confidence)}>
+                          {d.confidence} {p.confidence.toFixed(2).replace(".", ",")}
+                        </Badge>
                       ) : null}
-                      <Badge tone={confidenceTone(match.confidence)}>
-                        {d.confidence} {match.confidence.toFixed(2).replace(".", ",")}
-                      </Badge>
                     </p>
                   </div>
-                  <ProbabilityBar home={match.home1x2} draw={match.draw} away={match.away1x2} />
+                  {p ? (
+                    <ProbabilityBar home={p.home} draw={p.draw} away={p.away} />
+                  ) : (
+                    <p className="text-xs text-muted sm:text-right">{missing}</p>
+                  )}
                 </Link>
               </li>
             );

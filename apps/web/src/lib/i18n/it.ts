@@ -94,12 +94,11 @@ export const it = {
     roi: "ROI",
     bankrollsCount: "{n} bankroll",
     upcomingTitle: "Prossime partite",
-    upcomingDescription: "Probabilità 1X2 del modello attivo, dalla più vicina.",
-    upcomingEmpty:
-      "Nessuna previsione per le prossime partite: serve un modello attivo e partite in calendario.",
-    upcomingNoModel:
-      "Nessun modello attivo: le probabilità compaiono quando un Super Admin attiva una versione in Model Intelligence.",
-    upcomingUnavailable: "Previsioni non disponibili in questo momento.",
+    upcomingDescription: "Calendario con le probabilità 1X2 del modello attivo, dalla più vicina.",
+    upcomingEmpty: "Nessuna partita in calendario.",
+    upcomingUnavailable: "Calendario non disponibile in questo momento.",
+    predictionPending: "Previsione non ancora calcolata (il modello prevede i 7 giorni successivi)",
+    predictionNoModel: "Nessun modello attivo",
     seeAllMatches: "Tutte le partite",
     home: "1",
     draw: "X",
