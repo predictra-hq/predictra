@@ -18,12 +18,12 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                                                                            | Chi        | Serve a  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- |
-| P1  | Aggiungere al repository i criteri §23.3 e §26 del Prompt Master (o l'intero documento in `docs/architecture/`)                                                                 | `gennpalm` | corsia 0 |
-| P2  | Scelta dello storage separato per i backup (gratuito, privato, cifrato): opzioni e proposta nell'[ADR 0040](../decisions/0040-backup.md), **decide `gennpalm`**                 | `gennpalm` | ADR 0040 |
-| P3  | Nuovo progetto Supabase `predictra-prod` e nuovo progetto Vercel `predictra-prod`, con i segreti `PROD_*` (setup.md §7)                                                         | `gennpalm` | fase A4  |
-| P4  | Decisione su Ask PREDICTRA: disattivata in v1 (decisione D6 del piano M0); un LLM a pagamento richiede l'approvazione esplicita del proprietario e non deve mai produrre numeri | `gennpalm` | ADR 0042 |
+| #   | Cosa                                                                                                                                                                            | Chi        | Serve a                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| P1  | Aggiungere al repository i criteri §23.3 e §26 del Prompt Master (o l'intero documento in `docs/architecture/`)                                                                 | `gennpalm` | corsia 0                                                                                         |
+| P2  | Scelta dello storage separato per i backup (gratuito, privato, cifrato): opzioni e proposta nell'[ADR 0040](../decisions/0040-backup.md), **decide `gennpalm`**                 | `gennpalm` | ADR 0040                                                                                         |
+| P3  | Nuovo progetto Supabase `predictra-prod` e nuovo progetto Vercel `predictra-prod`, con i segreti `PROD_*` (setup.md §7)                                                         | `gennpalm` | fase A4                                                                                          |
+| P4  | Decisione su Ask PREDICTRA: disattivata in v1 (decisione D6 del piano M0); un LLM a pagamento richiede l'approvazione esplicita del proprietario e non deve mai produrre numeri | `gennpalm` | [ADR 0042](../decisions/0042-ask-predictra.md) (proposta: Groq gratuito, niente numeri dall’LLM) |
 
 ## Cosa serve dalle altre milestone
 
@@ -33,7 +33,7 @@ Tutte le milestone precedenti su `dev`, salvo backup e restore che si possono fa
 
 - **ADR 0040 — Backup:** `pg_dump` giornaliero da GitHub Actions verso lo storage scelto, cifratura, conservazione, test di restore mensile (ADR 0002).
 - **ADR 0041 — Retention:** durata di conservazione di `audit_logs`, inviti e dati personali (in `docs/data-dictionary/identity.md` risultano "da definire in M8").
-- **ADR 0042 — Ask PREDICTRA:** resta disattivata oppure si attiva con le condizioni di P4.
+- **ADR 0042 — Ask PREDICTRA:** [proposta](../decisions/0042-ask-predictra.md) di attivarla con Groq (piano gratuito) e Cloudflare Workers AI come riserva; la chat spiega solo dati già calcolati. Se non approvata, resta disattivata.
 - Passaggio a GitHub Pro per la protezione dei branch (costo: serve l'approvazione del proprietario).
 
 ## Corsia 0 — criteri e checklist
