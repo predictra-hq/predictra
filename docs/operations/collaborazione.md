@@ -130,3 +130,5 @@ Claude legge da solo `CLAUDE.md`. Se per completare il lavoro deve modificare un
 2. Si verificano su DEV i criteri di completamento del piano della milestone.
 3. Si aggiornano lo stato in `README.md`, `CLAUDE.md` e `docs/roadmap/README.md`, e la documentazione toccata (ADR, data dictionary, setup, security).
 4. Quando l'ambiente PROD esisterà: PR da `dev` a `main`.
+   - Dopo il merge di una PR da `dev` a `main`, GitHub cancella `dev` (opzione _Automatically delete head branches_). Il workflow _Ripristino di dev_ lo ricrea da solo allo stesso commit entro un minuto. Se non lo fa, si usa **Restore branch** nella pagina della PR. Successo il 9/11/2026 con la PR #48.
+   - Prima del merge si aspetta la CI verde della PR: unendo subito, il run della PR parte dopo il merge.

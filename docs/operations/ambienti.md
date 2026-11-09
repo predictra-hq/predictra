@@ -13,14 +13,14 @@ Fotografia di cosa è in servizio e di chi lo gestisce. Qui **non** vanno mai va
 
 Obiettivo: app e dati in Europa, vicino agli utenti e al database. Aggiornato al 9/11/2026.
 
-| Servizio                       | Regione                                                                                                             | Dove si imposta                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Vercel: funzioni dell'app      | **`fra1` (Francoforte)** dal 9/11/2026 (prima `iad1`, Washington)                                                   | `apps/web/vercel.json` (`regions`) e Vercel → progetto → Settings → Functions; devono coincidere     |
-| Vercel: rete di distribuzione  | il nodo più vicino a chi si collega (in Europa per gli utenti in Italia)                                            | non si imposta: è la prima parte dell'header `x-vercel-id`                                           |
-| Supabase DEV (database e Auth) | UE secondo la guida di setup (es. Francoforte); **da confermare** in Supabase → Project Settings → General → Region | alla creazione del progetto: non si cambia senza crearne uno nuovo                                   |
-| Upstash QStash                 | EU (`qstash.upstash.io`)                                                                                            | console Upstash; chiavi e schedule sono per regione                                                  |
-| GitHub Actions (worker e CI)   | runner ospitati da GitHub, non sceglibili sul piano gratuito                                                        | eseguono solo i job programmati e la CI; non servono le pagine agli utenti                           |
-| Backblaze B2 (backup cifrati)  | `us-east-005` (Stati Uniti), ADR 0040                                                                               | per l'Europa: account Backblaze nuovo con regione europea e segreti `B2_*` aggiornati (decisione M8) |
+| Servizio                       | Regione                                                                  | Dove si imposta                                                                                      |
+| ------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Vercel: funzioni dell'app      | **`fra1` (Francoforte)** dal 9/11/2026 (prima `iad1`, Washington)        | `apps/web/vercel.json` (`regions`) e Vercel → progetto → Settings → Functions; devono coincidere     |
+| Vercel: rete di distribuzione  | il nodo più vicino a chi si collega (in Europa per gli utenti in Italia) | non si imposta: è la prima parte dell'header `x-vercel-id`                                           |
+| Supabase DEV (database e Auth) | **Francoforte (`eu-central-1`)**, confermato da `gennpalm` il 9/11/2026  | alla creazione del progetto: non si cambia senza crearne uno nuovo                                   |
+| Upstash QStash                 | EU (`qstash.upstash.io`)                                                 | console Upstash; chiavi e schedule sono per regione                                                  |
+| GitHub Actions (worker e CI)   | runner ospitati da GitHub, non sceglibili sul piano gratuito             | eseguono solo i job programmati e la CI; non servono le pagine agli utenti                           |
+| Backblaze B2 (backup cifrati)  | `us-east-005` (Stati Uniti), ADR 0040                                    | per l'Europa: account Backblaze nuovo con regione europea e segreti `B2_*` aggiornati (decisione M8) |
 
 Verifica della regione delle funzioni: `curl -sI https://predictra-dev.vercel.app/login | grep -i x-vercel-id` → la seconda parte (es. `…::fra1::…`) è la regione della funzione.
 
