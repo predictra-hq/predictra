@@ -27,4 +27,5 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0031](0031-staking.md)                             | Stake suggerito: flat e Kelly frazionario limitato                | Proposta  |
 | [0035](0035-pianificazione-agente.md)               | Pianificazione dell'agente: QStash, GitHub Actions, budget        | Accettata |
 | [0040](0040-backup.md)                              | Backup del database e test di ripristino                          | Accettata |
+| [0042](0042-ask-predictra.md)                       | Ask PREDICTRA con un LLM gratuito                                 | Proposta  |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |
