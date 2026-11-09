@@ -45,17 +45,14 @@
 
 ## Lavoro in corso (per chi riprende)
 
-Nessuna PR di M7 aperta. Prossimo passo consigliato: verificare i primi cicli programmati e i minuti consumati, poi la fase A4 (piano in [M7](../roadmap/M7-agente-autonomo.md), corsia A). Le PR della milestone, in ordine:
+**M7 fase A4 (ridotta, decisa con `gennpalm` il 9/11/2026)** · branch `feature/m7-a-watchdog` · PR: non ancora aperta. Poi la chiusura di M7.
 
-- #26: contratto;
-- #33: worker;
-- #35: endpoint QStash;
-- #37: limiti verificati;
-- #38: interfaccia;
-- #40: football-data;
-- #41: quote;
-- #42: previsioni;
-- #43: proposte.
+| Passo | Contenuto                                                                                                                                                                                    | Stato                                                    |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 1     | `agent_watchdog()` (migrazione `20261109120000_agent_watchdog.sql`): notifica i monitor quando una sorgente è degradata, una volta per episodio                                              | fatto: 6 test in `supabase/tests/agent-watchdog.test.ts` |
+| 2     | Watchdog chiamato dal giro QStash e dal ciclo Python                                                                                                                                         | da fare                                                  |
+| 3     | Avvio del ciclo Python da QStash se GitHub ha saltato lo schedule (oltre 3 h 30 senza cicli), al massimo una volta l'ora; spento finché `gennpalm` non crea il token `GITHUB_DISPATCH_TOKEN` | da fare                                                  |
+| 4     | ADR 0035 accettato (cadenza adattiva rinviata), documentazione, `pnpm check`, PR                                                                                                             | da fare                                                  |
 
 ## Punti aperti
 
