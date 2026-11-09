@@ -67,7 +67,7 @@ export default async function ProposalPage({ params }: PageProps<"/bet-builder/[
         <p className="text-xs text-muted">{m.immutableNote}</p>
       </Card>
 
-      <Card className="mb-4 overflow-x-auto p-0">
+      <Card scrollLabel={m.legs} className="mb-4 p-0">
         <table className="w-full min-w-[860px] text-left text-sm">
           <caption className="sr-only">{m.legs}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">

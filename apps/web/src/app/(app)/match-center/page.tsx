@@ -83,7 +83,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
       <Alert className="mb-4">{m.matchCenter.delayedNote}</Alert>
 
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={`${competition.name} ${season?.label ?? ""}`.trim()} className="p-0">
         {matches.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.matchCenter.noMatches}</p>
         ) : (
@@ -130,9 +130,12 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                     <Link
                       href={`/match-center/${r.match_id}`}
                       className="rounded px-2 py-1 hover:bg-surface-2"
-                      aria-label={`${m.matchCenter.details}: ${r.home_team_name} – ${r.away_team_name}`}
                     >
+                      {/* Il nome accessibile contiene il testo visibile (WCAG 2.5.3). */}
                       {formatScore(r.home_score, r.away_score)}
+                      <span className="sr-only">
+                        {` — ${m.matchCenter.details}: ${r.home_team_name} – ${r.away_team_name}`}
+                      </span>
                     </Link>
                   </td>
                   <td className="px-4 py-3">{r.away_team_short_name ?? r.away_team_name}</td>

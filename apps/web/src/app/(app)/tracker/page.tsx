@@ -218,11 +218,12 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       )}
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{t.bets}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={t.bets} className="p-0">
         {bets.length === 0 ? (
           <p className="p-5 text-sm text-muted">{t.noBets}</p>
         ) : (
           <table className="w-full min-w-[960px] text-left text-sm">
+            <caption className="sr-only">{t.bets}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{t.placedAt}</Th>

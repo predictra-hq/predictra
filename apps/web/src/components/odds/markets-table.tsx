@@ -16,7 +16,7 @@ export function MarketsTable({
 }) {
   const m = getMessages().marketIntelligence;
   return (
-    <Card className="overflow-x-auto p-0">
+    <Card scrollLabel={m.marketsTitle} className="p-0">
       <table className="w-full min-w-[640px] text-left text-sm">
         <caption className="sr-only">{m.marketsTitle}</caption>
         <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">

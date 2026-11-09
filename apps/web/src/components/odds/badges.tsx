@@ -38,7 +38,9 @@ export function FormBadges({ form }: { form: string | null | undefined }) {
   const results = parseForm(form);
   if (results.length === 0) return <span className="text-muted">—</span>;
   return (
-    <span className="inline-flex gap-1" aria-label={results.map((r) => m.formResult[r]).join(", ")}>
+    <span className="inline-flex gap-1">
+      {/* aria-label su uno span non viene letto: il testo per gli screen reader è nascosto alla vista. */}
+      <span className="sr-only">{results.map((r) => m.formResult[r]).join(", ")}</span>
       {results.map((r, i) => (
         <span
           key={i}

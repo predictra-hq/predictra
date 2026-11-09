@@ -188,7 +188,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
 
       <h2 className="mb-1 text-lg font-semibold">{m.coverageTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.coverageDescription}</p>
-      <Card className="mb-8 overflow-x-auto p-0">
+      <Card scrollLabel={m.coverageTitle} className="mb-8 p-0">
         {coverage.every((c) => c.events === 0) ? (
           <p className="p-5 text-sm text-muted">{m.noCoverage}</p>
         ) : (

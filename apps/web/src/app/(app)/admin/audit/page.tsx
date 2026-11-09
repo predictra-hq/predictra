@@ -83,11 +83,12 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
         </Link>
       </form>
 
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={m.admin.auditTitle} className="p-0">
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.admin.noAudit}</p>
         ) : (
           <table className="w-full min-w-[760px] text-left text-sm">
+            <caption className="sr-only">{m.admin.auditTitle}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <th scope="col" className="px-4 py-3">

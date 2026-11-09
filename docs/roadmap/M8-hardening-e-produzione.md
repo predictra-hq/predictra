@@ -10,11 +10,11 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 ## Assegnazione
 
-| Corsia                      | Persona   | Issue | Stato                                                                                                                      |
-| --------------------------- | --------- | ----- | -------------------------------------------------------------------------------------------------------------------------- |
-| 0 — criteri e checklist     | —         | —     | da iniziare                                                                                                                |
-| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup) in servizio; A2 in revisione (PR `feature/m8-a-hardening`: CSP con nonce, audit); step-up 2FA, A3 e A4 da fare |
-| B — accessibilità e runbook | —         | —     | da iniziare                                                                                                                |
+| Corsia                      | Persona   | Issue | Stato                                                                                                              |
+| --------------------------- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
+| 0 — criteri e checklist     | —         | —     | da iniziare                                                                                                        |
+| A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup), A2 (CSP con nonce, audit) e A3 (revisione di sicurezza) in servizio; da fare: step-up 2FA e A4 (PROD) |
+| B — accessibilità e runbook | Alfry1299 | —     | B1 in revisione (PR `feature/m8-b-accessibilita`, [esito](../operations/accessibilita.md)); B2 e B3 da fare        |
 
 ## Prerequisiti
 

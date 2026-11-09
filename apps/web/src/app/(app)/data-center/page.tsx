@@ -100,11 +100,12 @@ export default async function DataCenterPage() {
       </div>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{d.coverage}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={d.coverage} className="p-0">
         {coverage.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noCoverage}</p>
         ) : (
           <table className="w-full min-w-[560px] text-left text-sm">
+            <caption className="sr-only">{d.coverage}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{m.matchCenter.competition}</Th>
@@ -129,11 +130,12 @@ export default async function DataCenterPage() {
       </Card>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{d.recentRuns}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={d.recentRuns} className="p-0">
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noRuns}</p>
         ) : (
           <table className="w-full min-w-[760px] text-left text-sm">
+            <caption className="sr-only">{d.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{d.started}</Th>
@@ -172,11 +174,12 @@ export default async function DataCenterPage() {
       </Card>
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{d.issues}</h2>
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={d.issues} className="p-0">
         {issues.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noOpenIssues}</p>
         ) : (
           <table className="w-full min-w-[640px] text-left text-sm">
+            <caption className="sr-only">{d.issues}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>{d.severity}</Th>
