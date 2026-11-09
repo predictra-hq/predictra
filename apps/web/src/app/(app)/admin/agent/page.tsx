@@ -17,6 +17,7 @@ import {
   CardTitle,
   Field,
   PageHeader,
+  ScrollRegion,
   Select,
 } from "@/components/ui/primitives";
 import {
@@ -58,16 +59,17 @@ function Td({ children, className }: { children: ReactNode; className?: string }
   return <td className={`px-3 py-2 align-top ${className ?? ""}`}>{children}</td>;
 }
 
-function Table({ head, children }: { head: ReactNode; children: ReactNode }) {
+function Table({ label, head, children }: { label: string; head: ReactNode; children: ReactNode }) {
   return (
-    <div className="mt-3 overflow-x-auto">
+    <ScrollRegion label={label} className="mt-3">
       <table className="w-full text-sm">
+        <caption className="sr-only">{label}</caption>
         <thead className="text-xs uppercase tracking-wide text-muted">
           <tr className="border-b border-border">{head}</tr>
         </thead>
         <tbody className="divide-y divide-border">{children}</tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 }
 
@@ -105,6 +107,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
       <Card>
         <CardTitle>{a.sourcesTitle}</CardTitle>
         <Table
+          label={a.sourcesTitle}
           head={
             <>
               <Th>{a.provider}</Th>
@@ -150,6 +153,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
             <p className="mt-2 text-sm text-muted">{a.queueEmpty}</p>
           ) : (
             <Table
+              label={a.queueTitle}
               head={
                 <>
                   <Th>{a.type}</Th>
@@ -184,6 +188,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
             <p className="mt-2 text-sm text-muted">{a.budgetEmpty}</p>
           ) : (
             <Table
+              label={a.budgetTitle}
               head={
                 <>
                   <Th>{a.provider}</Th>
@@ -236,6 +241,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
           <p className="mt-2 text-sm text-muted">{a.jobsEmpty}</p>
         ) : (
           <Table
+            label={a.jobsTitle}
             head={
               <>
                 <Th>ID</Th>
@@ -293,6 +299,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
           <p className="mt-2 text-sm text-muted">{a.runsEmpty}</p>
         ) : (
           <Table
+            label={a.runsTitle}
             head={
               <>
                 <Th>{a.started}</Th>

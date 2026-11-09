@@ -39,7 +39,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-lg border border-border-strong bg-bg px-3 text-sm text-fg placeholder:text-subtle",
+        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg placeholder:text-subtle",
         "focus:border-positive focus:outline-none",
         className,
       )}
@@ -52,7 +52,7 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-lg border border-border-strong bg-bg px-3 text-sm text-fg focus:border-positive focus:outline-none",
+        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg focus:border-positive focus:outline-none",
         className,
       )}
       {...props}
@@ -84,10 +84,40 @@ export function Field({
   );
 }
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+/**
+ * Con `scrollLabel` la card scorre in orizzontale (tabelle larghe) ed è una regione
+ * raggiungibile da tastiera, con un nome per gli screen reader (WCAG 2.1.1).
+ */
+export function Card({
+  className,
+  scrollLabel,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { scrollLabel?: string }) {
   return (
     <div
-      className={cn("rounded-[var(--radius-card)] border border-border bg-surface p-5", className)}
+      {...(scrollLabel ? { role: "region", "aria-label": scrollLabel, tabIndex: 0 } : {})}
+      className={cn(
+        "rounded-[var(--radius-card)] border border-border bg-surface p-5",
+        scrollLabel && "overflow-x-auto",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/** Contenitore a scorrimento orizzontale raggiungibile da tastiera (tabelle larghe). */
+export function ScrollRegion({
+  label,
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { label: string }) {
+  return (
+    <div
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+      className={cn("overflow-x-auto", className)}
       {...props}
     />
   );

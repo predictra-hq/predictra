@@ -83,7 +83,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
       <Alert className="mb-4">{m.matchCenter.delayedNote}</Alert>
 
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={`${competition.name} ${season?.label ?? ""}`.trim()} className="p-0">
         {matches.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.matchCenter.noMatches}</p>
         ) : (

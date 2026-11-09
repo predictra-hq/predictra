@@ -41,8 +41,9 @@ export default async function UsersPage() {
   return (
     <>
       <PageHeader title={m.admin.usersTitle} description={m.admin.usersDescription} />
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={m.admin.usersTitle} className="p-0">
         <table className="w-full min-w-[820px] text-left text-sm">
+          <caption className="sr-only">{m.admin.usersTitle}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
             <tr>
               <th scope="col" className="px-4 py-3">

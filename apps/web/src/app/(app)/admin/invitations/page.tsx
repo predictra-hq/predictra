@@ -73,11 +73,12 @@ export default async function InvitationsPage() {
         </ActionForm>
       </Card>
 
-      <Card className="overflow-x-auto p-0">
+      <Card scrollLabel={m.admin.invitationsTitle} className="p-0">
         {invitations.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.admin.noInvitations}</p>
         ) : (
           <table className="w-full min-w-[720px] text-left text-sm">
+            <caption className="sr-only">{m.admin.invitationsTitle}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <th scope="col" className="px-4 py-3">

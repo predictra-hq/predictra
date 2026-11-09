@@ -4,6 +4,7 @@ import { FreshnessBadge, QualityBadge } from "@/components/football/badges";
 import { analyseH2h, formatOdds, formatPercent, type Triplet } from "@/lib/odds/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { BookmakerKindBadge, MarginBadge } from "./badges";
+import { ScrollRegion } from "@/components/ui/primitives";
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -33,7 +34,7 @@ export function BookmakerOddsTable({
 }) {
   const m = getMessages().marketIntelligence;
   return (
-    <div className="overflow-x-auto">
+    <ScrollRegion label={caption}>
       <table className="w-full min-w-[960px] text-left text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
@@ -87,6 +88,6 @@ export function BookmakerOddsTable({
           })}
         </tbody>
       </table>
-    </div>
+    </ScrollRegion>
   );
 }

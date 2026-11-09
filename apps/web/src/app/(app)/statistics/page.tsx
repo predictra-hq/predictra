@@ -110,7 +110,10 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
         <p className="mt-4 text-xs text-muted">{m.rankingNote}</p>
       </Card>
 
-      <Card className="overflow-x-auto p-0">
+      <Card
+        scrollLabel={`${competition.name} ${competition.seasonLabel ?? ""}`.trim()}
+        className="p-0"
+      >
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noStats}</p>
         ) : (
