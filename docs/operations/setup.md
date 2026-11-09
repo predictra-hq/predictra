@@ -54,6 +54,9 @@ Non serve eseguire SQL né cambiare impostazioni Auth a mano: lo fa la pipeline.
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Config | chiave publishable                                                              |
    | `SUPABASE_SECRET_KEY`                  | Secret | chiave secret (**mai** con prefisso `NEXT_PUBLIC_`)                             |
    | `APP_BASE_URL`                         | Config | dominio del progetto, es. `https://predictra-dev.vercel.app` (senza `/` finale) |
+   | `GROQ_API_KEY`                         | Secret | chiave Groq di Ask PREDICTRA (ADR 0042); senza, la chat resta spenta            |
+   | `ASK_ENABLED`                          | Config | facoltativa: `false` spegne Ask anche con la chiave presente                    |
+   | `GROQ_MODEL`                           | Config | facoltativa: modello Groq, predefinito `openai/gpt-oss-120b`                    |
 
    La pipeline scarica le variabili con `vercel pull` e fa la build su GitHub Actions: le variabili di tipo _Secret_ arrivano come `[SENSITIVE]`. Per questo quelle usate in build (`NEXT_PUBLIC_*`) devono essere _Config_. `SUPABASE_SECRET_KEY` serve solo a runtime, sui server Vercel, e resta _Secret_.
 

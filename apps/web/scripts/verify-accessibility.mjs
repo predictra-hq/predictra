@@ -50,6 +50,7 @@ const PAGES = [
   "/bet-builder/slips",
   "/bankroll",
   "/tracker",
+  "/ask",
   "/settings/preferences",
   "/settings/security",
   "/admin/users",

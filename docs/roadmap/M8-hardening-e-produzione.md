@@ -33,7 +33,7 @@ Tutte le milestone precedenti su `dev`, salvo backup e restore che si possono fa
 
 - **ADR 0040 — Backup:** `pg_dump` giornaliero da GitHub Actions verso lo storage scelto, cifratura, conservazione, test di restore mensile (ADR 0002).
 - **ADR 0041 — Retention:** durata di conservazione di `audit_logs`, inviti e dati personali (in `docs/data-dictionary/identity.md` risultano "da definire in M8").
-- **ADR 0042 — Ask PREDICTRA:** [proposta](../decisions/0042-ask-predictra.md) di attivarla con Groq (piano gratuito) e Cloudflare Workers AI come riserva; la chat spiega solo dati già calcolati. Se non approvata, resta disattivata.
+- **ADR 0042 — Ask PREDICTRA:** [accettato](../decisions/0042-ask-predictra.md): chat con Groq (piano gratuito), strumenti in sola lettura e controllo sui numeri; pagina `/ask`.
 - Passaggio a GitHub Pro per la protezione dei branch (costo: serve l'approvazione del proprietario).
 
 ## Corsia 0 — criteri e checklist
