@@ -96,5 +96,17 @@ jobs:
           export NEXT_PUBLIC_SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
           case "$CHECK" in
             bankroll-isolation) node apps/web/scripts/verify-bankroll-isolation.mjs ;;
-            accessibility) APP_URL=http://localhost:3000 node apps/web/scripts/verify-accessibility.mjs ;;
+            accessibility)
+              mkdir -p "$RUNNER_TEMP/screenshots"
+              APP_URL=http://localhost:3000 SCREENSHOT_DIR="$RUNNER_TEMP/screenshots"                 node apps/web/scripts/verify-accessibility.mjs ;;
           esac
+
+      # Screenshot di dashboard e lista utenti (account temporaneo, dati DEV), per
+      # controllare a occhio il risultato. Conservati 3 giorni.
+      - uses: actions/upload-artifact@v4
+        if: always() && env.CHECK == 'accessibility'
+        with:
+          name: screenshots
+          path: ${{ runner.temp }}/screenshots
+          retention-days: 3
+          if-no-files-found: ignore
