@@ -1,3 +1,4 @@
+import type { DispatchOutcome } from "./dispatch";
 import { type QStashKeys, SIGNATURE_HEADER, verifyQStashSignature } from "./qstash";
 import { type AgentQueue, type JobHandler, runCycle } from "./worker";
 
@@ -11,9 +12,12 @@ import { type AgentQueue, type JobHandler, runCycle } from "./worker";
  * 4. Esegue un ciclo del worker TypeScript e risponde con il riepilogo.
  *    Risponde 200 anche se il ciclo è fallito: QStash non deve ritentare
  *    (retry 0, ADR 0035 §1); l'esito resta in `agent_runs`.
+ * 5. Dopo il ciclo (fase A4): watchdog (`agent_watchdog`, notifiche se una sorgente è
+ *    degradata) e avvio di riserva del ciclo Python se GitHub l'ha saltato. Un loro
+ *    errore non fa fallire la risposta: resta visibile nel riepilogo.
  */
 
-/** Budget giornaliero di messaggi QStash (ADR 0035 §2, provvisorio finché l'ADR non è accettato). */
+/** Budget giornaliero di messaggi QStash (ADR 0035 §2). */
 export const QSTASH_DAILY_QUOTA = 600;
 export const CYCLE_PATH = "/api/jobs/cycle";
 export const CYCLE_SCHEDULE = "jobs-light";
@@ -27,6 +31,19 @@ export interface CycleEndpointDeps {
   secrets: readonly string[];
   workerId: string;
   now?: () => number;
+  /** Fase A4: notifica i monitor se una sorgente è degradata; restituisce le notifiche create. */
+  watchdog?: () => Promise<number>;
+  /** Fase A4: avvia il ciclo Python se GitHub ha saltato lo schedule. */
+  fallback?: () => Promise<DispatchOutcome>;
+}
+
+async function safely<T>(fn: (() => Promise<T>) | undefined): Promise<T | "error" | null> {
+  if (!fn) return null;
+  try {
+    return await fn();
+  } catch {
+    return "error";
+  }
 }
 
 export async function handleCycleRequest(
@@ -61,6 +78,8 @@ export async function handleCycleRequest(
     },
     { secrets: deps.secrets, now: deps.now },
   );
+  const watchdog = await safely(deps.watchdog);
+  const dispatch = await safely(deps.fallback);
   return Response.json({
     run_id: summary.runId,
     status: summary.status,
@@ -70,5 +89,7 @@ export async function handleCycleRequest(
     dead: summary.dead,
     lease_lost: summary.leaseLost,
     qstash_within_budget: withinBudget,
+    watchdog_notifications: watchdog,
+    github_dispatch: dispatch,
   });
 }

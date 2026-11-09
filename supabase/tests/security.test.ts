@@ -29,6 +29,8 @@ const AUTHENTICATED_FUNCTIONS = [
   // RPC dell'app
   "public.accept_invitation",
   "public.add_team_alias",
+  "public.ask_consume",
+  "public.ask_record",
   "public.authorize_password_reset",
   "public.create_invitation",
   "public.retry_dead_agent_job",

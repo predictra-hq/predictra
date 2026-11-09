@@ -21,7 +21,7 @@ export const MAIN_NAV: readonly NavItem[] = [
   { key: "tracker", href: "/tracker" },
   { key: "modelIntelligence", href: "/models" },
   { key: "dataCenter", href: "/data-center" },
-  { key: "askPredictra", href: "/ask", milestone: 8 },
+  { key: "askPredictra", href: "/ask" },
 ];
 
 export const ADMIN_NAV: readonly NavItem[] = [
