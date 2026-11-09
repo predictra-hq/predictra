@@ -105,3 +105,10 @@ def test_payload_non_valido(capsys: pytest.CaptureFixture[str]) -> None:
     )
     assert code == 2
     assert KEY not in capsys.readouterr().err
+
+
+def test_watchdog_chiama_la_rpc() -> None:
+    queue, seen = make_queue(lambda r: httpx.Response(200, json=2))
+    assert queue.watchdog() == 2
+    assert seen[0].url.path == "/rest/v1/rpc/agent_watchdog"
+    assert json.loads(seen[0].content) == {}
