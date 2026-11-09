@@ -168,4 +168,50 @@ describe("POST /api/jobs/cycle", () => {
     const res = await handleCycleRequest(request("{}", sign(KEYS.next, "{}")), deps(queue));
     expect(await res.json()).toMatchObject({ qstash_within_budget: false, status: "succeeded" });
   });
+
+  it("dopo il ciclo esegue watchdog e avvio di riserva; un loro errore non fa fallire la risposta", async () => {
+    const queue = new RecordingQueue();
+    const order: string[] = [];
+    const res = await handleCycleRequest(
+      request("{}", sign(KEYS.current, "{}")),
+      deps(queue, {
+        watchdog: async () => {
+          order.push("watchdog");
+          return 2;
+        },
+        fallback: async () => {
+          order.push("fallback");
+          throw new Error("DEMO: GitHub non raggiungibile");
+        },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      status: "succeeded",
+      watchdog_notifications: 2,
+      github_dispatch: "error",
+    });
+    expect(order).toEqual(["watchdog", "fallback"]);
+    expect(queue.calls.at(-1)).toBe("finishRun");
+  });
+
+  it("con firma non valida non esegue watchdog né avvio di riserva", async () => {
+    const queue = new RecordingQueue();
+    let called = false;
+    const res = await handleCycleRequest(
+      request("{}"),
+      deps(queue, {
+        watchdog: async () => {
+          called = true;
+          return 0;
+        },
+        fallback: async () => {
+          called = true;
+          return "dispatched" as const;
+        },
+      }),
+    );
+    expect(res.status).toBe(401);
+    expect(called).toBe(false);
+  });
 });

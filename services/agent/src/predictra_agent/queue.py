@@ -212,6 +212,10 @@ class SupabaseQueue:
             )
         )
 
+    def watchdog(self) -> int:
+        """`agent_watchdog()`: notifica i monitor se una sorgente è degradata (fase A4)."""
+        return int(self.rpc("agent_watchdog", {}) or 0)
+
     def consume_quota(self, provider: str, window: QuotaWindow, quota: int, cost: int) -> bool:
         return bool(
             self.rpc(

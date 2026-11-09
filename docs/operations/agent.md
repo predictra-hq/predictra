@@ -112,6 +112,23 @@ Lo schedule di GitHub Actions per il worker Python resta spento fino alla fase A
 
 - **Dashboard → _Notifiche_**, per ogni utente e solo le proprie. Quando un job finisce in dead-letter, Admin e Super Admin ricevono una notifica con il link alla pagina dell'agente. Si possono segnare come lette una alla volta o tutte insieme. Nessuna email (ADR 0008).
 
+## Watchdog e avvio di riserva (fase A4)
+
+- **Watchdog:** `agent_watchdog()` gira a ogni giro di QStash e alla fine di ogni ciclo Python. Se una sorgente che ha già girato è _Degradata_ (QStash oltre 45 minuti, GitHub Actions oltre 6 ore senza un ciclo riuscito), Admin e Super Admin ricevono la notifica _Agente degradato_ in dashboard, una volta per episodio. Nessuna email.
+- **Avvio di riserva del ciclo Python:** se GitHub non avvia il ciclo programmato da oltre 3 h 30, il giro QStash chiede a GitHub di avviare _Agent (Python)_ su `dev`, con le stesse pianificazioni dello schedule. Al massimo una volta l'ora (contatore `github-dispatch` in _Amministrazione → Agente_). L'esito è nel campo `github_dispatch` della risposta dell'endpoint: `disabled`, `not-needed`, `rate-limited`, `dispatched` o `failed`.
+
+### Attivare l'avvio di riserva (`gennpalm`)
+
+Resta spento finché non esiste il token. Costo zero: i minuti sono quelli del ciclo, dentro il budget di 900 al mese.
+
+1. GitHub → foto profilo → _Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token_:
+   - nome `predictra-agent-dispatch`;
+   - scadenza a scelta, da annotare in [ambienti.md](ambienti.md);
+   - _Repository access_: solo `gennpalm/predictra`;
+   - _Permissions → Repository permissions → Actions: Read and write_, nient'altro.
+2. Vercel → progetto DEV → _Settings → Environment Variables_: `GITHUB_DISPATCH_TOKEN`, tipo _Secret_, ambiente _Production_. Non scriverlo in chat, issue o file.
+3. Fai un nuovo deploy di DEV: il prossimo merge su `dev`, oppure _Re-run_ dell'ultimo run CI su `dev`.
+
 ## Verifica del worker Python su DEV (dopo il merge in `main`)
 
 L'avvio manuale compare in _Actions_ solo quando il workflow è anche su `main`.

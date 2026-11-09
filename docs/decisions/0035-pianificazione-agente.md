@@ -1,6 +1,6 @@
 # ADR 0035 — Pianificazione dell'agente: QStash, GitHub Actions, budget e polling adattivo
 
-**Stato:** Proposta · **Data:** 2026-11-08 · **Milestone:** M7 corsia 0
+**Stato:** Accettata (`gennpalm`, 9/11/2026, con le modifiche in fondo) · **Data:** 2026-11-08 · **Milestone:** M7
 
 ## Contesto
 
@@ -100,8 +100,16 @@ Le notifiche sono righe di `notifications`, private per utente, e la dashboard l
 - Se la catena QStash si interrompe (deploy, errore), lo schedule di sicurezza la riavvia entro un'ora.
 - Gli schedule QStash usati sono 1, più eventuali prove: ben sotto il limite M0 di 10.
 
+## Modifiche all'accettazione (9/11/2026)
+
+Decise con `gennpalm` dopo le fasi A1–A5 e i primi cicli su DEV:
+
+1. **Piano dei job Python nel ciclo Python, non in QStash** (#40–#43). Ogni ciclo di _Agent (Python)_ accoda le finestre correnti (`--plan`) e poi le esegue: la raccolta non dipende da QStash. QStash resta per il ciclo leggero: heartbeat, watchdog e avvio di riserva.
+2. **Watchdog** (`agent_watchdog()`, migrazione `20261109120000_agent_watchdog.sql`). Lo chiamano entrambi i worker: QStash a ogni giro e il ciclo Python alla fine. Quando una sorgente che ha già girato è degradata (§3), notifica in dashboard gli utenti con `agents.monitor`, una volta per episodio.
+3. **Avvio di riserva del ciclo Python** (punto aperto 1, risolto in forma di riserva). Il 9/11/2026 GitHub non ha avviato nessuno schedule per circa 9 ore. Se il ciclo `github_actions` non parte da oltre 3 h 30, il giro QStash chiede a GitHub di avviare _Agent (Python)_ (`workflow_dispatch`, branch `dev`), al massimo una volta l'ora (contatore `github-dispatch`). I minuti restano nel budget del §2. È attivo solo con il segreto `GITHUB_DISPATCH_TOKEN` su Vercel: token GitHub a grana fine, solo questo repository, permesso _Actions: Read and write_.
+4. **Cadenza adattiva di QStash (§3) rinviata.** Oggi i job leggeri sono solo heartbeat, watchdog e avvio di riserva: aumentare i giri vicino alle partite consumerebbe messaggi senza beneficio. Si riprende quando esisterà un job leggero che ne trae vantaggio. Lo schedule QStash resta fisso ogni 15 minuti (96 messaggi al giorno).
+
 ## Punti aperti
 
-1. **Avvio dei job Python da QStash** (`workflow_dispatch` via API GitHub) per la cadenza vicino ai calci d'inizio. Servirebbe un token GitHub con permesso `actions: write`, salvato come segreto su Vercel. Per ora è escluso: si decide dopo le misure della fase A2.
-2. **Durate reali** dei job Python: da misurare in A2 per sostituire i tetti della tabella del §2.
-3. **Fuso della finestra giornaliera di QStash:** il contatore usa giorni UTC. La pagina dei prezzi non dice a che ora si azzera il limite di QStash. Il budget di 600 lascia margine anche se l'orario non coincide.
+1. **Durate reali** dei job Python: il primo ciclo completo (9/11/2026, 06:47) è durato circa 2 minuti e 12 secondi, quindi 3 minuti fatturati. Da confermare nei primi giorni con il contatore `github-actions`.
+2. **Fuso della finestra giornaliera di QStash:** il contatore usa giorni UTC. La pagina dei prezzi non dice a che ora si azzera il limite di QStash. Il budget di 600 lascia margine anche se l'orario non coincide.
