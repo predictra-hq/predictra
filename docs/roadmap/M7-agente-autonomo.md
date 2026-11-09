@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                            |
-| ---------------------------- | -------- | ----- | ------------------------------------------------ |
-| 0 — contratto                | gennpalm | —     | unita (#26)                                      |
-| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 da fare |
-| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                |
+| Corsia                       | Persona  | Issue | Stato                                                                                                                                                          |
+| ---------------------------- | -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                                                                    |
+| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 ridotta (watchdog e avvio di riserva) in revisione (PR `feature/m7-a-watchdog`), cadenza adattiva rinviata (ADR 0035) |
+| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                                                                              |
 
 ## Prerequisiti
 
@@ -59,13 +59,13 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 **File di proprietà:** `apps/web/src/app/api/jobs/**` (nuovo), `apps/web/src/lib/agent/**`, `services/agent/**` (worker Python della coda, dalla fase A1), `services/*/agent/**` (adattatori della coda per i worker Python), `.github/workflows/agent-*.yml`, variabili in fondo a `.env.example`. Collegare i job esistenti di M2–M5 tocca i loro file: una PR per job, avvisando chi li ha scritti.
 
-| Fase | Contenuto                                                                                                      |
-| ---- | -------------------------------------------------------------------------------------------------------------- |
-| A1   | Worker TypeScript e Python che prelevano, eseguono e completano i job; retry con backoff e jitter; dead-letter |
-| A2   | Test di idempotenza e di riavvio (job interrotto a metà ripreso dopo la scadenza del lease)                    |
-| A3   | Endpoint `/api/jobs/*` su Vercel con verifica della firma QStash; schedule su QStash e su GitHub Actions       |
-| A4   | Recupero delle finestre mancanti dopo un'interruzione; polling adattivo                                        |
-| A5   | Collegamento dei job reali di M2–M5, uno per PR                                                                |
+| Fase | Contenuto                                                                                                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1   | Worker TypeScript e Python che prelevano, eseguono e completano i job; retry con backoff e jitter; dead-letter                                                                              |
+| A2   | Test di idempotenza e di riavvio (job interrotto a metà ripreso dopo la scadenza del lease)                                                                                                 |
+| A3   | Endpoint `/api/jobs/*` su Vercel con verifica della firma QStash; schedule su QStash e su GitHub Actions                                                                                    |
+| A4   | Recupero delle finestre mancanti (fatto in A5: job a finestre); watchdog con notifica e avvio di riserva del ciclo Python. Polling adattivo rinviato (ADR 0035, modifiche all'accettazione) |
+| A5   | Collegamento dei job reali di M2–M5, uno per PR                                                                                                                                             |
 
 **Fatto quando:** i job reali girano dalla coda su DEV; interrompere e riavviare non duplica dati.
 

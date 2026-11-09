@@ -91,6 +91,13 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
     handlers = build_handlers(env, supabase_url=queue.url, supabase_secret_key=queue.secret_key)
     secrets = (*secrets, *provider_keys)
     summary = run_cycle(queue, handlers, config, secrets=secrets)
+    try:
+        # Fase A4: se una sorgente è degradata (anche QStash), i monitor ricevono una notifica.
+        notified = queue.watchdog()
+        if notified:
+            print(f"Watchdog: {notified} notifiche ai monitor")
+    except QueueError as exc:
+        print(f"Watchdog non riuscito: {exc}")
     print(
         f"Ciclo {summary.run_id} ({config.source}/{config.schedule}) — {summary.status}: "
         f"prelevati={summary.claimed} completati={summary.done} falliti={summary.failed} "

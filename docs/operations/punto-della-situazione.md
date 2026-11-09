@@ -47,12 +47,12 @@
 
 **M7 fase A4 (ridotta, decisa con `gennpalm` il 9/11/2026)** · branch `feature/m7-a-watchdog` · PR: non ancora aperta. Poi la chiusura di M7.
 
-| Passo | Contenuto                                                                                                                                                                                    | Stato                                                    |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 1     | `agent_watchdog()` (migrazione `20261109120000_agent_watchdog.sql`): notifica i monitor quando una sorgente è degradata, una volta per episodio                                              | fatto: 6 test in `supabase/tests/agent-watchdog.test.ts` |
-| 2     | Watchdog chiamato dal giro QStash e dal ciclo Python                                                                                                                                         | da fare                                                  |
-| 3     | Avvio del ciclo Python da QStash se GitHub ha saltato lo schedule (oltre 3 h 30 senza cicli), al massimo una volta l'ora; spento finché `gennpalm` non crea il token `GITHUB_DISPATCH_TOKEN` | da fare                                                  |
-| 4     | ADR 0035 accettato (cadenza adattiva rinviata), documentazione, `pnpm check`, PR                                                                                                             | da fare                                                  |
+| Passo | Contenuto                                                                                                                                                                                    | Stato                                                       |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1     | `agent_watchdog()` (migrazione `20261109120000_agent_watchdog.sql`): notifica i monitor quando una sorgente è degradata, una volta per episodio                                              | fatto: 6 test in `supabase/tests/agent-watchdog.test.ts`    |
+| 2     | Watchdog chiamato dal giro QStash e dal ciclo Python                                                                                                                                         | fatto: endpoint QStash e ciclo Python                       |
+| 3     | Avvio del ciclo Python da QStash se GitHub ha saltato lo schedule (oltre 3 h 30 senza cicli), al massimo una volta l'ora; spento finché `gennpalm` non crea il token `GITHUB_DISPATCH_TOKEN` | fatto, spento senza token (`lib/agent/dispatch.ts`, 8 test) |
+| 4     | ADR 0035 accettato (cadenza adattiva rinviata), documentazione, `pnpm check`, PR                                                                                                             | fatto: `pnpm check` verde (141 test database); PR aperta    |
 
 ## Punti aperti
 
