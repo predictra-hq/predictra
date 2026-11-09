@@ -1,6 +1,6 @@
 # Data dictionary — Ask PREDICTRA (M8)
 
-Migrazione: `supabase/migrations/20261109100000_ask.sql` · Decisione: [ADR 0042](../decisions/0042-ask-predictra.md) · Tipi: `packages/shared-types/src/ask.ts`, verificati da `supabase/tests/ask.test.ts`.
+Migrazione: `supabase/migrations/20261109130000_ask.sql` · Decisione: [ADR 0042](../decisions/0042-ask-predictra.md) · Tipi: `packages/shared-types/src/ask.ts`, verificati da `supabase/tests/ask.test.ts`.
 
 Regole:
 

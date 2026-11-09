@@ -1,7 +1,7 @@
 /**
  * Contratto M8 — Ask PREDICTRA: quota giornaliera per utente.
  *
- * Specchia `supabase/migrations/20261109100000_ask.sql` (verificato da
+ * Specchia `supabase/migrations/20261109130000_ask.sql` (verificato da
  * `supabase/tests/ask.test.ts`). Dizionario: docs/data-dictionary/ask.md.
  * Decisione: ADR 0042.
  */
