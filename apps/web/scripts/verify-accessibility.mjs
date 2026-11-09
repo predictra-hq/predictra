@@ -32,6 +32,9 @@ if (!url || !secret) {
   process.exit(2);
 }
 
+/** Pagine di cui salvare uno screenshot (artefatto del run) se SCREENSHOT_DIR è impostata. */
+const SCREENSHOTS = new Set(["/dashboard", "/dashboard (mobile)", "/admin/users"]);
+
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 const PAGES = [
@@ -149,6 +152,10 @@ async function audit(page, path, label = path) {
   const status = response?.status() ?? 0;
   const landed = new URL(page.url()).pathname;
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  if (process.env.SCREENSHOT_DIR && SCREENSHOTS.has(label)) {
+    const name = label.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+    await page.screenshot({ path: `${process.env.SCREENSHOT_DIR}/${name}.png`, fullPage: true });
+  }
 
   // Tastiera: il primo Tab porta al link per saltare al contenuto (pagine dell'app).
   let skipLink = null;

@@ -39,6 +39,7 @@ describe("contrasti del tema", () => {
     "negative",
     "negative-strong",
     "warning",
+    "info",
   ])("testo %s ≥ 4.5:1 su tutti gli sfondi", (text) => {
     for (const bg of BACKGROUNDS) {
       expect(contrast(token(text), token(bg)), `${text} su ${bg}`).toBeGreaterThanOrEqual(4.5);

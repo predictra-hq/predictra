@@ -1,74 +1,86 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { hasPermission, highestRole } from "@predictra/shared-types";
+import { hasPermission } from "@predictra/shared-types";
 import { AgentStatusCard } from "@/components/agent/agent-status-card";
 import { NotificationsCard } from "@/components/agent/notifications-card";
-import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
-import { requireUser } from "@/lib/auth/dal";
+import {
+  ActiveModelCard,
+  BankrollCard,
+  ExploreGrid,
+  ProposalsCard,
+  UpcomingMatchesCard,
+} from "@/components/dashboard/cards";
 import { FreshnessBadge } from "@/components/football/badges";
+import { Alert, Card, PageHeader } from "@/components/ui/primitives";
+import { requireUser } from "@/lib/auth/dal";
 import { getSourceHealth } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { hasActiveModel } from "@/lib/predictions/queries";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+/**
+ * Dashboard: solo dati reali (fonti, modello attivo, bankroll personale, proposte).
+ * Ogni riquadro degrada da solo con un messaggio se il suo dato non è disponibile.
+ */
 export default async function DashboardPage() {
   const user = await requireUser();
   const m = getMessages();
-  const role = highestRole(user.roles);
+  const d = m.dashboard;
+  const [sourcesAll, hasModel] = await Promise.all([
+    getSourceHealth().catch(() => []),
+    hasActiveModel().catch(() => false),
+  ]);
   // Freschezza dei dati in uso: la fonte più aggiornata tra quelle con termini verificati.
-  const sources = (await getSourceHealth().catch(() => [])).filter(
-    (s) => s.terms_verified_at && s.last_success_at,
-  );
-  const latest = sources.sort((a, b) =>
-    (b.last_success_at ?? "").localeCompare(a.last_success_at ?? ""),
-  )[0];
-  const lastSuccess = latest?.last_success_at ?? null;
-  const freshness = latest?.freshness ?? null;
+  const latest = sourcesAll
+    .filter((s) => s.terms_verified_at && s.last_success_at)
+    .sort((a, b) => (b.last_success_at ?? "").localeCompare(a.last_success_at ?? ""))[0];
 
   return (
     <>
       <PageHeader
-        title={`${m.dashboard.welcome}, ${user.displayName ?? user.email}`}
+        title={`${d.welcome}, ${user.displayName ?? user.email}`}
         description={m.app.motto}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <AgentStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
+      {!user.hasMfa ? (
+        <Alert tone="warning" className="mb-6 flex flex-wrap items-center justify-between gap-2">
+          <span>{d.mfaWarning}</span>
+          <Link href="/settings/security" className="font-medium underline underline-offset-2">
+            {d.mfaWarningAction}
+          </Link>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <BankrollCard />
+        <ActiveModelCard />
         <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">{m.dashboard.dataFreshness}</p>
-          {lastSuccess ? (
+          <p className="text-xs uppercase tracking-wide text-muted">{d.dataFreshness}</p>
+          {latest?.last_success_at ? (
             <Link href="/data-center" className="mt-2 flex flex-col gap-1">
-              <FreshnessBadge freshness={freshness} />
+              <span>
+                <FreshnessBadge freshness={latest.freshness ?? null} />
+              </span>
               <span className="text-xs text-muted">
-                {m.dashboard.lastUpdate}: {formatDateTime(lastSuccess)}
+                {d.lastUpdate}: {formatDateTime(latest.last_success_at)}
               </span>
             </Link>
           ) : (
-            <p className="mt-2 text-sm">{m.dashboard.noData}</p>
+            <p className="mt-2 text-sm text-muted">{d.noData}</p>
           )}
         </Card>
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">{m.dashboard.yourRole}</p>
-          <p className="mt-2 text-sm">{role ? m.roles[role] : "—"}</p>
-        </Card>
-        <Card>
-          <p className="text-xs uppercase tracking-wide text-muted">{m.dashboard.security}</p>
-          <div className="mt-2">
-            <Link href="/settings/security">
-              <Badge tone={user.hasMfa ? "positive" : "warning"}>
-                {user.hasMfa ? m.dashboard.mfaOn : m.dashboard.mfaOff}
-              </Badge>
-            </Link>
-          </div>
-        </Card>
+        <AgentStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        <UpcomingMatchesCard hasModel={hasModel} />
+        <ProposalsCard />
       </div>
 
       <NotificationsCard />
 
-      <Card className="mt-6">
-        <CardTitle>{m.dashboard.emptyTitle}</CardTitle>
-        <p className="mt-2 max-w-3xl text-sm text-muted">{m.dashboard.emptyBody}</p>
-      </Card>
+      <ExploreGrid />
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>
     </>
