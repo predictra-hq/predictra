@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                                                                                                                                          |
-| ---------------------------- | -------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                                                                    |
-| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 ridotta (watchdog e avvio di riserva) in revisione (PR `feature/m7-a-watchdog`), cadenza adattiva rinviata (ADR 0035) |
-| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                                                                              |
+| Corsia                       | Persona  | Issue | Stato                                                                                                                                   |
+| ---------------------------- | -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                                             |
+| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 ridotta (watchdog e avvio di riserva) in revisione (#52), cadenza adattiva rinviata (ADR 0035) |
+| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                                                       |
 
 ## Prerequisiti
 

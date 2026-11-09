@@ -45,7 +45,7 @@
 
 ## Lavoro in corso (per chi riprende)
 
-**M7 fase A4 (ridotta, decisa con `gennpalm` il 9/11/2026)** · branch `feature/m7-a-watchdog` · PR: non ancora aperta. Poi la chiusura di M7.
+**M7 fase A4 (ridotta, decisa con `gennpalm` il 9/11/2026)** · branch `feature/m7-a-watchdog` · PR: [#52](https://github.com/gennpalm/predictra/pull/52), in attesa di CI e merge. Poi la chiusura di M7.
 
 | Passo | Contenuto                                                                                                                                                                                    | Stato                                                       |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
