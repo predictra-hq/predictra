@@ -1,6 +1,6 @@
 # ADR 0042 — Ask PREDICTRA con un LLM gratuito
 
-**Stato:** Proposta (decide `gennpalm`, prerequisito P4 del [piano M8](../roadmap/M8-hardening-e-produzione.md)) · **Data:** 2026-11-09
+**Stato:** Accettata (PR #51 unita da `gennpalm` il 9/11/2026; `GROQ_API_KEY` configurata su Vercel DEV) · **Data:** 2026-11-09
 
 ## Contesto
 
@@ -51,10 +51,10 @@ Attivare Ask PREDICTRA con **Groq (opzione A)** come fornitore e **Cloudflare Wo
 
 ### 3. Sicurezza e limiti
 
-- Chiamata solo lato server (Route Handler o Server Action) dopo `requirePermission`. Nuovo permesso `ask.use`, da aggiungere sia in `roles.ts` che in SQL, con i relativi test.
+- Chiamata solo lato server (Server Action) dopo `requireUser`. Come le altre sezioni della navigazione principale, Ask è aperta a **ogni utente attivo**: niente permesso dedicato (scelta presa in fase 0, più semplice del permesso `ask.use` ipotizzato).
 - Chiave `GROQ_API_KEY` solo nelle variabili server di Vercel, **mai** con prefisso `NEXT_PUBLIC_`. Zero Data Retention attivato nella console Groq.
 - **Quota per utente:** per esempio 30 domande al giorno, in una tabella `ask_usage` con RLS (ogni utente vede solo la propria). Oltre la quota, o quando il fornitore risponde 429, si mostra un messaggio chiaro e si passa alla riserva se configurata. Nessun errore muto.
-- **Interruttore:** variabile `ASK_ENABLED`. Spenta, la voce torna disattivata.
+- **Interruttore:** la chat è attiva solo se c’è `GROQ_API_KEY`; `ASK_ENABLED=false` la spegne anche con la chiave presente.
 - **Log:** utente, ora, strumenti usati, token ed esito del controllo sui numeri. Il **testo delle domande non viene salvato** finché l'ADR 0041 (conservazione) non lo regola.
 - Le chiamate HTTP vanno all'endpoint compatibile OpenAI dei due fornitori con `fetch` dietro una piccola interfaccia `LlmProvider`. Così si cambia fornitore senza toccare la pagina.
 
@@ -70,9 +70,9 @@ Attivare Ask PREDICTRA con **Groq (opzione A)** come fornitore e **Cloudflare Wo
 | Fase  | Contenuto                                                                                                                                             | Corsia |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | P     | `gennpalm` crea l'account Groq, attiva Zero Data Retention e mette `GROQ_API_KEY` su Vercel (DEV)                                                     | —      |
-| 0     | Contratto: permesso `ask.use` (TS + SQL), tabella `ask_usage` con RLS e test                                                                          | 0      |
+| 0     | Contratto: tabella `ask_usage` con RLS, RPC `ask_consume` e `ask_record`, test                                                                        | 0      |
 | A     | `lib/ask/`: interfaccia `LlmProvider`, strumenti in sola lettura, controllo sui numeri con test unitari (risposte con numeri non presenti → scartate) | A      |
-| B     | Pagina `/ask`: chat, riquadro Fonti, quota residua, avvisi; voce di navigazione attiva quando `ASK_ENABLED`                                           | B      |
+| B     | Pagina `/ask`: chat, riquadro Fonti, quota residua, avvisi; voce di navigazione attiva                                                                | B      |
 | Verif | Prova su DEV con domande reali; il controllo di accessibilità (_Verifica DEV_) include `/ask`                                                         | —      |
 
 ## Alternativa
