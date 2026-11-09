@@ -1,6 +1,6 @@
 # M7 — Agente autonomo: piano e corsie
 
-**Stato:** in corso (corsia 0 unita, corsia A) · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** in servizio su DEV (corsie 0, A1–A3, A5 e B unite); restano A4 e chiusura · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                                                                                                     |
-| ---------------------------- | -------- | ----- | ------------------------------------------------------------------------------------------------------------------------- |
-| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                               |
-| A — coda e scheduler         | gennpalm | —     | A1–A3 unite (#33, #35); A5: football-data (#40), quote (#41), previsioni (#42) unite, proposte in revisione (#43); poi A4 |
-| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                                         |
+| Corsia                       | Persona  | Issue | Stato                                            |
+| ---------------------------- | -------- | ----- | ------------------------------------------------ |
+| 0 — contratto                | gennpalm | —     | unita (#26)                                      |
+| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 da fare |
+| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                |
 
 ## Prerequisiti
 
