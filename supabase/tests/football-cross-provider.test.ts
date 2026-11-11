@@ -174,10 +174,11 @@ describe("abbinamento tra provider", () => {
     });
   });
 
-  it("una squadra senza alias diventa nuova ed è segnalata; una stagione lontana è nuova", async () => {
+  it("squadra nuova: segnalata solo in una stagione con dati di un altro provider", async () => {
     await asServiceRole(db, async (tx) => {
       const afRun = await startRun(tx, AF, "DEMO:af2");
-      const r = await ingest(
+      // Stagione storica coperta solo da API-Football: una squadra nuova è normale.
+      const storica = await ingest(
         tx,
         afRun,
         batch(
@@ -185,13 +186,30 @@ describe("abbinamento tra provider", () => {
           "2023-08-19",
           [
             { provider_id: "AF-10", name: "DEMO Alfa" },
-            { provider_id: "AF-99", name: "DEMO Gamma Sconosciuta" },
+            { provider_id: "AF-99", name: "DEMO Gamma Retrocessa" },
           ],
           "2023-08-20T18:45:00Z",
           [0, 0],
         ),
       );
-      expect(r).toMatchObject({ teams_unmatched: 1, matches_matched: 0 });
+      expect(storica).toMatchObject({ teams_unmatched: 0, matches_matched: 0 });
+
+      // Stessa stagione di football-data.org: una squadra nuova è sospetta.
+      const comune = await ingest(
+        tx,
+        afRun,
+        batch(
+          "AF",
+          "2025-08-17",
+          [
+            { provider_id: "AF-10", name: "DEMO Alfa" },
+            { provider_id: "AF-98", name: "DEMO Gamma Sconosciuta" },
+          ],
+          "2025-08-24T18:45:00Z",
+          [1, 1],
+        ),
+      );
+      expect(comune).toMatchObject({ teams_unmatched: 1 });
 
       const issue = await one<{ n: number; name: string }>(
         tx,

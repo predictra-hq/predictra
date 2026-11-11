@@ -14,7 +14,7 @@ Migrazione `20261111160000_football_cross_provider.sql`, che sostituisce `ingest
 
 1. **Squadre:** se una squadra non è mappata per il provider, si cerca tra gli alias esistenti (`team_by_alias`, già usata per le quote in M3) prima con il nome e poi con il nome breve.
    - Abbinamento solo se l'alias indica **una sola** squadra e se quella squadra non ha già un altro ID dello stesso provider.
-   - Altrimenti la squadra è nuova. Se la competizione ha già dati di un altro provider, la squadra nuova è segnalata in `data_quality_issues` con `team.cross_provider_unmatched` (WARNING). La correzione passa da un alias nella pagina _Alias squadre_ (M3).
+   - Altrimenti la squadra è nuova. Se la **stessa stagione** ha già dati di un altro provider, la squadra nuova è segnalata in `data_quality_issues` con `team.cross_provider_unmatched` (WARNING). La correzione passa da un alias nella pagina _Alias squadre_ (M3). In una stagione coperta da un solo provider (lo storico) una squadra nuova è normale e non si segnala (migrazione `20261111180000_football_unmatched_overlap.sql`: la prima regola, per competizione, aveva segnalato 53 squadre retrocesse; quelle segnalazioni sono state chiuse come `IGNORED`).
    - **Suggerimento dell'adapter** (migrazione `20261111170000_football_team_hint.sql`). Gli alias esatti non bastano ("Bayern München" e "FC Bayern München"). L'adapter confronta i nomi in modo più ampio (`services/data-collector/src/predictra_collector/team_matching.py`):
      - per chiave: minuscole, senza accenti, punteggiatura, numeri e sigle societarie (FC, AC, SSC…);
      - altrimenti per inclusione, in una sola direzione: il nome nuovo è contenuto in un nome noto ("Marseille" in "Olympique de Marseille"), con almeno una parola di 4+ lettere;

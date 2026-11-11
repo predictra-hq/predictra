@@ -296,6 +296,12 @@ def backfill(
         summary.skipped += [f"{code}:{y}" for y in seasons if f"{code}:{y}" in done]
         if not todo:
             continue
+        # Serve almeno /leagues più una stagione: altrimenti si riprende domani.
+        if client.budget - client.requests_used < 2:
+            summary.stopped = (
+                f"Budget di {client.budget} richieste raggiunto: ci si ferma prima della quota"
+            )
+            break
         try:
             league = _find_league(client, code)
         except DailyBudgetExhausted as exc:
@@ -313,6 +319,13 @@ def backfill(
                 season = by_year.get(year)
                 if season is None:
                     raise LookupError(f"{code}: stagione {year} assente in /leagues")
+                # Budget del giorno esaurito: ci si ferma prima di aprire l'esecuzione,
+                # così non resta un'esecuzione "fallita" (è una fermata prevista).
+                if client.requests_used >= client.budget:
+                    raise DailyBudgetExhausted(
+                        f"Budget di {client.budget} richieste raggiunto: "
+                        "ci si ferma prima della quota"
+                    )
                 if store is not None:
                     run_id = store.start_run(PROVIDER, JOB_TYPE, f"{code}:{year}", triggered_by)
                 fixtures = client.fixtures(league=str(league["league"]["id"]), season=str(year))
