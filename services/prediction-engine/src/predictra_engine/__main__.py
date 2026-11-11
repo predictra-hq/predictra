@@ -87,6 +87,8 @@ def main(argv: list[str] | None = None) -> int:
             line += f" errore={m.error}"
         print(line)
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
+    if summary.refreshed_backtests:
+        print("  confronto settimanale: backtest rifatti per tutti i modelli con i dati aggiornati")
     if summary.selection is not None:
         verb = "da attivare (dry run)" if args.dry_run else "attivato"
         print(

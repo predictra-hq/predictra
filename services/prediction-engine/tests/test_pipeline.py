@@ -26,6 +26,7 @@ class FakeStore:
         self.runs = []
         self.active = None
         self.activations = []
+        self.clock = None  # istante di registrazione dei backtest (lo imposta il test)
 
     def training_results(self, as_of):
         return [as_row(r) for r in self.league if r.kickoff_at < as_of]
@@ -53,6 +54,7 @@ class FakeStore:
         return mv
 
     def record_backtest(self, payload):
+        payload = {**payload, "created_at": self.clock.isoformat()}
         self.backtests.append(payload)
         return len(self.backtests)
 
@@ -91,6 +93,7 @@ def test_scrittura_completa_e_idempotente(league):
     past, upcoming, now = setup(league)
     store = FakeStore(past, upcoming)
     models = [Baseline(), dixon_coles_model()]
+    store.clock = now
     summary = run(store, models, now=now, code_commit=COMMIT, model_code=CODE)
     assert not summary.failed
     assert len(store.versions) == 2
@@ -130,6 +133,27 @@ def test_scrittura_completa_e_idempotente(league):
     assert len(store.versions) == 4
     new_dc = store.versions[("dixon_coles", version_label(models[1], "b" * 64))]
     assert store.activations[-1] == (new_dc, "il modello attivo appartiene a un codice superato")
+
+
+def test_confronto_settimanale_rifa_i_backtest_con_i_dati_aggiornati(league):
+    past, upcoming, now = setup(league)
+    store = FakeStore(past, upcoming)
+    models = [Baseline(), dixon_coles_model()]
+    store.clock = now
+    run(store, models, now=now, code_commit=COMMIT, model_code=CODE)
+    assert len(store.backtests) == 2
+
+    # Dopo 3 giorni: backtest ancora validi, nessun nuovo confronto.
+    store.clock = now + timedelta(days=3)
+    s = run(store, models, now=now + timedelta(days=3), code_commit=COMMIT, model_code=CODE)
+    assert len(store.backtests) == 2 and not s.refreshed_backtests
+
+    # Dopo 8 giorni: tutti i modelli rifanno il backtest insieme, stesse versioni.
+    store.clock = now + timedelta(days=8)
+    s = run(store, models, now=now + timedelta(days=8), code_commit=COMMIT, model_code=CODE)
+    assert s.refreshed_backtests
+    assert len(store.backtests) == 4
+    assert len(store.versions) == 2
 
 
 def test_dry_run_non_scrive(league):

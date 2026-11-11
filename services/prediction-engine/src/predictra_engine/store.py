@@ -116,7 +116,7 @@ class SupabaseStore:
         rows = self.select(
             "backtests",
             {
-                "select": "brier,log_loss,ece,baseline_brier,baseline_log_loss",
+                "select": "brier,log_loss,ece,baseline_brier,baseline_log_loss,created_at",
                 "model_version_id": f"eq.{model_version_id}",
                 "order": "created_at.desc",
                 "limit": "1",
