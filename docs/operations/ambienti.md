@@ -59,7 +59,7 @@ Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Su
 
 ## Credenziali da rinnovare
 
-I due token usati dai deploy e il token dell'avvio di riserva dell'agente sono stati creati **senza scadenza** (verificato dal proprietario l'8/11/2026). Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
+I due token usati dai deploy (verificato dal proprietario l'8/11/2026) e il token dell'avvio di riserva dell'agente (11/11/2026) sono stati creati **senza scadenza**. Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
 
 | Credenziale                                                                   | Dove si rinnova                                                                                                     | Scadenza                                                                                                                                                      |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
