@@ -46,6 +46,26 @@ class SupabaseStore:
             raise StoreError(f"Supabase {name}: HTTP {response.status_code} {detail or ''}".strip())
         return response.json() if response.content else None
 
+    def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
+        """Chiavi delle esecuzioni concluse (SUCCEEDED o PARTIAL) di un tipo di lavoro."""
+        try:
+            response = self.http.get(
+                f"{self.url}/rest/v1/ingestion_runs",
+                params={
+                    "select": "window_key",
+                    "provider": f"eq.{provider}",
+                    "job_type": f"eq.{job_type}",
+                    "status": "in.(SUCCEEDED,PARTIAL)",
+                },
+                headers=self._headers(),
+            )
+        except httpx.HTTPError as exc:
+            raise StoreError(f"Supabase ingestion_runs: {type(exc).__name__}") from None
+        if response.status_code >= 400:
+            raise StoreError(f"Supabase ingestion_runs: HTTP {response.status_code}")
+        rows = response.json()
+        return {str(r["window_key"]) for r in rows if isinstance(r, dict) and r.get("window_key")}
+
     def start_run(self, provider: str, job_type: str, window_key: str, triggered_by: str) -> int:
         return int(
             self.rpc(
