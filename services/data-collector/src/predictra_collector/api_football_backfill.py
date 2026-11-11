@@ -26,6 +26,7 @@ from typing import Any, Protocol
 from .api_football import DAILY_BUDGET, PROVIDER, ApiFootballClient, DailyBudgetExhausted
 from .football_data import season_label
 from .runner import sanitize
+from .team_matching import TeamMatcher
 
 JOB_TYPE = "af.backfill"
 SEASONS: tuple[int, ...] = (2022, 2023, 2024)
@@ -95,6 +96,7 @@ class Store(Protocol):
         quota_remaining: int | None = None,
     ) -> None: ...
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]: ...
+    def teams(self) -> list[dict[str, Any]]: ...
 
 
 def _issue(code: str, severity: str, entity_type: str | None, pid: Any, **details: Any):
@@ -130,6 +132,7 @@ def normalize_season(
     fixtures: list[dict[str, Any]],
     code: str,
     observed_at: str,
+    matcher: TeamMatcher | None = None,
 ) -> Normalized:
     """Lotto per `ingest_football_batch` da una voce di /leagues e da /fixtures."""
     info = league["league"]
@@ -146,7 +149,7 @@ def normalize_season(
             issues.append(_issue("match.incomplete", "ERROR", "match", fid))
             continue
         for t in (home, away):
-            teams[str(t["id"])] = {
+            team = {
                 "provider_id": str(t["id"]),
                 "name": t.get("name") or str(t["id"]),
                 "short_name": None,
@@ -154,6 +157,11 @@ def normalize_season(
                 "area_code": None,
                 "event_time": None,
             }
+            known = matcher.match(team["name"]) if matcher is not None else None
+            if known is not None:
+                team["same_as_team_id"] = known.id
+                team["same_as_name"] = known.name  # solo per il riepilogo, il DB lo ignora
+            teams[str(t["id"])] = team
         short = ((fx.get("status") or {}).get("short")) or ""
         status = STATUS_MAP.get(short)
         if status is None:
@@ -226,6 +234,8 @@ class SeasonResult:
     teams_unmatched: int = 0
     issues: int = 0
     error: str | None = None
+    suggested: dict[str, str] = field(default_factory=dict)  # nome provider → nome nel DB
+    without_match: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -260,6 +270,7 @@ def backfill(
     triggered_by: str = "manual",
     secrets: tuple[str, ...] = (),
     observed_at: str | None = None,
+    matcher: TeamMatcher | None = None,
 ) -> BackfillSummary:
     """Scarica e scrive le stagioni mancanti. Con ``store=None`` (dry run) non scrive."""
     summary = BackfillSummary()
@@ -272,6 +283,8 @@ def backfill(
         client.budget = max(0, DAILY_BUDGET - used_today)
 
     done = store.succeeded_windows(PROVIDER, JOB_TYPE) if store is not None else set()
+    if matcher is None and store is not None:
+        matcher = TeamMatcher.from_rows(store.teams())
     for code in competitions:
         todo = [y for y in seasons if f"{code}:{y}" not in done]
         summary.skipped += [f"{code}:{y}" for y in seasons if f"{code}:{y}" in done]
@@ -297,7 +310,7 @@ def backfill(
                 if store is not None:
                     run_id = store.start_run(PROVIDER, JOB_TYPE, f"{code}:{year}", triggered_by)
                 fixtures = client.fixtures(league=str(league["league"]["id"]), season=str(year))
-                norm = normalize_season(league, season, fixtures, code, observed)
+                norm = normalize_season(league, season, fixtures, code, observed, matcher)
                 errors = sum(1 for i in norm.issues if i["severity"] == "ERROR")
                 result = SeasonResult(
                     code,
@@ -305,7 +318,17 @@ def backfill(
                     "PARTIAL" if errors else "SUCCEEDED",
                     matches=len(norm.batch["matches"]),
                     issues=len(norm.issues),
+                    suggested={
+                        t["name"]: t["same_as_name"]
+                        for t in norm.batch["teams"]
+                        if "same_as_name" in t
+                    },
+                    without_match=sorted(
+                        t["name"] for t in norm.batch["teams"] if "same_as_name" not in t
+                    ),
                 )
+                for t in norm.batch["teams"]:
+                    t.pop("same_as_name", None)
                 if not fixtures:
                     result.status = "FAILED"
                     result.error = "Nessuna partita restituita dal provider"

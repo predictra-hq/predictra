@@ -92,6 +92,9 @@ class FakeStore:
         self.finished: list[tuple[int, str]] = []
         self.batches: list[dict[str, Any]] = []
 
+    def teams(self) -> list[dict[str, Any]]:
+        return []
+
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
         assert (provider, job_type) == ("api-football", "af.backfill")
         return self.done
@@ -189,3 +192,36 @@ def test_dry_run_non_scrive():
     summary = backfill(client, None, ("SA",), observed_at=OBS)
     assert [r.status for r in summary.results] == ["SUCCEEDED"] * 3
     assert calls.count("/fixtures") == 3
+
+
+def test_abbinamento_ampio_dei_nomi():
+    from predictra_collector.team_matching import TeamMatcher, tokens
+
+    assert tokens("1. FC Köln") == tokens("FC Koln")
+    assert tokens("FC Bayern München") == tokens("Bayern Munchen")
+    rows = [
+        {"id": 1, "name": "DEMO FC Bayern München", "short_name": "DEMO Bayern"},
+        {"id": 2, "name": "DEMO Olympique de Marseille", "short_name": None},
+        {"id": 3, "name": "DEMO Real Madrid CF", "short_name": "DEMO Real Madrid"},
+        {"id": 4, "name": "DEMO Real Sociedad de Fútbol", "short_name": "DEMO Real Sociedad"},
+        {"id": 5, "name": "DEMO Gamma", "short_name": None, "team_aliases": [{"alias": "DEMO G"}]},
+    ]
+    m = TeamMatcher.from_rows(rows)
+    assert m.match("DEMO Bayern Munchen").id == 1  # type: ignore[union-attr]
+    assert m.match("DEMO Marseille").id == 2  # type: ignore[union-attr]
+    assert m.match("DEMO Real Madrid").id == 3  # type: ignore[union-attr]
+    assert m.match("DEMO Real") is None  # ambiguo: due squadre "Real"
+    assert m.match("DEMO Sconosciuta") is None
+    assert m.match("DEMO G").id == 5  # type: ignore[union-attr]
+
+
+def test_suggerimento_nel_lotto():
+    from predictra_collector.team_matching import TeamMatcher
+
+    league = league_entry()
+    live = load("af_fixtures_live_example.json")["response"]
+    matcher = TeamMatcher.from_rows([{"id": 42, "name": "Wydad Athletic Club"}])
+    norm = normalize_season(league, league["seasons"][0], live, "PL", OBS, matcher)
+    by_name = {t["name"]: t for t in norm.batch["teams"]}
+    assert by_name["Wydad AC"]["same_as_team_id"] == 42
+    assert "same_as_team_id" not in by_name["Rapide Oued ZEM"]

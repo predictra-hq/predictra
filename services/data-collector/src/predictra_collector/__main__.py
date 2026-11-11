@@ -21,6 +21,7 @@ from .football_data import FootballDataClient
 from .odds_runner import run_odds
 from .runner import run
 from .supabase_store import SupabaseStore
+from .team_matching import TeamMatcher
 from .the_odds_api import OddsApiClient
 
 
@@ -111,8 +112,19 @@ def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> 
     client = ApiFootballClient(settings.require_api_football())
     store = _store(settings, args.dry_run)
     competitions = parse_competitions(args.competitions)
+    matcher = None
+    if store is None and settings.supabase_url and settings.supabase_secret_key:
+        # Dry run con il database raggiungibile: si legge (solo lettura) l'elenco delle
+        # squadre per mostrare gli abbinamenti prima di scrivere.
+        reader = SupabaseStore(*settings.require_supabase())
+        matcher = TeamMatcher.from_rows(reader.teams())
     summary = backfill(
-        client, store, competitions, triggered_by=args.triggered_by, secrets=settings.secrets()
+        client,
+        store,
+        competitions,
+        triggered_by=args.triggered_by,
+        secrets=settings.secrets(),
+        matcher=matcher,
     )
     mode = "DRY RUN (nessuna scrittura)" if store is None else "scrittura su Supabase"
     print(
@@ -130,6 +142,11 @@ def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> 
         if r.error:
             line += f" errore={r.error}"
         print(line)
+        if r.suggested:
+            pairs = ", ".join(f"{a} → {b}" for a, b in sorted(r.suggested.items()))
+            print(f"       abbinamenti suggeriti: {pairs}")
+        if r.without_match:
+            print(f"       senza abbinamento: {', '.join(r.without_match)}")
     if summary.stopped:
         print(f"  fermato: {summary.stopped} (si riprende domani da qui)")
     return 1 if summary.failed else 0

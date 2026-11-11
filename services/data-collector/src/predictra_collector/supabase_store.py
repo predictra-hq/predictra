@@ -46,6 +46,21 @@ class SupabaseStore:
             raise StoreError(f"Supabase {name}: HTTP {response.status_code} {detail or ''}".strip())
         return response.json() if response.content else None
 
+    def teams(self) -> list[dict[str, Any]]:
+        """Squadre note con nome breve e alias (lettura, per l'abbinamento tra provider)."""
+        try:
+            response = self.http.get(
+                f"{self.url}/rest/v1/teams",
+                params={"select": "id,name,short_name,team_aliases(alias)", "limit": "5000"},
+                headers=self._headers(),
+            )
+        except httpx.HTTPError as exc:
+            raise StoreError(f"Supabase teams: {type(exc).__name__}") from None
+        if response.status_code >= 400:
+            raise StoreError(f"Supabase teams: HTTP {response.status_code}")
+        rows = response.json()
+        return rows if isinstance(rows, list) else []
+
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
         """Chiavi delle esecuzioni concluse (SUCCEEDED o PARTIAL) di un tipo di lavoro."""
         try:
