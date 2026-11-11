@@ -6,6 +6,7 @@ import { ActionForm, SubmitButton } from "@/components/ui/form";
 import {
   Card,
   CardTitle,
+  EmptyState,
   Field,
   Input,
   PageHeader,
@@ -39,9 +40,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
 
       <h2 className="mb-3 text-lg font-semibold">{m.yourBankrolls}</h2>
       {bankrolls.length === 0 ? (
-        <Card className="mb-6">
-          <p className="text-sm text-muted">{m.none}</p>
-        </Card>
+        <EmptyState className="mb-6">{m.none}</EmptyState>
       ) : (
         <div className="mb-6 grid gap-4 md:grid-cols-2">
           {bankrolls.map((b) => (

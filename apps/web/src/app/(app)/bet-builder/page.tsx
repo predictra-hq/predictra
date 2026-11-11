@@ -14,7 +14,15 @@ import {
   Metrics,
 } from "@/components/bet-builder/shared";
 import { FilterForm } from "@/components/ui/filter-form";
-import { Alert, Badge, Button, Card, PageHeader, Select } from "@/components/ui/primitives";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
+  Select,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
   formatSlateDate,
@@ -83,14 +91,10 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
   );
 }
 
-function EmptyState({ run }: { run: BetBuilderLatestRunRow | null }) {
+function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   const m = getMessages().betBuilder;
   const text = !run ? m.emptyNoRun : run.status === "FAILED" ? m.emptyFailed : m.emptyZero;
-  return (
-    <Card>
-      <p className="text-sm">{text}</p>
-    </Card>
-  );
+  return <EmptyState>{text}</EmptyState>;
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
@@ -137,7 +141,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       ) : null}
 
       {proposals.length === 0 ? (
-        <EmptyState run={run} />
+        <NoProposals run={run} />
       ) : (
         <>
           <FilterForm className="mb-4 flex flex-wrap items-end gap-3">

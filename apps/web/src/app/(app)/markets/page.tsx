@@ -8,7 +8,7 @@ import { BookmakerKindBadge } from "@/components/odds/badges";
 import { BookmakerOddsTable } from "@/components/odds/bookmaker-odds-table";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
 import { MarketsTable } from "@/components/odds/markets-table";
-import { Alert, Badge, Card, PageHeader } from "@/components/ui/primitives";
+import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -255,9 +255,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
       ) : null}
       <p className="mb-3 text-xs text-muted">{m.methodNote}</p>
       {groups.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">{m.noEvents}</p>
-        </Card>
+        <EmptyState>{m.noEvents}</EmptyState>
       ) : (
         <div className="flex flex-col gap-3">
           {groups.map((g) => (

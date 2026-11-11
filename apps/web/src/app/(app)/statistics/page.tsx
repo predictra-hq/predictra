@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
 import { FormBadges } from "@/components/odds/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { Card, CardTitle, PageHeader } from "@/components/ui/primitives";
+import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -56,9 +56,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <Card>
-          <p className="text-sm text-muted">{m.noData}</p>
-        </Card>
+        <EmptyState>{m.noData}</EmptyState>
       </>
     );
   }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/football/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { Card, CardTitle, PageHeader } from "@/components/ui/primitives";
+import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -64,9 +64,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <Card>
-          <p className="text-sm text-muted">{m.noData}</p>
-        </Card>
+        <EmptyState>{m.noData}</EmptyState>
       </>
     );
   }
@@ -202,9 +200,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
         </p>
       ) : null}
       {standingGroups.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">{m.noStandings}</p>
-        </Card>
+        <EmptyState>{m.noStandings}</EmptyState>
       ) : (
         <div className="flex flex-col gap-4">
           {standingGroups.map((g) => (

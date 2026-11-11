@@ -47,6 +47,12 @@ body {
 body {
   font-family: var(--font-sans);
   font-feature-settings: "tnum" 1;
+  /* Alone smeraldo appena accennato in alto: dà profondità senza togliere contrasto. */
+  background-image:
+    radial-gradient(56rem 28rem at 78% -8rem, rgb(16 185 129 / 0.08), transparent 70%),
+    radial-gradient(40rem 24rem at 8% -10rem, rgb(96 165 250 / 0.05), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   /* Caselle di spunta e radio nel colore del tema. */
   accent-color: var(--color-positive);
 }
@@ -62,6 +68,11 @@ body {
 }
 
 @layer base {
+  /* Intestazioni delle tabelle leggermente in rilievo rispetto alle righe. */
+  thead:not(.sr-only) {
+    background-color: rgb(255 255 255 / 0.025);
+  }
+
   /* Le righe delle tabelle si evidenziano al passaggio: più facile seguire i numeri. */
   tbody tr {
     transition: background-color 120ms;

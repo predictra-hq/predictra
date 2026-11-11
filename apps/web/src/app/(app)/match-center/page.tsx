@@ -8,7 +8,15 @@ import {
   QualityBadge,
 } from "@/components/football/badges";
 import { FilterForm } from "@/components/ui/filter-form";
-import { Alert, Button, Card, Field, PageHeader, Select } from "@/components/ui/primitives";
+import {
+  Alert,
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  PageHeader,
+  Select,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { formatScore, parseCompetitionCode, parseMatchday } from "@/lib/football/format";
 import {
@@ -31,9 +39,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
     return (
       <>
         <PageHeader title={m.matchCenter.title} description={m.matchCenter.description} />
-        <Card>
-          <p className="text-sm text-muted">{m.matchCenter.noData}</p>
-        </Card>
+        <EmptyState>{m.matchCenter.noData}</EmptyState>
       </>
     );
   }
