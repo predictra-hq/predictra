@@ -11,6 +11,7 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
   - Il workflow avvia nel runner l'app del branch scelto, collegata a Supabase DEV.
   - Crea un Super Admin temporaneo con 2FA e un bankroll `DEMO`.
   - Esegue [axe-core](https://github.com/dequelabs/axe-core) (regole WCAG 2.1 A e AA) su tutte le pagine, compresi login, 2FA, area admin, dettaglio partita e larghezza mobile.
+  - Su ogni pagina raccoglie anche gli errori di funzionamento: eccezioni JavaScript, errori nella console del browser (per esempio violazioni della CSP) e risposte 4xx/5xx dell'app. Una pagina con errori risulta KO. Prima esecuzione con questo controllo: 11/11/2026, 27 controlli su 27 superati ([run 43088334133](https://github.com/gennpalm/predictra/actions/runs/43088334133)).
   - Fa anche controlli da tastiera: il primo Tab raggiunge «Vai al contenuto», il menu mobile si apre e si chiude con Esc.
   - Alla fine cancella sempre l'account. Lo script è `apps/web/scripts/verify-accessibility.mjs`, il riepilogo per pagina compare nel run.
   - Si può avviare anche da un branch di lavoro, prima del merge. Dura circa 5 minuti e non va lanciato a ogni PR, per il budget di minuti di GitHub Actions.
