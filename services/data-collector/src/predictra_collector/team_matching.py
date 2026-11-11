@@ -5,8 +5,8 @@ Gli alias esatti non bastano: "Bayern München" (API-Football) e "FC Bayern Mün
 
 1. per **chiave**: minuscole, senza accenti né punteggiatura, senza numeri e senza sigle
    societarie (FC, AC, SSC…). Due nomi con la stessa chiave sono la stessa squadra;
-2. se nessuna chiave coincide, per **inclusione**: le parole di un nome sono tutte nel
-   nome dell'altro ("Marseille" in "Olympique de Marseille").
+2. se nessuna chiave coincide, per **inclusione**: le parole del nome nuovo sono tutte in
+   un nome già noto ("Marseille" in "Olympique de Marseille"), mai il contrario.
 
 Si suggerisce una squadra solo se la candidata è **una sola**: in caso di dubbio nessun
 abbinamento, e la squadra viene segnalata (`team.cross_provider_unmatched`) per un alias
@@ -65,19 +65,49 @@ class TeamMatcher:
                 known.append(KnownTeam(int(r["id"]), str(r.get("name")), keys))
         return cls(known)
 
-    def match(self, name: str) -> KnownTeam | None:
-        key = tokens(name)
-        if not key:
-            return None
-        exact = [t for t in self.teams if key in t.keys]
-        if len(exact) == 1:
-            return exact[0]
-        if exact:
-            return None
-        # Inclusione: almeno una parola significativa (4+ lettere) nella parte comune.
-        partial = [
-            t
-            for t in self.teams
-            if any((key <= k or k <= key) and any(len(w) >= 4 for w in (key & k)) for k in t.keys)
+    def _exact(self, key: frozenset[str]) -> list[KnownTeam]:
+        return [t for t in self.teams if key in t.keys]
+
+    def _partial(self, key: frozenset[str]) -> list[KnownTeam]:
+        # Inclusione in una sola direzione: il nome nuovo è contenuto in un nome noto
+        # ("Marseille" in "Olympique de Marseille"), con almeno una parola di 4+ lettere.
+        # Mai il contrario: un alias corto ("Sparta") dentro un nome più lungo
+        # ("Sparta Praha") abbinerebbe squadre diverse.
+        return [
+            t for t in self.teams if any(key <= k and any(len(w) >= 4 for w in key) for k in t.keys)
         ]
-        return partial[0] if len(partial) == 1 else None
+
+    def match(self, name: str) -> KnownTeam | None:
+        """Abbinamento di un solo nome (vedi `match_all` per un lotto)."""
+        return self.match_all([name]).get(name)
+
+    def match_all(self, names: list[str]) -> dict[str, KnownTeam]:
+        """Abbinamenti di tutte le squadre di un lotto.
+
+        Prima gli abbinamenti per chiave, poi quelli per inclusione. Un abbinamento per
+        inclusione si scarta se la squadra è già presa da un altro nome del lotto
+        ("FC Eindhoven" non diventa PSV se nello stesso lotto c'è "PSV Eindhoven") o se
+        due nomi la indicano entrambi.
+        """
+        out: dict[str, KnownTeam] = {}
+        pending: list[tuple[str, frozenset[str]]] = []
+        for name in dict.fromkeys(names):
+            key = tokens(name)
+            if not key:
+                continue
+            exact = self._exact(key)
+            if len(exact) == 1:
+                out[name] = exact[0]
+            elif not exact:
+                pending.append((name, key))
+        taken = {t.id for t in out.values()}
+        partial: dict[str, KnownTeam] = {}
+        for name, key in pending:
+            found = self._partial(key)
+            if len(found) == 1 and found[0].id not in taken:
+                partial[name] = found[0]
+        counts: dict[int, int] = {}
+        for t in partial.values():
+            counts[t.id] = counts.get(t.id, 0) + 1
+        out.update({n: t for n, t in partial.items() if counts[t.id] == 1})
+        return out

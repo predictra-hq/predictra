@@ -215,6 +215,34 @@ def test_abbinamento_ampio_dei_nomi():
     assert m.match("DEMO G").id == 5  # type: ignore[union-attr]
 
 
+def test_inclusione_scartata_se_la_squadra_e_gia_presa():
+    from predictra_collector.team_matching import TeamMatcher
+
+    rows = [
+        {"id": 7, "name": "DEMO PSV", "team_aliases": [{"alias": "DEMO PSV Eindhoven"}]},
+        {"id": 8, "name": "DEMO FC Internazionale Milano", "short_name": "DEMO Inter"},
+    ]
+    m = TeamMatcher.from_rows(rows)
+    # da sola l'inclusione abbinerebbe; con la squadra già presa nello stesso lotto no
+    assert m.match("DEMO FC Eindhoven").id == 7  # type: ignore[union-attr]
+    got = m.match_all(["DEMO PSV Eindhoven", "DEMO FC Eindhoven"])
+    assert got["DEMO PSV Eindhoven"].id == 7
+    assert "DEMO FC Eindhoven" not in got
+    got = m.match_all(["DEMO Inter", "DEMO Inter Club d'Escaldes"])
+    assert got["DEMO Inter"].id == 8
+    assert "DEMO Inter Club d'Escaldes" not in got
+
+
+def test_alias_corto_non_abbina_un_nome_piu_lungo():
+    from predictra_collector.team_matching import TeamMatcher
+
+    m = TeamMatcher.from_rows(
+        [{"id": 9, "name": "DEMO Sparta Rotterdam", "short_name": "DEMO Sparta"}]
+    )
+    assert m.match("DEMO Sparta Praha") is None
+    assert m.match("DEMO Inter Club d'Escaldes") is None
+
+
 def test_suggerimento_nel_lotto():
     from predictra_collector.team_matching import TeamMatcher
 

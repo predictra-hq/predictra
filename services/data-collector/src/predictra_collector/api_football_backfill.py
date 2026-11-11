@@ -140,6 +140,12 @@ def normalize_season(
     issues: list[dict[str, Any]] = []
     teams: dict[str, dict[str, Any]] = {}
     matches: list[dict[str, Any]] = []
+    names = [
+        ((item.get("teams") or {}).get(side) or {}).get("name") or ""
+        for item in fixtures
+        for side in ("home", "away")
+    ]
+    matched = matcher.match_all([n for n in names if n]) if matcher is not None else {}
     for item in fixtures:
         fx = item.get("fixture") or {}
         fid = fx.get("id")
@@ -157,7 +163,7 @@ def normalize_season(
                 "area_code": None,
                 "event_time": None,
             }
-            known = matcher.match(team["name"]) if matcher is not None else None
+            known = matched.get(team["name"])
             if known is not None:
                 team["same_as_team_id"] = known.id
                 team["same_as_name"] = known.name  # solo per il riepilogo, il DB lo ignora
