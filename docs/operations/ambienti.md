@@ -61,10 +61,11 @@ Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Su
 
 I due token usati dai deploy sono stati creati **senza scadenza** (verificato dal proprietario l'8/11/2026). Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
 
-| Credenziale                               | Dove si rinnova                        | Scadenza |
-| ----------------------------------------- | -------------------------------------- | -------- |
-| Token Supabase `github-actions-predictra` | supabase.com → Account → Access Tokens | nessuna  |
-| Token Vercel `github-actions-predictra`   | vercel.com → Account Settings → Tokens | nessuna  |
+| Credenziale                                                                   | Dove si rinnova                                                                                                     | Scadenza                                                                                                                           |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Token Supabase `github-actions-predictra`                                     | supabase.com → Account → Access Tokens                                                                              | nessuna                                                                                                                            |
+| Token Vercel `github-actions-predictra`                                       | vercel.com → Account Settings → Tokens                                                                              | nessuna                                                                                                                            |
+| Token GitHub `predictra-agent-dispatch` (Vercel DEV, `GITHUB_DISPATCH_TOKEN`) | github.com → Settings → Developer settings → Fine-grained tokens; poi Vercel → Environment Variables e nuovo deploy | da annotare (`gennpalm`). Scaduto il token, l'avvio di riserva risponde `failed` e i cicli dipendono solo dallo schedule di GitHub |
 
 Dopo la sostituzione aggiorna il segreto GitHub con lo stesso nome e rilancia l'ultimo run della CI su `dev`.
 
