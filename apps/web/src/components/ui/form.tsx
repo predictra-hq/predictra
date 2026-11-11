@@ -3,16 +3,22 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/errors";
-import { Alert, Button } from "./primitives";
+import { Alert, Button, Spinner } from "./primitives";
 
+/**
+ * Pulsante di invio: durante l'attesa mostra un indicatore e blocca i doppi clic.
+ * Con `confirmMessage` chiede conferma prima di inviare (azioni distruttive).
+ */
 export function SubmitButton({
   children,
   variant,
   className,
+  confirmMessage,
 }: {
   children: ReactNode;
   variant?: "primary" | "secondary" | "danger" | "ghost";
   className?: string;
+  confirmMessage?: string;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -22,7 +28,15 @@ export function SubmitButton({
       aria-busy={pending}
       variant={variant}
       className={className}
+      onClick={
+        confirmMessage
+          ? (e) => {
+              if (!window.confirm(confirmMessage)) e.preventDefault();
+            }
+          : undefined
+      }
     >
+      {pending ? <Spinner /> : null}
       {children}
     </Button>
   );

@@ -11,6 +11,21 @@ export function formatEuro(value: number | string | null | undefined): string {
 }
 
 /** Reale e simulato sempre distinguibili a colpo d'occhio. */
+/** Importo con segno: verde se positivo, rosso se negativo (mai solo il colore: c'è il segno). */
+export function SignedEuro({ value }: { value: number | string | null | undefined }) {
+  const n = value === null || value === undefined || value === "" ? null : Number(value);
+  return (
+    <span
+      className={
+        n === null || n === 0 ? undefined : n > 0 ? "text-positive-strong" : "text-negative-strong"
+      }
+    >
+      {n !== null && n > 0 ? "+" : ""}
+      {formatEuro(value)}
+    </span>
+  );
+}
+
 export function KindBadge({ kind }: { kind: BankrollKind }) {
   const m = getMessages().bankroll;
   return <Badge tone={kind === "REAL" ? "positive" : "warning"}>{m.kinds[kind]}</Badge>;

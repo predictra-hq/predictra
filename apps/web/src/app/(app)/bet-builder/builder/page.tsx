@@ -55,7 +55,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                     return (
                       <label
                         key={key}
-                        className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+                        className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-border-strong has-[:checked]:border-positive/60 has-[:checked]:bg-positive-soft"
                       >
                         <input
                           type="checkbox"

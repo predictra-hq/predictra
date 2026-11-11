@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BANKROLL_KINDS, MOVEMENT_KINDS } from "@predictra/shared-types";
-import { formatEuro, KindBadge, Stat, Th } from "@/components/bankroll/shared";
+import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import { Card, CardTitle, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
+import {
+  Card,
+  CardTitle,
+  Field,
+  Input,
+  PageHeader,
+  ScrollRegion,
+  Select,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { listBankrolls, listLimits, listMovements } from "@/lib/bankroll/queries";
 import { parseId } from "@/lib/football/format";
@@ -15,6 +23,7 @@ export const metadata: Metadata = { title: "Bankroll" };
 export default async function BankrollPage({ searchParams }: PageProps<"/bankroll">) {
   await requireUser();
   const m = getMessages().bankroll;
+  const c = getMessages().common;
   const params = await searchParams;
   const [bankrolls, limits] = await Promise.all([listBankrolls(), listLimits()]);
   const requested = typeof params.b === "string" ? parseId(params.b) : null;
@@ -38,7 +47,11 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
           {bankrolls.map((b) => (
             <Card
               key={b.bankroll_id}
-              className={b.bankroll_id === selected?.bankroll_id ? "border-positive/60" : undefined}
+              className={
+                b.bankroll_id === selected?.bankroll_id
+                  ? "border-positive/60 ring-1 ring-positive/30"
+                  : undefined
+              }
             >
               <div className="flex items-center justify-between gap-2">
                 <CardTitle>{b.name}</CardTitle>
@@ -47,7 +60,9 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
               <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <Stat label={m.balance}>{formatEuro(b.balance)}</Stat>
                 <Stat label={m.available}>{formatEuro(b.available)}</Stat>
-                <Stat label={m.settledProfit}>{formatEuro(b.settled_profit)}</Stat>
+                <Stat label={m.settledProfit}>
+                  <SignedEuro value={b.settled_profit} />
+                </Stat>
                 <Stat label={m.deposits}>{formatEuro(b.deposits)}</Stat>
                 <Stat label={m.withdrawals}>{formatEuro(b.withdrawals)}</Stat>
                 <Stat label={m.openBets}>
@@ -98,43 +113,51 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
             {movements.length === 0 ? (
               <p className="mt-4 text-sm text-muted">{m.noMovements}</p>
             ) : (
-              <table className="mt-4 w-full text-left text-sm">
-                <caption className="sr-only">{`${m.movements} · ${selected.name}`}</caption>
-                <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                  <tr>
-                    <Th>{m.date}</Th>
-                    <Th>{m.movementKind}</Th>
-                    <Th className="text-right">{m.amount}</Th>
-                    <Th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {movements.map((mv) => (
-                    <tr key={mv.id} className="border-b border-border align-top last:border-0">
-                      <td className="whitespace-nowrap px-3 py-2 text-muted">
-                        {formatDateTime(mv.occurred_at)}
-                      </td>
-                      <td className="px-3 py-2">
-                        {m.movementKinds[mv.kind]}
-                        {mv.note ? (
-                          <span className="block text-xs text-muted">{mv.note}</span>
-                        ) : null}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">
-                        {formatEuro(mv.kind === "WITHDRAWAL" ? -mv.amount : mv.amount)}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <ActionForm action={deleteMovement} className="inline">
-                          <input type="hidden" name="movementId" value={mv.id} />
-                          <SubmitButton variant="ghost" className="h-7 px-2 text-xs">
-                            {m.deleteMovement}
-                          </SubmitButton>
-                        </ActionForm>
-                      </td>
+              <ScrollRegion label={`${m.movements} · ${selected.name}`} className="mt-4">
+                <table className="w-full min-w-[420px] text-left text-sm">
+                  <caption className="sr-only">{`${m.movements} · ${selected.name}`}</caption>
+                  <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <Th>{m.date}</Th>
+                      <Th>{m.movementKind}</Th>
+                      <Th className="text-right">{m.amount}</Th>
+                      <Th>
+                        <span className="sr-only">{c.actions}</span>
+                      </Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {movements.map((mv) => (
+                      <tr key={mv.id} className="border-b border-border align-top last:border-0">
+                        <td className="whitespace-nowrap px-3 py-2 text-muted">
+                          {formatDateTime(mv.occurred_at)}
+                        </td>
+                        <td className="px-3 py-2">
+                          {m.movementKinds[mv.kind]}
+                          {mv.note ? (
+                            <span className="block text-xs text-muted">{mv.note}</span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">
+                          <SignedEuro value={mv.kind === "WITHDRAWAL" ? -mv.amount : mv.amount} />
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <ActionForm action={deleteMovement} className="inline">
+                            <input type="hidden" name="movementId" value={mv.id} />
+                            <SubmitButton
+                              variant="ghost"
+                              className="h-7 px-2 text-xs hover:text-negative-strong"
+                              confirmMessage={c.confirmDelete}
+                            >
+                              {m.deleteMovement}
+                            </SubmitButton>
+                          </ActionForm>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </ScrollRegion>
             )}
           </Card>
 

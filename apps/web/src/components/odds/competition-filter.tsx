@@ -1,3 +1,4 @@
+import { FilterForm } from "@/components/ui/filter-form";
 import { Button, Field, Select } from "@/components/ui/primitives";
 
 export interface CompetitionChoice {
@@ -18,7 +19,7 @@ export function CompetitionFilter({
   submitLabel: string;
 }) {
   return (
-    <form method="get" className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,24rem)_auto] sm:items-end">
+    <FilterForm className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,24rem)_auto] sm:items-end">
       <Field label={label} htmlFor="c">
         <Select id="c" name="c" defaultValue={selected ?? undefined}>
           {competitions.map((c) =>
@@ -33,6 +34,6 @@ export function CompetitionFilter({
       <Button type="submit" variant="secondary" className="sm:w-fit">
         {submitLabel}
       </Button>
-    </form>
+    </FilterForm>
   );
 }

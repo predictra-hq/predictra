@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import {
   FreshnessBadge,
   MatchStatusBadge,
   ProviderAttribution,
   QualityBadge,
 } from "@/components/football/badges";
+import { FilterForm } from "@/components/ui/filter-form";
 import { Alert, Button, Card, Field, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { formatScore, parseCompetitionCode, parseMatchday } from "@/lib/football/format";
@@ -54,7 +56,10 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
     <>
       <PageHeader title={m.matchCenter.title} description={m.matchCenter.description} />
 
-      <form method="get" className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_auto] sm:items-end">
+      <FilterForm
+        resets={{ c: ["g"] }}
+        className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_auto] sm:items-end"
+      >
         <Field label={m.matchCenter.competition} htmlFor="c">
           <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
             {competitions.map((c) =>
@@ -79,7 +84,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
         <Button type="submit" variant="secondary">
           {m.matchCenter.show}
         </Button>
-      </form>
+      </FilterForm>
 
       <Alert className="mb-4">{m.matchCenter.delayedNote}</Alert>
 
@@ -129,13 +134,14 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                   <td className="whitespace-nowrap px-4 py-3 text-center font-mono">
                     <Link
                       href={`/match-center/${r.match_id}`}
-                      className="rounded px-2 py-1 hover:bg-surface-2"
+                      className="inline-flex items-center gap-1 rounded-md border border-border-strong bg-surface-2 px-2.5 py-1 transition-colors hover:border-positive hover:text-positive-strong"
                     >
                       {/* Il nome accessibile contiene il testo visibile (WCAG 2.5.3). */}
                       {formatScore(r.home_score, r.away_score)}
                       <span className="sr-only">
                         {` — ${m.matchCenter.details}: ${r.home_team_name} – ${r.away_team_name}`}
                       </span>
+                      <ChevronRight size={14} aria-hidden="true" className="text-muted" />
                     </Link>
                   </td>
                   <td className="px-4 py-3">{r.away_team_short_name ?? r.away_team_name}</td>

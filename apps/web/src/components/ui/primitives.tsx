@@ -25,8 +25,8 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors",
-        "disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex h-10 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors",
+        "active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0",
         buttonVariants[variant],
         className,
       )}
@@ -35,12 +35,26 @@ export function Button({
   );
 }
 
+/** Indicatore di attesa (decorativo: lo stato è annunciato da `aria-busy`). */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-block size-3.5 shrink-0 rounded-full border-2 border-current border-r-transparent motion-safe:animate-spin",
+        className,
+      )}
+    />
+  );
+}
+
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg placeholder:text-subtle",
-        "focus:border-positive focus:outline-none",
+        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg transition-colors placeholder:text-subtle",
+        "hover:border-muted focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
@@ -52,7 +66,9 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg focus:border-positive focus:outline-none",
+        "h-10 w-full cursor-pointer rounded-lg border border-input bg-bg px-3 text-sm text-fg transition-colors",
+        "hover:border-muted focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
@@ -144,7 +160,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium",
         toneClasses[tone],
         className,
       )}

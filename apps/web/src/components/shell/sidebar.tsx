@@ -3,10 +3,55 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  CalendarDays,
+  Database,
+  Layers,
+  LayoutDashboard,
+  LineChart,
+  ListChecks,
+  LogOut,
+  Mail,
+  Menu,
+  MessageCircleQuestion,
+  ScrollText,
+  Settings2,
+  ShieldCheck,
+  Tags,
+  TrendingUp,
+  Trophy,
+  Users,
+  Wallet,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
+
+/** Un'icona per voce: il menu si riconosce a colpo d'occhio, non solo leggendo. */
+const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
+  dashboard: LayoutDashboard,
+  matchCenter: CalendarDays,
+  statisticsCenter: BarChart3,
+  betBuilder: Layers,
+  marketIntelligence: TrendingUp,
+  leagueIntelligence: Trophy,
+  bankroll: Wallet,
+  tracker: ListChecks,
+  modelIntelligence: LineChart,
+  dataCenter: Database,
+  askPredictra: MessageCircleQuestion,
+  users: Users,
+  invitations: Mail,
+  audit: ScrollText,
+  teamAliases: Tags,
+  agent: Bot,
+  security: ShieldCheck,
+  preferences: Settings2,
+};
 
 interface SidebarProps {
   messages: Messages;
@@ -31,15 +76,18 @@ function NavLinks({
     <ul className="flex flex-col gap-0.5">
       {items.map((item) => {
         const label = messages.nav[item.key];
+        const Icon = NAV_ICONS[item.key];
+        const icon = Icon ? <Icon size={16} aria-hidden="true" className="shrink-0" /> : null;
         if (item.milestone) {
           return (
             <li key={item.key}>
               <span
-                className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-subtle"
+                className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-subtle"
                 aria-disabled="true"
                 title={`${messages.common.availableFrom} Milestone ${item.milestone}`}
               >
-                {label}
+                {icon}
+                <span className="min-w-0 flex-1 truncate">{label}</span>
                 <span className="text-[10px] uppercase tracking-wide">M{item.milestone}</span>
               </span>
             </li>
@@ -53,13 +101,14 @@ function NavLinks({
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "block rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                 active
-                  ? "bg-positive-soft text-positive-strong"
+                  ? "bg-positive-soft font-medium text-positive-strong"
                   : "text-muted hover:bg-surface-2 hover:text-fg",
               )}
             >
-              {label}
+              {icon}
+              <span className="min-w-0 truncate">{label}</span>
             </Link>
           </li>
         );
@@ -82,6 +131,16 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // A menu aperto su mobile la pagina sotto non scorre.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <>
       <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
@@ -95,7 +154,7 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
           aria-expanded={open}
           aria-controls="sidebar"
           aria-label={open ? messages.nav.closeMenu : messages.nav.openMenu}
-          className="rounded-md p-2 text-muted hover:text-fg"
+          className="cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg"
         >
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -137,10 +196,16 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
         </nav>
 
         <div className="border-t border-border p-4">
-          <p className="truncate text-sm font-medium">{userLabel}</p>
+          <p className="truncate text-sm font-medium" title={userLabel}>
+            {userLabel}
+          </p>
           <p className="text-xs text-muted">{roleLabel}</p>
           <form action="/auth/signout" method="post" className="mt-3">
-            <button type="submit" className="text-sm text-muted hover:text-negative-strong">
+            <button
+              type="submit"
+              className="-ml-2 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-negative-strong"
+            >
+              <LogOut size={16} aria-hidden="true" />
               {messages.common.signOut}
             </button>
           </form>

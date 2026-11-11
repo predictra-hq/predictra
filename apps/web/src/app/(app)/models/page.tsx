@@ -119,7 +119,11 @@ export default async function ModelsPage() {
                 <Th className="text-right">{mi.logLoss}</Th>
                 <Th className="text-right">{mi.ece}</Th>
                 <Th>{mi.vsBaseline}</Th>
-                {canManage ? <Th>{""}</Th> : null}
+                {canManage ? (
+                  <Th>
+                    <span className="sr-only">{getMessages().common.actions}</span>
+                  </Th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -128,7 +132,7 @@ export default async function ModelsPage() {
                   key={v.model_version_id}
                   className="border-b border-border align-top last:border-0"
                 >
-                  <td className="px-3 py-3">
+                  <td className="whitespace-nowrap px-3 py-3">
                     <span className="font-medium">{mi.modelNames[v.model_key]}</span>
                     <span className="block font-mono text-xs text-muted">{v.version}</span>
                   </td>

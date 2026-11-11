@@ -1,6 +1,7 @@
 import type { BestOddsH2hRow, MatchOddsH2hRow } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
 import { BookmakerKindBadge } from "@/components/odds/badges";
@@ -68,7 +69,7 @@ function EventCard({ group, best }: { group: OddsEventGroup; best: BestOddsH2hRo
   const total = all.length;
   return (
     <details className="group rounded-[var(--radius-card)] border border-border bg-surface">
-      <summary className="flex cursor-pointer list-none flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <summary className="flex cursor-pointer list-none flex-col gap-3 rounded-[var(--radius-card)] p-4 transition-colors hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex flex-col gap-1">
           <span className="font-medium">
             {group.homeTeam} – {group.awayTeam}
@@ -81,8 +82,11 @@ function EventCard({ group, best }: { group: OddsEventGroup; best: BestOddsH2hRo
         <span className="flex flex-wrap items-center gap-2">
           {group.matchId === null ? <Badge tone="warning">{m.unmatched}</Badge> : null}
           <FreshnessBadge freshness={group.freshness} />
-          <span className="text-xs text-muted group-open:hidden">▸</span>
-          <span className="hidden text-xs text-muted group-open:inline">▾</span>
+          <ChevronDown
+            size={18}
+            aria-hidden="true"
+            className="text-muted transition-transform group-open:rotate-180"
+          />
         </span>
       </summary>
 
@@ -208,7 +212,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
             <tbody>
               {coverage.map((c) => (
                 <tr key={c.competition_id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3">
                     {c.competition_code ? (
                       <Link
                         href={`/markets?c=${c.competition_code}`}

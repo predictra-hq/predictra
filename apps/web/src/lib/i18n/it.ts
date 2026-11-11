@@ -19,6 +19,16 @@ export const it = {
     genericError: "Si è verificato un errore. Riprova.",
     availableFrom: "Disponibile da",
     loading: "Caricamento in corso…",
+    skipToContent: "Vai al contenuto",
+    actions: "Azioni",
+    confirmDelete: "Confermi l'eliminazione? L'operazione non si può annullare.",
+    errorTitle: "Qualcosa non ha funzionato",
+    errorDescription:
+      "La pagina non è riuscita a caricare i dati. Puoi riprovare: se il problema continua, segnalalo a un amministratore.",
+    retry: "Riprova",
+    notFoundTitle: "Pagina non trovata",
+    notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
+    backToDashboard: "Torna alla dashboard",
   },
   auth: {
     loginTitle: "Accesso riservato",
@@ -578,7 +588,7 @@ export const it = {
     builderDescription:
       "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 7 giorni. La valutazione usa le probabilità del modello attivo e la migliore quota FRESH tra i bookmaker.",
     builderEmpty:
-      "Nessuna partita in programma con previsioni del modello attivo. Le previsioni arrivano quando un modello è attivo (Model Intelligence).",
+      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato in Model Intelligence.",
     evaluate: "Valuta",
     evaluation: "Valutazione",
     noSelection: "Seleziona almeno un esito.",

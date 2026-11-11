@@ -89,9 +89,14 @@ export default async function SlipsPage() {
                   ))}
                 </ul>
                 <EvaluationPanel evaluation={evaluateSelections(selections, now)} />
-                <form action={deleteSlip}>
+                <form action={deleteSlip} className="mt-auto">
                   <input type="hidden" name="slipId" value={slip.id} />
-                  <SubmitButton variant="danger">{m.deleteSlip}</SubmitButton>
+                  <SubmitButton
+                    variant="danger"
+                    confirmMessage={getMessages().common.confirmDelete}
+                  >
+                    {m.deleteSlip}
+                  </SubmitButton>
                 </form>
               </Card>
             );
