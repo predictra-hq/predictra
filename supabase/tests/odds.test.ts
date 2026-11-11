@@ -288,6 +288,28 @@ describe("scrittura e abbinamento", () => {
     });
   });
 
+  it("l'alias ricollega subito anche un evento già giocato e chiude il suo avviso", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx);
+      const r1 = await ingestOdds(tx, oddsBatch("DEMO Casa Nome Diverso"));
+      expect(r1.matched).toBe(0);
+    });
+    const teamId = Number(
+      (await one<{ id: number }>(db, "select id from public.teams where name = 'DEMO Casa FC'")).id,
+    );
+    // Nessuna nuova raccolta: il provider non restituisce più l'evento.
+    await asUser(db, superAdmin, async (tx) => {
+      await tx.query("select public.add_team_alias($1, 'DEMO Casa Nome Diverso')", [teamId]);
+    });
+    const ev = await one<{ linked: number; open: number }>(
+      db,
+      `select (select count(*)::int from public.odds_events where match_id is not null) linked,
+              (select count(*)::int from public.data_quality_issues
+                where status = 'OPEN' and check_code = 'odds.event_unmatched') open`,
+    );
+    expect(ev).toEqual({ linked: 1, open: 0 });
+  });
+
   it("l'alias manuale richiede la 2FA", async () => {
     await asServiceRole(db, (tx) => seedFootball(tx));
     const teamId = Number(
