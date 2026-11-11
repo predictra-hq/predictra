@@ -40,7 +40,12 @@ Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` 
 
 ## Piano del backfill (fase A3)
 
-Stima per competizione e stagione: 1 chiamata per l'elenco delle partite e circa 19 chiamate da 20 partite per i dettagli, cioè circa 20 richieste. Con 8 competizioni e 3 stagioni sono circa 480 richieste, cioè 6 giorni a 90 richieste al giorno. Il job riprende dal punto in cui si era fermato (stato in `ingestion_runs`).
+- **Risultati:** 1 chiamata `/leagues` per competizione e 1 `/fixtures` per stagione, cioè 32 richieste in tutto (fatto, comando `api-football-backfill`).
+- **Formazioni e statistiche** (da fare, servono tabelle nuove): circa 19 chiamate da 20 partite per stagione, cioè circa 456 richieste, 6 giorni a 90 al giorno. Il job riprenderà dal punto in cui si era fermato (stato in `ingestion_runs`).
+
+## Backfill
+
+Comando `api-football-backfill` ([runbook](../operations/data-collector.md)). Il dry run dell'11/11/2026 (32 richieste) ha trovato tutte le 8 competizioni con `/leagues` (nome e paese) e 24 stagioni, per un totale di circa 7.900 partite. Le squadre si abbinano a quelle di football-data.org secondo l'[ADR 0011](../decisions/0011-abbinamento-tra-provider.md).
 
 ## Account e chiave
 

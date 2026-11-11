@@ -44,6 +44,7 @@ interface Team {
   provider_id: string;
   name: string;
   short_name?: string;
+  same_as_team_id?: number;
 }
 
 const batch = (
@@ -206,6 +207,57 @@ describe("abbinamento tra provider", () => {
          where c.code = 'DEMOX'`,
       );
       expect(seasons.n).toBe(2);
+    });
+  });
+
+  it("il suggerimento same_as_team_id abbina nomi diversi; un ID inesistente si ignora", async () => {
+    await asServiceRole(db, async (tx) => {
+      const fdRun = await startRun(tx, FD, "DEMO:fd-hint");
+      await ingest(
+        tx,
+        fdRun,
+        batch(
+          "FD",
+          "2021-08-14",
+          [
+            {
+              provider_id: "FDH-1",
+              name: "DEMO Fußball Club Delta München",
+              short_name: "DEMO Delta",
+            },
+            { provider_id: "FDH-2", name: "DEMO Epsilon", short_name: "DEMO Eps" },
+          ],
+          "2021-08-15T13:30:00Z",
+          [3, 0],
+        ),
+      );
+      const delta = await one<{ id: number }>(
+        tx,
+        "select id from public.teams where name = 'DEMO Fußball Club Delta München'",
+      );
+
+      const afRun = await startRun(tx, AF, "DEMO:af-hint");
+      const r = await ingest(
+        tx,
+        afRun,
+        batch(
+          "AF",
+          "2021-08-14",
+          [
+            { provider_id: "AF-50", name: "DEMO Delta Munchen", same_as_team_id: Number(delta.id) },
+            { provider_id: "AF-51", name: "DEMO Eps Nuova", same_as_team_id: 999999999 },
+          ],
+          "2021-08-15T13:30:00Z",
+          [3, 0],
+        ),
+      );
+      expect(r).toMatchObject({ teams_matched: 1, teams_unmatched: 1 });
+      const mapped = await one<{ entity_id: number }>(
+        tx,
+        "select entity_id from public.provider_entity_map where provider = $1 and provider_entity_id = 'AF-50'",
+        [AF],
+      );
+      expect(Number(mapped.entity_id)).toBe(Number(delta.id));
     });
   });
 

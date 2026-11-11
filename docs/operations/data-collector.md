@@ -58,6 +58,20 @@ Prima del backfill storico serve sapere quali stagioni dà davvero il piano Free
 
 Il nome e l'email dell'account non vengono mai stampati.
 
+## API-Football: backfill dello storico (M2 fase A3)
+
+Risultati delle stagioni 2022, 2023 e 2024 delle 8 competizioni della v1 (circa 7.900 partite). Formazioni e statistiche arriveranno con una PR di contratto dedicata.
+
+1. **Prima la prova:** _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-backfill`, `dry_run` attivo.
+   - Non scrive nulla. Legge (in sola lettura) le squadre del database.
+   - Nel log, per ogni stagione: le partite, gli _abbinamenti suggeriti_ (nome API-Football → squadra già nota) e le squadre _senza abbinamento_.
+   - Controlla gli abbinamenti: un abbinamento sbagliato unirebbe due squadre diverse.
+2. **Poi la scrittura:** stesso lavoro con `dry_run` spento.
+3. **Costo:** 1 richiesta `/leagues` per competizione e 1 `/fixtures` per stagione, cioè 32 richieste. Il budget è di 90 al giorno, contando anche quelle già usate oggi: se non basta, il comando si ferma e il giorno dopo riprende dalle stagioni mancanti. Le stagioni già riuscite (`ingestion_runs`, `job_type = af.backfill`) non costano più nulla.
+4. **Squadre non abbinate:** sono nuove (per esempio retrocesse prima della stagione in corso) oppure hanno un nome troppo diverso. Le seconde compaiono nel Data Center come `team.cross_provider_unmatched`. Si correggono con un alias nella pagina _Alias squadre_ **prima** di rilanciare il backfill di quella stagione.
+
+Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il database ignora i suggerimenti e crea squadre doppie. Va eseguito solo dopo il merge della PR e il deploy.
+
 ## Attivazione (una volta, `gennpalm`)
 
 1. Registrazione gratuita al piano Free dal sito https://www.football-data.org. La chiave arriva per email.
