@@ -15,6 +15,7 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0008](0008-niente-email-e-deploy-automatico.md)    | Nessuna email e deploy automatico da GitHub Actions               | Accettata |
 | [0009](0009-lavoro-in-parallelo.md)                 | Lavoro in parallelo per corsie                                    | Accettata |
 | [0010](0010-modello-dati-calcio.md)                 | Modello dati del calcio e ingestion v1                            | Accettata |
+| [0011](0011-abbinamento-tra-provider.md)            | Abbinamento delle stesse squadre, stagioni e partite tra provider | Proposta  |
 | [0015](0015-quote-v1.md)                            | Quote v1: The Odds API, 1X2, regione eu                           | Accettata |
 | [0016](0016-de-margin.md)                           | Margine e probabilità implicite (de-margin)                       | Proposta  |
 | [0020](0020-versioning-previsioni.md)               | Versioning e riproducibilità delle previsioni                     | Accettata |
