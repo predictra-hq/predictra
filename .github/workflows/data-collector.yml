@@ -28,7 +28,14 @@ on:
         description: "Lavoro"
         type: choice
         options:
-          [football-data, odds-daily, odds-prematch, api-football-probe, api-football-backfill]
+          [
+            football-data,
+            odds-daily,
+            odds-prematch,
+            api-football-probe,
+            api-football-backfill,
+            api-football-details,
+          ]
         default: football-data
       competitions:
         description: "Codici separati da virgola (vuoto = tutte le competizioni della v1)"
@@ -129,6 +136,8 @@ jobs:
             api-football-probe) uv run python -m predictra_collector api-football-probe; exit $? ;;
             # Storico 2022-2024 (M2 fase A3): riprende dalle stagioni mancanti, al massimo 32 richieste.
             api-football-backfill) args=(api-football-backfill) ;;
+            # Statistiche e formazioni (ADR 0012): riprende dal punto in cui si era fermato.
+            api-football-details) args=(api-football-details) ;;
           esac
           args+=(--triggered-by "$TRIGGERED_BY")
           if [ -n "$COMPETITIONS" ]; then args+=(--competitions "$COMPETITIONS"); fi

@@ -61,8 +61,13 @@ class SupabaseStore:
         rows = response.json()
         return rows if isinstance(rows, list) else []
 
-    def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
-        """Chiavi delle esecuzioni concluse (SUCCEEDED o PARTIAL) di un tipo di lavoro."""
+    def succeeded_windows(
+        self,
+        provider: str,
+        job_type: str,
+        statuses: tuple[str, ...] = ("SUCCEEDED", "PARTIAL"),
+    ) -> set[str]:
+        """Chiavi delle esecuzioni concluse (di default SUCCEEDED o PARTIAL)."""
         try:
             response = self.http.get(
                 f"{self.url}/rest/v1/ingestion_runs",
@@ -70,7 +75,7 @@ class SupabaseStore:
                     "select": "window_key",
                     "provider": f"eq.{provider}",
                     "job_type": f"eq.{job_type}",
-                    "status": "in.(SUCCEEDED,PARTIAL)",
+                    "status": f"in.({','.join(statuses)})",
                 },
                 headers=self._headers(),
             )
@@ -80,6 +85,31 @@ class SupabaseStore:
             raise StoreError(f"Supabase ingestion_runs: HTTP {response.status_code}")
         rows = response.json()
         return {str(r["window_key"]) for r in rows if isinstance(r, dict) and r.get("window_key")}
+
+    def last_run(self, provider: str, job_type: str, window_key: str) -> dict[str, Any] | None:
+        """Ultima esecuzione di una finestra (stato e cursore di ripresa)."""
+        try:
+            response = self.http.get(
+                f"{self.url}/rest/v1/ingestion_runs",
+                params={
+                    "select": "status,resume_cursor",
+                    "provider": f"eq.{provider}",
+                    "job_type": f"eq.{job_type}",
+                    "window_key": f"eq.{window_key}",
+                    "order": "started_at.desc",
+                    "limit": "1",
+                },
+                headers=self._headers(),
+            )
+        except httpx.HTTPError as exc:
+            raise StoreError(f"Supabase ingestion_runs: {type(exc).__name__}") from None
+        if response.status_code >= 400:
+            raise StoreError(f"Supabase ingestion_runs: HTTP {response.status_code}")
+        rows = response.json()
+        return rows[0] if rows else None
+
+    def ingest_details(self, run_id: int, batch: dict[str, Any]) -> dict[str, Any]:
+        return self.rpc("ingest_match_details", {"p_run_id": run_id, "p_batch": batch})
 
     def start_run(self, provider: str, job_type: str, window_key: str, triggered_by: str) -> int:
         return int(
@@ -114,6 +144,7 @@ class SupabaseStore:
         error_count: int,
         error_summary: str | None,
         quota_remaining: int | None = None,
+        resume_cursor: dict[str, Any] | None = None,
     ) -> None:
         self.rpc(
             "finish_ingestion_run",
@@ -125,6 +156,6 @@ class SupabaseStore:
                 "p_rows_upserted": rows_upserted,
                 "p_error_count": error_count,
                 "p_error_summary": error_summary,
-                "p_resume_cursor": None,
+                "p_resume_cursor": resume_cursor,
             },
         )
