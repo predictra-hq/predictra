@@ -45,6 +45,19 @@ Decisioni: [ADR 0015](../decisions/0015-quote-v1.md). Scheda della fonte: [the-o
   - Scegli il branch `dev`, poi `job` = `odds-daily` o `odds-prematch`.
   - Con `dry_run` attivo il log mostra eventi, bookmaker ed eventuali esiti che non sono né una squadra né `Draw`. Consuma comunque i crediti della chiamata.
 
+## API-Football: verifica del piano (M2 fase A3)
+
+Prima del backfill storico serve sapere quali stagioni dà davvero il piano Free: la documentazione non lo dice ([scheda](../data-sources/api-football.md)).
+
+1. _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-probe`.
+2. Il run non scrive nulla e usa al massimo 6 richieste delle 100 giornaliere. `/status` è gratuito.
+3. Nel log:
+   - piano, stato e richieste del giorno;
+   - le ultime stagioni della Serie A con la copertura dichiarata (formazioni, statistiche);
+   - per ogni anno dal 2021 al 2025, il numero di partite restituite oppure `NON accessibile` con il messaggio del provider.
+
+Il nome e l'email dell'account non vengono mai stampati.
+
 ## Attivazione (una volta, `gennpalm`)
 
 1. Registrazione gratuita al piano Free dal sito https://www.football-data.org. La chiave arriva per email.
