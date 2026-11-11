@@ -18,12 +18,15 @@ import numpy as np
 
 from .backtest import BacktestResult, backtest_models
 from .confidence import confidence
-from .data import Fixture, MatchResult, sha256_json, training_data_hash
+from .data import Fixture, MatchResult, parse_ts, sha256_json, training_data_hash
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
 from .selection import Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
+# Confronto settimanale (ADR 0023, modifica del 11/11/2026): i backtest più vecchi di
+# così si rifanno per tutti i modelli insieme, con i dati aggiornati.
+BACKTEST_MAX_AGE = timedelta(days=7)
 
 
 class Store(Protocol):
@@ -60,6 +63,7 @@ class RunSummary:
     data_hash: str
     models: list[ModelSummary] = field(default_factory=list)
     model_code: str = ""
+    refreshed_backtests: bool = False
     selection: Decision | None = None
     active_before: int | None = None
 
@@ -212,7 +216,19 @@ def run(
             recorded[m.key] = latest
             ece[m.key] = None if latest.get("ece") is None else float(latest["ece"])
 
-    # Backtest delle versioni nuove, tutti sulle stesse partite della baseline.
+    # Confronto settimanale: se un backtest manca o ha più di BACKTEST_MAX_AGE, si
+    # rifanno tutti, sulle stesse partite aggiornate, così il confronto resta equo e
+    # il modello attivo resta il più forte anche quando cambiano solo i dati.
+    stale = any(
+        "created_at" in r and as_of - parse_ts(str(r["created_at"])) > BACKTEST_MAX_AGE
+        for r in recorded.values()
+    )
+    if stale or (needs_backtest and recorded):
+        needs_backtest = [m.key for m in models]
+    summary.refreshed_backtests = stale
+
+    # Backtest delle versioni nuove (o di tutte, nel confronto settimanale), tutti sulle
+    # stesse partite della baseline.
     if needs_backtest:
         backtests = backtest_models(models, results)
         base = backtests.get("baseline")

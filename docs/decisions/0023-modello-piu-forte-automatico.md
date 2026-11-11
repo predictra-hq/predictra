@@ -37,6 +37,10 @@ Il proprietario chiede che il modello attivo sia sempre il più forte e che il m
 
 Il backtest usa tutto lo storico disponibile, compreso quello di API-Football 2022–2024: più partite rendono il confronto più affidabile. Misura sull'hardware di sviluppo con circa 13.000 partite: meno di un secondo per i quattro modelli per ogni settimana di backtest, quindi pochi minuti, dentro il lease di 15 minuti dell'agente. Il backtest si ripete solo quando nasce una versione nuova.
 
+## Modifica dell'11/11/2026: confronto settimanale
+
+Richiesta del proprietario. Con l'arrivo di nuovi dati (partite giocate, storico di API-Football) il modello più forte può cambiare anche senza modifiche al codice. Per questo i backtest più vecchi di **7 giorni** si rifanno per **tutti** i modelli insieme, sulle stesse partite aggiornate, e la scelta del punto 2 si ripete con i nuovi valori. Le versioni restano le stesse: si aggiungono solo nuove righe in `backtests`. Il costo è un backtest completo a settimana, pochi minuti. Nel log compare `confronto settimanale: backtest rifatti …`.
+
 ## Conseguenze
 
 - Con il merge, l'impronta sostituisce il commit nelle etichette: nasce **una** nuova serie di versioni, l'ultima per un motivo non legato ai modelli. Alla prima esecuzione il motore fa il backtest e attiva da solo la versione più forte, che sostituisce la #3, ferma all'8/11.

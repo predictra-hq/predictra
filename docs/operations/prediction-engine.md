@@ -27,6 +27,8 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
 
 Dall'11/11/2026 il motore attiva da solo il modello più forte: tra le versioni del codice corrente che battono la baseline, quella con il Log Loss più basso nel backtest. La cambia se il modello attivo è di un codice superato, oppure se un'altra versione lo batte di almeno 0,001 di Log Loss. Ogni cambio compare in _Audit_ come `model.auto_activated`, con il motivo.
 
+Ogni 7 giorni il motore rifà il backtest di tutti i modelli con i dati aggiornati e ripete la scelta (confronto settimanale).
+
 Una versione nuova nasce solo quando cambia il codice che produce i numeri (`models/`, `data.py`, `markets.py`, `confidence.py`): il log di ogni esecuzione riporta `codice dei modelli: <impronta>`.
 
 L'attivazione manuale descritta sotto resta possibile; il motore la cambia solo se trova un modello più forte.
