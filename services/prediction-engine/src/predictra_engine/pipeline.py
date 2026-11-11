@@ -21,7 +21,7 @@ from .confidence import confidence
 from .data import Fixture, MatchResult, parse_ts, sha256_json, training_data_hash
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
-from .selection import Candidate, Decision, choose_active, model_code_hash
+from .selection import CONTENDERS, Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
 # Confronto settimanale (ADR 0023, modifica del 11/11/2026): i backtest più vecchi di
@@ -36,6 +36,7 @@ class Store(Protocol):
     def latest_backtest(self, model_version_id: int) -> dict[str, Any] | None: ...
     def active_model_version(self) -> int | None: ...
     def auto_activate(self, model_version_id: int, reason: str) -> None: ...
+    def retire_superseded(self, keep: list[int]) -> int: ...
     def register_model_version(self, payload: dict[str, Any]) -> int: ...
     def record_backtest(self, payload: dict[str, Any]) -> int: ...
     def start_run(self, model_version_id: int, code_commit: str, triggered_by: str) -> int: ...
@@ -64,6 +65,7 @@ class RunSummary:
     models: list[ModelSummary] = field(default_factory=list)
     model_code: str = ""
     refreshed_backtests: bool = False
+    retired: int = 0
     selection: Decision | None = None
     active_before: int | None = None
 
@@ -182,12 +184,15 @@ def run(
     summaries = {m.key: ModelSummary(m.key, labels[m.key]) for m in models}
     summary.models = list(summaries.values())
 
-    # Versioni (una per famiglia, iperparametri e commit).
+    # Versioni: solo i modelli in gara (CONTENDERS, ADR 0024). Baseline ed Elo restano
+    # strumenti interni: la baseline come riferimento del backtest, Elo come secondo
+    # parere per l'accordo tra modelli del Confidence Score. Non si registrano.
+    contenders = [m for m in models if m.key in CONTENDERS]
     window = (min(r.kickoff_at for r in results), max(r.kickoff_at for r in results))
     ece: dict[str, float | None] = {}
     recorded: dict[str, dict[str, Any]] = {}
     needs_backtest: list[str] = []
-    for m in models:
+    for m in contenders:
         s = summaries[m.key]
         if dry_run:
             needs_backtest.append(m.key)
@@ -224,7 +229,7 @@ def run(
         for r in recorded.values()
     )
     if stale or (needs_backtest and recorded):
-        needs_backtest = [m.key for m in models]
+        needs_backtest = [m.key for m in contenders]
     summary.refreshed_backtests = stale
 
     # Backtest delle versioni nuove (o di tutte, nel confronto settimanale), tutti sulle
@@ -232,6 +237,9 @@ def run(
     if needs_backtest:
         backtests = backtest_models(models, results)
         base = backtests.get("baseline")
+        for key, bt in backtests.items():
+            if key not in CONTENDERS:
+                summaries[key].backtest = bt  # solo per il riepilogo
         for key in needs_backtest:
             bt = backtests.get(key)
             s = summaries[key]
@@ -243,9 +251,7 @@ def run(
                 store.record_backtest(
                     {
                         "model_version_id": s.model_version_id,
-                        "baseline_model_version_id": summaries["baseline"].model_version_id
-                        if "baseline" in summaries
-                        else None,
+                        "baseline_model_version_id": None,
                         "window_start": _iso(bt.window_start),
                         "window_end": _iso(bt.window_end),
                         "matches": bt.matches,
@@ -263,7 +269,7 @@ def run(
     # Il modello più forte diventa attivo da solo (ADR 0023).
     candidates: list[Candidate] = []
     base_bt = summaries["baseline"].backtest if "baseline" in summaries else None
-    for m in models:
+    for m in contenders:
         s = summaries[m.key]
         mv = s.model_version_id if s.model_version_id is not None else -1
         if s.backtest is not None:
@@ -300,6 +306,10 @@ def run(
         summary.selection = choose_active(candidates, summary.active_before)
         if summary.selection is not None:
             store.auto_activate(summary.selection.model_version_id, summary.selection.reason)
+        # Le versioni superate (codice vecchio, famiglie non più in gara) si ritirano:
+        # restano nello storico per la riproducibilità, non come modelli in elenco.
+        keep = [summaries[m.key].model_version_id for m in contenders]
+        summary.retired = store.retire_superseded([k for k in keep if k is not None])
     else:
         summary.selection = choose_active(candidates, None)
 
@@ -308,7 +318,7 @@ def run(
         key: {fx.match_id: f.probabilities_1x2(fx) for fx in fixtures if f.covers(fx)}
         for key, f in fitted.items()
     }
-    for m in models:
+    for m in contenders:
         s = summaries[m.key]
         rows: list[dict[str, Any]] = []
         matrices: list[dict[str, Any]] = []

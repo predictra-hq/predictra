@@ -656,11 +656,15 @@ export const it = {
   modelIntelligence: {
     title: "Model Intelligence",
     description:
-      "Versioni dei modelli di previsione, backtest walk-forward e modello attivo. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
-    activeModel: "Modello attivo",
+      "Il modello PREDICTRA e il suo sfidante: si riaddestrano a ogni esecuzione sulle partite più recenti e ogni settimana si confrontano, e il più forte diventa attivo da solo. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
+    activeModel: "Modello PREDICTRA (attivo)",
     noActive:
-      "Nessun modello attivo: nessuna previsione PREDICTRA viene mostrata finché un Super Admin non attiva una versione che batte la baseline.",
-    versions: "Versioni",
+      "Nessun modello attivo: il motore attiva da solo il modello più forte alla prossima esecuzione, se batte la baseline.",
+    versions: "In gara",
+    reference: "Riferimento (baseline)",
+    history: "Storico delle versioni ritirate",
+    historyHint:
+      "Versioni superate da un codice più recente o non più in gara. Restano nel database per riprodurre le previsioni già fatte.",
     noVersions: "Nessuna versione registrata: il motore non è ancora stato eseguito.",
     model: "Modello",
     version: "Versione",
@@ -677,7 +681,7 @@ export const it = {
     activate: "Attiva",
     activated: "Modello attivato.",
     activateHint:
-      "Si può attivare solo una versione con un backtest migliore della baseline su Brier e Log Loss. L'attivazione ritira il modello attivo precedente ed è registrata in audit.",
+      "Il motore sceglie da solo il modello più forte. Un Super Admin può attivare a mano lo sfidante, se batte la baseline su Brier e Log Loss: il motore lo cambierà solo se l'altro è più forte di almeno 0,001 di Log Loss.",
     calibration: "Curva di calibrazione",
     calibrationHint:
       "Per ogni fascia di probabilità prevista, la frequenza osservata. Sulla diagonale il modello è ben calibrato.",

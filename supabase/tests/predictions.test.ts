@@ -431,4 +431,36 @@ describe("modello attivo", () => {
     );
     expect(audit).toEqual({ n: 1, reason: "DEMO: nessun modello attivo" });
   });
+  it("le versioni superate si ritirano (ADR 0024): solo service_role, l'attiva non si tocca", async () => {
+    const { good, weak } = await setup();
+    const extra = await asServiceRole(db, async (tx) => register(tx, version("poisson", "v1")));
+    await asServiceRole(db, async (tx) => {
+      await tx.query("select public.auto_activate_model_version($1, 'DEMO')", [good]);
+    });
+    await asUser(db, superAdmin, async (tx) => {
+      expect(
+        await attempt(tx, "select public.retire_superseded_model_versions($1)", [[extra]]),
+      ).not.toBeNull();
+    });
+    const n = await asServiceRole(db, async (tx) =>
+      num(tx, "select public.retire_superseded_model_versions($1) v", [[extra]]),
+    );
+    expect(n).toBe(1); // weak ritirata; good è attiva, extra è da tenere
+    const rows = (
+      await db.query<{ id: number; status: string }>(
+        "select id, status::text from public.model_versions order by id",
+      )
+    ).rows.map((r) => [Number(r.id), r.status]);
+    expect(rows).toEqual([
+      [good, "ACTIVE"],
+      [weak, "RETIRED"],
+      [extra, "CANDIDATE"],
+    ]);
+    expect(
+      await num(
+        db,
+        "select count(*)::int v from public.audit_logs where action = 'model.versions_retired'",
+      ),
+    ).toBe(1);
+  });
 });
