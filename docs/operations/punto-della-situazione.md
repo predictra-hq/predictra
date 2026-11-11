@@ -20,7 +20,7 @@
    - verificare su DEV le tre pagine e la pagina admin _Alias squadre_ (`/admin/team-aliases`, solo Super Admin con 2FA);
    - aggiungere dalla pagina gli alias per i nomi di The Odds API non riconosciuti (57 eventi non abbinati nella prima raccolta). L'abbinamento avviene alla raccolta successiva; gli eventi già giocati non tornano più dal provider e restano non abbinati;
    - poi la chiusura di M3 (piano M3, _Chiusura_).
-2. **M4 (modelli): completata** (#17, #18, #22, #23). Modello attivo: Poisson. Il motore gira dalla coda dell'agente alle 03:47 e alle 12:47 UTC (M7, #42) e prevede le partite dei 7 giorni successivi ([runbook](prediction-engine.md)). Per controllare cosa vede l'app: _Run workflow_ con `command = diagnose`.
+2. **M4 (modelli): completata** (#17, #18, #22, #23). Dall'11/11/2026 il modello attivo è scelto in automatico: il più forte nel backtest ([ADR 0023](../decisions/0023-modello-piu-forte-automatico.md)). Fino ad allora era Poisson #3. Il motore gira dalla coda dell'agente alle 03:47 e alle 12:47 UTC (M7, #42) e prevede le partite dei 7 giorni successivi ([runbook](prediction-engine.md)). Per controllare cosa vede l'app: _Run workflow_ con `command = diagnose`.
 3. **M5 (Smart Bet Builder): completata** (#19, #20, #21), ADR 0025–0027 accettati. Restano due passi operativi per vedere proposte reali:
    - le proposte programmate passano dalla coda dell'agente (06:47 e 15:47 UTC, dopo le quote; [runbook](bet-builder.md)) dal merge in `main` della #43;
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.

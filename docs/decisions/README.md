@@ -21,6 +21,7 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0020](0020-versioning-previsioni.md)               | Versioning e riproducibilità delle previsioni                     | Accettata |
 | [0021](0021-modelli-v1.md)                          | Modelli della v1 e mercati derivati                               | Accettata |
 | [0022](0022-confidence-score.md)                    | Confidence Score                                                  | Accettata |
+| [0023](0023-modello-piu-forte-automatico.md)        | Versioni stabili e modello più forte attivato in automatico       | Accettata |
 | [0025](0025-regole-combinazioni.md)                 | Regole delle combinazioni (Bet Builder)                           | Accettata |
 | [0026](0026-correlazioni.md)                        | Correlazioni tra selezioni                                        | Accettata |
 | [0027](0027-motore-ranking-categorie.md)            | Motore delle combinazioni, ranking e categorie                    | Accettata |

@@ -1,6 +1,7 @@
-"""Esecuzione del motore: adattamento, versioni, backtest, previsioni (ADR 0020–0022).
+"""Esecuzione del motore: adattamento, versioni, backtest, previsioni (ADR 0020–0023).
 
-Versione = famiglia + iperparametri + commit del codice. A ogni esecuzione il
+Versione = famiglia + iperparametri + impronta del codice dei modelli (ADR 0023: non
+più il commit dell'intero servizio). A ogni esecuzione il
 modello si riadatta in modo deterministico sui dati di ``training_results(as_of)``:
 versione + ``as_of`` bastano a riprodurre ogni previsione. ``parameters`` conserva
 gli iperparametri e i parametri stimati al momento della registrazione.
@@ -20,6 +21,7 @@ from .confidence import confidence
 from .data import Fixture, MatchResult, sha256_json, training_data_hash
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
+from .selection import Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
 
@@ -28,7 +30,9 @@ class Store(Protocol):
     def training_results(self, as_of: datetime) -> list[dict[str, Any]]: ...
     def upcoming_fixtures(self, start: datetime, end: datetime) -> list[dict[str, Any]]: ...
     def find_model_version(self, model_key: str, version: str) -> int | None: ...
-    def latest_backtest_ece(self, model_version_id: int) -> float | bool | None: ...
+    def latest_backtest(self, model_version_id: int) -> dict[str, Any] | None: ...
+    def active_model_version(self) -> int | None: ...
+    def auto_activate(self, model_version_id: int, reason: str) -> None: ...
     def register_model_version(self, payload: dict[str, Any]) -> int: ...
     def record_backtest(self, payload: dict[str, Any]) -> int: ...
     def start_run(self, model_version_id: int, code_commit: str, triggered_by: str) -> int: ...
@@ -55,15 +59,19 @@ class RunSummary:
     fixtures: int
     data_hash: str
     models: list[ModelSummary] = field(default_factory=list)
+    model_code: str = ""
+    selection: Decision | None = None
+    active_before: int | None = None
 
     @property
     def failed(self) -> bool:
         return any(m.error for m in self.models)
 
 
-def version_label(model: Model, code_commit: str) -> str:
+def version_label(model: Model, code_id: str) -> str:
+    """Famiglia, iperparametri e impronta del codice dei modelli (ADR 0023)."""
     spec = sha256_json({"model": model.key, "hyperparameters": model.hyperparameters()})
-    return f"{model.key}-{spec[:8]}-{code_commit[:7]}"
+    return f"{model.key}-{spec[:8]}-{code_id[:7]}"
 
 
 def _iso(dt: datetime) -> str:
@@ -151,6 +159,7 @@ def run(
     horizon_days: int = 7,
     triggered_by: str = "schedule",
     dry_run: bool = False,
+    model_code: str | None = None,
 ) -> RunSummary:
     as_of = now.replace(microsecond=0)
     results = [MatchResult.from_row(r) for r in store.training_results(as_of)]
@@ -159,18 +168,20 @@ def run(
         for r in store.upcoming_fixtures(as_of, as_of + timedelta(days=horizon_days))
     ]
     data_hash = training_data_hash(results)
-    summary = RunSummary(as_of, len(results), len(fixtures), data_hash)
+    code_id = model_code or model_code_hash()
+    summary = RunSummary(as_of, len(results), len(fixtures), data_hash, model_code=code_id)
     if not results:
         return summary
 
     fitted = {m.key: m.fit(results, as_of) for m in models}
-    labels = {m.key: version_label(m, code_commit) for m in models}
+    labels = {m.key: version_label(m, code_id) for m in models}
     summaries = {m.key: ModelSummary(m.key, labels[m.key]) for m in models}
     summary.models = list(summaries.values())
 
     # Versioni (una per famiglia, iperparametri e commit).
     window = (min(r.kickoff_at for r in results), max(r.kickoff_at for r in results))
     ece: dict[str, float | None] = {}
+    recorded: dict[str, dict[str, Any]] = {}
     needs_backtest: list[str] = []
     for m in models:
         s = summaries[m.key]
@@ -194,11 +205,12 @@ def run(
                     "training_matches": len(results),
                 }
             )
-        latest = store.latest_backtest_ece(s.model_version_id)
-        if latest is False:
+        latest = store.latest_backtest(s.model_version_id)
+        if latest is None:
             needs_backtest.append(m.key)
         else:
-            ece[m.key] = latest  # type: ignore[assignment]
+            recorded[m.key] = latest
+            ece[m.key] = None if latest.get("ece") is None else float(latest["ece"])
 
     # Backtest delle versioni nuove, tutti sulle stesse partite della baseline.
     if needs_backtest:
@@ -231,6 +243,49 @@ def run(
                     }
                 )
                 s.backtest_recorded = True
+
+    # Il modello più forte diventa attivo da solo (ADR 0023).
+    candidates: list[Candidate] = []
+    base_bt = summaries["baseline"].backtest if "baseline" in summaries else None
+    for m in models:
+        s = summaries[m.key]
+        mv = s.model_version_id if s.model_version_id is not None else -1
+        if s.backtest is not None:
+            candidates.append(
+                Candidate(
+                    mv,
+                    m.key,
+                    s.version,
+                    s.backtest.brier,
+                    s.backtest.log_loss,
+                    base_bt.brier if base_bt else None,
+                    base_bt.log_loss if base_bt else None,
+                )
+            )
+        elif m.key in recorded:
+            r = recorded[m.key]
+
+            def num(v: Any) -> float | None:
+                return None if v is None else float(v)
+
+            candidates.append(
+                Candidate(
+                    mv,
+                    m.key,
+                    s.version,
+                    float(r["brier"]),
+                    float(r["log_loss"]),
+                    num(r.get("baseline_brier")),
+                    num(r.get("baseline_log_loss")),
+                )
+            )
+    if not dry_run:
+        summary.active_before = store.active_model_version()
+        summary.selection = choose_active(candidates, summary.active_before)
+        if summary.selection is not None:
+            store.auto_activate(summary.selection.model_version_id, summary.selection.reason)
+    else:
+        summary.selection = choose_active(candidates, None)
 
     # Previsioni delle partite in arrivo.
     p1x2 = {

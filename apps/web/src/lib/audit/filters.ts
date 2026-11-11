@@ -11,6 +11,7 @@ export const AUDIT_ACTIONS = [
   "user.password_reset_link",
   "team_alias.added",
   "model.activated",
+  "model.auto_activated",
   "agent.job_retried",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

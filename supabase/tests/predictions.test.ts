@@ -397,4 +397,38 @@ describe("modello attivo", () => {
     expect(rows.filter((r) => r.status === "ACTIVE").map((r) => Number(r.id))).toEqual([other]);
     expect(rows.find((r) => Number(r.id) === good)?.status).toBe("RETIRED");
   });
+  it("attivazione automatica del più forte (ADR 0023): solo service_role, stesse garanzie, audit", async () => {
+    const { good, weak } = await setup();
+    // Utenti, anche Super Admin con 2FA, non possono chiamarla.
+    for (const user of [alice, superAdmin]) {
+      await asUser(db, user, async (tx) => {
+        expect(
+          await attempt(tx, "select public.auto_activate_model_version($1, 'DEMO')", [good]),
+        ).not.toBeNull();
+      });
+    }
+    await asServiceRole(db, async (tx) => {
+      expect(
+        await attempt(tx, "select public.auto_activate_model_version($1, 'DEMO')", [weak]),
+      ).toMatch(/baseline/);
+      await tx.query("select public.auto_activate_model_version($1, $2)", [
+        good,
+        "DEMO: nessun modello attivo",
+      ]);
+      // Ripetere sulla stessa versione non fa nulla.
+      await tx.query("select public.auto_activate_model_version($1, 'DEMO')", [good]);
+    });
+    const active = await one<{ id: number; by: string | null }>(
+      db,
+      "select id, activated_by by from public.model_versions where status = 'ACTIVE'",
+    );
+    expect(Number(active.id)).toBe(good);
+    expect(active.by).toBeNull();
+    const audit = await one<{ n: number; reason: string }>(
+      db,
+      `select count(*)::int n, min(metadata ->> 'reason') reason from public.audit_logs
+       where action = 'model.auto_activated'`,
+    );
+    expect(audit).toEqual({ n: 1, reason: "DEMO: nessun modello attivo" });
+  });
 });

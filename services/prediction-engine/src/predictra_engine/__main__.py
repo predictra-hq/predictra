@@ -86,6 +86,14 @@ def main(argv: list[str] | None = None) -> int:
         if m.error:
             line += f" errore={m.error}"
         print(line)
+    print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
+    if summary.selection is not None:
+        verb = "da attivare (dry run)" if args.dry_run else "attivato"
+        print(
+            f"  modello più forte {verb}: {summary.selection.version} — {summary.selection.reason}"
+        )
+    elif not args.dry_run:
+        print("  modello attivo confermato: è ancora il più forte")
     return 1 if summary.failed else 0
 
 
