@@ -33,7 +33,7 @@
   | `FINISHED`                                            | `FINISHED`  |
   | `POSTPONED`, `SUSPENDED`, `CANCELLED`, `AWARDED`      | uguale      |
 
-  La corrispondenza per API-Football si definisce quando i suoi termini e la documentazione saranno verificati.
+  La corrispondenza per API-Football si definisce nella PR del backfill. L'abbinamento delle stesse entità tra provider è nell'[ADR 0011](0011-abbinamento-tra-provider.md).
 
 - **Viste** (punto di contatto tra le corsie A e B e con le milestone successive), tutte con `security_invoker`:
   - `v_match_center`;
