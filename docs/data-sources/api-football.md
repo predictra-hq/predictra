@@ -31,7 +31,12 @@ Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` 
 - **Header di risposta:** `x-ratelimit-requests-limit` e `x-ratelimit-requests-remaining` (giorno), `X-RateLimit-Limit` e `X-RateLimit-Remaining` (minuto).
 - **`/leagues`:** restituisce per ogni stagione il campo `coverage` (per esempio `lineups`, `statistics_fixtures`). "The coverage of a competition can vary from season to season and values set to True do not guarantee 100% data availability."
 - **`/fixtures`:** parametri `league` e `season` (tutte le partite di una stagione in una chiamata); `ids` con "Maximum of 20 fixtures ids" restituisce in una sola chiamata "events, lineups, statistics and players". Gli ID delle partite non cambiano mai.
-- **Stagioni del piano Free:** la documentazione non le indica. Il piano M0 riporta 2022–2024 da fonti indirette: **da verificare** con `/leagues` prima del backfill.
+- **Stagioni del piano Free: 2022, 2023 e 2024**, verificato l'11/11/2026 con `api-football-probe` ([run 43045871134](https://github.com/gennpalm/predictra/actions/runs/43045871134), 6 richieste). Per la Serie A (id 135):
+  - 2022: 381 partite, 2023: 380, 2024: 380;
+  - 2021 e 2025 rifiutate dal provider: "Free plans do not have access to this season, try from 2022 to 2024.";
+  - copertura dichiarata da `/leagues` per tutte le stagioni dal 2019 al 2026: formazioni ✅, statistiche delle partite ✅.
+
+  La stagione in corso (2026) resta su football-data.org. Gli ID delle altre competizioni della v1 si leggono da `/leagues` nella PR del backfill.
 
 ## Piano del backfill (fase A3)
 
