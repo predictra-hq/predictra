@@ -77,12 +77,12 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.config.outputs.ready == 'true'
         with:
           ref: ${{ inputs.ref }}
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         if: steps.config.outputs.ready == 'true'
         with:
           version: 3.0.0
@@ -98,10 +98,10 @@ jobs:
           PREDICTRA_REDIRECT_URL: ${{ secrets.APP_BASE_URL }}/**
         run: supabase config push --remote="$SUPABASE_PROJECT_ID" --yes
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         if: steps.config.outputs.ready == 'true'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: steps.config.outputs.ready == 'true'
         with:
           node-version-file: .nvmrc
