@@ -10,7 +10,10 @@
  *    persona: login, codice 2FA, poi ogni pagina, anche in larghezza mobile.
  * 3. Su ogni pagina esegue axe (WCAG 2.1 A e AA) e un controllo da tastiera: il primo
  *    Tab raggiunge il link "Vai al contenuto".
- * 4. Cancella SEMPRE l'account (e a cascata i suoi dati), anche in caso di errore.
+ * 4. Su ogni pagina raccoglie anche gli errori di funzionamento: eccezioni JavaScript,
+ *    errori nella console del browser (es. violazioni della CSP) e risposte HTTP 4xx/5xx
+ *    dell'app (pagina, dati, Server Action).
+ * 5. Cancella SEMPRE l'account (e a cascata i suoi dati), anche in caso di errore.
  *
  * Esce con codice 1 se c'è almeno una violazione. Riepilogo anche in GITHUB_STEP_SUMMARY.
  *
@@ -148,7 +151,24 @@ async function createSuperAdmin() {
 
 // --- Controlli -----------------------------------------------------------------------
 
+/** Errori di funzionamento della pagina in corso (riazzerati a ogni audit). */
+let runtime = [];
+
+function watchRuntime(page) {
+  page.on("pageerror", (e) => runtime.push(`eccezione JS: ${String(e.message).slice(0, 200)}`));
+  page.on("console", (m) => {
+    if (m.type() === "error") runtime.push(`console: ${m.text().slice(0, 200)}`);
+  });
+  page.on("response", (r) => {
+    const u = new URL(r.url());
+    if (r.status() >= 400 && u.origin === appUrl) {
+      runtime.push(`HTTP ${r.status()} ${u.pathname}${u.search.slice(0, 60)}`);
+    }
+  });
+}
+
 async function audit(page, path, label = path) {
+  runtime = [];
   const response = await page.goto(`${appUrl}${path}`, { waitUntil: "networkidle" });
   const status = response?.status() ?? 0;
   const landed = new URL(page.url()).pathname;
@@ -169,14 +189,19 @@ async function audit(page, path, label = path) {
     );
   }
 
-  results.push({ label, status, landed, violations, skipLink });
-  const marker = violations.length === 0 && skipLink !== false && status < 400 ? "OK" : "KO";
+  const errors = [...new Set(runtime)];
+  results.push({ label, status, landed, violations, skipLink, errors });
+  const marker =
+    violations.length === 0 && skipLink !== false && status < 400 && errors.length === 0
+      ? "OK"
+      : "KO";
   console.log(`${marker} ${label} (${status}${landed !== path ? ` → ${landed}` : ""})`);
   for (const v of violations) {
     console.log(`   - [${v.impact}] ${v.id}: ${v.help} (${v.nodes.length} elementi)`);
     for (const n of v.nodes.slice(0, 3)) console.log(`       ${n.target.join(" ")}`);
   }
   if (skipLink === false) console.log("   - il primo Tab non raggiunge «Vai al contenuto»");
+  for (const e of errors) console.log(`   - ${e}`);
 }
 
 async function login(page, account) {
@@ -208,7 +233,7 @@ async function firstDetailLink(page, listPath, pattern) {
 
 function summary() {
   const lines = [
-    "### Audit di accessibilità (axe, WCAG 2.1 AA)",
+    "### Audit di accessibilità (axe, WCAG 2.1 AA) ed errori di funzionamento",
     "",
     "| Pagina | Esito |",
     "| --- | --- |",
@@ -218,6 +243,7 @@ function summary() {
       ...r.violations.map((v) => `${v.id} (${v.impact}, ${v.nodes.length})`),
       ...(r.skipLink === false ? ["link «Vai al contenuto» non raggiunto"] : []),
       ...(r.status >= 400 ? [`HTTP ${r.status}`] : []),
+      ...(r.errors ?? []),
     ];
     lines.push(`| \`${r.label}\` | ${problems.length ? `❌ ${problems.join(", ")}` : "✅"} |`);
   }
@@ -230,6 +256,7 @@ async function main() {
   try {
     const context = await browser.newContext({ locale: "it-IT" });
     const page = await context.newPage();
+    watchRuntime(page);
     await audit(page, "/login");
     await audit(page, "/forgot-password");
 
@@ -281,7 +308,7 @@ async function main() {
   const text = summary();
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${text}\n`);
   const failed = results.filter(
-    (r) => r.violations.length > 0 || r.skipLink === false || r.status >= 400,
+    (r) => r.violations.length > 0 || r.skipLink === false || r.status >= 400 || r.errors?.length,
   );
   console.log(`\n${results.length - failed.length}/${results.length} controlli superati.`);
   if (failed.length) process.exit(1);
