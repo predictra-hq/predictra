@@ -41,7 +41,7 @@ Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` 
 ## Piano del backfill (fase A3)
 
 - **Risultati:** 1 chiamata `/leagues` per competizione e 1 `/fixtures` per stagione, cioè 32 richieste in tutto (fatto, comando `api-football-backfill`).
-- **Formazioni e statistiche** (da fare, servono tabelle nuove): circa 19 chiamate da 20 partite per stagione, cioè circa 456 richieste, 6 giorni a 90 al giorno. Il job riprenderà dal punto in cui si era fermato (stato in `ingestion_runs`).
+- **Formazioni e statistiche** ([ADR 0012](../decisions/0012-statistiche-e-formazioni.md)): 1 chiamata per l'elenco della stagione e circa 19 da 20 partite, cioè circa 480 richieste e 6 giorni a 90 al giorno. Job giornaliero dell'agente `api-football.details`, con ripresa dal blocco successivo (`ingestion_runs`, `af.details`).
 
 ## Backfill
 

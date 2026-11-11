@@ -15,7 +15,9 @@ Quando sarà disponibile la chiave API, aggiungere risposte reali registrate (da
 
 Esempi ufficiali della documentazione v3 (`API-FOOTBALL (3.9.3)`), dalla pagina salvata da `gennpalm` l'11/11/2026.
 
-| File                         | Fonte                                                          | Modifiche                                                          |
-| ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `af_status_example.json`     | sezione _API-SPORTS Account_, esempio di `GET /status`         | nessuna (i dati dell'account sono segnaposto della documentazione) |
-| `af_leagues_39_example.json` | sezione _Leagues_, esempio di risposta di `GET /leagues?id=39` | nessuna                                                            |
+| File                                 | Fonte                                                                               | Modifiche                                                          |
+| ------------------------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `af_status_example.json`             | sezione _API-SPORTS Account_, esempio di `GET /status`                              | nessuna (i dati dell'account sono segnaposto della documentazione) |
+| `af_fixture_statistics_example.json` | sezione _Statistics_, esempio di `GET /fixtures/statistics?fixture=215662&team=463` | nessuna                                                            |
+| `af_fixture_lineups_example.json`    | sezione _Lineups_, esempio di `GET /fixtures/lineups?fixture=592872`                | nessuna                                                            |
+| `af_leagues_39_example.json`         | sezione _Leagues_, esempio di risposta di `GET /leagues?id=39`                      | nessuna                                                            |

@@ -16,6 +16,7 @@ import sys
 
 from .api_football import ApiFootballClient, ApiFootballError, probe
 from .api_football_backfill import backfill
+from .api_football_details import collect_details
 from .config import ConfigError, Settings, load_settings, parse_competitions
 from .football_data import FootballDataClient
 from .odds_runner import run_odds
@@ -152,6 +153,38 @@ def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> 
     return 1 if summary.failed else 0
 
 
+def _cmd_api_football_details(args: argparse.Namespace, settings: Settings) -> int:
+    if args.dry_run:
+        print("api-football-details non ha un dry run: ogni blocco scaricato viene scritto.")
+        return 2
+    client = ApiFootballClient(settings.require_api_football())
+    store = SupabaseStore(*settings.require_supabase())
+    summary = collect_details(
+        client,
+        store,
+        parse_competitions(args.competitions),
+        triggered_by=args.triggered_by,
+        secrets=settings.secrets(),
+    )
+    print(
+        f"API-Football statistiche e formazioni — richieste: {summary.requests_used} — "
+        f"residue oggi: {client.day_remaining if client.day_remaining is not None else 'n.d.'}"
+    )
+    if summary.complete:
+        print("  tutte le stagioni sono complete")
+    for s in summary.seasons:
+        line = (
+            f"  {s.code:<4} {s.year} {s.status:<9} blocchi={s.chunks_done}/{s.chunks_total} "
+            f"partite={s.matches} statistiche={s.statistics} formazioni={s.lineups}"
+        )
+        if s.error:
+            line += f" errore={s.error}"
+        print(line)
+    if summary.stopped:
+        print(f"  fermato: {summary.stopped} (si riprende domani da qui)")
+    return 1 if summary.failed else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="predictra-collector")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -176,6 +209,10 @@ def main(argv: list[str] | None = None) -> int:
     bf.add_argument("--competitions", help="codici separati da virgola (default: v1)")
     bf.add_argument("--dry-run", action="store_true", help="non scrive su Supabase")
     bf.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    dt = sub.add_parser("api-football-details", help="statistiche e formazioni da API-Football")
+    dt.add_argument("--competitions", help="codici separati da virgola (default: v1)")
+    dt.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    dt.add_argument("--dry-run", action="store_true", help="non disponibile per questo lavoro")
 
     args = parser.parse_args(argv)
     try:
@@ -185,6 +222,7 @@ def main(argv: list[str] | None = None) -> int:
             "odds": _cmd_odds,
             "api-football-probe": _cmd_api_football_probe,
             "api-football-backfill": _cmd_api_football_backfill,
+            "api-football-details": _cmd_api_football_details,
         }
         handler = handlers[args.command]
         return handler(args, settings)
