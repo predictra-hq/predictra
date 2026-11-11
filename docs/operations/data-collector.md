@@ -68,7 +68,8 @@ Risultati delle stagioni 2022, 2023 e 2024 delle 8 competizioni della v1 (circa 
    - Controlla gli abbinamenti: un abbinamento sbagliato unirebbe due squadre diverse.
 2. **Poi la scrittura:** stesso lavoro con `dry_run` spento.
 3. **Costo:** 1 richiesta `/leagues` per competizione e 1 `/fixtures` per stagione, cioè 32 richieste. Il budget è di 90 al giorno, contando anche quelle già usate oggi: se non basta, il comando si ferma e il giorno dopo riprende dalle stagioni mancanti. Le stagioni già riuscite (`ingestion_runs`, `job_type = af.backfill`) non costano più nulla.
-4. **Squadre non abbinate:** sono nuove (per esempio retrocesse prima della stagione in corso) oppure hanno un nome troppo diverso. Le seconde compaiono nel Data Center come `team.cross_provider_unmatched`. Si correggono con un alias nella pagina _Alias squadre_ **prima** di rilanciare il backfill di quella stagione.
+4. **Squadre non abbinate:** di solito sono nuove (retrocesse prima della stagione in corso) e non si segnalano. Compaiono nel Data Center come `team.cross_provider_unmatched` solo se la stessa stagione ha già dati di football-data.org: in quel caso probabilmente hanno un nome troppo diverso e si correggono con un alias nella pagina _Alias squadre_.
+5. **Fermata al limite giornaliero:** il comando si ferma prima di aprire una nuova esecuzione, quindi nel Data Center non compare nessuna esecuzione fallita. Il log riporta `fermato: …`.
 
 Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il database ignora i suggerimenti e crea squadre doppie. Va eseguito solo dopo il merge della PR e il deploy.
 

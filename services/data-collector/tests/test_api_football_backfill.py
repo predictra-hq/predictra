@@ -180,11 +180,21 @@ def test_budget_conta_le_richieste_gia_usate_oggi():
     client, calls = client_for(None, used_today=88)  # type: ignore[arg-type]
     store = FakeStore(set())
     summary = backfill(client, store, ("SA",), observed_at=OBS)
-    # budget = 90 - 88 = 2: /leagues e una stagione, poi ci si ferma
+    # budget = 90 - 88 = 2: /leagues e una stagione, poi ci si ferma senza aprire
+    # un'altra esecuzione (nessuna esecuzione "fallita" per una fermata prevista)
     assert calls == ["/status", "/leagues", "/fixtures"]
     assert summary.stopped
-    assert store.started == ["SA:2022", "SA:2023"]
-    assert store.finished[-1][1] == "FAILED"
+    assert store.started == ["SA:2022"]
+    assert [s for _, s in store.finished] == ["SUCCEEDED"]
+
+
+def test_budget_esaurito_non_apre_esecuzioni():
+    client, calls = client_for(None, used_today=89)  # type: ignore[arg-type]
+    store = FakeStore(set())
+    summary = backfill(client, store, ("SA", "PL"), observed_at=OBS)
+    assert calls == ["/status"]
+    assert summary.stopped
+    assert store.started == []
 
 
 def test_dry_run_non_scrive():
