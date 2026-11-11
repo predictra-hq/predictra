@@ -23,6 +23,14 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   - Ogni riga ha `as_of`, `features_hash` e il Confidence Score con le sue componenti in `explanation`.
 - **Anti-leakage:** il database rifiuta previsioni con `as_of` successivo al calcio d'inizio. Il motore legge lo storico solo con `training_results`.
 
+## Modello attivo: automatico (ADR 0023)
+
+Dall'11/11/2026 il motore attiva da solo il modello più forte: tra le versioni del codice corrente che battono la baseline, quella con il Log Loss più basso nel backtest. La cambia se il modello attivo è di un codice superato, oppure se un'altra versione lo batte di almeno 0,001 di Log Loss. Ogni cambio compare in _Audit_ come `model.auto_activated`, con il motivo.
+
+Una versione nuova nasce solo quando cambia il codice che produce i numeri (`models/`, `data.py`, `markets.py`, `confidence.py`): il log di ogni esecuzione riporta `codice dei modelli: <impronta>`.
+
+L'attivazione manuale descritta sotto resta possibile; il motore la cambia solo se trova un modello più forte.
+
 ## Attivare un modello
 
 Il modello attivo è quello mostrato come "previsione PREDICTRA" (`v_active_predictions`). Finché nessuna versione è attiva, la vista è vuota: è il comportamento voluto.
