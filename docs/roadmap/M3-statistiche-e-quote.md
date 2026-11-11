@@ -1,6 +1,6 @@
 # M3 — Statistiche e quote: piano e corsie
 
-**Stato:** in corso: corsie 0 e A fatte, quote reali su DEV; corsia B unita (#16), manca la chiusura · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** ✅ completata l'11/11/2026, in servizio su DEV (corsie 0, A e B unite) · **Dipende da:** M2 · **Può partire quando:** il contratto di M2 (corsia 0) è su `dev` · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -101,3 +101,12 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 1. Corsie unite su `dev`, deploy DEV verde.
 2. Verifica dei criteri di completamento su DEV.
 3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md).
+
+**Verifica di chiusura (11/11/2026):**
+
+1. Corsie unite: 0 (#9), A (#10), B (#16). Correzione degli alias (#66): un alias nuovo ricollega anche gli eventi di quote già giocati. Ultimo deploy DEV verde (#67).
+2. Quote 1X2 salvate con `observed_at` e `event_time`; stato FRESH/STALE visibile nel Data Center e nelle viste (le quote migliori usano solo quote fresche).
+3. Test su overround e de-margin: `packages/quant/src/margin.test.ts` (7 test) e `supabase/tests/odds.test.ts` (12 test, compreso l'esempio dell'ADR 0016).
+4. Copertura dichiarata nella pagina Market (`v_odds_coverage`): competizioni, eventi e bookmaker realmente presenti.
+5. Pagine `/markets`, `/statistics`, `/leagues` e `/admin/team-aliases` aperte su DEV da un Super Admin temporaneo: nessun errore di accessibilità, JavaScript, console o HTTP (_Verifica DEV_, run 43088334133).
+6. Eventi non abbinati: i 20 avvisi aperti l'11/11 erano partite già giocate con nomi già noti; ricollegati dalla migrazione `20261111200000`.
