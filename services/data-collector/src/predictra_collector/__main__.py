@@ -3,6 +3,8 @@
 - ``python -m predictra_collector run [--competitions SA,PL] [--dry-run]``: football-data.org
 - ``python -m predictra_collector odds [--mode daily|prematch] [--competitions SA] [--dry-run]``:
   quote 1X2 da The Odds API
+- ``python -m predictra_collector api-football-probe``: verifica del piano API-Football
+  (stagioni accessibili); non scrive nulla, al massimo 6 richieste
 """
 
 from __future__ import annotations
@@ -10,6 +12,7 @@ from __future__ import annotations
 import argparse
 import sys
 
+from .api_football import ApiFootballClient, ApiFootballError, probe
 from .config import ConfigError, Settings, load_settings, parse_competitions
 from .football_data import FootballDataClient
 from .odds_runner import run_odds
@@ -74,6 +77,33 @@ def _cmd_odds(args: argparse.Namespace, settings: Settings) -> int:
     return 1 if summary.failed else 0
 
 
+def _cmd_api_football_probe(args: argparse.Namespace, settings: Settings) -> int:
+    client = ApiFootballClient(settings.require_api_football())
+    try:
+        report = probe(client)
+    except ApiFootballError as exc:
+        print(f"API-Football — verifica non riuscita: {exc}", file=sys.stderr)
+        return 1
+    print(
+        f"API-Football — piano: {report.plan} — attivo: {report.active} — "
+        f"richieste oggi: {report.requests_today}/{report.limit_day} — "
+        f"usate da questa verifica: {client.requests_used}"
+    )
+    if report.league_id is None:
+        print("  Competizione di prova non trovata")
+        return 1
+    print(f"  {report.league_name} (id {report.league_id})")
+    for s in report.seasons[-8:]:
+        print(
+            f"    stagione {s.year}: corrente={s.current} formazioni={s.lineups} "
+            f"statistiche={s.statistics_fixtures}"
+        )
+    for year, result in report.access.items():
+        outcome = f"{result} partite" if isinstance(result, int) else f"NON accessibile: {result}"
+        print(f"    accesso {year}: {outcome}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="predictra-collector")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -91,10 +121,19 @@ def main(argv: list[str] | None = None) -> int:
         if name == "odds":
             cmd.add_argument("--mode", choices=["daily", "prematch"], default="daily")
 
+    sub.add_parser(
+        "api-football-probe", help="verifica del piano API-Football (stagioni accessibili)"
+    )
+
     args = parser.parse_args(argv)
     try:
         settings = load_settings()
-        handler = _cmd_odds if args.command == "odds" else _cmd_run
+        handlers = {
+            "run": _cmd_run,
+            "odds": _cmd_odds,
+            "api-football-probe": _cmd_api_football_probe,
+        }
+        handler = handlers[args.command]
         return handler(args, settings)
     except ConfigError as exc:
         print(f"Configurazione: {exc}", file=sys.stderr)
