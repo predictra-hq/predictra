@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import { EvaluationPanel } from "@/components/bet-builder/evaluation";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import { Button, Card, CardTitle, Field, Input, PageHeader } from "@/components/ui/primitives";
+import {
+  Button,
+  Card,
+  CardTitle,
+  EmptyState,
+  Field,
+  Input,
+  PageHeader,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { evaluateSelections, parseSelectionKeys } from "@/lib/bet-builder/evaluate";
 import { selectionLabel } from "@/lib/bet-builder/format";
@@ -34,9 +42,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
       <BetBuilderNav current="builder" />
 
       {options.length === 0 ? (
-        <Card>
-          <p className="text-sm">{m.builderEmpty}</p>
-        </Card>
+        <EmptyState>{m.builderEmpty}</EmptyState>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
           <form method="get" className="flex flex-col gap-3">
@@ -55,7 +61,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                     return (
                       <label
                         key={key}
-                        className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+                        className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm transition-colors hover:border-border-strong has-[:checked]:border-positive/60 has-[:checked]:bg-positive-soft"
                       >
                         <input
                           type="checkbox"

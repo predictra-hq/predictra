@@ -10,11 +10,13 @@ import {
 } from "@predictra/bankroll";
 import { BANKROLL_KINDS, BET_STATUSES, type BankrollKind } from "@predictra/shared-types";
 import { ProfitCurve } from "@/components/bankroll/profit-curve";
-import { formatEuro, KindBadge, Stat, Th } from "@/components/bankroll/shared";
+import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
+import { FilterForm } from "@/components/ui/filter-form";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import {
   Alert,
   Badge,
+  Button,
   Card,
   CardTitle,
   Field,
@@ -37,6 +39,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   await requireUser();
   const t = getMessages().tracker;
   const b = getMessages().bankroll;
+  const c = getMessages().common;
   const params = await searchParams;
   const period = parsePeriod(params.p);
   const { since, dayAgo, weekAgo } = timeWindows(period);
@@ -65,7 +68,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
     <>
       <PageHeader title={t.title} description={t.description} />
 
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
+      <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
         <Field label={t.period} htmlFor="p">
           <Select id="p" name="p" defaultValue={period} className="w-48">
             {PERIODS.map((p) => (
@@ -75,13 +78,10 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
             ))}
           </Select>
         </Field>
-        <button
-          type="submit"
-          className="h-10 rounded-lg border border-border-strong bg-surface-2 px-4 text-sm hover:bg-border"
-        >
+        <Button type="submit" variant="secondary">
           {t.apply}
-        </button>
-      </form>
+        </Button>
+      </FilterForm>
 
       <h2 className="mb-3 text-lg font-semibold">{t.metrics}</h2>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -97,7 +97,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <Stat label={t.bets}>
                   {metrics.settledBets} / {metrics.bets}
                 </Stat>
-                <Stat label={t.profit}>{formatEuro(metrics.profit)}</Stat>
+                <Stat label={t.profit}>
+                  <SignedEuro value={metrics.profit} />
+                </Stat>
                 <Stat label={t.staked}>{formatEuro(metrics.staked)}</Stat>
                 <Stat label={t.yield}>{formatPercent(metrics.yield)}</Stat>
                 <Stat label={t.roi}>{formatPercent(metrics.roi)}</Stat>
@@ -233,7 +235,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <Th className="text-right">{t.stake}</Th>
                 <Th>{t.status}</Th>
                 <Th className="text-right">{t.profit}</Th>
-                <Th />
+                <Th>
+                  <span className="sr-only">{c.actions}</span>
+                </Th>
               </tr>
             </thead>
             <tbody>
@@ -271,7 +275,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                       {t.statuses[bet.status]}
                     </Badge>
                   </td>
-                  <td className="px-3 py-3 text-right font-mono">{formatEuro(bet.profit)}</td>
+                  <td className="px-3 py-3 text-right font-mono">
+                    <SignedEuro value={bet.profit} />
+                  </td>
                   <td className="px-3 py-3">
                     <div className="flex flex-col gap-2">
                       {bet.status === "OPEN" ? (
@@ -312,7 +318,11 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                       ) : null}
                       <ActionForm action={deleteBet} className="inline">
                         <input type="hidden" name="betId" value={bet.id} />
-                        <SubmitButton variant="ghost" className="h-7 px-2 text-xs">
+                        <SubmitButton
+                          variant="ghost"
+                          className="h-7 px-2 text-xs hover:text-negative-strong"
+                          confirmMessage={c.confirmDelete}
+                        >
                           {t.deleteBet}
                         </SubmitButton>
                       </ActionForm>

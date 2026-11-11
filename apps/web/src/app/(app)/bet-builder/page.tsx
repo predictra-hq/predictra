@@ -13,7 +13,16 @@ import {
   CategoryBadge,
   Metrics,
 } from "@/components/bet-builder/shared";
-import { Alert, Badge, Button, Card, PageHeader, Select } from "@/components/ui/primitives";
+import { FilterForm } from "@/components/ui/filter-form";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  PageHeader,
+  Select,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
   formatSlateDate,
@@ -82,14 +91,10 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
   );
 }
 
-function EmptyState({ run }: { run: BetBuilderLatestRunRow | null }) {
+function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   const m = getMessages().betBuilder;
   const text = !run ? m.emptyNoRun : run.status === "FAILED" ? m.emptyFailed : m.emptyZero;
-  return (
-    <Card>
-      <p className="text-sm">{text}</p>
-    </Card>
-  );
+  return <EmptyState>{text}</EmptyState>;
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
@@ -136,10 +141,10 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       ) : null}
 
       {proposals.length === 0 ? (
-        <EmptyState run={run} />
+        <NoProposals run={run} />
       ) : (
         <>
-          <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
+          <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs text-muted">{m.slate}</span>
               <Select name="d" defaultValue={slate ?? ""}>
@@ -165,7 +170,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
             <Button type="submit" variant="secondary">
               {m.show}
             </Button>
-          </form>
+          </FilterForm>
 
           {slates
             .filter((d) => !slate || d === slate)

@@ -6,6 +6,7 @@ import type {
   ReactNode,
   SelectHTMLAttributes,
 } from "react";
+import { CircleAlert, CircleCheck, Inbox, Info, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
@@ -25,8 +26,8 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors",
-        "disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex h-10 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors",
+        "active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0",
         buttonVariants[variant],
         className,
       )}
@@ -35,12 +36,26 @@ export function Button({
   );
 }
 
+/** Indicatore di attesa (decorativo: lo stato è annunciato da `aria-busy`). */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-block size-3.5 shrink-0 rounded-full border-2 border-current border-r-transparent motion-safe:animate-spin",
+        className,
+      )}
+    />
+  );
+}
+
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg placeholder:text-subtle",
-        "focus:border-positive focus:outline-none",
+        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg transition-colors placeholder:text-subtle",
+        "hover:border-muted focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
@@ -52,7 +67,9 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-lg border border-input bg-bg px-3 text-sm text-fg focus:border-positive focus:outline-none",
+        "h-10 w-full cursor-pointer rounded-lg border border-input bg-bg px-3 text-sm text-fg transition-colors",
+        "hover:border-muted focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30",
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
       {...props}
@@ -97,7 +114,7 @@ export function Card({
     <div
       {...(scrollLabel ? { role: "region", "aria-label": scrollLabel, tabIndex: 0 } : {})}
       className={cn(
-        "rounded-[var(--radius-card)] border border-border bg-surface p-5",
+        "rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_2px_rgb(0_0_0/0.4)]",
         scrollLabel && "overflow-x-auto",
         className,
       )}
@@ -144,7 +161,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium",
         toneClasses[tone],
         className,
       )}
@@ -153,24 +170,58 @@ export function Badge({
   );
 }
 
+const toneIcons = {
+  neutral: Info,
+  positive: CircleCheck,
+  negative: CircleAlert,
+  warning: TriangleAlert,
+} as const;
+
+/** Avviso con icona: il tipo di messaggio si riconosce anche senza il colore. */
 export function Alert({
   tone = "neutral",
   className,
+  children,
   ...props
 }: HTMLAttributes<HTMLDivElement> & { tone?: Tone }) {
+  const Icon = toneIcons[tone];
   return (
     <div
       role={tone === "negative" ? "alert" : "status"}
-      className={cn("rounded-lg border px-3 py-2 text-sm", toneClasses[tone], className)}
+      className={cn(
+        "flex items-start gap-2.5 rounded-lg border px-3 py-2 text-sm",
+        toneClasses[tone],
+        className,
+      )}
       {...props}
-    />
+    >
+      <Icon size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+/** Stato vuoto: riquadro tratteggiato con icona, al posto di una riga di testo isolata. */
+export function EmptyState({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center gap-3 rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface/60 px-5 py-10 text-center",
+        className,
+      )}
+    >
+      <span className="rounded-full bg-surface-2 p-3 text-muted">
+        <Inbox size={22} aria-hidden="true" />
+      </span>
+      <p className="max-w-md text-sm text-muted">{children}</p>
+    </div>
   );
 }
 
 export function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+    <header className="mb-6 border-b border-border pb-5">
+      <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{title}</h1>
       {description ? <p className="mt-1 max-w-3xl text-sm text-muted">{description}</p> : null}
     </header>
   );

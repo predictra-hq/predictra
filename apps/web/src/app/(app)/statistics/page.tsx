@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
 import { FormBadges } from "@/components/odds/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { Card, CardTitle, PageHeader } from "@/components/ui/primitives";
+import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -56,9 +56,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <Card>
-          <p className="text-sm text-muted">{m.noData}</p>
-        </Card>
+        <EmptyState>{m.noData}</EmptyState>
       </>
     );
   }
@@ -124,7 +122,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
                 <Th>#</Th>
-                <Th>{m.team}</Th>
+                <Th className="sticky left-0 z-10 bg-surface">{m.team}</Th>
                 <Th className="text-right">{m.played}</Th>
                 <Th className="text-right">{m.won}</Th>
                 <Th className="text-right">{m.drawn}</Th>
@@ -147,7 +145,9 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
               {rows.map((r, i) => (
                 <tr key={r.team_id} className="border-b border-border last:border-0">
                   <td className="px-3 py-2 text-muted">{i + 1}</td>
-                  <td className="px-3 py-2">{r.team_name}</td>
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-2 font-medium">
+                    {r.team_name}
+                  </td>
                   <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                   <td className="px-3 py-2 text-right font-mono">{r.won}</td>
                   <td className="px-3 py-2 text-right font-mono">{r.draw}</td>

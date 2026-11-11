@@ -3,7 +3,7 @@ import Link from "next/link";
 import { EvaluationPanel } from "@/components/bet-builder/evaluation";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { SubmitButton } from "@/components/ui/form";
-import { Card, PageHeader } from "@/components/ui/primitives";
+import { Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { evaluateSelections, type ManualSelection } from "@/lib/bet-builder/evaluate";
 import { selectionLabel } from "@/lib/bet-builder/format";
@@ -54,9 +54,7 @@ export default async function SlipsPage() {
       <BetBuilderNav current="slips" />
 
       {slips.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">{m.slipsEmpty}</p>
-        </Card>
+        <EmptyState>{m.slipsEmpty}</EmptyState>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {slips.map((slip) => {
@@ -89,9 +87,14 @@ export default async function SlipsPage() {
                   ))}
                 </ul>
                 <EvaluationPanel evaluation={evaluateSelections(selections, now)} />
-                <form action={deleteSlip}>
+                <form action={deleteSlip} className="mt-auto">
                   <input type="hidden" name="slipId" value={slip.id} />
-                  <SubmitButton variant="danger">{m.deleteSlip}</SubmitButton>
+                  <SubmitButton
+                    variant="danger"
+                    confirmMessage={getMessages().common.confirmDelete}
+                  >
+                    {m.deleteSlip}
+                  </SubmitButton>
                 </form>
               </Card>
             );

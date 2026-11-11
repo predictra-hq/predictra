@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/football/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { Card, CardTitle, PageHeader } from "@/components/ui/primitives";
+import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -64,9 +64,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <Card>
-          <p className="text-sm text-muted">{m.noData}</p>
-        </Card>
+        <EmptyState>{m.noData}</EmptyState>
       </>
     );
   }
@@ -116,7 +114,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
               const adv = s ? homeAdvantage(s) : null;
               return (
                 <tr key={c.competitionId} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2">
+                  <td className="whitespace-nowrap px-3 py-2">
                     {c.code ? (
                       <Link href={`/leagues?c=${c.code}`} className="hover:text-positive">
                         {c.name}
@@ -202,9 +200,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
         </p>
       ) : null}
       {standingGroups.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">{m.noStandings}</p>
-        </Card>
+        <EmptyState>{m.noStandings}</EmptyState>
       ) : (
         <div className="flex flex-col gap-4">
           {standingGroups.map((g) => (
@@ -241,7 +237,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                   {g.rows.map((r) => (
                     <tr key={r.team_id} className="border-b border-border last:border-0">
                       <td className="px-3 py-2 text-muted">{r.position}</td>
-                      <td className="px-3 py-2">{r.team_name}</td>
+                      <td className="whitespace-nowrap px-3 py-2 font-medium">{r.team_name}</td>
                       <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                       <td className="px-3 py-2 text-right font-mono">{r.won}</td>
                       <td className="px-3 py-2 text-right font-mono">{r.draw}</td>

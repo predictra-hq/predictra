@@ -56,9 +56,14 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>{m.matchCenter.matchTitle}</CardTitle>
-          <p className="mt-4 text-center font-mono text-3xl font-semibold">
-            {formatScore(match.home_score, match.away_score)}
-          </p>
+          {/* Tabellone: squadre ai lati del risultato. */}
+          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg bg-surface-2 px-3 py-4">
+            <p className="text-right text-sm font-medium sm:text-base">{match.home_team_name}</p>
+            <p className="whitespace-nowrap font-mono text-3xl font-semibold">
+              {formatScore(match.home_score, match.away_score)}
+            </p>
+            <p className="text-sm font-medium sm:text-base">{match.away_team_name}</p>
+          </div>
           <dl className="mt-4">
             <Row label={m.matchCenter.status}>
               <MatchStatusBadge status={match.status} />
