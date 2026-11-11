@@ -26,33 +26,21 @@
    - attivare un modello del motore M4 (Super Admin con 2FA). All'inizio è probabile che le proposte siano zero (Confidence Score basso): è il comportamento voluto.
 4. **M6 (bankroll): completata** (#25, #27, #28). Isolamento verificato su DEV con account temporanei: _Actions → Verifica DEV → Run workflow_. Da collegare in seguito: lo stake con Kelly nel Tracker.
 5. **M8, backup (A1): in servizio** (#31, #32). Backup cifrato ogni giorno alle 02:30 UTC su Backblaze B2 (`us-east-005`) e test di ripristino il giorno 1 di ogni mese ([runbook](backup-restore.md)). Primo backup e primo ripristino da B2 riusciti l'8/11/2026. Lo schedule parte dopo il merge di `dev` in `main`. Hardening (A2) e revisione di sicurezza (A3) in servizio. Accessibilità (B1): 26 controlli su 26 superati con axe, verifica ripetibile con _Verifica DEV_ → `accessibility` ([accessibilita.md](accessibilita.md)). Il check salva anche gli screenshot di dashboard e lista utenti come artefatto del run (3 giorni). Dashboard rinnovata con dati reali: prossime partite con le probabilità 1X2 del modello attivo, bankroll personale, modello attivo, proposte del Bet Builder. Corretta la lista utenti, che era vuota per una relazione ambigua tra ruoli e profili. Ask PREDICTRA (ADR 0042, accettato): chat su Groq (piano gratuito) con strumenti in sola lettura, controllo che scarta i numeri non presenti nei dati e quota di 30 domande al giorno per utente; testo delle domande mai salvato. Restano: ambiente PROD (A4, servono i segreti `PROD_*`), step-up 2FA, runbook (B2) e checklist finale (B3).
-6. **M7 (agente autonomo): in servizio su DEV, in verifica.** Corsie 0 (#26), A (#33, #35, #40–#43) e B (#38) unite e attive da `main` dal 9/11/2026. Runbook: [agent.md](agent.md).
+6. **M7 (agente autonomo): completata l'11/11/2026** (#26, #33, #35, #38, #40–#43, #52). Runbook: [agent.md](agent.md); verifica di chiusura nel [piano M7](../roadmap/M7-agente-autonomo.md).
    - **Cosa gira:** _Agent (Python)_ ogni 3 ore al minuto 47 UTC. Ogni ciclo accoda le finestre correnti e le esegue nell'ordine indicato, con retry, dead-letter e notifiche:
      - raccolta football-data.org: ogni ciclo;
      - quote: 06:47 e 15:47;
      - previsioni: 03:47 e 12:47;
      - proposte del Bet Builder: 06:47 e 15:47.
 
-     QStash chiama `/api/jobs/cycle` ogni 15 minuti (heartbeat dei job leggeri). _Data collector_, _Prediction engine_ e _Bet Builder_ restano solo per l'avvio manuale.
+     QStash chiama `/api/jobs/cycle` ogni 15 minuti: heartbeat, watchdog (notifica _Agente degradato_ in dashboard) e avvio di riserva del ciclo Python quando GitHub salta lo schedule per oltre 3 h 30. _Data collector_, _Prediction engine_ e _Bet Builder_ restano solo per l'avvio manuale.
 
-   - **Da verificare nei primi giorni:**
-     - in _Amministrazione → Agente_, cicli `github_actions` e `qstash` riusciti e job completati;
-     - minuti per ciclo (contatore `github-actions`, budget 900 al mese) e crediti The Odds API (al massimo 16 al giorno).
-   - **Da decidere:** conferma dell'[ADR 0035](../decisions/0035-pianificazione-agente.md) da parte di `gennpalm`. I limiti gratuiti sono verificati l'8/11/2026; il piano delle finestre per i job Python sta nel ciclo Python invece che in QStash (motivato nelle PR #40–#43).
-   - **Resta di M7:**
-     - fase A4: cadenza adattiva di QStash vicino ai calci d'inizio, da fare dopo aver misurato i minuti;
-     - chiusura (piano M7).
+   - **Da tenere d'occhio:** GitHub salta spesso lo schedule (9 cicli su 14 partiti dall'avvio di riserva tra il 9 e l'11/11). Minuti misurati: circa 570 al mese su 900.
+   - **Rinviato:** cadenza adattiva di QStash vicino ai calci d'inizio (ADR 0035, modifica 4).
 
 ## Lavoro in corso (per chi riprende)
 
-**M7 fase A4 (ridotta, decisa con `gennpalm` il 9/11/2026)** · branch `feature/m7-a-watchdog` · PR: [#52](https://github.com/gennpalm/predictra/pull/52), in attesa di CI e merge. Poi la chiusura di M7.
-
-| Passo | Contenuto                                                                                                                                                                                    | Stato                                                       |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 1     | `agent_watchdog()` (migrazione `20261109120000_agent_watchdog.sql`): notifica i monitor quando una sorgente è degradata, una volta per episodio                                              | fatto: 6 test in `supabase/tests/agent-watchdog.test.ts`    |
-| 2     | Watchdog chiamato dal giro QStash e dal ciclo Python                                                                                                                                         | fatto: endpoint QStash e ciclo Python                       |
-| 3     | Avvio del ciclo Python da QStash se GitHub ha saltato lo schedule (oltre 3 h 30 senza cicli), al massimo una volta l'ora; spento finché `gennpalm` non crea il token `GITHUB_DISPATCH_TOKEN` | fatto, spento senza token (`lib/agent/dispatch.ts`, 8 test) |
-| 4     | ADR 0035 accettato (cadenza adattiva rinviata), documentazione, `pnpm check`, PR                                                                                                             | fatto: `pnpm check` verde (141 test database); PR aperta    |
+Nessuno. M7 è chiusa con la PR di chiusura. Prossimi passi possibili: M3 corsia B e chiusura di M3, M8 (ambiente PROD, runbook, checklist finale).
 
 ## Punti aperti
 
