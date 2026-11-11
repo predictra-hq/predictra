@@ -1,39 +1,44 @@
 # API-Football (API-SPORTS)
 
-**Stato dei termini:** ⛔ **NON VERIFICATI** · **Codice provider:** `api-football` · **Usato in:** M2 corsia A, fase A3 (backfill storico) · **Decisioni:** [ADR 0004](../decisions/0004-fonti-dati-v1.md), [ADR 0010](../decisions/0010-modello-dati-calcio.md)
+**Verificato il:** 11/11/2026 · **Codice provider:** `api-football` · **Usato in:** M2 corsia A, fase A3 (backfill storico) · **Decisioni:** [ADR 0004](../decisions/0004-fonti-dati-v1.md), [ADR 0010](../decisions/0010-modello-dati-calcio.md) · **Migrazione:** `20261111150000_api_football_termini.sql`
 
-## Perché non è verificato
+Termini regolati dalla legge francese. Il sito blocca la lettura automatica (verifica anti-bot): termini e documentazione li ha letti a mano `gennpalm` e li ha forniti in sessione l'11/11/2026.
 
-Il 7/11/2026 tutte le pagine ufficiali hanno risposto **HTTP 403** alla lettura automatica, con una verifica anti-bot che non va aggirata:
+## Termini d'uso
 
-- https://www.api-football.com/terms
-- https://api-sports.io/terms
-- https://www.api-football.com/pricing
-- https://www.api-football.com/documentation-v3
+Fonte: https://www.api-football.com/terms, versione "Last updated: May 21, 2025".
 
-Il piano M0 (§2.1) riporta, da ricerche indirette, 100 richieste al giorno e accesso alle sole stagioni 2022–2024 nel piano Free. Sono informazioni **da confermare**.
+| Clausola                 | Contenuto                                                                                                                                                                                                     | Cosa comporta per PREDICTRA                                                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account                  | "Accounts are individual and may not be shared with other developers. It is forbidden to have multiple accounts to increase the limit of the free plan."                                                      | **Un solo account**, quello di `gennpalm`. La chiave sta solo nel segreto GitHub `API_FOOTBALL_KEY`. Il primo account (7/11) risulta sospeso: va chiuso tramite il supporto, non riusato                      |
+| Rivendita                | "it is prohibited to resell this data to third parties […] We provide data for you to create different projects such as applications, websites, fantasy soccer games etc."                                    | Consentito: conservare i dati nel nostro database e usarli nei modelli. Vietato vendere o ridistribuire i dati grezzi                                                                                         |
+| Licenza di pubblicazione | "We do not provide a "license" for the use and publication of the data […] Any license or permission to publish the data must be requested by the user from the competent authorities."                       | Nessuna licenza sui diritti di leghe e federazioni. PREDICTRA è privata, su invito, senza uso commerciale (anche per il piano Vercel Hobby): i dati restano interni. Una pubblicazione richiede una nuova ADR |
+| Piattaforme di scommessa | "The use of our data for betting platforms, television broadcasting, fantasy sports platforms, or any mass media distribution may require additional licenses from the relevant rights holders."              | PREDICTRA non piazza scommesse e non è un bookmaker (regola 10): rientra nell'uso privato di analisi. Da rivalutare prima di ogni apertura al pubblico                                                        |
+| Attribuzione             | non richiesta                                                                                                                                                                                                 | `providers.attribution` vuoto                                                                                                                                                                                 |
+| Loghi e immagini         | forniti "solely for identification and descriptive purposes"; i diritti restano ai titolari                                                                                                                   | Non li scarichiamo                                                                                                                                                                                            |
+| Limite al minuto         | superarlo è una "material breach": sospensione automatica o chiusura dell'account, senza preavviso                                                                                                            | Il collector resta sempre sotto il limite al minuto letto negli header `X-RateLimit-*`, con un margine                                                                                                        |
+| Quota giornaliera        | piano da dashboard: azzeramento alle 00:00 UTC; "when your quota limit is reached, your account will be suspended for the rest of the day"                                                                    | Budget in `agent_rate_limits` sotto il limite (90 su 100 al giorno), così la quota non si raggiunge mai                                                                                                       |
+| Piano Free               | "gives you access to all available APIs and endpoints, but remains limited in terms of available data. We reserve the right to modify the Free Plan and the available data at any time without prior notice." | Stagioni e coperture si verificano con l'API stessa prima del backfill, non si danno per scontate                                                                                                             |
+| Qualità dei dati         | "provided "as is" and without any guarantee"                                                                                                                                                                  | Valgono i controlli di qualità di M2 (A4)                                                                                                                                                                     |
 
-Finché questa scheda non è completata:
+## Documentazione tecnica
 
-- `providers.terms_verified_at` resta vuoto e il collector **non** usa il provider;
-- la fase A3 del piano M2 è bloccata. Le altre fasi no.
+Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` l'11/11/2026.
 
-## Da fare (proprietario, a mano da browser)
+- **Base URL:** `https://v3.football.api-sports.io/`, solo richieste `GET`.
+- **Chiave:** header `x-apisports-key`. Non sono ammessi altri header.
+- **`/status`:** account, piano e richieste del giorno (`requests.current`, `requests.limit_day`). "This call does not count against the daily quota."
+- **Header di risposta:** `x-ratelimit-requests-limit` e `x-ratelimit-requests-remaining` (giorno), `X-RateLimit-Limit` e `X-RateLimit-Remaining` (minuto).
+- **`/leagues`:** restituisce per ogni stagione il campo `coverage` (per esempio `lineups`, `statistics_fixtures`). "The coverage of a competition can vary from season to season and values set to True do not guarantee 100% data availability."
+- **`/fixtures`:** parametri `league` e `season` (tutte le partite di una stagione in una chiamata); `ids` con "Maximum of 20 fixtures ids" restituisce in una sola chiamata "events, lineups, statistics and players". Gli ID delle partite non cambiano mai.
+- **Stagioni del piano Free:** la documentazione non le indica. Il piano M0 riporta 2022–2024 da fonti indirette: **da verificare** con `/leagues` prima del backfill.
 
-1. Aprire la pagina dei termini (link in fondo al sito api-football.com o nella dashboard dopo la registrazione).
-2. Riportare qui, citando la clausola, cosa dicono su:
-   - conservazione dei dati in un proprio database;
-   - uso per addestrare modelli statistici;
-   - visualizzazione dei dati ad altri utenti;
-   - uso commerciale e attribuzione;
-   - limiti specifici del piano Free.
-3. Dalla dashboard, confermare:
-   - richieste al giorno e al minuto;
-   - stagioni accessibili;
-   - base URL;
-   - nome dell'header della chiave.
-4. Se i termini consentono l'uso:
-   - aprire una PR di contratto con una migrazione nuova che imposta `terms_url` e `terms_verified_at` per `api-football`;
-   - aggiornare questa scheda e l'ADR 0010 (§5).
+## Piano del backfill (fase A3)
 
-   Se non lo consentono: aggiornare l'ADR 0004 e togliere il provider dal piano M2.
+Stima per competizione e stagione: 1 chiamata per l'elenco delle partite e circa 19 chiamate da 20 partite per i dettagli, cioè circa 20 richieste. Con 8 competizioni e 3 stagioni sono circa 480 richieste, cioè 6 giorni a 90 richieste al giorno. Il job riprende dal punto in cui si era fermato (stato in `ingestion_runs`).
+
+## Account e chiave
+
+- Account attivo: registrato da `gennpalm` l'11/11/2026, piano Free, limite di 100 richieste al giorno (letto in dashboard).
+- Segreto GitHub `API_FOOTBALL_KEY`: presente dall'11/11/2026.
+- Primo account (7/11/2026): sospeso, 0 richieste usate. Da far chiudere al supporto per rispettare la regola di un solo account.
