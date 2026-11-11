@@ -50,12 +50,12 @@ Si gestiscono in _Settings → Secrets and variables → Actions_ (solo `gennpal
 
 Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Supabase con `DEV_SUPABASE_SECRET_KEY`):
 
-| Segreto                                                                            | Provider                                                       | Stato                                          |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
-| `FOOTBALL_DATA_API_KEY`                                                            | football-data.org (piano Free)                                 | presente dal 7/11/2026                         |
-| `ODDS_API_KEY`                                                                     | The Odds API (piano Starter, 500 crediti/mese)                 | presente dal 7/11/2026                         |
-| `BACKUP_PASSPHRASE`, `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET`, `B2_ENDPOINT` | Backblaze B2, backup cifrati (ADR 0040, regione `us-east-005`) | presenti dall'8/11/2026                        |
-| `API_FOOTBALL_KEY`                                                                 | API-Football                                                   | non creato: termini da verificare (M2 fase A3) |
+| Segreto                                                                            | Provider                                                       | Stato                                                 |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `FOOTBALL_DATA_API_KEY`                                                            | football-data.org (piano Free)                                 | presente dal 7/11/2026                                |
+| `ODDS_API_KEY`                                                                     | The Odds API (piano Starter, 500 crediti/mese)                 | presente dal 7/11/2026                                |
+| `BACKUP_PASSPHRASE`, `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET`, `B2_ENDPOINT` | Backblaze B2, backup cifrati (ADR 0040, regione `us-east-005`) | presenti dall'8/11/2026                               |
+| `API_FOOTBALL_KEY`                                                                 | API-Football                                                   | presente dall'11/11/2026 (account registrato l'11/11) |
 
 ## Credenziali da rinnovare
 

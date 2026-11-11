@@ -149,13 +149,17 @@ describe("contratto: tipi condivisi", () => {
     expect(await enumValues("issue_status")).toEqual([...ISSUE_STATUSES]);
   });
 
-  it("il catalogo provider coincide e solo football-data.org ha i termini verificati", async () => {
-    const { rows } = await db.query<{ code: string; verified: boolean }>(
-      "select code, terms_verified_at is not null verified from public.providers order by code",
+  it("il catalogo provider coincide e i termini sono verificati per tutti", async () => {
+    const { rows } = await db.query<{ code: string; verified: boolean; terms_url: string | null }>(
+      "select code, terms_verified_at is not null verified, terms_url from public.providers order by code",
     );
     expect(rows.map((r) => r.code)).toEqual([...FOOTBALL_PROVIDERS].sort());
     expect(rows.find((r) => r.code === FD)?.verified).toBe(true);
-    expect(rows.find((r) => r.code === "api-football")?.verified).toBe(false);
+    // API-Football: termini letti a mano l'11/11/2026 (migrazione 20261111150000).
+    expect(rows.find((r) => r.code === "api-football")).toMatchObject({
+      verified: true,
+      terms_url: "https://www.api-football.com/terms",
+    });
   });
 
   it("la migrazione non inserisce dati calcistici", async () => {
@@ -547,11 +551,23 @@ describe("funzioni di ingestion", () => {
     );
 
   it("rifiuta un provider con termini d'uso non verificati", async () => {
-    await asServiceRole(db, async (tx) => {
-      expect(
-        await attempt(tx, "select public.start_ingestion_run('api-football', 'af.x', 'k')"),
-      ).toMatch(/non verificati/);
-    });
+    // Provider DEMO senza termini verificati, rimosso alla fine del test.
+    await db.exec(
+      `insert into public.providers (code, name, website, licence_summary, docs_path)
+       values ('demo-non-verificato', 'DEMO', 'https://demo.example', 'DEMO', 'docs/DEMO.md')`,
+    );
+    try {
+      await asServiceRole(db, async (tx) => {
+        expect(
+          await attempt(
+            tx,
+            "select public.start_ingestion_run('demo-non-verificato', 'demo.x', 'k')",
+          ),
+        ).toMatch(/non verificati/);
+      });
+    } finally {
+      await db.exec("delete from public.providers where code = 'demo-non-verificato'");
+    }
   });
 
   it("scrive un lotto e rieseguirlo non duplica nulla", async () => {
