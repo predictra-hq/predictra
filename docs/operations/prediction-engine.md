@@ -23,6 +23,10 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   - Ogni riga ha `as_of`, `features_hash` e il Confidence Score con le sue componenti in `explanation`.
 - **Anti-leakage:** il database rifiuta previsioni con `as_of` successivo al calcio d'inizio. Il motore legge lo storico solo con `training_results`.
 
+## Un modello PREDICTRA e uno sfidante (ADR 0024)
+
+In gara ci sono solo **Poisson** e **Dixon-Coles**, gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
+
 ## Modello attivo: automatico (ADR 0023)
 
 Dall'11/11/2026 il motore attiva da solo il modello più forte: tra le versioni del codice corrente che battono la baseline, quella con il Log Loss più basso nel backtest. La cambia se il modello attivo è di un codice superato, oppure se un'altra versione lo batte di almeno 0,001 di Log Loss. Ogni cambio compare in _Audit_ come `model.auto_activated`, con il motivo.

@@ -139,6 +139,10 @@ class SupabaseStore:
             {"p_model_version_id": model_version_id, "p_reason": reason[:500]},
         )
 
+    def retire_superseded(self, keep: list[int]) -> int:
+        """Ritira le versioni candidate fuori da ``keep`` (ADR 0024); restituisce quante."""
+        return int(self.rpc("retire_superseded_model_versions", {"p_keep": keep}) or 0)
+
     def record_backtest(self, payload: dict[str, Any]) -> int:
         return int(self.rpc("record_backtest", {"p": payload}))
 

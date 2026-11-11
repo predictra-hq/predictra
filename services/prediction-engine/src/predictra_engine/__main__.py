@@ -87,6 +87,9 @@ def main(argv: list[str] | None = None) -> int:
             line += f" errore={m.error}"
         print(line)
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
+    if summary.retired:
+        print(f"  versioni superate ritirate: {summary.retired}")
+    print("  in gara: poisson, dixon_coles · interni: baseline (riferimento), elo (secondo parere)")
     if summary.refreshed_backtests:
         print("  confronto settimanale: backtest rifatti per tutti i modelli con i dati aggiornati")
     if summary.selection is not None:
