@@ -10,6 +10,7 @@ import type {
   UserBetSlipRow,
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
+import { LIKELY_MARKETS, type LikelyRow } from "./likely";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
 
@@ -25,7 +26,7 @@ export class BetBuilderDataUnavailable extends Error {
   }
 }
 
-const MANUAL_HORIZON_DAYS = 7;
+const MANUAL_HORIZON_DAYS = 10;
 
 export async function getLatestRun(): Promise<BetBuilderLatestRunRow | null> {
   const supabase = await createClient();
@@ -259,4 +260,25 @@ export async function listSlips(): Promise<SlipWithSelections[]> {
     ...s,
     selections: bySlip.get(s.id) ?? [],
   }));
+}
+
+/**
+ * Previsioni del modello attivo per "Le più probabili": partite in programma nei prossimi
+ * giorni, solo i mercati e le linee ammessi (`LIKELY_MARKETS`).
+ */
+export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
+  const supabase = await createClient();
+  const end = new Date(now.getTime() + MANUAL_HORIZON_DAYS * 86_400_000);
+  const { data, error } = await supabase
+    .from("v_active_predictions")
+    .select(
+      "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+    )
+    .in("market", Object.keys(LIKELY_MARKETS))
+    .eq("match_status", "SCHEDULED")
+    .gt("kickoff_at", now.toISOString())
+    .lt("kickoff_at", end.toISOString())
+    .limit(10000);
+  if (error) throw new BetBuilderDataUnavailable("previsioni", error);
+  return (data ?? []) as LikelyRow[];
 }
