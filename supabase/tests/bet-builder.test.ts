@@ -470,6 +470,133 @@ describe("proposte", () => {
     });
   });
 
+  it("ADR 0033: proposte anche su under/over e doppia chance con quote italiane", async () => {
+    await asServiceRole(db, async (tx) => {
+      const s = await seed(tx);
+      // Quote italiane di under/over 2,5 e doppia chance sulla partita M2 (evento E2).
+      const oddsRun = await num(
+        tx,
+        "select public.start_ingestion_run($1, 'odds.h2h', 'DEMO:extra', 'manual') v",
+        [ODDS],
+      );
+      const market = (key: string, outcomes: [string, number][]) => ({
+        key,
+        last_update: iso(-HOUR - 5 * 60_000),
+        outcomes: outcomes.map(([selection, price]) => ({ selection, price })),
+      });
+      await tx.query("select public.ingest_odds_batch($1, $2)", [
+        oddsRun,
+        JSON.stringify({
+          observed_at: iso(-HOUR),
+          competition_code: "DEMO",
+          sport_key: "soccer_demo",
+          events: [
+            {
+              provider_event_id: "E2",
+              commence_time: iso(50 * HOUR),
+              home_team: "DEMO Squadra T3",
+              away_team: "DEMO Squadra T4",
+              bookmakers: [
+                {
+                  key: "demo_it",
+                  title: "DEMO (IT)",
+                  region: "eu",
+                  markets: [
+                    market("totals_2_5", [
+                      ["OVER", 2.2],
+                      ["UNDER", 1.7],
+                    ]),
+                    market("double_chance", [
+                      ["HOME_DRAW", 1.5],
+                      ["HOME_AWAY", 1.3],
+                      ["DRAW_AWAY", 1.8],
+                    ]),
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
+      ]);
+      await tx.query("select public.finish_ingestion_run($1, 'SUCCEEDED')", [oddsRun]);
+      const predRun = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        s.model,
+        COMMIT,
+      ]);
+      const pred = (
+        market: string,
+        line: number | null,
+        selection: string,
+        probability: number,
+      ) => ({
+        match_id: s.m2,
+        market,
+        line,
+        selection,
+        probability,
+        push_probability: null,
+        confidence_score: 0.6,
+        explanation: {},
+        features_hash: HASH,
+        as_of: iso(-HOUR),
+      });
+      await tx.query("select public.record_predictions($1, $2)", [
+        predRun,
+        JSON.stringify({
+          predictions: [
+            pred("TOTAL_GOALS", 2.5, "OVER", 0.55),
+            pred("TOTAL_GOALS", 2.5, "UNDER", 0.45),
+            pred("DOUBLE_CHANCE", null, "HOME_DRAW", 0.8),
+          ],
+        }),
+      ]);
+      await tx.query("select public.finish_prediction_run($1, 'SUCCEEDED', 1)", [predRun]);
+      const ids = async (market: string, selection: string) => ({
+        prediction_id: await num(
+          tx,
+          "select id v from public.predictions where match_id = $1 and market = $2 and selection = $3",
+          [s.m2, market, selection],
+        ),
+        odds_snapshot_id: await num(
+          tx,
+          `select s.id v from public.odds_snapshots s join public.odds_events e on e.id = s.event_id
+           where e.match_id = $1 and s.market = $2 and s.selection = $3`,
+          [s.m2, market === "TOTAL_GOALS" ? "totals_2_5" : "double_chance", selection],
+        ),
+      });
+      const rules = { ...DEFAULT_BET_BUILDER_RULES, rules_version: "DEMO-0033" };
+      const run = await startRun(tx, s.model, rules);
+      // Over 2,5: modello 0,55, mercato 0,50 → usata 0,525; EV = 0,525 · 2,2 − 1 = 0,155.
+      await record(tx, run, [
+        {
+          category: "BALANCED",
+          rank: 1,
+          rank_score: 0.1,
+          legs: [{ ...(await ids("TOTAL_GOALS", "OVER")), market_probability: 0.5 }],
+        },
+        {
+          category: "CONSERVATIVE",
+          rank: 1,
+          rank_score: 0.1,
+          legs: [{ ...(await ids("DOUBLE_CHANCE", "HOME_DRAW")), market_probability: 0.7 }],
+        },
+      ]);
+      const rows = (
+        await tx.query<{ market: string; line: string | null; probability: string; ev: string }>(
+          `select l.market, l.line::text, p.probability::text, p.expected_value::text ev
+           from public.bet_proposals p join public.bet_proposal_legs l on l.proposal_id = p.id
+           where p.run_id = $1 order by l.market`,
+          [run],
+        )
+      ).rows;
+      expect(rows).toEqual([
+        // Doppia chance: 0,5·0,8 + 0,5·0,7 = 0,75; EV = 0,75 · 1,5 − 1 = 0,125.
+        { market: "DOUBLE_CHANCE", line: null, probability: "0.75000000", ev: "0.125000" },
+        { market: "TOTAL_GOALS", line: "2.50", probability: "0.52500000", ev: "0.155000" },
+      ]);
+    });
+  });
+
   it("rieseguire lo stesso lotto non duplica nulla", async () => {
     await asServiceRole(db, async (tx) => {
       const s = await seed(tx);

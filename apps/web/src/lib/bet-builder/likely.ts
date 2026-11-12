@@ -57,6 +57,7 @@ export interface ItalianPrice {
 /** Mercato di quote corrispondente (ADR 0029): 1X2 → h2h, Totale gol 2,5 → totals_2_5. */
 export function oddsMarketFor(market: string, line: number | null): string | null {
   if (market === "1X2" && line === null) return "h2h";
+  if (market === "DOUBLE_CHANCE" && line === null) return "double_chance";
   if (market === "TOTAL_GOALS" && line !== null && [0.5, 1.5, 2.5, 3.5, 4.5, 5.5].includes(line)) {
     return `totals_${Math.floor(line)}_5`;
   }
@@ -94,6 +95,20 @@ export function italianPriceFor(
   const market = oddsMarketFor(pick.market, pick.line);
   if (!market) return null;
   return prices.get(`${pick.matchId}|${market}|${pick.selection}`) ?? null;
+}
+
+/** Quota reale combinata se ogni pronostico ha una quota italiana, altrimenti null. */
+export function combinedItalianPrice(
+  prices: ReadonlyMap<string, ItalianPrice>,
+  picks: readonly Pick<LikelyPick, "matchId" | "market" | "line" | "selection">[],
+): number | null {
+  let product = 1;
+  for (const p of picks) {
+    const it = italianPriceFor(prices, p);
+    if (!it) return null;
+    product *= it.price;
+  }
+  return product;
 }
 
 export interface LikelyMultiple {

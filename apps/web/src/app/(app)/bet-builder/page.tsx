@@ -69,8 +69,9 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
                 {l.home_team_name} – {l.away_team_name}
               </span>{" "}
               <span className="text-muted">
-                · {selectionLabel(l.selection, l.home_team_name, l.away_team_name)} ·{" "}
-                {formatDateTime(l.kickoff_at)}
+                ·{" "}
+                {selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}{" "}
+                · {formatDateTime(l.kickoff_at)}
               </span>
             </span>
             <span className="font-mono text-xs text-muted">

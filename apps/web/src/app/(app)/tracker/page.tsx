@@ -9,7 +9,12 @@ import {
   profitCurve,
   suggestStake,
 } from "@predictra/bankroll";
-import { BANKROLL_KINDS, BET_STATUSES, type BankrollKind } from "@predictra/shared-types";
+import {
+  BANKROLL_KINDS,
+  BET_STATUSES,
+  DEFAULT_BET_BUILDER_RULES,
+  type BankrollKind,
+} from "@predictra/shared-types";
 import { ProfitCurve } from "@/components/bankroll/profit-curve";
 import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
 import { FilterForm } from "@/components/ui/filter-form";
@@ -31,10 +36,12 @@ import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/li
 import {
   listBankrolls,
   listBets,
+  getMarketConsensus,
   listKellyMatches,
   listLimits,
   listMovements,
 } from "@/lib/bankroll/queries";
+import { usedProbability } from "@/lib/bet-builder/market";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
@@ -62,10 +69,21 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const k = t.kelly;
   const kellyInput = parseKellyInput(params);
   const kellyMatch = kellyMatches.find((x) => x.matchId === kellyInput.matchId) ?? null;
-  const kellyProbability =
+  const modelProbability =
     kellyMatch && kellyInput.selection
       ? (kellyMatch.probabilities[kellyInput.selection] ?? null)
       : null;
+  // ADR 0028: probabilità prudente = media tra modello e consenso di mercato.
+  const consensus = kellyMatch ? await getMarketConsensus(kellyMatch.matchId) : {};
+  const marketProbability = kellyInput.selection ? consensus[kellyInput.selection] : undefined;
+  const kellyProbability =
+    modelProbability === null
+      ? null
+      : usedProbability(
+          modelProbability,
+          marketProbability,
+          DEFAULT_BET_BUILDER_RULES.market_weight ?? 0,
+        );
   const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
   const kellyAsked = params.km !== undefined || params.ko !== undefined;
   const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
@@ -295,6 +313,8 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
           {kellyReady && kellyProbability !== null && kellyInput.odds !== null ? (
             <div className="mt-4">
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Stat label={k.modelProbability}>{formatPercent(modelProbability)}</Stat>
+                <Stat label={k.marketProbability}>{formatPercent(marketProbability)}</Stat>
                 <Stat label={k.probability}>{formatPercent(kellyProbability)}</Stat>
                 <Stat label={k.fairOdds}>{odds(fairOdds(kellyProbability))}</Stat>
                 <Stat label={k.expectedValue}>

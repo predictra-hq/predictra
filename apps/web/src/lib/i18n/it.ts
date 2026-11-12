@@ -573,7 +573,7 @@ export const it = {
       description:
         "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Sotto, le multiple più probabili.",
       fairOddsNote:
-        "Tra parentesi la quota equa = 1 ÷ probabilità: sotto questa quota la giocata non conviene. Sotto, quando c'è, la migliore quota reale di un bookmaker italiano (1X2 e under/over; per gli altri tipi di giocata le quote non sono disponibili gratis).",
+        "Tra parentesi la quota equa = 1 ÷ probabilità: sotto questa quota la giocata non conviene. Sotto, quando c'è, la migliore quota reale di un bookmaker italiano (1X2, doppia chance e under/over; per gol/no gol e gol di una squadra le quote italiane non sono disponibili gratis).",
       multiples: "Multiple più probabili",
       multiple: "Multipla da {n}",
       singles: "Pronostico più probabile per partita",
@@ -584,10 +584,11 @@ export const it = {
         "Nessun pronostico disponibile: servono previsioni del modello attivo per le partite in programma.",
       showAll: "Mostra tutti i {n} pronostici",
       italianPrice: "quota {price} · {bookmaker}",
+      combinedItalian: "Quota reale combinata (bookmaker italiani): {price}",
     },
     valueTitle: "Proposte con valore",
     valueDescription:
-      "Singole e multiple 1X2 giocabili su bookmaker italiani (oggi Codere e Unibet Italia), solo quando la loro quota supera quella equa. La probabilità usata è la media tra quella del modello e quella del mercato, ricavata dalle quote di tutti i bookmaker, anche esteri: così il valore non viene gonfiato quando il modello si discosta troppo. Per gli altri tipi di giocata non abbiamo quote reali gratuite, quindi compaiono solo tra le più probabili.",
+      "Singole e multiple su 1X2, doppia chance e under/over giocabili su bookmaker italiani (oggi Codere e Unibet Italia), solo quando la loro quota supera quella equa. La probabilità usata è la media tra quella del modello e quella del mercato, ricavata dalle quote di tutti i bookmaker, anche esteri: così il valore non viene gonfiato quando il modello si discosta troppo. Gol/no gol e gli altri tipi di giocata non hanno quote italiane gratuite: compaiono solo tra le più probabili.",
     technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
     navBuilder: "Costruisci",
@@ -948,7 +949,7 @@ export const it = {
     kelly: {
       title: "Calcolatore Kelly",
       description:
-        "Kelly indica quanto puntare in base alla probabilità del modello attivo e alla quota del tuo bookmaker. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
+        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nel Bet Builder. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
       match: "Partita",
       chooseMatch: "Scegli una partita",
       selection: "Esito",
@@ -959,7 +960,9 @@ export const it = {
         "Nessuna partita in programma con le probabilità del modello attivo. Il motore prevede le partite dei prossimi 7 giorni, due volte al giorno.",
       invalidOdds: "Inserisci una quota maggiore di 1 (es. 2,10).",
       incomplete: "Scegli partita ed esito e inserisci la quota.",
-      probability: "Probabilità del modello",
+      modelProbability: "Probabilità del modello",
+      marketProbability: "Probabilità del mercato",
+      probability: "Probabilità usata (media)",
       fairOdds: "Quota equa (1/p)",
       expectedValue: "Valore atteso per 1 € puntato",
       stake: "Stake Kelly",
