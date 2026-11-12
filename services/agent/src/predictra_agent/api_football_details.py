@@ -9,6 +9,9 @@ l'adattatore alla coda.
   usate) e riprende dal punto in cui si era fermato il giorno prima. Quando tutte le
   stagioni sono complete, il job si chiude senza chiamare il provider (solo `/status`,
   gratuito).
+- Prima dei dettagli, la correzione dello storico (ADR 0034): riscarica i risultati
+  2022-2024 con la normalizzazione attuale, una volta sola (32 richieste), poi non costa
+  più nulla. Va prima perché i dettagli usano tutto il budget del giorno.
 - Chiave mancante o limite del piano → errore non recuperabile; stagione fallita → un solo
   nuovo tentativo.
 """
@@ -20,6 +23,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from predictra_collector.api_football import ApiFootballClient
+from predictra_collector.api_football_backfill import backfill
 from predictra_collector.api_football_details import collect_details
 from predictra_collector.config import V1_COMPETITIONS
 from predictra_collector.supabase_store import SupabaseStore
@@ -43,13 +47,23 @@ def make_handler(
     supabase_url: str,
     supabase_secret_key: str,
     collector: Collector = collect_details,
+    rescorer: Collector = backfill,
 ) -> Handler:
     def handle(ctx: JobContext) -> dict[str, Any]:
         key = (env.get("API_FOOTBALL_KEY") or "").strip()
         if not key:
             raise PermanentJobError("Variabile API_FOOTBALL_KEY mancante")
-        client = ApiFootballClient(key)
         store = SupabaseStore(supabase_url, supabase_secret_key)
+        rescore = rescorer(
+            ApiFootballClient(key),
+            store,
+            V1_COMPETITIONS,
+            triggered_by="schedule",
+            secrets=(key, supabase_secret_key),
+            refresh=True,
+        )
+        # Client nuovo: il budget dei dettagli si ricalcola da /status, già aggiornato.
+        client = ApiFootballClient(key)
         summary = collector(
             client,
             store,
@@ -58,6 +72,11 @@ def make_handler(
             secrets=(key, supabase_secret_key),
         )
         result = {
+            "rescore": {
+                "requests": rescore.requests_used,
+                "seasons": [f"{r.code}:{r.year} {r.status}" for r in rescore.results],
+                "stopped": rescore.stopped,
+            },
             "requests": summary.requests_used,
             "complete": summary.complete,
             "stopped": summary.stopped,

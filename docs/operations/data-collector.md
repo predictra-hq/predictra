@@ -77,7 +77,8 @@ Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il da
 
 - Riscarica le stagioni 2022–2024 anche se già fatte, con la normalizzazione attuale: per esempio il risultato al 90' per le partite finite ai supplementari o ai rigori.
 - Costa 32 richieste e rispetta il budget del giorno: se non basta, si ferma e va rilanciato il giorno dopo.
-- Come si avvia: _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-rescore`.
+- **Automatica:** la fa il job giornaliero dell'agente `api-football.details`, prima dei dettagli. Le stagioni corrette (`job_type = af.rescore.2`) non costano più nulla.
+- A mano, se serve: _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-rescore`. Funziona solo se restano richieste nel giorno: i dettagli le usano quasi tutte.
 - A ogni lotto si chiudono da soli i problemi di punteggio delle partite tornate regolari (`resolve_quality_issues`).
 
 ## API-Football: statistiche e formazioni (M2 fase A3, ADR 0012)
