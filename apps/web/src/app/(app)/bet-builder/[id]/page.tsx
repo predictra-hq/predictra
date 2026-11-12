@@ -6,12 +6,18 @@ import {
   BetBuilderNav,
   CategoryBadge,
   Metrics,
+  StakeSimulation,
 } from "@/components/bet-builder/shared";
 import { FreshnessBadge } from "@/components/football/badges";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Badge, Card, CardTitle, Field, Input, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { confidenceLabel, formatSlateDate, selectionLabel } from "@/lib/bet-builder/format";
+import {
+  confidenceLabel,
+  formatSlateDate,
+  parseStake,
+  selectionLabel,
+} from "@/lib/bet-builder/format";
 import { getProposal, listProposalLegs } from "@/lib/bet-builder/queries";
 import { parseId } from "@/lib/football/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -20,10 +26,14 @@ import { saveProposalSlip } from "../actions";
 
 export const metadata: Metadata = { title: "Proposta — Smart Bet Builder" };
 
-export default async function ProposalPage({ params }: PageProps<"/bet-builder/[id]">) {
+export default async function ProposalPage({
+  params,
+  searchParams,
+}: PageProps<"/bet-builder/[id]">) {
   await requireUser();
   const m = getMessages().betBuilder;
   const { id } = await params;
+  const stake = parseStake((await searchParams).s);
   const proposalId = parseId(id);
   if (proposalId === null) notFound();
   const [proposal, legs] = await Promise.all([
@@ -40,7 +50,10 @@ export default async function ProposalPage({ params }: PageProps<"/bet-builder/[
       />
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
-      <Link href="/bet-builder" className="mb-4 inline-block text-sm text-positive hover:underline">
+      <Link
+        href={stake !== null ? `/bet-builder?s=${stake}` : "/bet-builder"}
+        className="mb-4 inline-block text-sm text-positive hover:underline"
+      >
         {m.back}
       </Link>
 
@@ -55,6 +68,13 @@ export default async function ProposalPage({ params }: PageProps<"/bet-builder/[
           expectedValue={proposal.expected_value}
           confidence={proposal.confidence_score}
         />
+        {stake !== null && proposal.combined_price !== null && proposal.probability !== null ? (
+          <StakeSimulation
+            stake={stake}
+            price={proposal.combined_price}
+            probability={proposal.probability}
+          />
+        ) : null}
         <p className="text-sm text-muted">
           {proposal.legs_count > 1 ? m.correlationIndependence : m.correlationNone}
         </p>

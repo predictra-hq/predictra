@@ -80,12 +80,6 @@ export function stakeOutcome(stake: number, price: number, probability: number):
   };
 }
 
-const euro = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" });
-
-export function formatEuro(value: number): string {
-  return euro.format(value);
-}
-
 /** Inizio del turno (ADR 0036): venerdì per venerdì–lunedì, martedì per martedì–giovedì. */
 export function roundStartOf(value: string): string {
   const d = new Date(`${value}T00:00:00Z`);

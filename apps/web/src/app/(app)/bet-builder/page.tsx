@@ -67,7 +67,7 @@ function ProposalCard({
           {m.rank} {p.rank}
         </span>
         <Link
-          href={`/bet-builder/${p.proposal_id}`}
+          href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
           className="ml-auto text-sm text-positive hover:underline"
         >
           {m.details}
@@ -157,7 +157,12 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <LikelyCard picks={picks} multiples={likelyMultiples(picks)} prices={italianOdds} />
+      <LikelyCard
+        picks={picks}
+        multiples={likelyMultiples(picks)}
+        prices={italianOdds}
+        stake={stake}
+      />
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
       <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
@@ -224,6 +229,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
             </Button>
           </FilterForm>
 
+          {shown.length === 0 ? <EmptyState>{m.emptyFiltered}</EmptyState> : null}
           {slates
             .filter((d) => !slate || d === slate)
             .map((d) => {

@@ -645,6 +645,7 @@ export const it = {
     priceChangedWarning: "{n} selezioni hanno una quota cambiata dalla generazione.",
     stake: "Quanto vuoi giocare (€)",
     stakePlaceholder: "4",
+    emptyFiltered: "Nessuna proposta con questi filtri. Prova un altro turno o un'altra categoria.",
     stakeTitle: "Se giochi {stake}",
     stakeWin: "Vinci {payout} (guadagno {profit})",
     stakeWinProbability: "probabilità {p}",

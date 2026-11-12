@@ -2,7 +2,8 @@ import type { BetProposalCategory } from "@predictra/shared-types";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Alert, Badge } from "@/components/ui/primitives";
-import { confidenceLabel, formatEuro, stakeOutcome } from "@/lib/bet-builder/format";
+import { formatEuro } from "@/components/bankroll/shared";
+import { confidenceLabel, stakeOutcome } from "@/lib/bet-builder/format";
 import { getMessages } from "@/lib/i18n";
 import {
   fillTemplate,

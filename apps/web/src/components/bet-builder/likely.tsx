@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { PredictionMarket } from "@predictra/shared-types";
+import { StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
   combinedItalianPrice,
@@ -57,10 +58,13 @@ export function LikelyCard({
   picks,
   multiples,
   prices,
+  stake = null,
 }: {
   picks: readonly LikelyPick[];
   multiples: readonly LikelyMultiple[];
   prices: Prices;
+  /** Puntata da simulare sulle multiple che hanno una quota reale. */
+  stake?: number | null;
 }) {
   const m = getMessages().betBuilder.likely;
   return (
@@ -90,9 +94,20 @@ export function LikelyCard({
                     {(() => {
                       const real = combinedItalianPrice(prices, x.picks);
                       return real === null ? null : (
-                        <p className="mt-1 text-xs">
-                          {fillTemplate(m.combinedItalian, { price: formatOdds(real) })}
-                        </p>
+                        <>
+                          <p className="mt-1 text-xs">
+                            {fillTemplate(m.combinedItalian, { price: formatOdds(real) })}
+                          </p>
+                          {stake !== null ? (
+                            <div className="mt-2">
+                              <StakeSimulation
+                                stake={stake}
+                                price={real}
+                                probability={x.probability}
+                              />
+                            </div>
+                          ) : null}
+                        </>
                       );
                     })()}
                     <ul className="mt-2 text-sm">
