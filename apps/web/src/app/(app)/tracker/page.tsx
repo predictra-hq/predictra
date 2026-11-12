@@ -7,6 +7,7 @@ import {
   flatStake,
   lossSince,
   profitCurve,
+  suggestStake,
 } from "@predictra/bankroll";
 import { BANKROLL_KINDS, BET_STATUSES, type BankrollKind } from "@predictra/shared-types";
 import { ProfitCurve } from "@/components/bankroll/profit-curve";
@@ -26,7 +27,14 @@ import {
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
-import { listBankrolls, listBets, listLimits, listMovements } from "@/lib/bankroll/queries";
+import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
+import {
+  listBankrolls,
+  listBets,
+  listKellyMatches,
+  listLimits,
+  listMovements,
+} from "@/lib/bankroll/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
@@ -44,12 +52,22 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const period = parsePeriod(params.p);
   const { since, dayAgo, weekAgo } = timeWindows(period);
 
-  const [bankrolls, allBets, movements, limits] = await Promise.all([
+  const [bankrolls, allBets, movements, limits, kellyMatches] = await Promise.all([
     listBankrolls(),
     listBets(),
     listMovements(),
     listLimits(),
+    listKellyMatches(),
   ]);
+  const k = t.kelly;
+  const kellyInput = parseKellyInput(params);
+  const kellyMatch = kellyMatches.find((x) => x.matchId === kellyInput.matchId) ?? null;
+  const kellyProbability =
+    kellyMatch && kellyInput.selection
+      ? (kellyMatch.probabilities[kellyInput.selection] ?? null)
+      : null;
+  const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
+  const kellyAsked = params.km !== undefined || params.ko !== undefined;
   const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
   const kindOf = new Map(bankrolls.map((x) => [x.bankroll_id, x.kind]));
 
@@ -218,6 +236,111 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
           </Card>
         </div>
       )}
+
+      {bankrolls.length > 0 ? (
+        <Card className="mt-4">
+          <CardTitle>{k.title}</CardTitle>
+          <p className="mt-1 text-sm text-muted">{k.description}</p>
+          {kellyMatches.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">{k.noMatches}</p>
+          ) : (
+            <FilterForm className="mt-4 grid gap-3 sm:grid-cols-[1fr_11rem_9rem_auto] sm:items-end">
+              <input type="hidden" name="p" value={period} />
+              <Field label={k.match} htmlFor="km">
+                <Select
+                  id="km"
+                  name="km"
+                  defaultValue={kellyMatch ? String(kellyMatch.matchId) : ""}
+                >
+                  <option value="" disabled>
+                    {k.chooseMatch}
+                  </option>
+                  {kellyMatches.map((x) => (
+                    <option key={x.matchId} value={x.matchId}>
+                      {formatDateTime(x.kickoffAt)} · {x.home} – {x.away}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={k.selection} htmlFor="ks">
+                <Select id="ks" name="ks" defaultValue={kellyInput.selection ?? "HOME"}>
+                  {KELLY_SELECTIONS.map((sel) => (
+                    <option key={sel} value={sel}>
+                      {k.selections[sel]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={k.odds} htmlFor="ko">
+                <Input
+                  id="ko"
+                  name="ko"
+                  inputMode="decimal"
+                  defaultValue={typeof params.ko === "string" ? params.ko : ""}
+                  placeholder="2,10"
+                />
+              </Field>
+              <Button type="submit" variant="secondary">
+                {k.calculate}
+              </Button>
+            </FilterForm>
+          )}
+          {kellyInput.invalidOdds ? (
+            <Alert className="mt-3" tone="warning">
+              {k.invalidOdds}
+            </Alert>
+          ) : kellyAsked && !kellyReady ? (
+            <p className="mt-3 text-sm text-muted">{k.incomplete}</p>
+          ) : null}
+          {kellyReady && kellyProbability !== null && kellyInput.odds !== null ? (
+            <div className="mt-4">
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Stat label={k.probability}>{formatPercent(kellyProbability)}</Stat>
+                <Stat label={k.fairOdds}>{odds(fairOdds(kellyProbability))}</Stat>
+                <Stat label={k.expectedValue}>
+                  {formatPercent(expectedValue(kellyProbability, kellyInput.odds))}
+                </Stat>
+              </dl>
+              <ul className="mt-4 flex flex-col gap-2 text-sm">
+                {bankrolls.map((x) => {
+                  const lim = limits.find((l) => l.bankroll_id === x.bankroll_id) ?? null;
+                  const s = suggestStake({
+                    available: Number(x.available),
+                    flatPct: Number(x.flat_stake_pct),
+                    probability: kellyProbability,
+                    odds: kellyInput.odds,
+                    limits: lim,
+                  });
+                  return (
+                    <li
+                      key={x.bankroll_id}
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2 last:border-0"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{x.name}</span>
+                        <KindBadge kind={x.kind} />
+                      </span>
+                      {s.kellyNote === "NON_POSITIVE_EV" ? (
+                        <span className="text-muted">{k.noValue}</span>
+                      ) : (
+                        <span>
+                          {k.stake}:{" "}
+                          <span className="font-mono text-fg">{formatEuro(s.kelly ?? 0)}</span>
+                          {lim?.max_stake != null &&
+                          s.kelly !== null &&
+                          s.kelly >= Number(lim.max_stake) ? (
+                            <span className="ml-1 text-xs text-muted">({k.capped})</span>
+                          ) : null}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{t.bets}</h2>
       <Card scrollLabel={t.bets} className="p-0">
