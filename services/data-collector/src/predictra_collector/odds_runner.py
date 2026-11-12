@@ -1,7 +1,8 @@
-"""Raccolta quote 1X2 da The Odds API (ADR 0015): una esecuzione per competizione.
+"""Raccolta quote da The Odds API (ADR 0015, 0029): una esecuzione per competizione.
 
 Modalità:
-- ``daily``: snapshot di tutte le competizioni (1 credito ciascuna se ci sono eventi).
+- ``daily``: snapshot di tutte le competizioni: 1X2, e under/over se i crediti bastano
+  fino a fine mese (1 credito per mercato, se ci sono eventi).
 - ``prematch``: solo le competizioni con almeno una partita nelle prossime 6 ore,
   verificate prima con ``/events`` (gratuito).
 """
@@ -15,7 +16,15 @@ from typing import Any, Literal, Protocol
 
 from .config import ODDS_SPORT_KEYS
 from .runner import sanitize
-from .the_odds_api import PROVIDER, BudgetExhausted, OddsApiClient, normalize_odds
+from .the_odds_api import (
+    CREDIT_RESERVE,
+    MARKET,
+    PROVIDER,
+    TOTALS,
+    BudgetExhausted,
+    OddsApiClient,
+    normalize_odds,
+)
 
 JOB_TYPE = "odds.h2h"
 PREMATCH_WINDOW = timedelta(hours=6)
@@ -56,6 +65,7 @@ class OddsResult:
 @dataclass
 class OddsSummary:
     results: list[OddsResult] = field(default_factory=list)
+    markets: tuple[str, ...] = ()
     remaining: int | None = None
 
     @property
@@ -78,6 +88,23 @@ def has_upcoming(events: list[dict[str, Any]], now: datetime, window: timedelta)
     return False
 
 
+DAILY_COMPETITIONS_COST = 2  # h2h + totals per competizione con eventi
+
+
+def totals_affordable(remaining: int | None, now: datetime, competitions: int) -> bool:
+    """Under/over solo se i crediti bastano fino a fine mese anche con 2 mercati (ADR 0029).
+
+    Regola prudente: crediti residui ≥ riserva + giorni rimanenti * 2 * competizioni.
+    Senza il dato dei crediti residui non si rischia: solo 1X2.
+    """
+    if remaining is None:
+        return False
+    next_month = (now.replace(day=28) + timedelta(days=4)).replace(day=1)
+    days_left = (next_month.date() - now.date()).days
+    need = CREDIT_RESERVE + days_left * DAILY_COMPETITIONS_COST * competitions
+    return remaining >= need
+
+
 def run_odds(
     client: OddsApiClient,
     store: OddsStore | None,
@@ -91,6 +118,14 @@ def run_odds(
     summary = OddsSummary()
     current = now or datetime.now(UTC)
     observed = current.isoformat(timespec="seconds")
+    markets: tuple[str, ...] = (MARKET,)
+    if mode == "daily":
+        # /sports è gratuito e restituisce i crediti residui negli header.
+        with contextlib.suppress(Exception):
+            client.sports()
+        if totals_affordable(client.remaining, current, len(competitions)):
+            markets = (MARKET, TOTALS)
+    summary.markets = markets
 
     for code in competitions:
         sport_key = ODDS_SPORT_KEYS[code]
@@ -113,7 +148,7 @@ def run_odds(
         try:
             if store is not None:
                 run_id = store.start_run(PROVIDER, JOB_TYPE, f"{code}:{mode}", triggered_by)
-            events = client.odds(sport_key)
+            events = client.odds(sport_key, markets)
             normalized = normalize_odds(events, code, sport_key, observed)
             teams = {e.get("home_team") for e in events} | {e.get("away_team") for e in events}
             result = OddsResult(

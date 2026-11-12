@@ -6,12 +6,13 @@ from pathlib import Path
 import httpx
 import pytest
 
-from predictra_collector.odds_runner import has_upcoming, run_odds
+from predictra_collector.odds_runner import has_upcoming, run_odds, totals_affordable
 from predictra_collector.the_odds_api import (
     BudgetExhausted,
     OddsApiClient,
     OddsApiError,
     normalize_odds,
+    totals_market_code,
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "odds_v4_example_nfl.json"
@@ -197,3 +198,66 @@ def test_has_upcoming():
     assert not has_upcoming(
         [{"commence_time": "non-una-data"}], now, __import__("datetime").timedelta(hours=6)
     )
+
+
+def test_under_over_una_voce_per_linea(nfl):
+    events = soccer_from(nfl, (2, 3.4, 4))
+    events[0]["bookmakers"][0]["markets"].append(
+        {
+            "key": "totals",
+            "last_update": "2026-11-07T17:00:00Z",
+            "outcomes": [
+                {"name": "Over", "price": 1.9, "point": 2.5},
+                {"name": "Under", "price": 1.95, "point": 2.5},
+                {"name": "Over", "price": 1.8, "point": 2.25},  # linea asiatica: scartata
+                {"name": "Under", "price": 0.9, "point": 2.5},  # quota non valida
+            ],
+        }
+    )
+    result = normalize_odds(events, "SA", "soccer_italy_serie_a", OBS)
+    markets = result.batch["events"][0]["bookmakers"][0]["markets"]
+    assert [m["key"] for m in markets] == ["h2h", "totals_2_5"]
+    assert markets[1]["outcomes"] == [
+        {"selection": "OVER", "price": 1.9},
+        {"selection": "UNDER", "price": 1.95},
+    ]
+    assert totals_market_code(0.5) == "totals_0_5"
+    assert totals_market_code(3.0) is None
+    assert totals_market_code("2.5") is None
+
+
+def test_under_over_solo_se_i_crediti_bastano_fino_a_fine_mese():
+    now = datetime(2026, 11, 12, 7, 0, tzinfo=UTC)  # 19 giorni con oggi
+    # riserva 20 + 19 giorni * 2 mercati * 8 competizioni = 324
+    assert totals_affordable(451, now, 8)
+    assert totals_affordable(324, now, 8)
+    assert not totals_affordable(323, now, 8)
+    assert not totals_affordable(None, now, 8)
+    assert totals_affordable(52, datetime(2026, 12, 31, 7, 0, tzinfo=UTC), 8)  # 1 giorno
+
+
+def test_run_odds_daily_chiede_under_over_quando_conviene(nfl):
+    seen = []
+
+    def handler(request):
+        if request.url.path.endswith("/odds"):
+            seen.append(request.url.params["markets"])
+            return httpx.Response(200, json=soccer_from(nfl, (2, 3.4, 4)))
+        return httpx.Response(200, json=[])
+
+    now = datetime(2026, 11, 12, 7, 0, tzinfo=UTC)
+    summary = run_odds(make_client(handler, remaining="451"), None, ("SA",), now=now)
+    assert seen == ["h2h,totals"] and summary.markets == ("h2h", "totals")
+    seen.clear()
+    summary = run_odds(make_client(handler, remaining="30"), None, ("SA",), now=now)
+    assert seen == ["h2h"] and summary.markets == ("h2h",)
+    # Prima della partita (prematch) solo 1X2: servono le quote di chiusura.
+    seen.clear()
+
+    def prematch(request):
+        if request.url.path.endswith("/events"):
+            return httpx.Response(200, json=[{"id": "x", "commence_time": "2026-11-12T09:00:00Z"}])
+        return handler(request)
+
+    run_odds(make_client(prematch, remaining="451"), None, ("SA",), mode="prematch", now=now)
+    assert seen == ["h2h"]

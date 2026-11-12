@@ -47,6 +47,55 @@ export interface LikelyPick {
   confidence: number;
 }
 
+/** Migliore quota reale di un bookmaker italiano per il pronostico (se raccolta). */
+export interface ItalianPrice {
+  price: number;
+  bookmaker: string;
+  observedAt: string;
+}
+
+/** Mercato di quote corrispondente (ADR 0029): 1X2 → h2h, Totale gol 2,5 → totals_2_5. */
+export function oddsMarketFor(market: string, line: number | null): string | null {
+  if (market === "1X2" && line === null) return "h2h";
+  if (market === "TOTAL_GOALS" && line !== null && [0.5, 1.5, 2.5, 3.5, 4.5, 5.5].includes(line)) {
+    return `totals_${Math.floor(line)}_5`;
+  }
+  return null;
+}
+
+export interface LatestOddsRow {
+  match_id: number | null;
+  bookmaker: string;
+  market: string;
+  selection: string;
+  price: number;
+  observed_at: string;
+}
+
+/** Migliore quota italiana per (partita, mercato, esito), tra le righe già filtrate. */
+export function bestItalianPrices(rows: readonly LatestOddsRow[]): Map<string, ItalianPrice> {
+  const best = new Map<string, ItalianPrice>();
+  for (const r of rows) {
+    if (r.match_id === null) continue;
+    const key = `${r.match_id}|${r.market}|${r.selection}`;
+    const price = Number(r.price);
+    const cur = best.get(key);
+    if (!cur || price > cur.price) {
+      best.set(key, { price, bookmaker: r.bookmaker, observedAt: r.observed_at });
+    }
+  }
+  return best;
+}
+
+export function italianPriceFor(
+  prices: ReadonlyMap<string, ItalianPrice>,
+  pick: Pick<LikelyPick, "matchId" | "market" | "line" | "selection">,
+): ItalianPrice | null {
+  const market = oddsMarketFor(pick.market, pick.line);
+  if (!market) return null;
+  return prices.get(`${pick.matchId}|${market}|${pick.selection}`) ?? null;
+}
+
 export interface LikelyMultiple {
   size: number;
   picks: LikelyPick[];

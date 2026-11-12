@@ -18,7 +18,21 @@ PROVIDER = "the-odds-api"
 BASE_URL = "https://api.the-odds-api.com/v4"
 REGION = "eu"
 MARKET = "h2h"
+TOTALS = "totals"
 CREDIT_RESERVE = 20  # ADR 0015 §2
+# Linee under/over conservate (ADR 0029): solo .5, nessun rimborso possibile.
+TOTAL_LINES = (0.5, 1.5, 2.5, 3.5, 4.5, 5.5)
+
+
+def totals_market_code(point: Any) -> str | None:
+    """2.5 → "totals_2_5" (codice del catalogo `markets`); linee non ammesse → None."""
+    if not isinstance(point, int | float) or isinstance(point, bool):
+        return None
+    line = float(point)
+    if line not in TOTAL_LINES:
+        return None
+    whole, half = divmod(round(line * 10), 10)
+    return f"totals_{whole}_{half}"
 
 
 class OddsApiError(RuntimeError):
@@ -74,15 +88,25 @@ class OddsApiClient:
         data = self._get(f"/sports/{sport_key}/events", {"dateFormat": "iso"})
         return data if isinstance(data, list) else []
 
-    def odds(self, sport_key: str) -> list[dict[str, Any]]:
-        """Quote 1X2 della regione eu (1 credito se ci sono eventi)."""
+    def sports(self) -> list[dict[str, Any]]:
+        """Elenco degli sport (gratuito): serve a leggere i crediti residui."""
+        data = self._get("/sports", {})
+        return data if isinstance(data, list) else []
+
+    def odds(self, sport_key: str, markets: tuple[str, ...] = (MARKET,)) -> list[dict[str, Any]]:
+        """Quote della regione eu: 1 credito per mercato, se ci sono eventi."""
         if self.remaining is not None and self.remaining < self.reserve:
             raise BudgetExhausted(
                 f"Crediti residui {self.remaining} sotto la riserva di {self.reserve}"
             )
         data = self._get(
             f"/sports/{sport_key}/odds",
-            {"regions": REGION, "markets": MARKET, "oddsFormat": "decimal", "dateFormat": "iso"},
+            {
+                "regions": REGION,
+                "markets": ",".join(markets),
+                "oddsFormat": "decimal",
+                "dateFormat": "iso",
+            },
         )
         return data if isinstance(data, list) else []
 
@@ -134,6 +158,24 @@ def normalize_odds(
         for book in ev.get("bookmakers") or []:
             markets = []
             for market in book.get("markets") or []:
+                # last_update del mercato; quello del bookmaker è deprecato.
+                last_update = market.get("last_update") or book.get("last_update")
+                if market.get("key") == TOTALS:
+                    # Under/over: una voce del catalogo per linea (totals_2_5 …).
+                    by_line: dict[str, list[dict[str, Any]]] = {}
+                    for outcome in market.get("outcomes") or []:
+                        side = str(outcome.get("name") or "").strip().upper()
+                        code = totals_market_code(outcome.get("point"))
+                        if side not in {"OVER", "UNDER"} or code is None:
+                            continue
+                        if not _valid_price(outcome.get("price")):
+                            continue
+                        by_line.setdefault(code, []).append(
+                            {"selection": side, "price": outcome["price"]}
+                        )
+                    for code, outs in sorted(by_line.items()):
+                        markets.append({"key": code, "last_update": last_update, "outcomes": outs})
+                    continue
                 if market.get("key") != MARKET:
                     continue
                 outcomes = []
@@ -146,12 +188,7 @@ def normalize_odds(
                     outcomes.append({"selection": selection, "price": outcome["price"]})
                 if outcomes:
                     markets.append(
-                        {
-                            "key": MARKET,
-                            # last_update del mercato; quello del bookmaker è deprecato.
-                            "last_update": market.get("last_update") or book.get("last_update"),
-                            "outcomes": outcomes,
-                        }
+                        {"key": MARKET, "last_update": last_update, "outcomes": outcomes}
                     )
             if markets and book.get("key"):
                 books.append(

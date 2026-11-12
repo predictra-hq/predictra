@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { bestPicks, likelyMultiples, type LikelyRow } from "./likely";
+import {
+  bestItalianPrices,
+  bestPicks,
+  italianPriceFor,
+  likelyMultiples,
+  oddsMarketFor,
+  type LikelyRow,
+} from "./likely";
 
 const row = (
   match: number,
@@ -52,5 +59,37 @@ describe("le più probabili (valori DEMO)", () => {
     expect(two!.confidence).toBe(0.5);
     expect(three!.probability).toBeCloseTo(0.336);
     expect(likelyMultiples(picks)).toHaveLength(2); // con 3 partite non c'è la quadrupla
+  });
+
+  it("quota italiana reale del pronostico, se raccolta (ADR 0029)", () => {
+    expect(oddsMarketFor("TOTAL_GOALS", 2.5)).toBe("totals_2_5");
+    expect(oddsMarketFor("TOTAL_GOALS", 2)).toBeNull();
+    expect(oddsMarketFor("1X2", null)).toBe("h2h");
+    expect(oddsMarketFor("BTTS", null)).toBeNull();
+    const prices = bestItalianPrices([
+      {
+        match_id: 1,
+        bookmaker: "demo_it",
+        market: "totals_2_5",
+        selection: "UNDER",
+        price: 1.8,
+        observed_at: "t1",
+      },
+      {
+        match_id: 1,
+        bookmaker: "demo2_it",
+        market: "totals_2_5",
+        selection: "UNDER",
+        price: 1.85,
+        observed_at: "t2",
+      },
+    ]);
+    const pick = { matchId: 1, market: "TOTAL_GOALS", line: 2.5, selection: "UNDER" };
+    expect(italianPriceFor(prices, pick)).toEqual({
+      price: 1.85,
+      bookmaker: "demo2_it",
+      observedAt: "t2",
+    });
+    expect(italianPriceFor(prices, { ...pick, selection: "OVER" })).toBeNull();
   });
 });

@@ -31,10 +31,11 @@ import {
   selectionLabel,
 } from "@/lib/bet-builder/format";
 import { LikelyCard } from "@/components/bet-builder/likely";
-import { bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
+import { bestItalianPrices, bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
 import {
   getLatestRun,
   listActiveProposals,
+  listItalianLatestOdds,
   listLikelyRows,
   listProposalLegs,
 } from "@/lib/bet-builder/queries";
@@ -114,6 +115,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
     listLikelyRows(new Date()),
   ]);
   const picks = bestPicks(likelyRows);
+  const italianOdds = bestItalianPrices(await listItalianLatestOdds(picks.map((p) => p.matchId)));
 
   const slates = [...new Set(proposals.map((p) => p.slate_date))];
   const slate = parseSlateDate(params.d);
@@ -134,7 +136,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <LikelyCard picks={picks} multiples={likelyMultiples(picks)} />
+      <LikelyCard picks={picks} multiples={likelyMultiples(picks)} prices={italianOdds} />
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
       <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>

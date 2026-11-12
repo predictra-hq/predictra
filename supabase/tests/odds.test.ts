@@ -231,6 +231,44 @@ describe("scrittura e abbinamento", () => {
     });
   });
 
+  it("ADR 0029: quote under/over salvate per linea e collegate alle previsioni TOTAL_GOALS", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx);
+      const batch = oddsBatch("DEMO Casa");
+      batch.events[0]!.bookmakers[0]!.markets.push({
+        key: "totals_2_5",
+        last_update: "2026-01-07T11:00:00Z",
+        outcomes: [
+          { selection: "OVER", price: 1.9 },
+          { selection: "UNDER", price: 1.95 },
+        ],
+      } as never);
+      batch.events[0]!.bookmakers[0]!.markets.push({
+        key: "totals_2_25", // linea non in catalogo: scartata
+        last_update: "2026-01-07T11:00:00Z",
+        outcomes: [{ selection: "OVER", price: 1.8 }],
+      } as never);
+      await ingestOdds(tx, batch);
+      const rows = (
+        await tx.query<{ market: string; selection: string; price: string }>(
+          `select market, selection, price::text from public.odds_snapshots
+           where market like 'totals%' order by selection`,
+        )
+      ).rows;
+      expect(rows).toEqual([
+        { market: "totals_2_5", selection: "OVER", price: "1.900" },
+        { market: "totals_2_5", selection: "UNDER", price: "1.950" },
+      ]);
+      const m = await one<{ a: string | null; b: string | null; c: string | null }>(
+        tx,
+        `select app_private.odds_market_for('TOTAL_GOALS', 2.5) a,
+                app_private.odds_market_for('TOTAL_GOALS', 2) b,
+                app_private.odds_market_for('1X2', null) c`,
+      );
+      expect(m).toEqual({ a: "totals_2_5", b: null, c: "h2h" });
+    });
+  });
+
   it("una quota aggiornata dal bookmaker diventa una riga nuova", async () => {
     await asServiceRole(db, async (tx) => {
       await seedFootball(tx);

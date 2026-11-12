@@ -37,6 +37,7 @@ Fonti: https://the-odds-api.com/#get-access e https://the-odds-api.com/liveapi/g
 | Quote            | `GET /v4/sports/{sport}/odds/?apiKey=…&regions=eu&markets=h2h&oddsFormat=decimal&dateFormat=iso` |
 | Eventi           | `GET /v4/sports/{sport}/events` (gratuito)                                                       |
 | Mercato 1X2      | `h2h`: per il calcio include il pareggio                                                         |
+| Under/over       | `totals`: esiti `Over`/`Under` con `point` (linea); salvati come `totals_2_5` ecc. (ADR 0029)    |
 | `last_update`    | va usato quello del **mercato**; quello del bookmaker è deprecato                                |
 | Partite concluse | non restituite da `/odds`                                                                        |
 
