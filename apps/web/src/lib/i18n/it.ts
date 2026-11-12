@@ -918,8 +918,29 @@ export const it = {
     betSaved: "Giocata registrata.",
     suggestions: "Stake suggerito",
     suggestionsHint:
-      "Solo informativo. Flat: percentuale del disponibile del bankroll. Kelly frazionario: disponibile quando la giocata ha una probabilità del modello attivo (non ancora collegato in questa pagina).",
+      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per lo stake con Kelly usa il calcolatore qui sotto.",
     flatSuggestion: "Flat",
+    kelly: {
+      title: "Calcolatore Kelly",
+      description:
+        "Kelly indica quanto puntare in base alla probabilità del modello attivo e alla quota del tuo bookmaker. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
+      match: "Partita",
+      chooseMatch: "Scegli una partita",
+      selection: "Esito",
+      selections: { HOME: "1 (casa)", DRAW: "X (pareggio)", AWAY: "2 (trasferta)" },
+      odds: "Quota del bookmaker",
+      calculate: "Calcola",
+      noMatches:
+        "Nessuna partita in programma con le probabilità del modello attivo. Il motore prevede le partite dei prossimi 7 giorni, due volte al giorno.",
+      invalidOdds: "Inserisci una quota maggiore di 1 (es. 2,10).",
+      incomplete: "Scegli partita ed esito e inserisci la quota.",
+      probability: "Probabilità del modello",
+      fairOdds: "Quota equa (1/p)",
+      expectedValue: "Valore atteso per 1 € puntato",
+      stake: "Stake Kelly",
+      noValue: "Nessun valore: la quota è più bassa di quella equa, stake zero.",
+      capped: "ridotto allo stake massimo dei tuoi limiti",
+    },
     limitReached: "Limite raggiunto",
     limitNames: {
       MAX_STAKE: "stake massimo",

@@ -6,6 +6,7 @@ import type {
   PersonalLimitsRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
+import { groupKellyMatches, type KellyMatch } from "./kelly";
 
 /*
  * Letture dei dati personali con la sessione dell'utente: la RLS restituisce solo
@@ -72,4 +73,22 @@ export async function listBets(sinceDays?: number): Promise<BetRow[]> {
   const { data, error } = await query;
   if (error) throw new BankrollUnavailable("giocate", error);
   return (data ?? []) as BetRow[];
+}
+
+/**
+ * Partite in programma con le probabilità 1X2 del modello attivo (calcolatore Kelly).
+ * Vuoto se nessun modello è attivo: la vista restituisce solo la versione ACTIVE.
+ */
+export async function listKellyMatches(now: Date = new Date()): Promise<KellyMatch[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_active_predictions")
+    .select("match_id, kickoff_at, home_team_name, away_team_name, selection, probability")
+    .eq("market", "1X2")
+    .eq("match_status", "SCHEDULED")
+    .gte("kickoff_at", now.toISOString())
+    .order("kickoff_at")
+    .limit(600);
+  if (error) throw new BankrollUnavailable("previsioni del modello", error);
+  return groupKellyMatches(data ?? []);
 }
