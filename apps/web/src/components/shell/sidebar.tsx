@@ -27,6 +27,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { Logo } from "@/components/shell/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
@@ -144,7 +145,8 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
   return (
     <>
       <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
-        <span className="font-bold tracking-[0.2em]">
+        <span className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
+          <Logo className="size-7 shrink-0" />
           {messages.app.name}
           <span className="text-positive">.</span>
         </span>
@@ -167,7 +169,8 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
           open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
-        <div className="hidden h-16 items-center px-5 lg:flex">
+        <div className="hidden h-16 items-center gap-3 px-5 lg:flex">
+          <Logo className="size-8 shrink-0" />
           <div>
             <p className="font-bold tracking-[0.2em]">
               {messages.app.name}
