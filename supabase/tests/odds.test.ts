@@ -310,6 +310,43 @@ describe("scrittura e abbinamento", () => {
     expect(ev).toEqual({ linked: 1, open: 0 });
   });
 
+  it("evento passato con nomi noti ma partita rinviata: avviso chiuso come IGNORED a fine raccolta", async () => {
+    await asServiceRole(db, async (tx) => {
+      // La partita DEMO è stata spostata di due mesi: l'evento di quote dell'8/11 non ha
+      // nessuna partita entro 36 ore, anche se i due nomi sono noti. La chiusura della
+      // raccolta (finish_ingestion_run) rilancia il ricollegamento.
+      await seedFootball(tx, "2027-01-04T20:15:00Z");
+      const r1 = await ingestOdds(tx, oddsBatch("DEMO Casa"));
+      expect(r1.matched).toBe(0);
+      const after = await one<{ status: string; reason: string; linked: number }>(
+        tx,
+        `select i.status::text status, i.details ->> 'closed_reason' reason,
+                (select count(*)::int from public.odds_events where match_id is not null) linked
+         from public.data_quality_issues i where i.check_code = 'odds.event_unmatched'`,
+      );
+      expect(after).toEqual({
+        status: "IGNORED",
+        reason: "nomi noti, nessuna partita del calendario entro 36 ore",
+        linked: 0,
+      });
+    });
+  });
+
+  it("evento futuro con nomi noti e partita non ancora in calendario: l'avviso resta aperto", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx, "2099-01-04T20:15:00Z");
+      const batch = oddsBatch("DEMO Casa");
+      batch.events[0]!.commence_time = "2099-03-01T19:45:00Z";
+      await ingestOdds(tx, batch);
+      const { n } = await one<{ n: number }>(
+        tx,
+        `select count(*)::int n from public.data_quality_issues
+         where status = 'OPEN' and check_code = 'odds.event_unmatched'`,
+      );
+      expect(n).toBe(1);
+    });
+  });
+
   it("l'alias manuale richiede la 2FA", async () => {
     await asServiceRole(db, (tx) => seedFootball(tx));
     const teamId = Number(
