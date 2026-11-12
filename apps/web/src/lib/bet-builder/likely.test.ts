@@ -54,12 +54,48 @@ describe("le più probabili (valori DEMO)", () => {
       row(3, "TOTAL_GOALS", "UNDER", 0.7, 2.5, 0.5),
     ]);
     const [two, three] = likelyMultiples(picks);
+    expect(two!.category).toBe("CONSERVATIVE");
     expect(two!.picks.map((p) => p.matchId)).toEqual([1, 3]);
     expect(two!.probability).toBeCloseTo(0.56);
     expect(two!.fairOdds).toBeCloseTo(1 / 0.56);
     expect(two!.confidence).toBe(0.5);
+    expect(three!.category).toBe("BALANCED");
     expect(three!.probability).toBeCloseTo(0.336);
-    expect(likelyMultiples(picks)).toHaveLength(2); // con 3 partite non c'è la quadrupla
+    // Finite le partite: l'aggressiva non aggiungerebbe nulla all'equilibrata.
+    expect(likelyMultiples(picks)).toHaveLength(2);
+  });
+
+  it("una multipla per categoria: la più lunga sopra la soglia, al massimo 12 partite", () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({
+      matchId: i + 1,
+      kickoffAt: `2026-11-20T${String(10 + (i % 10)).padStart(2, "0")}:00:00Z`,
+      home: `DEMO Casa ${i + 1}`,
+      away: `DEMO Ospite ${i + 1}`,
+      market: i % 2 === 0 ? "TOTAL_GOALS" : "1X2",
+      line: i % 2 === 0 ? 2.5 : null,
+      selection: i % 2 === 0 ? "UNDER" : "HOME",
+      probability: 0.85,
+      confidence: 0.8,
+    }));
+    const multiples = likelyMultiples(many);
+    // 0,85^4 ≈ 0,52 ≥ 0,50; 0,85^8 ≈ 0,27 ≥ 0,25; 0,85^14 ≈ 0,10 ma il tetto è 12.
+    expect(multiples.map((x) => [x.category, x.size])).toEqual([
+      ["CONSERVATIVE", 4],
+      ["BALANCED", 8],
+      ["AGGRESSIVE", 12],
+    ]);
+    // Dentro la schedina: prima 1X2, poi under/over.
+    expect(multiples[0]!.picks.map((p) => p.market)).toEqual([
+      "1X2",
+      "1X2",
+      "TOTAL_GOALS",
+      "TOTAL_GOALS",
+    ]);
+  });
+
+  it("nessuna multipla se due pronostici non restano sopra la soglia più bassa", () => {
+    const picks = bestPicks([row(1, "1X2", "HOME", 0.55)]);
+    expect(likelyMultiples(picks)).toEqual([]);
   });
 
   it("quota italiana reale del pronostico, se raccolta (ADR 0029)", () => {
