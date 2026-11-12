@@ -69,9 +69,28 @@ class Summary:
     skipped_reason: str | None = None
 
 
+def is_italian(bookmaker: str) -> bool:
+    """Bookmaker con licenza italiana: stessa regola del database (codice ``*_it``)."""
+    return bookmaker.endswith("_it")
+
+
 def collect_legs(
-    store: Store, model_version_id: int, now: datetime, horizon: timedelta
+    store: Store,
+    model_version_id: int,
+    now: datetime,
+    horizon: timedelta,
+    rules: Rules | None = None,
 ) -> tuple[list[Leg], int]:
+    """Selezioni candidate: previsione del modello attivo + migliore quota ammessa.
+
+    ADR 0028 (con le regole predefinite):
+    - la probabilità di mercato è il consenso de-marginato di **tutti** i bookmaker con
+      quote FRESH (anche internazionali): media delle probabilità implicite normalizzate;
+    - la quota giocabile è la migliore tra i soli bookmaker **italiani**;
+    - la probabilità usata è ``(1 − w)·modello + w·mercato``.
+    """
+    rules = rules or Rules()
+    weight = Decimal(str(rules.market_weight))
     fixtures = store.upcoming_fixtures(now + KICKOFF_MARGIN, now + horizon)
     by_match = {int(f["match_id"]): f for f in fixtures}
     if not by_match:
@@ -94,12 +113,35 @@ def collect_legs(
         if cur is None or rank > (_ts(cur["event_time"]), _ts(cur["observed_at"])):
             latest_odds[key] = s
 
-    best: dict[tuple[int, str], dict[str, Any]] = {}
-    for (event_id, _bookmaker, selection), s in latest_odds.items():
+    fresh: dict[tuple[int, str, str], dict[str, Any]] = {}
+    for key, s in latest_odds.items():
         if s["quality"] != "OK":
             continue
         age = max_age.get(s["provider"])
         if age is not None and _ts(s["observed_at"]) < now - age + FRESHNESS_MARGIN:
+            continue
+        fresh[key] = s
+
+    # Consenso di mercato: per ogni bookmaker con 1, X e 2 freschi, probabilità
+    # implicite normalizzate (de-margin proporzionale); poi media tra bookmaker.
+    by_book: dict[tuple[int, str], dict[str, Decimal]] = {}
+    for (event_id, bookmaker, selection), s in fresh.items():
+        by_book.setdefault((event_id, bookmaker), {})[selection] = Decimal(str(s["price"]))
+    sums: dict[tuple[int, str], Decimal] = {}
+    counts: dict[tuple[int, str], int] = {}
+    for (event_id, _bookmaker), prices in by_book.items():
+        if set(prices) != {"HOME", "DRAW", "AWAY"}:
+            continue
+        total = sum(1 / v for v in prices.values())
+        for selection, price in prices.items():
+            key = (events[event_id], selection)
+            sums[key] = sums.get(key, Decimal(0)) + (1 / price) / total
+            counts[key] = counts.get(key, 0) + 1
+    market = {k: sums[k] / counts[k] for k in sums}
+
+    best: dict[tuple[int, str], dict[str, Any]] = {}
+    for (event_id, bookmaker, selection), s in fresh.items():
+        if rules.italian_bookmakers_only and not is_italian(bookmaker):
             continue
         key = (events[event_id], selection)
         cur = best.get(key)
@@ -114,6 +156,11 @@ def collect_legs(
         odds = best.get((match_id, selection))
         if odds is None or (p["push_probability"] or 0) > 0 or p["line"] is not None:
             continue
+        model_p = Decimal(str(p["probability"]))
+        market_p = market.get((match_id, selection))
+        if weight > 0 and (market_p is None or not 0 < market_p < 1):
+            continue  # senza consenso di mercato la selezione non si valuta
+        used = model_p if weight == 0 else (1 - weight) * model_p + weight * market_p
         f = by_match[match_id]
         legs.append(
             Leg(
@@ -125,11 +172,15 @@ def collect_legs(
                 market=p["market"],
                 line=None,
                 selection=selection,
-                probability=Decimal(str(p["probability"])),
+                probability=used.quantize(Decimal("1e-8")),
                 confidence=Decimal(str(p["confidence_score"])),
                 odds_snapshot_id=int(odds["id"]),
                 bookmaker=odds["bookmaker"],
                 price=Decimal(str(odds["price"])),
+                model_probability=model_p,
+                market_probability=None
+                if weight == 0 or market_p is None
+                else market_p.quantize(Decimal("1e-8")),
             )
         )
     return legs, len(by_match)
@@ -152,7 +203,7 @@ def run(
         summary.skipped_reason = "nessun modello attivo"
         return summary
 
-    legs, summary.fixtures = collect_legs(store, model, now, timedelta(days=horizon_days))
+    legs, summary.fixtures = collect_legs(store, model, now, timedelta(days=horizon_days), rules)
     summary.legs = len(legs)
     summary.proposals, summary.candidates = build_proposals(legs, rules)
     if dry_run:
