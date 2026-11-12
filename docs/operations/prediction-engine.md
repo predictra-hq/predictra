@@ -8,7 +8,7 @@ Servizio Python in `services/prediction-engine/`. Decisioni: [ADR 0020](../decis
 GitHub Actions "Agent (Python)" (03:47 e 12:47 UTC: job predictions.run della coda, dopo la raccolta dello stesso ciclo, M7)
 oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   1. training_results(as_of = adesso)              → partite concluse fino a ora
-  2. v_match_center: partite SCHEDULED dei prossimi 7 giorni
+  2. v_match_center: partite SCHEDULED dei prossimi 10 giorni
   3. per ogni modello (baseline, elo, poisson, dixon_coles), adattato per competizione:
        versione = famiglia + iperparametri + commit del codice del motore
        se la versione è nuova: register_model_version + backtest walk-forward → record_backtest
@@ -51,7 +51,7 @@ La pagina Model Intelligence, con un pulsante di attivazione, arriva con la cors
 _Actions → Prediction engine → Run workflow_, branch `dev`.
 
 - `dry_run`: calcola backtest e previsioni senza scrivere nulla e stampa le metriche.
-- `horizon_days`: quanti giorni di partite prevedere (predefinito 7).
+- `horizon_days`: quanti giorni di partite prevedere (predefinito 10).
 
 Dall'8/11/2026 (M7 fase A5) le esecuzioni programmate passano dalla coda dell'agente: finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra, al massimo 2 tentativi, il commit calcolato come prima (ultimo commit di `services/prediction-engine`, ADR 0020; nell'agente si chiama `PREDICTION_ENGINE_COMMIT`). Le versioni di numpy e scipy dell'agente sono verificate uguali a quelle del motore da un test ([runbook dell'agente](agent.md)). Come per il Data collector, il pulsante _Run workflow_ esiste solo quando il workflow è su `main`.
 
@@ -80,7 +80,7 @@ Se il pannello "Previsioni PREDICTRA" resta vuoto: _Run workflow_ con `command =
 
 - versioni, stato, backtest e numero di previsioni;
 - la versione attiva;
-- le partite in programma nei 7 giorni;
+- le partite in programma nei 10 giorni;
 - quante di queste la vista `v_active_predictions` restituisce.
 
 Chiude con un **esito**: nessun modello attivo, versione attiva senza previsioni, vista che non restituisce righe, oppure dati corretti (problema lato utente).

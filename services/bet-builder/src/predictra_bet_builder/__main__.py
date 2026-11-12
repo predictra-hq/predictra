@@ -1,4 +1,4 @@
-"""Riga di comando: ``python -m predictra_bet_builder run [--dry-run] [--horizon-days 7]``.
+"""Riga di comando: ``python -m predictra_bet_builder run [--dry-run] [--horizon-days 10]``.
 
 Variabili: SUPABASE_URL (o NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SECRET_KEY,
 CODE_COMMIT (SHA del codice del servizio).
@@ -22,7 +22,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     cmd = sub.add_parser("run", help="genera e salva le proposte del Bet Builder")
     cmd.add_argument("--dry-run", action="store_true", help="legge i dati ma non scrive nulla")
-    cmd.add_argument("--horizon-days", type=int, default=7, help="giorni di partite considerati")
+    cmd.add_argument("--horizon-days", type=int, default=10, help="giorni di partite considerati")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
     args = parser.parse_args(argv)
 

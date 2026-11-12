@@ -636,7 +636,7 @@ export const it = {
       "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote FRESH.",
     builderTitle: "Costruisci una combinazione",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 7 giorni. La valutazione usa le probabilità del modello attivo e la migliore quota FRESH tra i bookmaker.",
+      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa le probabilità del modello attivo e la migliore quota FRESH tra i bookmaker.",
     builderEmpty:
       "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato in Model Intelligence.",
     evaluate: "Valuta",
@@ -777,7 +777,7 @@ export const it = {
       NOT_UPCOMING:
         "Le previsioni riguardano solo le partite non ancora iniziate: questa è già iniziata, conclusa o non in programma.",
       NOT_YET_EVALUATED:
-        "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 7 giorni, due volte al giorno (03:47 e 12:47 UTC).",
+        "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 10 giorni, due volte al giorno (03:47 e 12:47 UTC).",
     },
     disclaimer:
       "Probabilità stimate da un modello quantitativo sui risultati storici: sono stime incerte, non garanzie.",
