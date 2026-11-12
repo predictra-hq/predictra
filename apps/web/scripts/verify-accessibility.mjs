@@ -318,6 +318,8 @@ async function main() {
     if (match) await audit(page, match, "/match-center/[id]");
     const proposal = await firstDetailLink(page, "/bet-builder", /^\/bet-builder\/\d+$/);
     if (proposal) await audit(page, proposal, "/bet-builder/[id]");
+    const slip = await firstDetailLink(page, "/bet-builder/slips", /^\/bet-builder\/slips\/\d+$/);
+    if (slip) await audit(page, slip, "/bet-builder/slips/[id]");
 
     // Larghezza mobile: menu chiuso fuori dalla tabulazione, menu aperto accessibile.
     await page.setViewportSize({ width: 375, height: 812 });
