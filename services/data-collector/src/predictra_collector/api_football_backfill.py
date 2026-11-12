@@ -29,6 +29,9 @@ from .runner import SCORE_CHECKS, resolvable_matches, sanitize
 from .team_matching import TeamMatcher
 
 JOB_TYPE = "af.backfill"
+# Correzione dello storico con la normalizzazione attuale (ADR 0034): un'esecuzione per
+# stagione con questo tipo. Le stagioni già corrette si saltano, quindi riprende da sola.
+RESCORE_JOB_TYPE = "af.rescore.2"
 SEASONS: tuple[int, ...] = (2022, 2023, 2024)
 
 # Codice v1 (football-data.org) → (nome, paese) per la ricerca con /leagues.
@@ -289,9 +292,12 @@ def backfill(
 ) -> BackfillSummary:
     """Scarica e scrive le stagioni mancanti. Con ``store=None`` (dry run) non scrive.
 
-    ``refresh``: riscarica anche le stagioni già fatte (per esempio dopo una correzione
-    della normalizzazione, ADR 0034). Costa come il primo backfill: 32 richieste.
+    ``refresh``: riscarica le stagioni con la normalizzazione attuale (ADR 0034), una
+    volta sola: le esecuzioni hanno tipo ``RESCORE_JOB_TYPE`` e quelle riuscite si
+    saltano. Costa come il primo backfill (32 richieste) e riprende il giorno dopo se
+    il budget non basta.
     """
+    job_type = RESCORE_JOB_TYPE if refresh else JOB_TYPE
     summary = BackfillSummary()
     observed = observed_at or datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -301,9 +307,7 @@ def backfill(
     if isinstance(used_today, int):
         client.budget = max(0, DAILY_BUDGET - used_today)
 
-    done = (
-        store.succeeded_windows(PROVIDER, JOB_TYPE) if store is not None and not refresh else set()
-    )
+    done = store.succeeded_windows(PROVIDER, job_type) if store is not None else set()
     if matcher is None and store is not None:
         matcher = TeamMatcher.from_rows(store.teams())
     for code in competitions:
@@ -342,7 +346,7 @@ def backfill(
                         "ci si ferma prima della quota"
                     )
                 if store is not None:
-                    run_id = store.start_run(PROVIDER, JOB_TYPE, f"{code}:{year}", triggered_by)
+                    run_id = store.start_run(PROVIDER, job_type, f"{code}:{year}", triggered_by)
                 fixtures = client.fixtures(league=str(league["league"]["id"]), season=str(year))
                 norm = normalize_season(league, season, fixtures, code, observed, matcher)
                 errors = sum(1 for i in norm.issues if i["severity"] == "ERROR")

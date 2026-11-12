@@ -131,8 +131,10 @@ class FakeStore:
         return []
 
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
-        assert (provider, job_type) == ("api-football", "af.backfill")
-        return self.done
+        assert provider == "api-football"
+        assert job_type in ("af.backfill", "af.rescore.2")
+        self.job_type = job_type
+        return self.done if job_type == "af.backfill" else getattr(self, "rescored", set())
 
     def start_run(self, provider, job_type, window_key, triggered_by) -> int:
         self.started.append(window_key)
@@ -210,10 +212,24 @@ def test_adr_0034_refresh_riscarica_anche_le_stagioni_fatte():
     client, calls = client_for(None)  # type: ignore[arg-type]
     store = FakeStore({"SA:2022", "SA:2023", "SA:2024"})
     summary = backfill(client, store, ("SA",), observed_at=OBS, refresh=True)
+    assert store.job_type == "af.rescore.2"
     assert summary.skipped == []
     assert store.started == ["SA:2022", "SA:2023", "SA:2024"]
     assert calls == ["/status", "/leagues", "/fixtures", "/fixtures", "/fixtures"]
     assert store.resolved  # partite senza problemi di punteggio: avvisi chiusi
+
+
+def test_adr_0034_refresh_riprende_e_poi_non_costa_nulla():
+    client, _calls = client_for(None)  # type: ignore[arg-type]
+    store = FakeStore({"SA:2022", "SA:2023", "SA:2024"})
+    store.rescored = {"SA:2022", "SA:2023"}
+    backfill(client, store, ("SA",), observed_at=OBS, refresh=True)
+    assert store.started == ["SA:2024"]
+    client2, calls2 = client_for(None)  # type: ignore[arg-type]
+    store.rescored = {"SA:2022", "SA:2023", "SA:2024"}
+    summary = backfill(client2, store, ("SA",), observed_at=OBS, refresh=True)
+    assert calls2 == ["/status"]
+    assert summary.requests_used == 0
 
 
 def test_competizione_non_univoca_fallisce_senza_scrivere():

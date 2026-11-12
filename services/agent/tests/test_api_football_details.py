@@ -45,11 +45,33 @@ class FakeCollector:
         return self.summary
 
 
-def handlers(collector: FakeCollector, env: dict[str, str] | None = None):
+@dataclass
+class RescoreResult:
+    code: str
+    year: int
+    status: str
+
+
+@dataclass
+class RescoreSummary:
+    results: list[RescoreResult] = field(default_factory=list)
+    requests_used: int = 0
+    stopped: str | None = None
+
+
+def handlers(
+    collector: FakeCollector,
+    env: dict[str, str] | None = None,
+    rescorer: FakeCollector | None = None,
+):
     env = {"API_FOOTBALL_KEY": AF_KEY} if env is None else env
     return {
         api_football_details.JOB_TYPE: api_football_details.make_handler(
-            env, supabase_url=URL, supabase_secret_key=SECRET, collector=collector
+            env,
+            supabase_url=URL,
+            supabase_secret_key=SECRET,
+            collector=collector,
+            rescorer=rescorer or FakeCollector(RescoreSummary()),  # type: ignore[arg-type]
         )
     }
 
@@ -95,6 +117,31 @@ def test_dettagli_dalla_coda(queue: FakeQueue) -> None:
     assert call["secrets"] == (AF_KEY, SECRET)
     result = queue.jobs[job_id].result
     assert result is not None and result["seasons"] == {"SA:2022": "PARTIAL 4/20"}
+
+
+def test_adr_0034_correzione_dello_storico_prima_dei_dettagli(queue: FakeQueue) -> None:
+    order: list[str] = []
+
+    class Recording(FakeCollector):
+        def __init__(self, name: str, summary: Any):
+            super().__init__(summary)
+            self.name = name
+
+        def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+            order.append(self.name)
+            return super().__call__(client, store, competitions, **kw)
+
+    rescorer = Recording(
+        "rescore", RescoreSummary([RescoreResult("SA", 2024, "SUCCEEDED")], requests_used=2)
+    )
+    collector = Recording("details", Summary(complete=True))
+    job_id = plan(queue)
+    run_cycle(queue, handlers(collector, rescorer=rescorer), config(), clock=queue.clock)
+    assert order == ["rescore", "details"]
+    assert rescorer.calls[0]["refresh"] is True
+    result = queue.jobs[job_id].result
+    assert result is not None
+    assert result["rescore"] == {"requests": 2, "seasons": ["SA:2024 SUCCEEDED"], "stopped": None}
 
 
 def test_chiave_mancante_va_in_dead_letter(queue: FakeQueue) -> None:
