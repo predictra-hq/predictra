@@ -17,6 +17,7 @@ from predictra_collector.api_football_backfill import (
     normalize_season,
     parse_round,
 )
+from predictra_collector.runner import resolvable_matches
 
 FIXTURES = Path(__file__).parent / "fixtures"
 OBS = "2026-11-11T16:00:00+00:00"
@@ -78,11 +79,45 @@ def test_durata_e_problemi():
     league = league_entry()
     items = [finished(1, "FT", (2, 1)), finished(2, "PEN", (1, 1)), finished(3, "XYZ", (0, 0))]
     items[0]["goals"] = {"home": None, "away": None}
+    items[1]["score"]["fulltime"] = {"home": 1, "away": 1}
     norm = normalize_season(league, league["seasons"][0], items, "PL", OBS)
     durations = [m["score_duration"] for m in norm.batch["matches"]]
     assert durations == ["REGULAR", "PENALTY_SHOOTOUT", None]
     codes = sorted(i["check_code"] for i in norm.issues)
-    assert codes == ["match.score_missing", "match.score_non_regular", "match.status_unknown"]
+    assert codes == ["match.score_missing", "match.status_unknown"]
+
+
+def test_adr_0034_supplementari_risultato_al_90():
+    """Struttura reale verificata su DEV (fixture 1208413), con valori DEMO."""
+    league = league_entry()
+    pen = finished(10, "PEN", (1, 2))
+    pen["score"] = {
+        "halftime": {"home": 0, "away": 0},
+        "fulltime": {"home": 0, "away": 1},
+        "extratime": {"home": 1, "away": 1},
+        "penalty": {"home": 5, "away": 6},
+    }
+    aet = finished(11, "AET", (1, 1))
+    aet["score"] = {
+        "halftime": {"home": 0, "away": 0},
+        "fulltime": {"home": 1, "away": 0},
+        "extratime": {"home": 0, "away": 1},
+        "penalty": {"home": None, "away": None},
+    }
+    missing = finished(12, "AET", (2, 2))
+    missing["score"] = {"halftime": {"home": 0, "away": 0}, "fulltime": {}}
+    norm = normalize_season(league, league["seasons"][0], [pen, aet, missing], "PL", OBS)
+    scores = [(m["home_score"], m["away_score"]) for m in norm.batch["matches"]]
+    assert scores == [(0, 1), (1, 0), (None, None)]
+    assert [m["score_duration"] for m in norm.batch["matches"]] == [
+        "PENALTY_SHOOTOUT",
+        "EXTRA_TIME",
+        "EXTRA_TIME",
+    ]
+    assert [(i["check_code"], i["provider_entity_id"]) for i in norm.issues] == [
+        ("match.score_missing", "12")
+    ]
+    assert resolvable_matches(norm.batch, norm.issues) == ["10", "11"]
 
 
 class FakeStore:
@@ -96,8 +131,10 @@ class FakeStore:
         return []
 
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]:
-        assert (provider, job_type) == ("api-football", "af.backfill")
-        return self.done
+        assert provider == "api-football"
+        assert job_type in ("af.backfill", "af.rescore.2")
+        self.job_type = job_type
+        return self.done if job_type == "af.backfill" else getattr(self, "rescored", set())
 
     def start_run(self, provider, job_type, window_key, triggered_by) -> int:
         self.started.append(window_key)
@@ -106,6 +143,10 @@ class FakeStore:
     def ingest(self, run_id, batch):
         self.batches.append(batch)
         return {"matches": len(batch["matches"]), "teams": len(batch["teams"]), "teams_matched": 2}
+
+    def resolve_issues(self, run_id, check_codes, ids):
+
+        self.resolved = getattr(self, "resolved", []) + list(ids)
 
     def report_issues(self, run_id, issues):
         pass
@@ -164,6 +205,30 @@ def test_tutto_fatto_nessuna_richiesta():
     client, calls = client_for(None)  # type: ignore[arg-type]
     summary = backfill(client, FakeStore({"SA:2022", "SA:2023", "SA:2024"}), ("SA",))
     assert calls == ["/status"]
+    assert summary.requests_used == 0
+
+
+def test_adr_0034_refresh_riscarica_anche_le_stagioni_fatte():
+    client, calls = client_for(None)  # type: ignore[arg-type]
+    store = FakeStore({"SA:2022", "SA:2023", "SA:2024"})
+    summary = backfill(client, store, ("SA",), observed_at=OBS, refresh=True)
+    assert store.job_type == "af.rescore.2"
+    assert summary.skipped == []
+    assert store.started == ["SA:2022", "SA:2023", "SA:2024"]
+    assert calls == ["/status", "/leagues", "/fixtures", "/fixtures", "/fixtures"]
+    assert store.resolved  # partite senza problemi di punteggio: avvisi chiusi
+
+
+def test_adr_0034_refresh_riprende_e_poi_non_costa_nulla():
+    client, _calls = client_for(None)  # type: ignore[arg-type]
+    store = FakeStore({"SA:2022", "SA:2023", "SA:2024"})
+    store.rescored = {"SA:2022", "SA:2023"}
+    backfill(client, store, ("SA",), observed_at=OBS, refresh=True)
+    assert store.started == ["SA:2024"]
+    client2, calls2 = client_for(None)  # type: ignore[arg-type]
+    store.rescored = {"SA:2022", "SA:2023", "SA:2024"}
+    summary = backfill(client2, store, ("SA",), observed_at=OBS, refresh=True)
+    assert calls2 == ["/status"]
     assert summary.requests_used == 0
 
 

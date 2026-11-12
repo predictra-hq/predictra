@@ -35,7 +35,7 @@ Decisioni: [ADR 0015](../decisions/0015-quote-v1.md). Scheda della fonte: [the-o
 ```
 
 - **Dall'8/11/2026** le raccolte automatiche delle quote passano dalla coda dell'agente (job `odds.collect`, schedule di _Agent (Python)_; [runbook](agent.md)). Finestre: `daily` 06–15 UTC, `prematch` 15–21 UTC. Un tentativo che ha già speso crediti non si ripete; senza crediti spesi si ritenta una volta sola. _Data collector_ resta per l'avvio manuale.
-- **Budget:** al massimo 16 crediti al giorno, circa 480 al mese su 500.
+- **Budget:** pianificatore dei crediti ([ADR 0032](../decisions/0032-pianificatore-crediti-quote.md)). Ogni giorno: budget = (residui − riserva) / giorni rimanenti nel mese. Le competizioni senza partite nelle 48 ore non spendono crediti. Priorità: 1X2, poi under/over nella stessa chiamata, poi doppia chance per le partite delle 36 ore. Prima della partita solo 1X2. Sempre sotto i 500 crediti al mese.
   - Il client legge `x-requests-remaining` e si ferma sotto la riserva di 20 crediti; l'esecuzione risulta `FAILED` con il motivo.
   - Crediti usati e residui finiscono in `ingestion_runs` (`requests_used`, `quota_remaining`) e nel Data Center.
 - **Abbinamento:** ogni evento si abbina a una partita tramite gli alias delle squadre.
@@ -72,6 +72,22 @@ Risultati delle stagioni 2022, 2023 e 2024 delle 8 competizioni della v1 (circa 
 5. **Fermata al limite giornaliero:** il comando si ferma prima di aprire una nuova esecuzione, quindi nel Data Center non compare nessuna esecuzione fallita. Il log riporta `fermato: …`.
 
 Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il database ignora i suggerimenti e crea squadre doppie. Va eseguito solo dopo il merge della PR e il deploy.
+
+### Correzione dello storico (`api-football-rescore`, ADR 0034)
+
+- Riscarica le stagioni 2022–2024 anche se già fatte, con la normalizzazione attuale: per esempio il risultato al 90' per le partite finite ai supplementari o ai rigori.
+- Costa 32 richieste e rispetta il budget del giorno: se non basta, si ferma e va rilanciato il giorno dopo.
+- **Automatica:** la fa il job giornaliero dell'agente `api-football.details`, prima dei dettagli. Le stagioni corrette (`job_type = af.rescore.2`) non costano più nulla.
+- A mano, se serve: _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-rescore`. Funziona solo se restano richieste nel giorno: i dettagli le usano quasi tutte.
+- A ogni lotto si chiudono da soli i problemi di punteggio delle partite tornate regolari (`resolve_quality_issues`).
+
+## API-Football: statistiche e formazioni (M2 fase A3, ADR 0012)
+
+Statistiche di squadra (tiri, corner, possesso, cartellini, passaggi…) e formazioni (modulo, allenatore, titolari e panchina) delle stagioni dello storico già scritte.
+
+- **In automatico:** l'agente accoda ogni giorno il job `api-football.details`, insieme alla raccolta football-data.org, quando `API_FOOTBALL_KEY` è disponibile. Ogni job usa il budget del giorno (90 richieste, contando quelle già usate) e riprende dalla partita dove si era fermato. Ogni partita costa 2 richieste (statistiche e formazioni), quindi circa 44 partite al giorno. La stagione 2024 richiede circa 2 mesi, tutte e tre circa 6. Un errore di piano ferma subito il lavoro del giorno. A lavoro finito il job costa solo `/status`, che è gratuito.
+- **A mano:** _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-details`. Non ha un dry run: ogni partita scaricata viene scritta.
+- **Avanzamento:** in `ingestion_runs`, `job_type = af.details`, una esecuzione per competizione e stagione (`PARTIAL` con `resume_cursor = {"next": n}` finché manca qualcosa, `SUCCEEDED` alla fine).
 
 ## Attivazione (una volta, `gennpalm`)
 

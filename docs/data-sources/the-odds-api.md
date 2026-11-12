@@ -30,15 +30,17 @@ Fonti: https://the-odds-api.com/#get-access e https://the-odds-api.com/liveapi/g
 
 ## API v4
 
-| Voce             | Valore                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------ |
-| Host             | `https://api.the-odds-api.com`                                                                   |
-| Autenticazione   | parametro di query `apiKey`                                                                      |
-| Quote            | `GET /v4/sports/{sport}/odds/?apiKey=…&regions=eu&markets=h2h&oddsFormat=decimal&dateFormat=iso` |
-| Eventi           | `GET /v4/sports/{sport}/events` (gratuito)                                                       |
-| Mercato 1X2      | `h2h`: per il calcio include il pareggio                                                         |
-| `last_update`    | va usato quello del **mercato**; quello del bookmaker è deprecato                                |
-| Partite concluse | non restituite da `/odds`                                                                        |
+| Voce             | Valore                                                                                                                                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Host             | `https://api.the-odds-api.com`                                                                                                                                                                                                             |
+| Autenticazione   | parametro di query `apiKey`                                                                                                                                                                                                                |
+| Quote            | `GET /v4/sports/{sport}/odds/?apiKey=…&regions=eu&markets=h2h&oddsFormat=decimal&dateFormat=iso`                                                                                                                                           |
+| Eventi           | `GET /v4/sports/{sport}/events` (gratuito)                                                                                                                                                                                                 |
+| Mercato 1X2      | `h2h`: per il calcio include il pareggio                                                                                                                                                                                                   |
+| Doppia chance    | solo per partita: `GET /v4/sports/{sport}/events/{id}/odds?markets=double_chance` (1 credito); esiti "Casa or Draw" ecc. Verificato il 12/11/2026, offerta anche da Codere (IT); gol/no gol e draw no bet solo bookmaker esteri (ADR 0032) |
+| Under/over       | `totals`: esiti `Over`/`Under` con `point` (linea); salvati come `totals_2_5` ecc. (ADR 0029)                                                                                                                                              |
+| `last_update`    | va usato quello del **mercato**; quello del bookmaker è deprecato                                                                                                                                                                          |
+| Partite concluse | non restituite da `/odds`                                                                                                                                                                                                                  |
 
 L'esempio di risposta nella documentazione riguarda l'NFL (due esiti). Nel calcio il pareggio si chiama **`Draw`**: confermato con una risposta reale il 7/11/2026 (Serie A: 16 eventi, 24 bookmaker, 1 credito).
 

@@ -22,7 +22,7 @@ import sys
 from datetime import UTC, datetime
 from typing import cast
 
-from . import bet_builder, football_data, odds, predictions
+from . import api_football_details, bet_builder, football_data, odds, predictions
 from .handlers import build_handlers
 from .queue import QueueError, RunSource, SupabaseQueue
 from .worker import CycleConfig, MinutesBudget, run_cycle
@@ -67,6 +67,9 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
     planned: list[tuple[str, str, dict[str, object], int]] = []
     if "football-data" in args.plan:
         planned.append((*football_data.planned_job(now), 5))
+        # Statistiche e formazioni API-Football (ADR 0012): un job al giorno, se c'è la chiave.
+        if (env.get("API_FOOTBALL_KEY") or "").strip():
+            planned.append(api_football_details.planned_job(now))
     if "odds" in args.plan:
         planned.extend(odds.planned_jobs(now))
     if "predictions" in args.plan:
@@ -85,7 +88,10 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
             print(f"Piano non riuscito per {key}: {exc}")
     provider_keys = tuple(
         k
-        for k in ((env.get(n) or "").strip() for n in ("FOOTBALL_DATA_API_KEY", "ODDS_API_KEY"))
+        for k in (
+            (env.get(n) or "").strip()
+            for n in ("FOOTBALL_DATA_API_KEY", "ODDS_API_KEY", "API_FOOTBALL_KEY")
+        )
         if k
     )
     handlers = build_handlers(env, supabase_url=queue.url, supabase_secret_key=queue.secret_key)

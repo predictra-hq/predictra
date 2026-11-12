@@ -36,7 +36,7 @@ on:
       horizon_days:
         description: "Giorni di partite da prevedere"
         type: string
-        default: "7"
+        default: "10"
 
 permissions:
   contents: read
@@ -107,7 +107,7 @@ jobs:
         if: steps.secrets.outputs.skip != 'true'
         env:
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
-          HORIZON: ${{ inputs.horizon_days || '7' }}
+          HORIZON: ${{ inputs.horizon_days || '10' }}
           TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
           TUNE_ARGS: ${{ inputs.tune_args }}
           COMMAND: ${{ inputs.command || 'run' }}

@@ -1,6 +1,6 @@
 # M2 — Football data: piano e corsie
 
-**Stato:** completata su DEV il 7/11/2026, tranne la fase A3 (backfill API-Football: termini verificati l'11/11/2026, adapter da fare) · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata su DEV il 7/11/2026. Fase A3: risultati 2022–2024 completati il 12/11/2026; statistiche e formazioni in corso, scaricate in automatico ogni giorno, circa 6 mesi per tutto lo storico · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,11 +15,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona   | Issue | Stato                                                                                  |
-| --------------- | --------- | ----- | -------------------------------------------------------------------------------------- |
-| 0 — contratto   | Alfry1299 | —     | unita (#5)                                                                             |
-| A — ingestion   | Alfry1299 | —     | unita (#6): A1, A2, A4 (controlli di base), A5. **A3 bloccata** (termini API-Football) |
-| B — interfaccia | Alfry1299 | —     | unita (#7)                                                                             |
+| Corsia          | Persona   | Issue | Stato                                                                                                                                          |
+| --------------- | --------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — contratto   | Alfry1299 | —     | unita (#5)                                                                                                                                     |
+| A — ingestion   | Alfry1299 | —     | unita (#6): A1, A2, A4 (controlli di base), A5. A3: risultati 2022–2024 completati il 12/11/2026, statistiche e formazioni in corso (#71, #72) |
+| B — interfaccia | Alfry1299 | —     | unita (#7)                                                                                                                                     |
 
 Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 

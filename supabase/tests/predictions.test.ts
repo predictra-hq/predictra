@@ -376,7 +376,7 @@ describe("modello attivo", () => {
     ).toBe(1);
   });
 
-  it("attivarne un altro ritira il precedente: mai due attivi", async () => {
+  it("attivarne un altro rimette in gara il precedente: mai due attivi, si torna indietro", async () => {
     const { good } = await setup();
     const other = await asServiceRole(db, async (tx) => {
       const id = await register(tx, version("poisson", "v1"));
@@ -395,7 +395,21 @@ describe("modello attivo", () => {
       )
     ).rows;
     expect(rows.filter((r) => r.status === "ACTIVE").map((r) => Number(r.id))).toEqual([other]);
-    expect(rows.find((r) => Number(r.id) === good)?.status).toBe("RETIRED");
+    // Il precedente resta lo sfidante (non ritirato) e si può riattivare.
+    expect(rows.find((r) => Number(r.id) === good)?.status).toBe("CANDIDATE");
+    await asUser(db, superAdmin, async (tx) => {
+      await tx.query("select public.set_active_model_version($1)", [good]);
+    });
+    const after = (
+      await db.query<{ id: number; status: string }>(
+        "select id, status::text from public.model_versions where id in ($1, $2) order by id",
+        [good, other],
+      )
+    ).rows.map((r) => [Number(r.id), r.status]);
+    expect(after).toEqual([
+      [good, "ACTIVE"],
+      [other, "CANDIDATE"],
+    ]);
   });
   it("attivazione automatica del più forte (ADR 0023): solo service_role, stesse garanzie, audit", async () => {
     const { good, weak } = await setup();
@@ -430,5 +444,37 @@ describe("modello attivo", () => {
        where action = 'model.auto_activated'`,
     );
     expect(audit).toEqual({ n: 1, reason: "DEMO: nessun modello attivo" });
+  });
+  it("le versioni superate si ritirano (ADR 0024): solo service_role, l'attiva non si tocca", async () => {
+    const { good, weak } = await setup();
+    const extra = await asServiceRole(db, async (tx) => register(tx, version("poisson", "v1")));
+    await asServiceRole(db, async (tx) => {
+      await tx.query("select public.auto_activate_model_version($1, 'DEMO')", [good]);
+    });
+    await asUser(db, superAdmin, async (tx) => {
+      expect(
+        await attempt(tx, "select public.retire_superseded_model_versions($1)", [[extra]]),
+      ).not.toBeNull();
+    });
+    const n = await asServiceRole(db, async (tx) =>
+      num(tx, "select public.retire_superseded_model_versions($1) v", [[extra]]),
+    );
+    expect(n).toBe(1); // weak ritirata; good è attiva, extra è da tenere
+    const rows = (
+      await db.query<{ id: number; status: string }>(
+        "select id, status::text from public.model_versions order by id",
+      )
+    ).rows.map((r) => [Number(r.id), r.status]);
+    expect(rows).toEqual([
+      [good, "ACTIVE"],
+      [weak, "RETIRED"],
+      [extra, "CANDIDATE"],
+    ]);
+    expect(
+      await num(
+        db,
+        "select count(*)::int v from public.audit_logs where action = 'model.versions_retired'",
+      ),
+    ).toBe(1);
   });
 });

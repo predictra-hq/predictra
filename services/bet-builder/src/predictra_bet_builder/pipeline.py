@@ -33,7 +33,7 @@ class Store(Protocol):
     def upcoming_fixtures(self, start: datetime, end: datetime) -> list[dict[str, Any]]: ...
     def predictions(self, model_version_id: int, match_ids: Any) -> list[dict[str, Any]]: ...
     def odds_events(self, match_ids: Any) -> list[dict[str, Any]]: ...
-    def h2h_snapshots(self, event_ids: Any) -> list[dict[str, Any]]: ...
+    def market_snapshots(self, event_ids: Any) -> list[dict[str, Any]]: ...
     def odds_max_age(self) -> dict[str, str]: ...
     def start_run(
         self, model_version_id: int, code_commit: str, rules: dict[str, object], triggered_by: str
@@ -69,39 +69,136 @@ class Summary:
     skipped_reason: str | None = None
 
 
+def is_italian(bookmaker: str) -> bool:
+    """Bookmaker con licenza italiana: stessa regola del database (codice ``*_it``)."""
+    return bookmaker.endswith("_it")
+
+
+# Esiti di ogni mercato di quote (catalogo `markets`, ADR 0029 e 0032).
+H2H = ("HOME", "DRAW", "AWAY")
+DOUBLE_CHANCE = ("HOME_DRAW", "HOME_AWAY", "DRAW_AWAY")
+OVER_UNDER = ("OVER", "UNDER")
+
+
+def odds_market_for(market: str, line: Any) -> str | None:
+    """Mercato di quote per una previsione: stessa regola di ``app_private.odds_market_for``."""
+    if market == "1X2" and line is None:
+        return "h2h"
+    if market == "DOUBLE_CHANCE" and line is None:
+        return "double_chance"
+    if market == "TOTAL_GOALS" and line is not None:
+        value = Decimal(str(line))
+        if value in {Decimal("0.5") + n for n in range(6)}:
+            return f"totals_{int(value)}_5"
+    return None
+
+
+def _outcomes(odds_market: str) -> tuple[str, ...]:
+    if odds_market == "h2h":
+        return H2H
+    if odds_market == "double_chance":
+        return DOUBLE_CHANCE
+    return OVER_UNDER
+
+
+def market_consensus(
+    fresh: dict[tuple[int, str, str, str], dict[str, Any]], events: dict[int, int]
+) -> dict[tuple[int, str, str], Decimal]:
+    """Consenso di mercato senza margine per (partita, mercato di quote, esito).
+
+    - 1X2 e under/over: per ogni bookmaker con tutti gli esiti, probabilità implicite
+      normalizzate (de-margin proporzionale, ADR 0016); poi media tra bookmaker.
+    - Doppia chance: dal consenso 1X2 quando c'è (più bookmaker), es. 1X = P(1) + P(X);
+      altrimenti dalle quote di doppia chance normalizzate a somma 2.
+    """
+    by_book: dict[tuple[int, str, str], dict[str, Decimal]] = {}
+    for (event_id, bookmaker, odds_market, selection), s in fresh.items():
+        key = (event_id, bookmaker, odds_market)
+        by_book.setdefault(key, {})[selection] = Decimal(str(s["price"]))
+    sums: dict[tuple[int, str, str], Decimal] = {}
+    counts: dict[tuple[int, str, str], int] = {}
+    for (event_id, _bookmaker, odds_market), prices in by_book.items():
+        outcomes = _outcomes(odds_market)
+        if set(prices) != set(outcomes):
+            continue
+        total = sum(1 / v for v in prices.values())
+        scale = Decimal(2) if odds_market == "double_chance" else Decimal(1)
+        for selection, price in prices.items():
+            key = (events[event_id], odds_market, selection)
+            sums[key] = sums.get(key, Decimal(0)) + scale * (1 / price) / total
+            counts[key] = counts.get(key, 0) + 1
+    consensus = {k: sums[k] / counts[k] for k in sums}
+    # Doppia chance dal consenso 1X2, se disponibile.
+    for match_id in {k[0] for k in consensus if k[1] == "h2h"}:
+        h = consensus.get((match_id, "h2h", "HOME"))
+        d = consensus.get((match_id, "h2h", "DRAW"))
+        a = consensus.get((match_id, "h2h", "AWAY"))
+        if h is None or d is None or a is None:
+            continue
+        consensus[(match_id, "double_chance", "HOME_DRAW")] = h + d
+        consensus[(match_id, "double_chance", "HOME_AWAY")] = h + a
+        consensus[(match_id, "double_chance", "DRAW_AWAY")] = d + a
+    return consensus
+
+
 def collect_legs(
-    store: Store, model_version_id: int, now: datetime, horizon: timedelta
+    store: Store,
+    model_version_id: int,
+    now: datetime,
+    horizon: timedelta,
+    rules: Rules | None = None,
 ) -> tuple[list[Leg], int]:
+    """Selezioni candidate: previsione del modello attivo + migliore quota ammessa.
+
+    Mercati con quote reali (ADR 0033): 1X2, doppia chance, under/over (linee .5).
+    ADR 0028, con le regole predefinite:
+    - probabilità di mercato = consenso senza margine di **tutti** i bookmaker FRESH;
+    - quota giocabile = la migliore tra i soli bookmaker **italiani**;
+    - probabilità usata = ``(1 − w)·modello + w·mercato``.
+    """
+    rules = rules or Rules()
+    weight = Decimal(str(rules.market_weight))
     fixtures = store.upcoming_fixtures(now + KICKOFF_MARGIN, now + horizon)
     by_match = {int(f["match_id"]): f for f in fixtures}
     if not by_match:
         return [], 0
 
-    latest_pred: dict[tuple[int, str], dict[str, Any]] = {}
+    latest_pred: dict[tuple[int, str, str, str], dict[str, Any]] = {}
     for p in store.predictions(model_version_id, by_match):
-        key = (int(p["match_id"]), p["selection"])
+        odds_market = odds_market_for(p["market"], p["line"])
+        if odds_market is None:
+            continue
+        key = (int(p["match_id"]), p["market"], odds_market, p["selection"])
         cur = latest_pred.get(key)
         if cur is None or (_ts(p["as_of"]), int(p["id"])) > (_ts(cur["as_of"]), int(cur["id"])):
             latest_pred[key] = p
 
     events = {int(e["id"]): int(e["match_id"]) for e in store.odds_events(by_match)}
     max_age = {k: parse_interval(v) for k, v in store.odds_max_age().items()}
-    latest_odds: dict[tuple[int, str, str], dict[str, Any]] = {}
-    for s in store.h2h_snapshots(events):
-        key = (int(s["event_id"]), s["bookmaker"], s["selection"])
+    latest_odds: dict[tuple[int, str, str, str], dict[str, Any]] = {}
+    for s in store.market_snapshots(events):
+        key = (int(s["event_id"]), s["bookmaker"], s.get("market", "h2h"), s["selection"])
         cur = latest_odds.get(key)
         rank = (_ts(s["event_time"]), _ts(s["observed_at"]))
         if cur is None or rank > (_ts(cur["event_time"]), _ts(cur["observed_at"])):
             latest_odds[key] = s
 
-    best: dict[tuple[int, str], dict[str, Any]] = {}
-    for (event_id, _bookmaker, selection), s in latest_odds.items():
+    fresh: dict[tuple[int, str, str, str], dict[str, Any]] = {}
+    for key, s in latest_odds.items():
         if s["quality"] != "OK":
             continue
         age = max_age.get(s["provider"])
         if age is not None and _ts(s["observed_at"]) < now - age + FRESHNESS_MARGIN:
             continue
-        key = (events[event_id], selection)
+        fresh[key] = s
+
+    market = market_consensus(fresh, events)
+
+    best: dict[tuple[int, str, str], dict[str, Any]] = {}
+    for (event_id, bookmaker, odds_market, selection), s in fresh.items():
+        if rules.italian_bookmakers_only and not is_italian(bookmaker):
+            continue
+        key = (events[event_id], odds_market, selection)
         cur = best.get(key)
         if cur is None or (Decimal(str(s["price"])), cur["bookmaker"]) > (
             Decimal(str(cur["price"])),
@@ -110,10 +207,15 @@ def collect_legs(
             best[key] = s
 
     legs: list[Leg] = []
-    for (match_id, selection), p in sorted(latest_pred.items()):
-        odds = best.get((match_id, selection))
-        if odds is None or (p["push_probability"] or 0) > 0 or p["line"] is not None:
+    for (match_id, _market, odds_market, selection), p in sorted(latest_pred.items()):
+        odds = best.get((match_id, odds_market, selection))
+        if odds is None or (p["push_probability"] or 0) > 0:
             continue
+        model_p = Decimal(str(p["probability"]))
+        market_p = market.get((match_id, odds_market, selection))
+        if weight > 0 and (market_p is None or not 0 < market_p < 1):
+            continue  # senza consenso di mercato la selezione non si valuta
+        used = model_p if weight == 0 else (1 - weight) * model_p + weight * market_p
         f = by_match[match_id]
         legs.append(
             Leg(
@@ -123,13 +225,17 @@ def collect_legs(
                 home_team_id=int(f["home_team_id"]),
                 away_team_id=int(f["away_team_id"]),
                 market=p["market"],
-                line=None,
+                line=None if p["line"] is None else float(p["line"]),
                 selection=selection,
-                probability=Decimal(str(p["probability"])),
+                probability=used.quantize(Decimal("1e-8")),
                 confidence=Decimal(str(p["confidence_score"])),
                 odds_snapshot_id=int(odds["id"]),
                 bookmaker=odds["bookmaker"],
                 price=Decimal(str(odds["price"])),
+                model_probability=model_p,
+                market_probability=None
+                if weight == 0 or market_p is None
+                else market_p.quantize(Decimal("1e-8")),
             )
         )
     return legs, len(by_match)
@@ -141,7 +247,7 @@ def run(
     *,
     now: datetime,
     code_commit: str,
-    horizon_days: int = 7,
+    horizon_days: int = 10,
     triggered_by: str = "manual",
     dry_run: bool = False,
 ) -> Summary:
@@ -152,7 +258,7 @@ def run(
         summary.skipped_reason = "nessun modello attivo"
         return summary
 
-    legs, summary.fixtures = collect_legs(store, model, now, timedelta(days=horizon_days))
+    legs, summary.fixtures = collect_legs(store, model, now, timedelta(days=horizon_days), rules)
     summary.legs = len(legs)
     summary.proposals, summary.candidates = build_proposals(legs, rules)
     if dry_run:

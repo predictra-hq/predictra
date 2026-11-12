@@ -118,6 +118,18 @@ class ApiFootballClient:
         response = body.get("response")
         return response if isinstance(response, list) else []
 
+    def fixture_statistics(self, fixture: str) -> list[dict[str, Any]]:
+        """Statistiche di una partita (una richiesta; disponibile nel piano Free)."""
+        body = self._get("/fixtures/statistics", {"fixture": fixture})
+        response = body.get("response")
+        return response if isinstance(response, list) else []
+
+    def fixture_lineups(self, fixture: str) -> list[dict[str, Any]]:
+        """Formazioni di una partita (una richiesta; disponibile nel piano Free)."""
+        body = self._get("/fixtures/lineups", {"fixture": fixture})
+        response = body.get("response")
+        return response if isinstance(response, list) else []
+
 
 @dataclass(frozen=True)
 class SeasonInfo:

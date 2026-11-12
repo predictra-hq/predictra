@@ -25,10 +25,13 @@ from typing import Any, Protocol
 
 from .api_football import DAILY_BUDGET, PROVIDER, ApiFootballClient, DailyBudgetExhausted
 from .football_data import season_label
-from .runner import sanitize
+from .runner import SCORE_CHECKS, resolvable_matches, sanitize
 from .team_matching import TeamMatcher
 
 JOB_TYPE = "af.backfill"
+# Correzione dello storico con la normalizzazione attuale (ADR 0034): un'esecuzione per
+# stagione con questo tipo. Le stagioni già corrette si saltano, quindi riprende da sola.
+RESCORE_JOB_TYPE = "af.rescore.2"
 SEASONS: tuple[int, ...] = (2022, 2023, 2024)
 
 # Codice v1 (football-data.org) → (nome, paese) per la ricerca con /leagues.
@@ -66,6 +69,7 @@ STATUS_MAP: dict[str, str] = {
     "WO": "AWARDED",
 }
 DURATION: dict[str, str] = {"FT": "REGULAR", "AET": "EXTRA_TIME", "PEN": "PENALTY_SHOOTOUT"}
+NON_REGULAR = {"EXTRA_TIME", "PENALTY_SHOOTOUT"}
 FINAL = {"FINISHED", "AWARDED"}
 
 # Turni a eliminazione: stessi nomi di stage di football-data.org.
@@ -94,6 +98,9 @@ class Store(Protocol):
         error_count: int,
         error_summary: str | None,
         quota_remaining: int | None = None,
+    ) -> None: ...
+    def resolve_issues(
+        self, run_id: int, check_codes: tuple[str, ...], provider_entity_ids: list[str]
     ) -> None: ...
     def succeeded_windows(self, provider: str, job_type: str) -> set[str]: ...
     def teams(self) -> list[dict[str, Any]]: ...
@@ -173,18 +180,22 @@ def normalize_season(
         if status is None:
             issues.append(_issue("match.status_unknown", "WARNING", "match", fid, status=short))
             status = "SCHEDULED"
-        goals = item.get("goals") or {}
-        half = (item.get("score") or {}).get("halftime") or {}
-        hs, as_ = goals.get("home"), goals.get("away")
+        score = item.get("score") or {}
+        half = score.get("halftime") or {}
+        duration = DURATION.get(short)
+        # `goals` comprende i supplementari (non i rigori); `score.fulltime` è il risultato
+        # al 90'. Verificato su DEV il 12/11/2026 (fixture 1208413: fulltime 0-1,
+        # extratime 1-1, goals 1-2, rigori 5-6). Le quote si regolano sul 90': ADR 0034.
+        if duration in NON_REGULAR:
+            regular = score.get("fulltime") or {}
+            hs, as_ = regular.get("home"), regular.get("away")
+        else:
+            goals = item.get("goals") or {}
+            hs, as_ = goals.get("home"), goals.get("away")
         if (hs is None) != (as_ is None):
             hs = as_ = None
-        duration = DURATION.get(short)
         if status in FINAL and hs is None:
             issues.append(_issue("match.score_missing", "ERROR", "match", fid, status=short))
-        if duration in {"EXTRA_TIME", "PENALTY_SHOOTOUT"}:
-            issues.append(
-                _issue("match.score_non_regular", "WARNING", "match", fid, duration=duration)
-            )
         stage, number = parse_round((item.get("league") or {}).get("round"))
         matches.append(
             {
@@ -277,8 +288,16 @@ def backfill(
     secrets: tuple[str, ...] = (),
     observed_at: str | None = None,
     matcher: TeamMatcher | None = None,
+    refresh: bool = False,
 ) -> BackfillSummary:
-    """Scarica e scrive le stagioni mancanti. Con ``store=None`` (dry run) non scrive."""
+    """Scarica e scrive le stagioni mancanti. Con ``store=None`` (dry run) non scrive.
+
+    ``refresh``: riscarica le stagioni con la normalizzazione attuale (ADR 0034), una
+    volta sola: le esecuzioni hanno tipo ``RESCORE_JOB_TYPE`` e quelle riuscite si
+    saltano. Costa come il primo backfill (32 richieste) e riprende il giorno dopo se
+    il budget non basta.
+    """
+    job_type = RESCORE_JOB_TYPE if refresh else JOB_TYPE
     summary = BackfillSummary()
     observed = observed_at or datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -288,7 +307,7 @@ def backfill(
     if isinstance(used_today, int):
         client.budget = max(0, DAILY_BUDGET - used_today)
 
-    done = store.succeeded_windows(PROVIDER, JOB_TYPE) if store is not None else set()
+    done = store.succeeded_windows(PROVIDER, job_type) if store is not None else set()
     if matcher is None and store is not None:
         matcher = TeamMatcher.from_rows(store.teams())
     for code in competitions:
@@ -327,7 +346,7 @@ def backfill(
                         "ci si ferma prima della quota"
                     )
                 if store is not None:
-                    run_id = store.start_run(PROVIDER, JOB_TYPE, f"{code}:{year}", triggered_by)
+                    run_id = store.start_run(PROVIDER, job_type, f"{code}:{year}", triggered_by)
                 fixtures = client.fixtures(league=str(league["league"]["id"]), season=str(year))
                 norm = normalize_season(league, season, fixtures, code, observed, matcher)
                 errors = sum(1 for i in norm.issues if i["severity"] == "ERROR")
@@ -358,6 +377,9 @@ def backfill(
                     result.teams_matched = int(written.get("teams_matched", 0))
                     result.teams_unmatched = int(written.get("teams_unmatched", 0))
                     store.report_issues(run_id, norm.issues)
+                    store.resolve_issues(
+                        run_id, SCORE_CHECKS, resolvable_matches(norm.batch, norm.issues)
+                    )
                     store.finish_run(
                         run_id,
                         result.status,

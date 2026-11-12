@@ -108,7 +108,13 @@ export default async function ProposalPage({ params }: PageProps<"/bet-builder/[
                   <span className="block text-xs text-muted">{formatDateTime(l.kickoff_at)}</span>
                 </td>
                 <td className="px-4 py-3">
-                  {selectionLabel(l.selection, l.home_team_name, l.away_team_name)}
+                  {selectionLabel(
+                    l.selection,
+                    l.home_team_name,
+                    l.away_team_name,
+                    l.market,
+                    l.line,
+                  )}
                 </td>
                 <td className="px-4 py-3 text-right font-mono">{formatPercent(l.probability)}</td>
                 <td className="px-4 py-3">

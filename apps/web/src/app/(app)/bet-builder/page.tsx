@@ -27,13 +27,22 @@ import {
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
-  formatSlateDate,
+  formatRound,
   parseCategory,
   parseSlateDate,
   parseStake,
+  roundStartOf,
   selectionLabel,
 } from "@/lib/bet-builder/format";
-import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
+import { LikelyCard } from "@/components/bet-builder/likely";
+import { bestItalianPrices, bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
+import {
+  getLatestRun,
+  listActiveProposals,
+  listItalianLatestOdds,
+  listLikelyRows,
+  listProposalLegs,
+} from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
@@ -72,8 +81,9 @@ function ProposalCard({
                 {l.home_team_name} – {l.away_team_name}
               </span>{" "}
               <span className="text-muted">
-                · {selectionLabel(l.selection, l.home_team_name, l.away_team_name)} ·{" "}
-                {formatDateTime(l.kickoff_at)}
+                ·{" "}
+                {selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}{" "}
+                · {formatDateTime(l.kickoff_at)}
               </span>
             </span>
             <span className="font-mono text-xs text-muted">
@@ -115,15 +125,25 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   await requireUser();
   const m = getMessages().betBuilder;
   const params = await searchParams;
-  const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
+  const [run, proposals, likelyRows] = await Promise.all([
+    getLatestRun(),
+    listActiveProposals(),
+    listLikelyRows(new Date()),
+  ]);
+  const picks = bestPicks(likelyRows);
+  const italianOdds = bestItalianPrices(await listItalianLatestOdds(picks.map((p) => p.matchId)));
 
-  const slates = [...new Set(proposals.map((p) => p.slate_date))];
+  // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
+  const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
   const slate = parseSlateDate(params.d);
   const category = parseCategory(params.cat);
   const stake = parseStake(params.s);
-  const shown = proposals.filter(
-    (p) => (!slate || p.slate_date === slate) && (!category || p.category === category),
-  );
+  const shown = proposals
+    .filter(
+      (p) =>
+        (!slate || roundStartOf(p.slate_date) === slate) && (!category || p.category === category),
+    )
+    .sort((a, b) => a.rank - b.rank);
   const legs = await listProposalLegs(shown.map((p) => p.proposal_id));
   const legsBy = new Map<number, BetProposalLegRow[]>();
   for (const l of legs) legsBy.set(l.proposal_id, [...(legsBy.get(l.proposal_id) ?? []), l]);
@@ -137,23 +157,30 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <p className="mb-1 text-xs text-muted">
-        {fillTemplate(m.thresholds, {
-          ev: formatPercent(rules.min_expected_value, 0),
-          p: formatPercent(rules.min_probability, 0),
-          c: String(rules.min_confidence_score).replace(".", ","),
-          legs: rules.max_legs,
-        })}
-      </p>
-      {run ? (
-        <p className="mb-4 text-xs text-muted">
-          {fillTemplate(m.lastRun, {
-            at: formatDateTime(run.finished_at ?? run.started_at),
-            candidates: run.candidates_evaluated,
-            proposals: run.proposals_written,
+      <LikelyCard picks={picks} multiples={likelyMultiples(picks)} prices={italianOdds} />
+
+      <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
+      <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+      <details className="mb-4 text-xs text-muted">
+        <summary className="cursor-pointer">{m.technicalDetails}</summary>
+        <p className="mb-1 mt-2 text-xs text-muted">
+          {fillTemplate(m.thresholds, {
+            ev: formatPercent(rules.min_expected_value, 0),
+            p: formatPercent(rules.min_probability, 0),
+            c: String(rules.min_confidence_score).replace(".", ","),
+            legs: rules.max_legs,
           })}
         </p>
-      ) : null}
+        {run ? (
+          <p className="mb-4 text-xs text-muted">
+            {fillTemplate(m.lastRun, {
+              at: formatDateTime(run.finished_at ?? run.started_at),
+              candidates: run.candidates_evaluated,
+              proposals: run.proposals_written,
+            })}
+          </p>
+        ) : null}
+      </details>
 
       {proposals.length === 0 ? (
         <NoProposals run={run} />
@@ -166,7 +193,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                 <option value="">{m.allSlates}</option>
                 {slates.map((d) => (
                   <option key={d} value={d}>
-                    {formatSlateDate(d)}
+                    {formatRound(d)}
                   </option>
                 ))}
               </Select>
@@ -200,11 +227,13 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
           {slates
             .filter((d) => !slate || d === slate)
             .map((d) => {
-              const day = shown.filter((p) => p.slate_date === d);
+              const day = shown.filter((p) => roundStartOf(p.slate_date) === d);
               if (day.length === 0) return null;
               return (
                 <section key={d} className="mb-6">
-                  <h2 className="mb-3 text-lg font-semibold capitalize">{formatSlateDate(d)}</h2>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    {fillTemplate(m.roundTitle, { round: formatRound(d) })}
+                  </h2>
                   {BET_PROPOSAL_CATEGORIES.map((c) => {
                     const group = day.filter((p) => p.category === c);
                     if (group.length === 0) return null;

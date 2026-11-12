@@ -1,4 +1,4 @@
-"""Riga di comando: ``python -m predictra_engine run [--dry-run] [--horizon-days 7]``.
+"""Riga di comando: ``python -m predictra_engine run [--dry-run] [--horizon-days 10]``.
 
 Variabili: SUPABASE_URL (o NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SECRET_KEY,
 CODE_COMMIT (SHA del codice; in GitHub Actions è GITHUB_SHA).
@@ -27,7 +27,7 @@ def main(argv: list[str] | None = None) -> int:
         "run", help="adatta i modelli, esegue i backtest nuovi e scrive le previsioni"
     )
     cmd.add_argument("--dry-run", action="store_true", help="legge i dati ma non scrive nulla")
-    cmd.add_argument("--horizon-days", type=int, default=7, help="giorni di partite da prevedere")
+    cmd.add_argument("--horizon-days", type=int, default=10, help="giorni di partite da prevedere")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
     sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
     tune_cmd = sub.add_parser(
@@ -87,6 +87,9 @@ def main(argv: list[str] | None = None) -> int:
             line += f" errore={m.error}"
         print(line)
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
+    if summary.retired:
+        print(f"  versioni superate ritirate: {summary.retired}")
+    print("  in gara: poisson, dixon_coles · interni: baseline (riferimento), elo (secondo parere)")
     if summary.refreshed_backtests:
         print("  confronto settimanale: backtest rifatti per tutti i modelli con i dati aggiornati")
     if summary.selection is not None:

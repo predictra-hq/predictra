@@ -231,6 +231,51 @@ describe("scrittura e abbinamento", () => {
     });
   });
 
+  it("ADR 0029: quote under/over salvate per linea e collegate alle previsioni TOTAL_GOALS", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx);
+      const batch = oddsBatch("DEMO Casa");
+      batch.events[0]!.bookmakers[0]!.markets.push({
+        key: "totals_2_5",
+        last_update: "2026-01-07T11:00:00Z",
+        outcomes: [
+          { selection: "OVER", price: 1.9 },
+          { selection: "UNDER", price: 1.95 },
+        ],
+      } as never);
+      batch.events[0]!.bookmakers[0]!.markets.push({
+        key: "totals_2_25", // linea non in catalogo: scartata
+        last_update: "2026-01-07T11:00:00Z",
+        outcomes: [{ selection: "OVER", price: 1.8 }],
+      } as never);
+      await ingestOdds(tx, batch);
+      const rows = (
+        await tx.query<{ market: string; selection: string; price: string }>(
+          `select market, selection, price::text from public.odds_snapshots
+           where market like 'totals%' order by selection`,
+        )
+      ).rows;
+      expect(rows).toEqual([
+        { market: "totals_2_5", selection: "OVER", price: "1.900" },
+        { market: "totals_2_5", selection: "UNDER", price: "1.950" },
+      ]);
+      const m = await one<{ a: string | null; b: string | null; c: string | null }>(
+        tx,
+        `select app_private.odds_market_for('TOTAL_GOALS', 2.5) a,
+                app_private.odds_market_for('TOTAL_GOALS', 2) b,
+                app_private.odds_market_for('1X2', null) c`,
+      );
+      expect(m).toEqual({ a: "totals_2_5", b: null, c: "h2h" });
+      // ADR 0032: doppia chance per partita.
+      const dc = await one<{ code: string | null; sel: string[] }>(
+        tx,
+        `select app_private.odds_market_for('DOUBLE_CHANCE', null) code,
+                (select selections from public.markets where code = 'double_chance') sel`,
+      );
+      expect(dc).toEqual({ code: "double_chance", sel: ["HOME_DRAW", "HOME_AWAY", "DRAW_AWAY"] });
+    });
+  });
+
   it("una quota aggiornata dal bookmaker diventa una riga nuova", async () => {
     await asServiceRole(db, async (tx) => {
       await seedFootball(tx);
@@ -308,6 +353,43 @@ describe("scrittura e abbinamento", () => {
                 where status = 'OPEN' and check_code = 'odds.event_unmatched') open`,
     );
     expect(ev).toEqual({ linked: 1, open: 0 });
+  });
+
+  it("evento passato con nomi noti ma partita rinviata: avviso chiuso come IGNORED a fine raccolta", async () => {
+    await asServiceRole(db, async (tx) => {
+      // La partita DEMO è stata spostata di due mesi: l'evento di quote dell'8/11 non ha
+      // nessuna partita entro 36 ore, anche se i due nomi sono noti. La chiusura della
+      // raccolta (finish_ingestion_run) rilancia il ricollegamento.
+      await seedFootball(tx, "2027-01-04T20:15:00Z");
+      const r1 = await ingestOdds(tx, oddsBatch("DEMO Casa"));
+      expect(r1.matched).toBe(0);
+      const after = await one<{ status: string; reason: string; linked: number }>(
+        tx,
+        `select i.status::text status, i.details ->> 'closed_reason' reason,
+                (select count(*)::int from public.odds_events where match_id is not null) linked
+         from public.data_quality_issues i where i.check_code = 'odds.event_unmatched'`,
+      );
+      expect(after).toEqual({
+        status: "IGNORED",
+        reason: "nomi noti, nessuna partita del calendario entro 36 ore",
+        linked: 0,
+      });
+    });
+  });
+
+  it("evento futuro con nomi noti e partita non ancora in calendario: l'avviso resta aperto", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx, "2099-01-04T20:15:00Z");
+      const batch = oddsBatch("DEMO Casa");
+      batch.events[0]!.commence_time = "2099-03-01T19:45:00Z";
+      await ingestOdds(tx, batch);
+      const { n } = await one<{ n: number }>(
+        tx,
+        `select count(*)::int n from public.data_quality_issues
+         where status = 'OPEN' and check_code = 'odds.event_unmatched'`,
+      );
+      expect(n).toBe(1);
+    });
   });
 
   it("l'alias manuale richiede la 2FA", async () => {

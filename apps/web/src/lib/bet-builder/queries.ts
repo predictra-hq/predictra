@@ -2,14 +2,17 @@ import "server-only";
 import type {
   ActivePredictionRow,
   ActiveBetProposalRow,
-  BestOddsH2hRow,
   BetBuilderLatestRunRow,
   BetProposalKind,
   BetProposalLegRow,
   FreshnessStatus,
+  MatchOddsH2hRow,
   UserBetSlipRow,
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
+import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
+import { matchMarkets, type Outcome, usedProbability } from "./market";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
 
@@ -25,7 +28,7 @@ export class BetBuilderDataUnavailable extends Error {
   }
 }
 
-const MANUAL_HORIZON_DAYS = 7;
+const MANUAL_HORIZON_DAYS = 10;
 
 export async function getLatestRun(): Promise<BetBuilderLatestRunRow | null> {
   const supabase = await createClient();
@@ -121,15 +124,6 @@ export interface ManualOption {
   outcomes: ManualSelection[];
 }
 
-function bestPrice(row: BestOddsH2hRow | undefined, selection: string) {
-  if (!row) return { price: null, bookmaker: null };
-  if (selection === "HOME")
-    return { price: row.best_home_price, bookmaker: row.best_home_bookmaker };
-  if (selection === "DRAW")
-    return { price: row.best_draw_price, bookmaker: row.best_draw_bookmaker };
-  return { price: row.best_away_price, bookmaker: row.best_away_bookmaker };
-}
-
 /**
  * Previsioni 1X2 attive delle partite in programma nei prossimi giorni, con le
  * migliori quote FRESH (`v_best_odds_h2h` considera solo bookmaker con quote fresche).
@@ -170,19 +164,21 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
     | "model_version"
   >[];
   const ids = [...new Set(predictions.map((p) => p.match_id))];
-  let best: BestOddsH2hRow[] = [];
+  // ADR 0028: consenso da tutti i bookmaker, quota giocabile solo italiana.
+  let oddsRows: MatchOddsH2hRow[] = [];
   if (ids.length > 0) {
-    const odds = await supabase.from("v_best_odds_h2h").select("*").in("match_id", ids);
+    const odds = await supabase
+      .from("v_match_odds_h2h")
+      .select(
+        "match_id, bookmaker, italian_market, home_price, draw_price, away_price, home_probability, draw_probability, away_probability, observed_at, freshness, quality",
+      )
+      .in("match_id", ids)
+      .limit(5000);
     if (odds.error) throw new BetBuilderDataUnavailable("quote", odds.error);
-    best = (odds.data ?? []) as BestOddsH2hRow[];
+    oddsRows = (odds.data ?? []) as MatchOddsH2hRow[];
   }
-  // Più eventi del provider sulla stessa partita: si tiene il più recente.
-  const bestByMatch = new Map<number, BestOddsH2hRow>();
-  for (const b of best) {
-    if (b.match_id === null) continue;
-    const cur = bestByMatch.get(b.match_id);
-    if (!cur || b.observed_at > cur.observed_at) bestByMatch.set(b.match_id, b);
-  }
+  const markets = matchMarkets(oddsRows);
+  const weight = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0;
 
   const options = new Map<number, ManualOption>();
   for (const p of predictions) {
@@ -200,7 +196,9 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
       };
       options.set(p.match_id, option);
     }
-    const { price } = bestPrice(bestByMatch.get(p.match_id), p.selection);
+    const market = markets.get(p.match_id);
+    const outcome = p.selection as Outcome;
+    const price = market?.italian[outcome]?.price ?? null;
     const freshness: FreshnessStatus | null = price === null ? null : "FRESH";
     option.outcomes.push({
       matchId: p.match_id,
@@ -208,7 +206,7 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
       awayTeam: p.away_team_name,
       kickoffAt: p.kickoff_at,
       selection: p.selection,
-      probability: Number(p.probability),
+      probability: usedProbability(Number(p.probability), market?.consensus[outcome], weight),
       confidence: Number(p.confidence_score),
       price: price === null ? null : Number(price),
       freshness,
@@ -258,5 +256,54 @@ export async function listSlips(): Promise<SlipWithSelections[]> {
   return ((slips.data ?? []) as UserBetSlipRow[]).map((s) => ({
     ...s,
     selections: bySlip.get(s.id) ?? [],
+  }));
+}
+
+/**
+ * Previsioni del modello attivo per "Le più probabili": partite in programma nei prossimi
+ * giorni, solo i mercati e le linee ammessi (`LIKELY_MARKETS`).
+ */
+export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
+  const supabase = await createClient();
+  const end = new Date(now.getTime() + MANUAL_HORIZON_DAYS * 86_400_000);
+  const { data, error } = await supabase
+    .from("v_active_predictions")
+    .select(
+      "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+    )
+    .in("market", Object.keys(LIKELY_MARKETS))
+    .eq("match_status", "SCHEDULED")
+    .gt("kickoff_at", now.toISOString())
+    .lt("kickoff_at", end.toISOString())
+    .limit(10000);
+  if (error) throw new BetBuilderDataUnavailable("previsioni", error);
+  return (data ?? []) as LikelyRow[];
+}
+
+/**
+ * Ultime quote dei bookmaker italiani (1X2 e under/over) per le partite indicate, per
+ * affiancare la quota reale ai pronostici più probabili (ADR 0028, 0029).
+ */
+export async function listItalianLatestOdds(matchIds: readonly number[]): Promise<LatestOddsRow[]> {
+  if (matchIds.length === 0) return [];
+  const supabase = await createClient();
+  const books = await supabase.from("bookmakers").select("code, title").eq("italian_market", true);
+  if (books.error) throw new BetBuilderDataUnavailable("bookmaker", books.error);
+  const titles = new Map((books.data ?? []).map((b) => [String(b.code), String(b.title)]));
+  const codes = [...titles.keys()];
+  if (codes.length === 0) return [];
+  const { data, error } = await supabase
+    .from("v_latest_odds")
+    .select("match_id, bookmaker, market, selection, price, observed_at")
+    .in("match_id", matchIds as number[])
+    .in("bookmaker", codes)
+    .or("market.eq.h2h,market.eq.double_chance,market.like.totals_*")
+    .eq("quality", "OK")
+    .limit(10000);
+  if (error) throw new BetBuilderDataUnavailable("quote italiane", error);
+  // Nome leggibile del bookmaker (es. "Unibet (IT)") al posto del codice.
+  return ((data ?? []) as LatestOddsRow[]).map((r) => ({
+    ...r,
+    bookmaker: titles.get(r.bookmaker) ?? r.bookmaker,
   }));
 }

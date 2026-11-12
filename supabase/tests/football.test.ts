@@ -674,12 +674,49 @@ describe("funzioni di ingestion", () => {
     });
   });
 
+  it("ADR 0034: i problemi di punteggio si chiudono quando la partita torna regolare", async () => {
+    await asServiceRole(db, async (tx) => {
+      const run = await startRun(tx);
+      await ingest(tx, run, batch(OBS1));
+      const issues = ["DEMO-M1", "DEMO-M2"].map((id) => ({
+        check_code: "match.score_non_regular",
+        severity: "WARNING",
+        entity_type: "match",
+        provider_entity_id: id,
+        details: { motivo: "DEMO" },
+      }));
+      await tx.query("select public.report_quality_issues($1, $2)", [run, JSON.stringify(issues)]);
+      const closed = await tx.query<{ n: number }>(
+        "select public.resolve_quality_issues($1, $2, $3) as n",
+        [run, ["match.score_non_regular", "match.score_missing"], ["DEMO-M1"]],
+      );
+      expect(closed.rows[0]?.n).toBe(1);
+      const rows = (
+        await tx.query<{ provider_entity_id: string; status: string; resolved: boolean }>(
+          `select provider_entity_id, status, resolved_at is not null as resolved
+           from public.data_quality_issues order by provider_entity_id`,
+        )
+      ).rows;
+      expect(rows).toEqual([
+        { provider_entity_id: "DEMO-M1", status: "RESOLVED", resolved: true },
+        { provider_entity_id: "DEMO-M2", status: "OPEN", resolved: false },
+      ]);
+      // Controlli non indicati restano aperti.
+      const none = await tx.query<{ n: number }>(
+        "select public.resolve_quality_issues($1, $2, $3) as n",
+        [run, ["match.score_missing"], ["DEMO-M2"]],
+      );
+      expect(none.rows[0]?.n).toBe(0);
+    });
+  });
+
   it("gli utenti non possono chiamare le funzioni di ingestion", async () => {
     await asUser(db, superAdmin, async (tx) => {
       for (const sql of [
         "select public.start_ingestion_run('football-data-org', 'x.y', 'k')",
         "select public.ingest_football_batch(1, '{}'::jsonb)",
         "select public.report_quality_issues(1, '[]'::jsonb)",
+        "select public.resolve_quality_issues(1, '{}', '{}')",
         "select public.finish_ingestion_run(1, 'FAILED')",
       ]) {
         expect(await attempt(tx, sql), sql).toMatch(/permission denied/);

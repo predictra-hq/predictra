@@ -4,8 +4,11 @@ I job reali di M2-M5 si collegano nella fase A5, uno per PR (piano M7):
 - `football-data.collect` (raccolta football-data.org, M2): `football_data.py`;
 - `odds.collect` (quote The Odds API, M3): `odds.py`;
 - `predictions.run` (previsioni del motore, M4): `predictions.py`;
-- `bet-builder.run` (proposte dello Smart Bet Builder, M5): `bet_builder.py`. Un tipo senza gestore
-non viene prelevato: resta in coda.
+- `bet-builder.run` (proposte dello Smart Bet Builder, M5): `bet_builder.py`;
+- `api-football.details` (statistiche e formazioni API-Football, M2 A3):
+  `api_football_details.py`.
+
+Un tipo senza gestore non viene prelevato: resta in coda.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from . import bet_builder, football_data, odds, predictions
+from . import api_football_details, bet_builder, football_data, odds, predictions
 from .worker import Handler, JobContext, PermanentJobError
 
 
@@ -50,6 +53,9 @@ def build_handlers(
     """Tutti i gestori del worker, con la configurazione presa dall'ambiente."""
     return {
         **HANDLERS,
+        api_football_details.JOB_TYPE: api_football_details.make_handler(
+            env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
+        ),
         football_data.JOB_TYPE: football_data.make_handler(
             env, supabase_url=supabase_url, supabase_secret_key=supabase_secret_key
         ),

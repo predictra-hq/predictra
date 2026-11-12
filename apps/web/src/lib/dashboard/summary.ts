@@ -55,8 +55,8 @@ export function withPredictions(
   });
 }
 
-/** Orizzonte del motore di previsione (`run --horizon-days`, default 7). */
-export const PREDICTION_HORIZON_DAYS = 7;
+/** Orizzonte del motore di previsione (`run --horizon-days`, default 10). */
+export const PREDICTION_HORIZON_DAYS = 10;
 
 /** Da quando ci si può aspettare la previsione: il calcio d'inizio meno l'orizzonte. */
 export function predictionExpectedFrom(kickoffAt: string, days = PREDICTION_HORIZON_DAYS): Date {

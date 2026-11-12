@@ -91,7 +91,12 @@ Nessun account o segreto nuovo.
 
 Verifica su DEV: 15 controlli superati, 3 account di prova creati e cancellati. Per ripeterla: _Actions → Verifica DEV → Run workflow_.
 
-Resta da collegare lo **stake con Kelly** nel Tracker: richiede di legare una giocata a una previsione del modello attivo (M4). Le funzioni sono già pronte in `@predictra/bankroll`.
+**Stake con Kelly collegato il 12/11/2026.** Il Tracker ha un calcolatore Kelly: si sceglie una partita in programma con le probabilità 1X2 del modello attivo, poi l'esito e la quota del bookmaker. Per ogni bankroll la pagina mostra:
+
+- lo stake suggerito (`suggestStake` di `@predictra/bankroll`: un quarto di Kelly, tetto del 2% del disponibile, stake massimo dei limiti personali, ADR 0031);
+- la quota equa e il valore atteso.
+
+Solo informativo. La probabilità del modello non viene ancora salvata insieme alla giocata.
 
 ## Chiusura di M6
 

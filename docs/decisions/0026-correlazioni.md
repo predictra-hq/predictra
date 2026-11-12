@@ -38,3 +38,5 @@ Si esclude, senza proporre alternative, ogni combinazione che contiene:
 
 - In v1, con le sole quote 1X2, le proposte sono **singole e multiple su partite diverse**.
 - Il calcolo della congiunta sulla stessa partita va scritto una volta in Python (motore, M5 corsia A) e una in TypeScript (valutazione manuale, corsia B), con gli stessi casi di test documentati, come per il de-margin (ADR 0016).
+
+> **Aggiornamento (ADR 0036, 12/11/2026):** le multiple uniscono partite dello stesso **turno** (venerdì–lunedì o martedì–giovedì), non più solo dello stesso giorno.

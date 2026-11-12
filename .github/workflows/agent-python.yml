@@ -47,7 +47,7 @@ on:
         type: number
         default: 10
       plan_football_data:
-        description: "Accoda la finestra corrente di raccolta football-data.org (come lo schedule)"
+        description: "Accoda la finestra corrente di raccolta football-data.org (come lo schedule) e il job giornaliero di statistiche e formazioni API-Football"
         type: boolean
         default: false
       plan_odds:
@@ -102,6 +102,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
       FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
     steps:
       - name: Verifica segreti
         id: secrets

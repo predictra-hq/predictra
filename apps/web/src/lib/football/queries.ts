@@ -3,6 +3,9 @@ import type {
   IngestionRunStatus,
   IssueSeverity,
   MatchCenterRow,
+  MatchLineupPlayerRow,
+  MatchLineupRow,
+  MatchTeamStatisticRow,
   SourceHealthRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
@@ -77,15 +80,47 @@ export async function listCompetitions(): Promise<CompetitionOption[]> {
 }
 
 /** Stagione più recente della competizione, con giornata corrente e ultima giornata. */
-export async function getCurrentSeason(competitionId: number): Promise<SeasonInfo | null> {
+export interface SeasonOption {
+  id: number;
+  label: string;
+}
+
+/** Stagioni di una competizione, dalla più recente (in corso e storico 2022–2024). */
+export async function listSeasons(competitionId: number): Promise<SeasonOption[]> {
   const supabase = await createClient();
-  const { data: season, error } = await supabase
+  const { data, error } = await supabase
+    .from("seasons")
+    .select("id, label")
+    .eq("competition_id", competitionId)
+    .order("start_date", { ascending: false });
+  if (error) throw new FootballDataUnavailable("stagioni", error);
+  return (data ?? []).map((r) => ({ id: Number(r.id), label: String(r.label) }));
+}
+
+/** La stagione richiesta (se appartiene alla competizione), altrimenti la più recente. */
+export async function getCurrentSeason(
+  competitionId: number,
+  seasonId: number | null = null,
+): Promise<SeasonInfo | null> {
+  const supabase = await createClient();
+  let query = supabase
     .from("seasons")
     .select("id, label, current_matchday")
-    .eq("competition_id", competitionId)
+    .eq("competition_id", competitionId);
+  if (seasonId !== null) query = query.eq("id", seasonId);
+  let { data: season, error } = await query
     .order("start_date", { ascending: false })
     .limit(1)
     .maybeSingle();
+  if (!error && !season && seasonId !== null) {
+    ({ data: season, error } = await supabase
+      .from("seasons")
+      .select("id, label, current_matchday")
+      .eq("competition_id", competitionId)
+      .order("start_date", { ascending: false })
+      .limit(1)
+      .maybeSingle());
+  }
   if (error) throw new FootballDataUnavailable("stagione", error);
   if (!season) return null;
 
@@ -226,4 +261,42 @@ export async function listCoverage(): Promise<CoverageRow[]> {
     };
   });
   return sortCompetitions(rows);
+}
+
+/** Statistiche di squadra e formazioni di una partita (ADR 0012), se la fonte le ha. */
+export interface MatchDetails {
+  statistics: Pick<MatchTeamStatisticRow, "team_id" | "stat" | "value" | "provider">[];
+  lineups: Pick<MatchLineupRow, "team_id" | "formation" | "coach_name" | "provider">[];
+  players: Pick<
+    MatchLineupPlayerRow,
+    "team_id" | "player_name" | "shirt_number" | "position" | "grid" | "is_starter"
+  >[];
+}
+
+export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
+  const supabase = await createClient();
+  const [stats, lineups, players] = await Promise.all([
+    supabase
+      .from("match_team_statistics")
+      .select("team_id, stat, value, provider")
+      .eq("match_id", matchId),
+    supabase
+      .from("match_lineups")
+      .select("team_id, formation, coach_name, provider")
+      .eq("match_id", matchId),
+    supabase
+      .from("match_lineup_players")
+      .select("team_id, player_name, shirt_number, position, grid, is_starter")
+      .eq("match_id", matchId)
+      .order("is_starter", { ascending: false })
+      .order("grid", { ascending: true, nullsFirst: false })
+      .order("shirt_number", { ascending: true }),
+  ]);
+  const error = stats.error ?? lineups.error ?? players.error;
+  if (error) throw new FootballDataUnavailable("statistiche e formazioni", error);
+  return {
+    statistics: (stats.data ?? []) as MatchDetails["statistics"],
+    lineups: (lineups.data ?? []) as MatchDetails["lineups"],
+    players: (players.data ?? []) as MatchDetails["players"],
+  };
 }

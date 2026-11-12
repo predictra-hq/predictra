@@ -25,6 +25,9 @@ from pathlib import Path
 PACKAGE = Path(__file__).resolve().parent
 MODEL_CODE = ("models", "data.py", "markets.py", "confidence.py")
 MARGIN = 0.001
+# Modelli in gara (ADR 0024): i due che calcolano tutti i mercati del Bet Builder.
+# Uno è il modello PREDICTRA attivo, l'altro lo sfidante.
+CONTENDERS = frozenset({"poisson", "dixon_coles"})
 
 
 def model_code_hash(root: Path = PACKAGE) -> str:

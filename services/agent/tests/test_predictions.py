@@ -104,7 +104,7 @@ def test_una_esecuzione_per_finestra(queue: FakeQueue) -> None:
     assert call["code_commit"] == COMMIT
     assert call["triggered_by"] == "schedule"
     assert call["dry_run"] is False
-    assert call["horizon_days"] == 7
+    assert call["horizon_days"] == 10
     assert "baseline" in call["models"]
 
 
