@@ -18,12 +18,13 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { formatScore, parseCompetitionCode, parseMatchday } from "@/lib/football/format";
+import { formatScore, parseCompetitionCode, parseId, parseMatchday } from "@/lib/football/format";
 import {
   getCurrentSeason,
   getSourceHealth,
   listCompetitions,
   listMatches,
+  listSeasons,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
@@ -46,10 +47,18 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
   const requestedCode = parseCompetitionCode(params.c);
   const competition = competitions.find((c) => c.code === requestedCode) ?? competitions[0]!;
-  const season = await getCurrentSeason(competition.id);
+  const requestedSeason = typeof params.s === "string" ? parseId(params.s) : null;
+  const [season, seasons] = await Promise.all([
+    getCurrentSeason(competition.id, requestedSeason),
+    listSeasons(competition.id),
+  ]);
+  const isLatest = season !== null && seasons[0]?.id === season.id;
   const requestedMatchday = parseMatchday(params.g);
+  // Stagione in corso: la giornata corrente; stagione passata: la prima.
   const matchday =
-    requestedMatchday ?? season?.currentMatchday ?? (season?.maxMatchday ? 1 : "all");
+    requestedMatchday ??
+    (isLatest ? season?.currentMatchday : null) ??
+    (season?.maxMatchday ? 1 : "all");
   const [matches, sources] = await Promise.all([
     season ? listMatches(season.id, matchday) : Promise.resolve([]),
     getSourceHealth(),
@@ -63,8 +72,8 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
       <PageHeader title={m.matchCenter.title} description={m.matchCenter.description} />
 
       <FilterForm
-        resets={{ c: ["g"] }}
-        className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_auto] sm:items-end"
+        resets={{ c: ["s", "g"], s: ["g"] }}
+        className="mb-4 grid gap-3 sm:grid-cols-[1fr_9rem_10rem_auto] sm:items-end"
       >
         <Field label={m.matchCenter.competition} htmlFor="c">
           <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
@@ -75,6 +84,15 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                 </option>
               ) : null,
             )}
+          </Select>
+        </Field>
+        <Field label={m.matchCenter.season} htmlFor="s">
+          <Select id="s" name="s" defaultValue={season ? String(season.id) : undefined}>
+            {seasons.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.label}
+              </option>
+            ))}
           </Select>
         </Field>
         <Field label={m.matchCenter.matchday} htmlFor="g">
