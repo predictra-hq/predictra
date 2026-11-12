@@ -4,8 +4,10 @@ import {
   formatRound,
   parseCategory,
   parseSlateDate,
+  parseStake,
   roundStartOf,
   selectionLabel,
+  stakeOutcome,
 } from "./format";
 
 describe("formattazione Bet Builder", () => {
@@ -35,6 +37,25 @@ describe("formattazione Bet Builder", () => {
     expect(parseSlateDate("2026-11-21")).toBe("2026-11-21");
     expect(parseSlateDate("21/11/2026")).toBeNull();
     expect(parseSlateDate(["2026-11-21"])).toBeNull();
+  });
+
+  it("puntata dall'URL", () => {
+    expect(parseStake("4")).toBe(4);
+    expect(parseStake("4,50")).toBe(4.5);
+    expect(parseStake("4.5")).toBe(4.5);
+    expect(parseStake("0")).toBeNull();
+    expect(parseStake("-4")).toBeNull();
+    expect(parseStake("4,555")).toBeNull();
+    expect(parseStake("quattro")).toBeNull();
+    expect(parseStake("1000000")).toBeNull();
+    expect(parseStake(undefined)).toBeNull();
+  });
+
+  it("esito di una puntata", () => {
+    const o = stakeOutcome(4, 7.8, 0.18);
+    expect(o.payout).toBe(31.2);
+    expect(o.profit).toBe(27.2);
+    expect(o.loseProbability).toBeCloseTo(0.82);
   });
 });
 

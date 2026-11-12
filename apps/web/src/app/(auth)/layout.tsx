@@ -1,3 +1,4 @@
+import { Logo } from "@/components/shell/logo";
 import { getMessages } from "@/lib/i18n";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
@@ -5,6 +6,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
       <div className="mb-8 text-center">
+        <Logo className="mx-auto mb-4 size-14" />
         <p className="text-2xl font-bold tracking-[0.2em]">
           {m.app.name}
           <span className="text-positive">.</span>

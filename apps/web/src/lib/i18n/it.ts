@@ -643,6 +643,15 @@ export const it = {
     back: "Torna alle proposte",
     staleWarning: "{n} selezioni hanno ora una quota STALE: verifica prima di usarla.",
     priceChangedWarning: "{n} selezioni hanno una quota cambiata dalla generazione.",
+    stake: "Quanto vuoi giocare (€)",
+    stakePlaceholder: "4",
+    emptyFiltered: "Nessuna proposta con questi filtri. Prova un altro turno o un'altra categoria.",
+    stakeTitle: "Se giochi {stake}",
+    stakeWin: "Vinci {payout} (guadagno {profit})",
+    stakeWinProbability: "probabilità {p}",
+    stakeLose: "Perdi {stake}",
+    stakeNote:
+      "Calcolo sulla quota della proposta e sulla probabilità del modello: è una stima, non una garanzia.",
     correlationIndependence:
       "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (indipendenza dichiarata, ADR 0026).",
     correlationNone: "Singola: probabilità della previsione del modello.",
