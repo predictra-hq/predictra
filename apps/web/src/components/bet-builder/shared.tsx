@@ -2,9 +2,15 @@ import type { BetProposalCategory } from "@predictra/shared-types";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Alert, Badge } from "@/components/ui/primitives";
-import { confidenceLabel } from "@/lib/bet-builder/format";
+import { confidenceLabel, formatEuro, stakeOutcome } from "@/lib/bet-builder/format";
 import { getMessages } from "@/lib/i18n";
-import { formatDecimal, formatOdds, formatPercent, formatSigned } from "@/lib/odds/format";
+import {
+  fillTemplate,
+  formatDecimal,
+  formatOdds,
+  formatPercent,
+  formatSigned,
+} from "@/lib/odds/format";
 
 const CATEGORY_TONE: Record<BetProposalCategory, "positive" | "neutral" | "warning"> = {
   CONSERVATIVE: "positive",
@@ -62,6 +68,50 @@ function Metric({ label, value, hint }: { label: string; value: ReactNode; hint?
       </span>
       <span className="font-mono text-base">{value}</span>
     </span>
+  );
+}
+
+/**
+ * Simulazione di una puntata su una combinazione: quanto si incassa se vince e con
+ * quale probabilità, quanto si perde altrimenti. Non registra né piazza nulla.
+ */
+export function StakeSimulation({
+  stake,
+  price,
+  probability,
+}: {
+  stake: number;
+  price: number;
+  probability: number;
+}) {
+  const m = getMessages().betBuilder;
+  const o = stakeOutcome(stake, price, probability);
+  return (
+    <div className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm">
+      <p className="mb-1 text-xs text-muted">
+        {fillTemplate(m.stakeTitle, { stake: formatEuro(stake) })}
+      </p>
+      <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className="text-positive-strong">
+          {fillTemplate(m.stakeWin, {
+            payout: formatEuro(o.payout),
+            profit: `+${formatEuro(o.profit)}`,
+          })}
+        </span>
+        <span className="font-mono text-xs text-muted">
+          {fillTemplate(m.stakeWinProbability, { p: formatPercent(probability) })}
+        </span>
+      </p>
+      <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className="text-negative-strong">
+          {fillTemplate(m.stakeLose, { stake: formatEuro(stake) })}
+        </span>
+        <span className="font-mono text-xs text-muted">
+          {fillTemplate(m.stakeWinProbability, { p: formatPercent(o.loseProbability) })}
+        </span>
+      </p>
+      <p className="mt-1 text-xs text-subtle">{m.stakeNote}</p>
+    </div>
   );
 }
 

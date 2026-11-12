@@ -12,6 +12,7 @@ import {
   BetBuilderNav,
   CategoryBadge,
   Metrics,
+  StakeSimulation,
 } from "@/components/bet-builder/shared";
 import { FilterForm } from "@/components/ui/filter-form";
 import {
@@ -20,6 +21,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Input,
   PageHeader,
   Select,
 } from "@/components/ui/primitives";
@@ -28,6 +30,7 @@ import {
   formatSlateDate,
   parseCategory,
   parseSlateDate,
+  parseStake,
   selectionLabel,
 } from "@/lib/bet-builder/format";
 import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
@@ -36,7 +39,15 @@ import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
 export const metadata: Metadata = { title: "Smart Bet Builder" };
 
-function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalLegRow[] }) {
+function ProposalCard({
+  p,
+  legs,
+  stake,
+}: {
+  p: ActiveBetProposalRow;
+  legs: BetProposalLegRow[];
+  stake: number | null;
+}) {
   const m = getMessages().betBuilder;
   return (
     <Card className="flex flex-col gap-3">
@@ -77,6 +88,9 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
         expectedValue={p.expected_value}
         confidence={p.confidence_score}
       />
+      {stake !== null && p.combined_price !== null && p.probability !== null ? (
+        <StakeSimulation stake={stake} price={p.combined_price} probability={p.probability} />
+      ) : null}
       {p.legs_stale > 0 ? (
         <Alert tone="warning">{fillTemplate(m.staleWarning, { n: p.legs_stale })}</Alert>
       ) : null}
@@ -106,6 +120,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   const slates = [...new Set(proposals.map((p) => p.slate_date))];
   const slate = parseSlateDate(params.d);
   const category = parseCategory(params.cat);
+  const stake = parseStake(params.s);
   const shown = proposals.filter(
     (p) => (!slate || p.slate_date === slate) && (!category || p.category === category),
   );
@@ -167,6 +182,16 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                 ))}
               </Select>
             </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs text-muted">{m.stake}</span>
+              <Input
+                name="s"
+                inputMode="decimal"
+                placeholder={m.stakePlaceholder}
+                defaultValue={typeof params.s === "string" ? params.s : ""}
+                className="w-40"
+              />
+            </label>
             <Button type="submit" variant="secondary">
               {m.show}
             </Button>
@@ -195,6 +220,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                               key={p.proposal_id}
                               p={p}
                               legs={legsBy.get(p.proposal_id) ?? []}
+                              stake={stake}
                             />
                           ))}
                         </div>
