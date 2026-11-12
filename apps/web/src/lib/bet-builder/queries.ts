@@ -11,7 +11,7 @@ import type {
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
 import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
-import { LIKELY_MARKETS, type LikelyRow } from "./likely";
+import { LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
 import { matchMarkets, type Outcome, usedProbability } from "./market";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
@@ -278,4 +278,32 @@ export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
     .limit(10000);
   if (error) throw new BetBuilderDataUnavailable("previsioni", error);
   return (data ?? []) as LikelyRow[];
+}
+
+/**
+ * Ultime quote dei bookmaker italiani (1X2 e under/over) per le partite indicate, per
+ * affiancare la quota reale ai pronostici più probabili (ADR 0028, 0029).
+ */
+export async function listItalianLatestOdds(matchIds: readonly number[]): Promise<LatestOddsRow[]> {
+  if (matchIds.length === 0) return [];
+  const supabase = await createClient();
+  const books = await supabase.from("bookmakers").select("code, title").eq("italian_market", true);
+  if (books.error) throw new BetBuilderDataUnavailable("bookmaker", books.error);
+  const titles = new Map((books.data ?? []).map((b) => [String(b.code), String(b.title)]));
+  const codes = [...titles.keys()];
+  if (codes.length === 0) return [];
+  const { data, error } = await supabase
+    .from("v_latest_odds")
+    .select("match_id, bookmaker, market, selection, price, observed_at")
+    .in("match_id", matchIds as number[])
+    .in("bookmaker", codes)
+    .or("market.eq.h2h,market.like.totals_*")
+    .eq("quality", "OK")
+    .limit(10000);
+  if (error) throw new BetBuilderDataUnavailable("quote italiane", error);
+  // Nome leggibile del bookmaker (es. "Unibet (IT)") al posto del codice.
+  return ((data ?? []) as LatestOddsRow[]).map((r) => ({
+    ...r,
+    bookmaker: titles.get(r.bookmaker) ?? r.bookmaker,
+  }));
 }

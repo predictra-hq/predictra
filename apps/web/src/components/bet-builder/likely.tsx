@@ -1,10 +1,15 @@
 import Link from "next/link";
 import type { PredictionMarket } from "@predictra/shared-types";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
-import type { LikelyMultiple, LikelyPick } from "@/lib/bet-builder/likely";
+import {
+  italianPriceFor,
+  type ItalianPrice,
+  type LikelyMultiple,
+  type LikelyPick,
+} from "@/lib/bet-builder/likely";
 import { confidenceLabel } from "@/lib/bet-builder/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { fillTemplate } from "@/lib/odds/format";
+import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatLine, formatPercent } from "@/lib/predictions/format";
 
 /** "Doppia chance 1X", "Totale gol Under 2,5", "Gol squadra Casa over 0,5". */
@@ -16,7 +21,11 @@ export function pickLabel(pick: Pick<LikelyPick, "market" | "selection" | "line"
   return [market, selection, line].filter(Boolean).join(" ");
 }
 
-function PickRow({ pick }: { pick: LikelyPick }) {
+type Prices = ReadonlyMap<string, ItalianPrice>;
+
+function PickRow({ pick, prices }: { pick: LikelyPick; prices: Prices }) {
+  const m = getMessages().betBuilder.likely;
+  const it = italianPriceFor(prices, pick);
   return (
     <li className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border py-1.5 last:border-0">
       <span>
@@ -26,9 +35,17 @@ function PickRow({ pick }: { pick: LikelyPick }) {
         <span className="text-muted">· {formatDateTime(pick.kickoffAt)}</span>
         <span className="block text-sm">{pickLabel(pick)}</span>
       </span>
-      <span className="font-mono text-sm">
+      <span className="text-right font-mono text-sm">
         {formatPercent(pick.probability)}{" "}
         <span className="text-xs text-muted">({formatFairOdds(pick.probability)})</span>
+        {it ? (
+          <span className="block text-xs">
+            {fillTemplate(m.italianPrice, {
+              price: formatOdds(it.price),
+              bookmaker: it.bookmaker,
+            })}
+          </span>
+        ) : null}
       </span>
     </li>
   );
@@ -38,9 +55,11 @@ function PickRow({ pick }: { pick: LikelyPick }) {
 export function LikelyCard({
   picks,
   multiples,
+  prices,
 }: {
   picks: readonly LikelyPick[];
   multiples: readonly LikelyMultiple[];
+  prices: Prices;
 }) {
   const m = getMessages().betBuilder.likely;
   return (
@@ -69,7 +88,7 @@ export function LikelyCard({
                     </p>
                     <ul className="mt-2 text-sm">
                       {x.picks.map((p) => (
-                        <PickRow key={p.matchId} pick={p} />
+                        <PickRow key={p.matchId} pick={p} prices={prices} />
                       ))}
                     </ul>
                   </div>
@@ -80,7 +99,7 @@ export function LikelyCard({
           <h3 className="mb-2 mt-5 text-sm font-semibold">{m.singles}</h3>
           <ul className="text-sm">
             {picks.slice(0, 10).map((p) => (
-              <PickRow key={p.matchId} pick={p} />
+              <PickRow key={p.matchId} pick={p} prices={prices} />
             ))}
           </ul>
           {picks.length > 10 ? (
@@ -90,7 +109,7 @@ export function LikelyCard({
               </summary>
               <ul className="mt-2">
                 {picks.slice(10).map((p) => (
-                  <PickRow key={p.matchId} pick={p} />
+                  <PickRow key={p.matchId} pick={p} prices={prices} />
                 ))}
               </ul>
             </details>

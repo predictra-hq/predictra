@@ -573,7 +573,7 @@ export const it = {
       description:
         "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Sotto, le multiple più probabili.",
       fairOddsNote:
-        "Quota equa = 1 ÷ probabilità: è la quota sotto la quale la giocata non conviene, non è una quota del bookmaker.",
+        "Tra parentesi la quota equa = 1 ÷ probabilità: sotto questa quota la giocata non conviene. Sotto, quando c'è, la migliore quota reale di un bookmaker italiano (1X2 e under/over; per gli altri tipi di giocata le quote non sono disponibili gratis).",
       multiples: "Multiple più probabili",
       multiple: "Multipla da {n}",
       singles: "Pronostico più probabile per partita",
@@ -583,6 +583,7 @@ export const it = {
       empty:
         "Nessun pronostico disponibile: servono previsioni del modello attivo per le partite in programma.",
       showAll: "Mostra tutti i {n} pronostici",
+      italianPrice: "quota {price} · {bookmaker}",
     },
     valueTitle: "Proposte con valore",
     valueDescription:

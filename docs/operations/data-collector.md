@@ -35,7 +35,7 @@ Decisioni: [ADR 0015](../decisions/0015-quote-v1.md). Scheda della fonte: [the-o
 ```
 
 - **Dall'8/11/2026** le raccolte automatiche delle quote passano dalla coda dell'agente (job `odds.collect`, schedule di _Agent (Python)_; [runbook](agent.md)). Finestre: `daily` 06–15 UTC, `prematch` 15–21 UTC. Un tentativo che ha già speso crediti non si ripete; senza crediti spesi si ritenta una volta sola. _Data collector_ resta per l'avvio manuale.
-- **Budget:** al massimo 16 crediti al giorno, circa 480 al mese su 500.
+- **Budget:** pianificatore dei crediti ([ADR 0032](../decisions/0032-pianificatore-crediti-quote.md)). Ogni giorno: budget = (residui − riserva) / giorni rimanenti nel mese. Le competizioni senza partite nelle 48 ore non spendono crediti. Priorità: 1X2, poi under/over nella stessa chiamata, poi doppia chance per le partite delle 36 ore. Prima della partita solo 1X2. Sempre sotto i 500 crediti al mese.
   - Il client legge `x-requests-remaining` e si ferma sotto la riserva di 20 crediti; l'esecuzione risulta `FAILED` con il motivo.
   - Crediti usati e residui finiscono in `ingestion_runs` (`requests_used`, `quota_remaining`) e nel Data Center.
 - **Abbinamento:** ogni evento si abbina a una partita tramite gli alias delle squadre.
