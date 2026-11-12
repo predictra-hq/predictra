@@ -2,10 +2,12 @@
 
 Fasi A2 e A3 del piano M5:
 - selezioni ammesse: soglie per selezione (probabilità, Confidence Score, EV);
-- combinazioni: singole e multiple su partite e squadre diverse della stessa
-  giornata (ADR 0026 §2; niente selezioni sulla stessa partita in v1, §1);
+- combinazioni: singole e multiple su partite e squadre diverse dello stesso turno
+  (ADR 0026 §2 e ADR 0036: da venerdì a lunedì o da martedì a giovedì, ora di Roma;
+  niente selezioni sulla stessa partita in v1, §1);
 - soglie della combinazione, categoria dalla probabilità, ranking ``C · EV / σ``,
-  al massimo ``max_proposals_per_category`` proposte per giornata e categoria.
+  al massimo ``max_proposals_per_category`` proposte per turno e categoria, tra cui
+  la migliore di ogni numero di selezioni (singola, doppia, tripla…) che supera le soglie.
 
 I valori sono calcolati come li ricalcola il database (``record_bet_proposals``):
 probabilità arrotondata a 8 decimali, quota combinata a 6, EV dai valori arrotondati.
@@ -17,7 +19,7 @@ from __future__ import annotations
 import itertools
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from zoneinfo import ZoneInfo
 
@@ -26,6 +28,34 @@ from .rules import Rules, category_for_probability, expected_value, rank_score
 ROME = ZoneInfo("Europe/Rome")
 # Selezioni considerate per giornata, le migliori per punteggio: limita le combinazioni.
 MAX_CANDIDATE_LEGS = 30
+
+
+def round_start(day: date) -> date:
+    """Inizio del turno (ADR 0036): venerdì per venerdì–lunedì, martedì per martedì–giovedì."""
+    weekday = day.weekday()  # lunedì = 0
+    if weekday >= 4:
+        return day - timedelta(days=weekday - 4)
+    if weekday == 0:
+        return day - timedelta(days=3)
+    return day - timedelta(days=weekday - 1)
+
+
+def _select(proposals: list[Proposal], limit: int) -> list[Proposal]:
+    """Le ``limit`` migliori per punteggio, garantendo la migliore di ogni numero di
+    selezioni presente (ADR 0036): così le multiple non spariscono dietro le singole."""
+    ordered = sorted(proposals, key=Proposal.sort_key)
+    chosen: list[Proposal] = ordered[:1]
+    for size in sorted({len(p.legs) for p in ordered}):
+        if len(chosen) >= limit:
+            break
+        if all(len(p.legs) != size for p in chosen):
+            chosen.append(next(p for p in ordered if len(p.legs) == size))
+    for p in ordered:
+        if len(chosen) >= limit:
+            break
+        if p not in chosen:
+            chosen.append(p)
+    return sorted(chosen, key=Proposal.sort_key)
 
 
 @dataclass(frozen=True)
@@ -176,14 +206,14 @@ def _independent(legs: tuple[Leg, ...]) -> bool:
 
 def build_proposals(legs: list[Leg], rules: Rules) -> tuple[list[Proposal], int]:
     """Proposte ordinate e numerate; secondo valore: combinazioni valutate."""
-    by_slate: dict[date, list[Leg]] = defaultdict(list)
+    by_round: dict[date, list[Leg]] = defaultdict(list)
     for leg in eligible_legs(legs, rules):
-        by_slate[leg.slate_date].append(leg)
+        by_round[round_start(leg.slate_date)].append(leg)
 
     evaluated = 0
     grouped: dict[tuple[date, str], list[Proposal]] = defaultdict(list)
-    for slate in sorted(by_slate):
-        pool = sorted(by_slate[slate], key=lambda leg: (-leg.score(), leg.prediction_id))
+    for start in sorted(by_round):
+        pool = sorted(by_round[start], key=lambda leg: (-leg.score(), leg.prediction_id))
         pool = pool[:MAX_CANDIDATE_LEGS]
         for size in range(1, rules.max_legs + 1):
             for combo in itertools.combinations(pool, size):
@@ -192,10 +222,10 @@ def build_proposals(legs: list[Leg], rules: Rules) -> tuple[list[Proposal], int]
                 evaluated += 1
                 proposal = _combine(combo, rules)
                 if proposal is not None:
-                    grouped[(proposal.slate_date, proposal.category)].append(proposal)
+                    grouped[(start, proposal.category)].append(proposal)
 
     result: list[Proposal] = []
     for key in sorted(grouped):
-        ranked = sorted(grouped[key], key=Proposal.sort_key)[: rules.max_proposals_per_category]
+        ranked = _select(grouped[key], rules.max_proposals_per_category)
         result.extend(Proposal(**{**p.__dict__, "rank": i}) for i, p in enumerate(ranked, start=1))
     return result, evaluated

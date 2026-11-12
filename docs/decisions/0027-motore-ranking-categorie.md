@@ -57,3 +57,5 @@ Il limite inferiore 0,10 è `min_probability` (ADR 0025). Per ogni giornata e ca
 
 - Le proposte cambiano solo due volte al giorno: tra una run e l'altra quote e freschezza possono cambiare. La vista `v_bet_proposal_legs` mostra quota e freschezza attuali; `v_active_bet_proposals` conta le selezioni con quota STALE o cambiata, per l'avviso in interfaccia.
 - Pesi e categorie sono iniziali: si rivedono con un nuovo ADR dopo i primi dati reali.
+
+> **Aggiornamento (ADR 0036, 12/11/2026):** posizioni e limite valgono per **turno** (venerdì–lunedì o martedì–giovedì) e categoria. Il limite sale a 8 e comprende sempre la migliore proposta di ogni numero di selezioni. `slate_date` resta la data della prima partita.

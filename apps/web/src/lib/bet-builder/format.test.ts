@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { confidenceLabel, parseCategory, parseSlateDate, selectionLabel } from "./format";
+import {
+  confidenceLabel,
+  formatRound,
+  parseCategory,
+  parseSlateDate,
+  roundStartOf,
+  selectionLabel,
+} from "./format";
 
 describe("formattazione Bet Builder", () => {
   it("etichette degli esiti", () => {
@@ -28,5 +35,20 @@ describe("formattazione Bet Builder", () => {
     expect(parseSlateDate("2026-11-21")).toBe("2026-11-21");
     expect(parseSlateDate("21/11/2026")).toBeNull();
     expect(parseSlateDate(["2026-11-21"])).toBeNull();
+  });
+});
+
+describe("turni (ADR 0036)", () => {
+  it("venerdì–lunedì e martedì–giovedì", () => {
+    expect(roundStartOf("2026-11-20")).toBe("2026-11-20");
+    expect(roundStartOf("2026-11-22")).toBe("2026-11-20");
+    expect(roundStartOf("2026-11-23")).toBe("2026-11-20");
+    expect(roundStartOf("2026-11-24")).toBe("2026-11-24");
+    expect(roundStartOf("2026-11-26")).toBe("2026-11-24");
+  });
+  it("etichetta leggibile", () => {
+    expect(formatRound("2026-11-20")).toBe("venerdì 20 – lunedì 23 novembre");
+    expect(formatRound("2026-10-30")).toBe("venerdì 30 ottobre – lunedì 2 novembre");
+    expect(formatRound("2026-11-24")).toBe("martedì 24 – giovedì 26 novembre");
   });
 });

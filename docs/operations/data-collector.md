@@ -73,6 +73,13 @@ Risultati delle stagioni 2022, 2023 e 2024 delle 8 competizioni della v1 (circa 
 
 Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il database ignora i suggerimenti e crea squadre doppie. Va eseguito solo dopo il merge della PR e il deploy.
 
+### Correzione dello storico (`api-football-rescore`, ADR 0034)
+
+- Riscarica le stagioni 2022–2024 anche se già fatte, con la normalizzazione attuale: per esempio il risultato al 90' per le partite finite ai supplementari o ai rigori.
+- Costa 32 richieste e rispetta il budget del giorno: se non basta, si ferma e va rilanciato il giorno dopo.
+- Come si avvia: _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-rescore`.
+- A ogni lotto si chiudono da soli i problemi di punteggio delle partite tornate regolari (`resolve_quality_issues`).
+
 ## API-Football: statistiche e formazioni (M2 fase A3, ADR 0012)
 
 Statistiche di squadra (tiri, corner, possesso, cartellini, passaggi…) e formazioni (modulo, allenatore, titolari e panchina) delle stagioni dello storico già scritte.

@@ -48,6 +48,30 @@ export function parseSlateDate(raw: unknown): string | null {
   return Number.isNaN(new Date(`${raw}T00:00:00Z`).getTime()) ? null : raw;
 }
 
+/** Inizio del turno (ADR 0036): venerdì per venerdì–lunedì, martedì per martedì–giovedì. */
+export function roundStartOf(value: string): string {
+  const d = new Date(`${value}T00:00:00Z`);
+  const weekday = d.getUTCDay(); // domenica = 0
+  const back = weekday >= 5 ? weekday - 5 : weekday === 0 ? 2 : weekday === 1 ? 3 : weekday - 2;
+  d.setUTCDate(d.getUTCDate() - back);
+  return d.toISOString().slice(0, 10);
+}
+
+/** "venerdì 20 – lunedì 23 novembre" oppure "martedì 24 – giovedì 26 novembre". */
+export function formatRound(start: string): string {
+  const d = new Date(`${start}T00:00:00Z`);
+  const end = new Date(d);
+  end.setUTCDate(d.getUTCDate() + (d.getUTCDay() === 5 ? 3 : 2));
+  const fmt = (x: Date, month: boolean) =>
+    new Intl.DateTimeFormat("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      ...(month ? { month: "long" } : {}),
+      timeZone: "UTC",
+    }).format(x);
+  return `${fmt(d, d.getUTCMonth() !== end.getUTCMonth())} – ${fmt(end, true)}`;
+}
+
 export function formatSlateDate(value: string): string {
   return new Intl.DateTimeFormat("it-IT", {
     weekday: "long",

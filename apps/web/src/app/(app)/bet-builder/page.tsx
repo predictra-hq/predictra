@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
-  formatSlateDate,
+  formatRound,
   parseCategory,
   parseSlateDate,
+  roundStartOf,
   selectionLabel,
 } from "@/lib/bet-builder/format";
 import { LikelyCard } from "@/components/bet-builder/likely";
@@ -118,12 +119,16 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   const picks = bestPicks(likelyRows);
   const italianOdds = bestItalianPrices(await listItalianLatestOdds(picks.map((p) => p.matchId)));
 
-  const slates = [...new Set(proposals.map((p) => p.slate_date))];
+  // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
+  const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
   const slate = parseSlateDate(params.d);
   const category = parseCategory(params.cat);
-  const shown = proposals.filter(
-    (p) => (!slate || p.slate_date === slate) && (!category || p.category === category),
-  );
+  const shown = proposals
+    .filter(
+      (p) =>
+        (!slate || roundStartOf(p.slate_date) === slate) && (!category || p.category === category),
+    )
+    .sort((a, b) => a.rank - b.rank);
   const legs = await listProposalLegs(shown.map((p) => p.proposal_id));
   const legsBy = new Map<number, BetProposalLegRow[]>();
   for (const l of legs) legsBy.set(l.proposal_id, [...(legsBy.get(l.proposal_id) ?? []), l]);
@@ -173,7 +178,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                 <option value="">{m.allSlates}</option>
                 {slates.map((d) => (
                   <option key={d} value={d}>
-                    {formatSlateDate(d)}
+                    {formatRound(d)}
                   </option>
                 ))}
               </Select>
@@ -197,11 +202,13 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
           {slates
             .filter((d) => !slate || d === slate)
             .map((d) => {
-              const day = shown.filter((p) => p.slate_date === d);
+              const day = shown.filter((p) => roundStartOf(p.slate_date) === d);
               if (day.length === 0) return null;
               return (
                 <section key={d} className="mb-6">
-                  <h2 className="mb-3 text-lg font-semibold capitalize">{formatSlateDate(d)}</h2>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    {fillTemplate(m.roundTitle, { round: formatRound(d) })}
+                  </h2>
                   {BET_PROPOSAL_CATEGORIES.map((c) => {
                     const group = day.filter((p) => p.category === c);
                     if (group.length === 0) return null;

@@ -40,7 +40,7 @@ Regole comuni:
 | `freshness_status`     | `FRESH`, `STALE`                                                                               |
 | `competition_type`     | `LEAGUE`, `CUP`, `LEAGUE_CUP`, `PLAYOFFS`                                                      |
 | `match_status`         | `SCHEDULED`, `LIVE`, `FINISHED`, `POSTPONED`, `SUSPENDED`, `CANCELLED`, `ABANDONED`, `AWARDED` |
-| `score_duration`       | `REGULAR`, `EXTRA_TIME`, `PENALTY_SHOOTOUT`                                                    |
+| `score_duration`       | `REGULAR`, `EXTRA_TIME`, `PENALTY_SHOOTOUT` (i punteggi sono sempre quelli al 90', ADR 0034)   |
 | `standing_type`        | `TOTAL`, `HOME`, `AWAY`                                                                        |
 | `football_entity_type` | `competition`, `season`, `team`, `match`                                                       |
 | `football_data_kind`   | `competitions`, `teams`, `matches`, `standings`                                                |
