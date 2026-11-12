@@ -568,6 +568,26 @@ export const it = {
       "Combinazioni di selezioni costruite dalle probabilità del modello attivo e dalle quote reali FRESH, con le correlazioni gestite. Si propone solo ciò che supera le soglie: nessuna schedina forzata.",
     disclaimer:
       "PREDICTRA non piazza scommesse e non garantisce vincite: le proposte sono stime soggette a incertezza. Il valore atteso (EV) è calcolato sulle probabilità del modello, non è un guadagno sicuro. Gioca responsabilmente.",
+    likely: {
+      title: "Le più probabili",
+      description:
+        "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Sotto, le multiple più probabili.",
+      fairOddsNote:
+        "Quota equa = 1 ÷ probabilità: è la quota sotto la quale la giocata non conviene, non è una quota del bookmaker.",
+      multiples: "Multiple più probabili",
+      multiple: "Multipla da {n}",
+      singles: "Pronostico più probabile per partita",
+      probability: "Probabilità",
+      fairOdds: "Quota equa",
+      confidence: "Affidabilità",
+      empty:
+        "Nessun pronostico disponibile: servono previsioni del modello attivo per le partite in programma.",
+      showAll: "Mostra tutti i {n} pronostici",
+    },
+    valueTitle: "Proposte con valore",
+    valueDescription:
+      "Singole e multiple 1X2 in cui la quota reale del bookmaker supera quella equa del modello. Per gli altri tipi di giocata non abbiamo quote reali gratuite, quindi compaiono solo tra le più probabili.",
+    technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
     navBuilder: "Costruisci",
     navSlips: "Le mie schedine",

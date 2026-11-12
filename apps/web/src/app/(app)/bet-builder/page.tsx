@@ -30,7 +30,14 @@ import {
   parseSlateDate,
   selectionLabel,
 } from "@/lib/bet-builder/format";
-import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
+import { LikelyCard } from "@/components/bet-builder/likely";
+import { bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
+import {
+  getLatestRun,
+  listActiveProposals,
+  listLikelyRows,
+  listProposalLegs,
+} from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
@@ -101,7 +108,12 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   await requireUser();
   const m = getMessages().betBuilder;
   const params = await searchParams;
-  const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
+  const [run, proposals, likelyRows] = await Promise.all([
+    getLatestRun(),
+    listActiveProposals(),
+    listLikelyRows(new Date()),
+  ]);
+  const picks = bestPicks(likelyRows);
 
   const slates = [...new Set(proposals.map((p) => p.slate_date))];
   const slate = parseSlateDate(params.d);
@@ -122,23 +134,30 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <p className="mb-1 text-xs text-muted">
-        {fillTemplate(m.thresholds, {
-          ev: formatPercent(rules.min_expected_value, 0),
-          p: formatPercent(rules.min_probability, 0),
-          c: String(rules.min_confidence_score).replace(".", ","),
-          legs: rules.max_legs,
-        })}
-      </p>
-      {run ? (
-        <p className="mb-4 text-xs text-muted">
-          {fillTemplate(m.lastRun, {
-            at: formatDateTime(run.finished_at ?? run.started_at),
-            candidates: run.candidates_evaluated,
-            proposals: run.proposals_written,
+      <LikelyCard picks={picks} multiples={likelyMultiples(picks)} />
+
+      <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
+      <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+      <details className="mb-4 text-xs text-muted">
+        <summary className="cursor-pointer">{m.technicalDetails}</summary>
+        <p className="mb-1 mt-2 text-xs text-muted">
+          {fillTemplate(m.thresholds, {
+            ev: formatPercent(rules.min_expected_value, 0),
+            p: formatPercent(rules.min_probability, 0),
+            c: String(rules.min_confidence_score).replace(".", ","),
+            legs: rules.max_legs,
           })}
         </p>
-      ) : null}
+        {run ? (
+          <p className="mb-4 text-xs text-muted">
+            {fillTemplate(m.lastRun, {
+              at: formatDateTime(run.finished_at ?? run.started_at),
+              candidates: run.candidates_evaluated,
+              proposals: run.proposals_written,
+            })}
+          </p>
+        ) : null}
+      </details>
 
       {proposals.length === 0 ? (
         <NoProposals run={run} />
