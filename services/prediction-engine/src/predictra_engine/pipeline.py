@@ -162,7 +162,7 @@ def run(
     *,
     now: datetime,
     code_commit: str,
-    horizon_days: int = 7,
+    horizon_days: int = 10,
     triggered_by: str = "schedule",
     dry_run: bool = False,
     model_code: str | None = None,

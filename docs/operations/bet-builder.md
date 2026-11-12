@@ -10,7 +10,7 @@ Dall'8/11/2026 (M7 fase A5, ADR 0035) le esecuzioni programmate passano dalla co
 GitHub Actions "Agent (Python)" (06:47 e 15:47 UTC: job bet-builder.run della coda, dopo quote e previsioni dello stesso ciclo, M7)
 oppure "Bet Builder" (solo avvio manuale)
   1. modello attivo (model_versions.status = ACTIVE); se non c'è, nessuna run
-  2. v_match_center: partite SCHEDULED dei prossimi 7 giorni (calcio d'inizio tra almeno 15 minuti)
+  2. v_match_center: partite SCHEDULED dei prossimi 10 giorni (calcio d'inizio tra almeno 15 minuti)
   3. predictions: l'1X2 più recente del modello attivo per partita ed esito
   4. odds_snapshots h2h: l'ultima quota per bookmaker ed esito, qualità OK e FRESH
      (letta da meno di 12 ore, con 30 minuti di margine); per ogni esito la quota più alta
@@ -35,7 +35,7 @@ oppure "Bet Builder" (solo avvio manuale)
 _Actions → Bet Builder → Run workflow_, branch `dev`.
 
 - `dry_run`: calcola le proposte senza scrivere nulla e le stampa nel log.
-- `horizon_days`: quanti giorni di partite considerare (predefinito 7, massimo 14).
+- `horizon_days`: quanti giorni di partite considerare (predefinito 10, massimo 14).
 
 ## Verifiche
 
