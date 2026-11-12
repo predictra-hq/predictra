@@ -297,7 +297,7 @@ export async function listItalianLatestOdds(matchIds: readonly number[]): Promis
     .select("match_id, bookmaker, market, selection, price, observed_at")
     .in("match_id", matchIds as number[])
     .in("bookmaker", codes)
-    .or("market.eq.h2h,market.like.totals_*")
+    .or("market.eq.h2h,market.eq.double_chance,market.like.totals_*")
     .eq("quality", "OK")
     .limit(10000);
   if (error) throw new BetBuilderDataUnavailable("quote italiane", error);

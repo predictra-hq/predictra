@@ -55,7 +55,15 @@ export default async function SlipPage({ params }: PageProps<"/bet-builder/slips
                   {x.homeTeam} – {x.awayTeam}
                 </Link>{" "}
                 <span className="text-muted">· {formatDateTime(x.kickoffAt)}</span>
-                <span className="block">{selectionLabel(x.selection, x.homeTeam, x.awayTeam)}</span>
+                <span className="block">
+                  {selectionLabel(
+                    x.selection,
+                    x.homeTeam,
+                    x.awayTeam,
+                    slip.selections[i]!.market,
+                    slip.selections[i]!.line,
+                  )}
+                </span>
               </span>
               <span className="font-mono text-xs text-muted">
                 {formatPercent(x.probability)} · {formatOdds(x.price)}

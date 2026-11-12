@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { PredictionMarket } from "@predictra/shared-types";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
+  combinedItalianPrice,
   italianPriceFor,
   type ItalianPrice,
   type LikelyMultiple,
@@ -86,6 +87,14 @@ export function LikelyCard({
                       {m.fairOdds} {formatFairOdds(x.probability)} · {m.confidence}{" "}
                       {confidenceLabel(x.confidence)}
                     </p>
+                    {(() => {
+                      const real = combinedItalianPrice(prices, x.picks);
+                      return real === null ? null : (
+                        <p className="mt-1 text-xs">
+                          {fillTemplate(m.combinedItalian, { price: formatOdds(real) })}
+                        </p>
+                      );
+                    })()}
                     <ul className="mt-2 text-sm">
                       {x.picks.map((p) => (
                         <PickRow key={p.matchId} pick={p} prices={prices} />

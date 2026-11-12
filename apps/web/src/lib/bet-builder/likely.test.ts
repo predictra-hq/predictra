@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bestItalianPrices,
   bestPicks,
+  combinedItalianPrice,
   italianPriceFor,
   likelyMultiples,
   oddsMarketFor,
@@ -66,6 +67,7 @@ describe("le più probabili (valori DEMO)", () => {
     expect(oddsMarketFor("TOTAL_GOALS", 2)).toBeNull();
     expect(oddsMarketFor("1X2", null)).toBe("h2h");
     expect(oddsMarketFor("BTTS", null)).toBeNull();
+    expect(oddsMarketFor("DOUBLE_CHANCE", null)).toBe("double_chance");
     const prices = bestItalianPrices([
       {
         match_id: 1,
@@ -91,5 +93,31 @@ describe("le più probabili (valori DEMO)", () => {
       observedAt: "t2",
     });
     expect(italianPriceFor(prices, { ...pick, selection: "OVER" })).toBeNull();
+  });
+
+  it("quota italiana combinata solo se tutte le selezioni ne hanno una", () => {
+    const prices = bestItalianPrices([
+      {
+        match_id: 1,
+        bookmaker: "DEMO",
+        market: "h2h",
+        selection: "HOME",
+        price: 1.5,
+        observed_at: "t",
+      },
+      {
+        match_id: 2,
+        bookmaker: "DEMO",
+        market: "totals_2_5",
+        selection: "UNDER",
+        price: 2,
+        observed_at: "t",
+      },
+    ]);
+    const a = { matchId: 1, market: "1X2", line: null, selection: "HOME" };
+    const b = { matchId: 2, market: "TOTAL_GOALS", line: 2.5, selection: "UNDER" };
+    const c = { matchId: 3, market: "BTTS", line: null, selection: "YES" };
+    expect(combinedItalianPrice(prices, [a, b])).toBeCloseTo(3);
+    expect(combinedItalianPrice(prices, [a, c])).toBeNull();
   });
 });

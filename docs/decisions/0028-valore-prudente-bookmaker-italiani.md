@@ -36,5 +36,5 @@ Inoltre la migliore quota arrivava spesso da bookmaker non disponibili in Italia
 - Meno proposte e valori più bassi, ma credibili. Una partita senza quote italiane non entra nelle proposte.
 - La probabilità di mercato è calcolata dal motore. Il database ne controlla presenza e limiti e la usa con il peso della run, ma non ricalcola il consenso: è un limite dichiarato.
 - "Le più probabili" (pronostici su più mercati) usa ancora la sola probabilità del modello. Per quei mercati non ci sono quote reali gratuite e non c'è valore da calcolare.
-- Il calcolatore Kelly del Tracker usa ancora la probabilità del modello: da allineare in una PR successiva.
+- Il calcolatore Kelly del Tracker usa la stessa probabilità prudente dal 12/11/2026 (ADR 0033).
 - **Mercati diversi dall'1X2 (under/over, gol/no gol, doppia chance…) con quote italiane:** il piano gratuito di The Odds API (500 crediti al mese, circa 480 già usati per l'1X2) non basta. La regione `it` non esiste: i bookmaker italiani coperti sono solo Codere e Unibet Italia. Estendere i mercati richiede una scelta del proprietario: ridurre le raccolte 1X2 oppure un piano a pagamento (regola 7).

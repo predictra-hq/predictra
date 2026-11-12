@@ -7,7 +7,24 @@ import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 
 /** Etichetta di un esito 1X2: "1 · Inter", "X · pareggio", "2 · Milan". */
-export function selectionLabel(selection: string, homeTeam: string, awayTeam: string): string {
+/**
+ * Etichetta di una selezione. Senza mercato o con 1X2: "1 · Squadra". Per gli altri
+ * mercati (ADR 0033): "Doppia chance 1X", "Totale gol Over 2,5".
+ */
+export function selectionLabel(
+  selection: string,
+  homeTeam: string,
+  awayTeam: string,
+  market?: string | null,
+  line?: number | string | null,
+): string {
+  if (market && market !== "1X2") {
+    const p = getMessages().predictions;
+    const name = p.markets[market as keyof typeof p.markets] ?? market;
+    const sel = (p.selections as Record<string, string>)[selection] ?? selection;
+    const value = line === null || line === undefined ? "" : String(Number(line)).replace(".", ",");
+    return [name, sel, value].filter(Boolean).join(" ");
+  }
   const s = getMessages().betBuilder.selections;
   if (selection === "HOME") return fillTemplate(s.HOME, { team: homeTeam });
   if (selection === "AWAY") return fillTemplate(s.AWAY, { team: awayTeam });

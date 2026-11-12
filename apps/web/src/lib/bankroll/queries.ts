@@ -2,10 +2,12 @@ import "server-only";
 import type {
   BankrollSummaryRow,
   BetRow,
+  MatchOddsH2hRow,
   MovementKind,
   PersonalLimitsRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
+import { matchMarkets } from "@/lib/bet-builder/market";
 import { groupKellyMatches, type KellyMatch } from "./kelly";
 
 /*
@@ -91,4 +93,23 @@ export async function listKellyMatches(now: Date = new Date()): Promise<KellyMat
     .limit(600);
   if (error) throw new BankrollUnavailable("previsioni del modello", error);
   return groupKellyMatches(data ?? []);
+}
+
+/**
+ * Consenso di mercato senza margine (tutti i bookmaker FRESH) della partita scelta nel
+ * calcolatore Kelly, per la probabilità prudente dell'ADR 0028.
+ */
+export async function getMarketConsensus(
+  matchId: number,
+): Promise<Partial<Record<"HOME" | "DRAW" | "AWAY", number>>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_match_odds_h2h")
+    .select(
+      "match_id, bookmaker, italian_market, home_price, draw_price, away_price, home_probability, draw_probability, away_probability, observed_at, freshness, quality",
+    )
+    .eq("match_id", matchId)
+    .limit(500);
+  if (error) throw new BankrollUnavailable("quote di mercato", error);
+  return matchMarkets((data ?? []) as MatchOddsH2hRow[]).get(matchId)?.consensus ?? {};
 }

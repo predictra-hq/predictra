@@ -5,6 +5,14 @@ describe("formattazione Bet Builder", () => {
   it("etichette degli esiti", () => {
     expect(selectionLabel("HOME", "DEMO A", "DEMO B")).toBe("1 · DEMO A");
     expect(selectionLabel("DRAW", "DEMO A", "DEMO B")).toBe("X · pareggio");
+    // ADR 0033: altri mercati con quote reali.
+    expect(selectionLabel("HOME_DRAW", "DEMO A", "DEMO B", "DOUBLE_CHANCE", null)).toBe(
+      "Doppia chance 1X",
+    );
+    expect(selectionLabel("OVER", "DEMO A", "DEMO B", "TOTAL_GOALS", "2.50")).toBe(
+      "Totale gol Over 2,5",
+    );
+    expect(selectionLabel("HOME", "DEMO A", "DEMO B", "1X2", null)).toBe("1 · DEMO A");
     expect(selectionLabel("AWAY", "DEMO A", "DEMO B")).toBe("2 · DEMO B");
   });
 

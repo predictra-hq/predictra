@@ -96,7 +96,7 @@ class FakeStore:
             if e["match_id"] in set(match_ids)
         ]
 
-    def h2h_snapshots(self, event_ids):
+    def market_snapshots(self, event_ids):
         return [s for s in self.snaps if s["event_id"] in set(event_ids)]
 
     def odds_max_age(self):
@@ -210,3 +210,60 @@ def test_adr_0028_mercato_e_solo_bookmaker_italiani():
     assert float(leg.probability) == pytest.approx(0.5 * 0.5 + 0.5 * market, abs=1e-8)
     item = summary.proposals[0].as_batch_item(DEFAULT_RULES)
     assert item["legs"][0]["market_probability"] == pytest.approx(market, abs=1e-8)
+
+
+def test_adr_0033_tutti_i_mercati_con_quote_italiane():
+    """1X2, doppia chance e under/over: consenso per mercato, quota solo italiana."""
+    store = FakeStore()
+    fresh = iso(timedelta(hours=-1))
+    t = iso(timedelta(hours=-3))
+
+    def snap(sid, book, market, sel, price):
+        s = store._s(sid, 101, book, sel, price, t, fresh)
+        s["market"] = market
+        return s
+
+    store.snaps = [
+        # 1X2 di un bookmaker estero: serve solo al consenso (anche per la doppia chance).
+        snap(1, "demo_int", "h2h", "HOME", 2.0),
+        snap(2, "demo_int", "h2h", "DRAW", 3.5),
+        snap(3, "demo_int", "h2h", "AWAY", 4.0),
+        # Doppia chance e under/over 2,5 di un bookmaker italiano.
+        snap(4, "demo_it", "double_chance", "HOME_DRAW", 1.45),
+        snap(5, "demo_it", "double_chance", "HOME_AWAY", 1.35),
+        snap(6, "demo_it", "double_chance", "DRAW_AWAY", 2.0),
+        snap(7, "demo_it", "totals_2_5", "OVER", 2.2),
+        snap(8, "demo_it", "totals_2_5", "UNDER", 1.6),
+        snap(9, "demo_int", "totals_2_5", "OVER", 2.0),
+        snap(10, "demo_int", "totals_2_5", "UNDER", 1.8),
+    ]
+    store.preds = [
+        {**store._p(31, 1, "HOME_DRAW", 0.75, iso(timedelta(hours=-2))), "market": "DOUBLE_CHANCE"},
+        {
+            **store._p(32, 1, "OVER", 0.55, iso(timedelta(hours=-2))),
+            "market": "TOTAL_GOALS",
+            "line": 2.5,
+        },
+        # Linea senza quote (3,0) e mercato senza quote (BTTS): ignorati.
+        {
+            **store._p(33, 1, "OVER", 0.4, iso(timedelta(hours=-2))),
+            "market": "TOTAL_GOALS",
+            "line": 3.0,
+        },
+        {**store._p(34, 1, "YES", 0.6, iso(timedelta(hours=-2))), "market": "BTTS"},
+    ]
+    from predictra_bet_builder.pipeline import collect_legs
+
+    legs, _ = collect_legs(store, 7, NOW, timedelta(days=10), DEFAULT_RULES)
+    by = {(leg.market, leg.selection): leg for leg in legs}
+    assert set(by) == {("DOUBLE_CHANCE", "HOME_DRAW"), ("TOTAL_GOALS", "OVER")}
+    dc = by[("DOUBLE_CHANCE", "HOME_DRAW")]
+    s = 1 / 2.0 + 1 / 3.5 + 1 / 4.0
+    assert float(dc.market_probability) == pytest.approx((1 / 2.0 + 1 / 3.5) / s, abs=1e-8)
+    assert dc.bookmaker == "demo_it" and float(dc.price) == 1.45
+    over = by[("TOTAL_GOALS", "OVER")]
+    m_it = (1 / 2.2) / (1 / 2.2 + 1 / 1.6)
+    m_int = (1 / 2.0) / (1 / 2.0 + 1 / 1.8)
+    assert float(over.market_probability) == pytest.approx((m_it + m_int) / 2, abs=1e-8)
+    assert over.line == 2.5 and float(over.price) == 2.2
+    assert float(over.probability) == pytest.approx(0.5 * 0.55 + 0.5 * (m_it + m_int) / 2, abs=1e-8)
