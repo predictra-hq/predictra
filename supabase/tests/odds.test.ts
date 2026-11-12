@@ -266,6 +266,13 @@ describe("scrittura e abbinamento", () => {
                 app_private.odds_market_for('1X2', null) c`,
       );
       expect(m).toEqual({ a: "totals_2_5", b: null, c: "h2h" });
+      // ADR 0032: doppia chance per partita.
+      const dc = await one<{ code: string | null; sel: string[] }>(
+        tx,
+        `select app_private.odds_market_for('DOUBLE_CHANCE', null) code,
+                (select selections from public.markets where code = 'double_chance') sel`,
+      );
+      expect(dc).toEqual({ code: "double_chance", sel: ["HOME_DRAW", "HOME_AWAY", "DRAW_AWAY"] });
     });
   });
 
