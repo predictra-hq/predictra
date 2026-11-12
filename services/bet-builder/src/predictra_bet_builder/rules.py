@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass
 
 @dataclass(frozen=True)
 class Rules:
-    rules_version: str = "2026.11.08-1"
+    rules_version: str = "2026.11.12-1"
     max_legs: int = 4
     max_proposals_per_category: int = 5
     min_leg_probability: float = 0.2
@@ -21,6 +21,9 @@ class Rules:
     min_leg_expected_value: float = 0.02
     min_expected_value: float = 0.05
     min_confidence_score: float = 0.4
+    # ADR 0028: probabilità usata = (1 − w)·modello + w·mercato; quote solo italiane.
+    market_weight: float = 0.5
+    italian_bookmakers_only: bool = True
 
     def as_json(self) -> dict[str, object]:
         return asdict(self)
@@ -30,6 +33,11 @@ DEFAULT_RULES = Rules()
 
 CATEGORIES = ("CONSERVATIVE", "BALANCED", "AGGRESSIVE")
 CATEGORY_MIN_PROBABILITY = {"CONSERVATIVE": 0.5, "BALANCED": 0.25, "AGGRESSIVE": 0.0}
+
+
+def blended_probability(model: float, market: float, weight: float) -> float:
+    """Probabilità usata (ADR 0028): ``(1 − w)·modello + w·mercato``."""
+    return (1 - weight) * model + weight * market
 
 
 def expected_value(probability: float, price: float) -> float:

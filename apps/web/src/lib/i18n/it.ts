@@ -587,7 +587,7 @@ export const it = {
     },
     valueTitle: "Proposte con valore",
     valueDescription:
-      "Singole e multiple 1X2 in cui la quota reale del bookmaker supera quella equa del modello. Per gli altri tipi di giocata non abbiamo quote reali gratuite, quindi compaiono solo tra le più probabili.",
+      "Singole e multiple 1X2 giocabili su bookmaker italiani (oggi Codere e Unibet Italia), solo quando la loro quota supera quella equa. La probabilità usata è la media tra quella del modello e quella del mercato, ricavata dalle quote di tutti i bookmaker, anche esteri: così il valore non viene gonfiato quando il modello si discosta troppo. Per gli altri tipi di giocata non abbiamo quote reali gratuite, quindi compaiono solo tra le più probabili.",
     technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
     navBuilder: "Costruisci",
@@ -657,7 +657,7 @@ export const it = {
       "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote FRESH.",
     builderTitle: "Costruisci una combinazione",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa le probabilità del modello attivo e la migliore quota FRESH tra i bookmaker.",
+      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota FRESH dei bookmaker italiani.",
     builderEmpty:
       "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato in Model Intelligence.",
     evaluate: "Valuta",
