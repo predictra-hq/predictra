@@ -690,6 +690,10 @@ export const it = {
     deleteSlip: "Elimina",
     slipDeleted: "Schedina eliminata.",
     savedAt: "Salvata il {date}",
+    slipSummary: "{n} selezioni",
+    slipProbability: "Probabilità",
+    openSlip: "Apri la schedina",
+    backToSlips: "← Torna alle mie schedine",
   },
   teamAliases: {
     title: "Alias delle squadre",
