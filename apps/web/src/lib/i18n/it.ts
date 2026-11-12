@@ -628,7 +628,7 @@ export const it = {
     rules:
       "Gli alias non si inventano: si aggiungono solo guardando il nome reale ricevuto. Ogni alias è registrato in audit. Serve un Super Admin con la verifica a due fattori.",
     nextRunNote:
-      "Dopo il salvataggio l'abbinamento avviene alla prossima raccolta delle quote (07:23 e 16:37 UTC). Gli eventi già giocati non vengono più ricevuti e restano non abbinati.",
+      "Dopo il salvataggio l'evento si abbina subito, anche se la partita è già stata giocata. Se i due nomi sono già noti e l'evento resta non abbinato, la partita non è nel calendario a quell'ora (di solito è stata rinviata): non serve un alias, l'avviso si chiude da solo alla raccolta successiva.",
     namesTitle: "Nomi da abbinare",
     noIssues: "Nessun evento di quote non abbinato. Tutti i nomi ricevuti sono riconosciuti.",
     receivedName: "Nome ricevuto",
@@ -640,7 +640,7 @@ export const it = {
     otherTeams: "Altre squadre",
     suggestion: "Possibile corrispondenza: {team} (verifica prima di salvare)",
     save: "Salva alias",
-    saved: "Alias salvato. L'evento si abbinerà alla prossima raccolta delle quote.",
+    saved: "Alias salvato. Gli eventi con questo nome sono stati ricollegati.",
     duplicate: "Questo alias esiste già.",
     invalid: "Scegli una squadra e un nome validi.",
     resolution: {
@@ -648,7 +648,8 @@ export const it = {
       ambiguous: "Ambiguo: più squadre",
       known: "Alias presente",
     },
-    knownHint: "Alias già presente: l'evento si abbinerà alla prossima raccolta.",
+    knownHint:
+      "Nome già riconosciuto: non serve un alias. Se l'evento resta non abbinato, la partita non è nel calendario a quell'ora (rinvio): l'avviso si chiude da solo.",
     ambiguousHint:
       "Il nome corrisponde a più squadre: l'abbinamento non avviene finché l'ambiguità resta. Va risolta nel database con una PR dedicata.",
     eventsTitle: "Eventi non abbinati",
@@ -691,7 +692,7 @@ export const it = {
     activate: "Attiva",
     activated: "Modello attivato.",
     activateHint:
-      "Il motore sceglie da solo il modello più forte. Un Super Admin può attivare a mano lo sfidante, se batte la baseline su Brier e Log Loss: il motore lo cambierà solo se l'altro è più forte di almeno 0,001 di Log Loss.",
+      "Il motore sceglie da solo il modello più forte a ogni ciclo (ogni 3 ore). Un Super Admin può attivare a mano lo sfidante, se batte la baseline su Brier e Log Loss, e tornare indietro quando vuole: il modello sostituito resta in gara. Al ciclo successivo il motore rimette attivo l'altro solo se è più forte di almeno 0,001 di Log Loss.",
     calibration: "Curva di calibrazione",
     calibrationHint:
       "Per ogni fascia di probabilità prevista, la frequenza osservata. Sulla diagonale il modello è ben calibrato.",

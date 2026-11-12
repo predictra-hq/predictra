@@ -27,6 +27,8 @@ Fatti verificati:
 
    Le versioni ritirate e le loro previsioni restano nel database per la riproducibilità (ADR 0020).
 
+   **Cambio del modello attivo (aggiornamento del 12/11/2026).** Quando un modello prende il posto dell'attivo, a mano (`set_active_model_version`) o in automatico (`auto_activate_model_version`), il precedente torna `CANDIDATE`, cioè sfidante, e non `RETIRED`. Così resta in gara e si può riattivare. Su DEV attivare a mano Dixon-Coles aveva ritirato Poisson, che non si poteva più riattivare. `RETIRED` vale solo per le versioni superate, decise dal motore. La migrazione `20261112000000_model_activation_reversible.sql` ha anche rimesso in gara l'ultima versione di Poisson e di Dixon-Coles. Un'attivazione manuale vale fino al ciclo successivo del motore: se l'altro modello è più forte di almeno 0,001 di Log Loss, torna attivo da solo (ADR 0023).
+
 4. **Pagina _Model Intelligence_:**
    - in primo piano il modello attivo, con il riferimento della baseline;
    - una tabella "In gara" con il modello attivo e lo sfidante;

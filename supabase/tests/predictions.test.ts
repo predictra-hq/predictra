@@ -376,7 +376,7 @@ describe("modello attivo", () => {
     ).toBe(1);
   });
 
-  it("attivarne un altro ritira il precedente: mai due attivi", async () => {
+  it("attivarne un altro rimette in gara il precedente: mai due attivi, si torna indietro", async () => {
     const { good } = await setup();
     const other = await asServiceRole(db, async (tx) => {
       const id = await register(tx, version("poisson", "v1"));
@@ -395,7 +395,21 @@ describe("modello attivo", () => {
       )
     ).rows;
     expect(rows.filter((r) => r.status === "ACTIVE").map((r) => Number(r.id))).toEqual([other]);
-    expect(rows.find((r) => Number(r.id) === good)?.status).toBe("RETIRED");
+    // Il precedente resta lo sfidante (non ritirato) e si può riattivare.
+    expect(rows.find((r) => Number(r.id) === good)?.status).toBe("CANDIDATE");
+    await asUser(db, superAdmin, async (tx) => {
+      await tx.query("select public.set_active_model_version($1)", [good]);
+    });
+    const after = (
+      await db.query<{ id: number; status: string }>(
+        "select id, status::text from public.model_versions where id in ($1, $2) order by id",
+        [good, other],
+      )
+    ).rows.map((r) => [Number(r.id), r.status]);
+    expect(after).toEqual([
+      [good, "ACTIVE"],
+      [other, "CANDIDATE"],
+    ]);
   });
   it("attivazione automatica del più forte (ADR 0023): solo service_role, stesse garanzie, audit", async () => {
     const { good, weak } = await setup();
