@@ -23,8 +23,8 @@ class Season:
     code: str
     year: int
     status: str
-    chunks_done: int = 20
-    chunks_total: int = 20
+    done: int = 20
+    total: int = 20
 
 
 @dataclass
@@ -108,3 +108,15 @@ def test_stagione_fallita_ritenta(queue: FakeQueue) -> None:
     collector = FakeCollector(Summary([Season("PL", 2023, "FAILED")]))
     run_cycle(queue, handlers(collector), config(), clock=queue.clock)
     assert queue.jobs[job_id].status == "failed"
+
+
+def test_limite_del_piano_non_ritenta(queue: FakeQueue) -> None:
+    job_id = plan(queue)
+    collector = FakeCollector(
+        Summary(
+            [Season("SA", 2024, "FAILED")],
+            stopped="Limite del piano API-Football: ApiFootballError: plan",
+        )
+    )
+    run_cycle(queue, handlers(collector), config(), clock=queue.clock)
+    assert queue.jobs[job_id].status == "dead"

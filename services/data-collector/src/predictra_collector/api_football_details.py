@@ -1,15 +1,20 @@
 """Statistiche e formazioni da API-Football (M2 fase A3, ADR 0012).
 
 - Si lavora per competizione e stagione, sulle stagioni dei risultati già scritti
-  (job ``af.backfill``, chiave ``<codice>:<anno>``).
+  (job ``af.backfill``, chiave ``<codice>:<anno>``), dalla più recente: prima il 2024.
 - Per ogni stagione: 1 richiesta ``/fixtures?league&season`` per l'elenco ordinato delle
-  partite concluse, poi ``/fixtures?ids=`` a blocchi di 20, che restituisce statistiche
-  e formazioni nella stessa risposta (documentazione v3). Circa 20 richieste a stagione.
+  partite concluse, poi per ogni partita ``/fixtures/statistics`` e ``/fixtures/lineups``
+  (2 richieste). Il piano Free non ammette il parametro ``ids`` di ``/fixtures``
+  (verificato su DEV il 12/11/2026: "Free plans do not have access to the Ids
+  parameter"), mentre i due endpoint per partita sono disponibili.
 - Ripresa: ogni stagione ha un'esecuzione ``af.details`` (chiave ``<codice>:<anno>``).
   Se il budget del giorno finisce a metà, l'esecuzione chiude ``PARTIAL`` con
-  ``resume_cursor = {"next": <blocco>}`` e il giorno dopo riparte da lì. Una stagione
-  finita chiude ``SUCCEEDED`` e non costa più nulla.
-- Budget: lo stesso del backfill (90 richieste al giorno, contando quelle già usate).
+  ``resume_cursor = {"next": <indice della partita>}`` e il giorno dopo riparte da lì.
+  Una stagione finita chiude ``SUCCEEDED`` e non costa più nulla.
+- Un errore di piano ("plan") ferma subito tutto il lavoro del giorno: le stagioni
+  successive darebbero lo stesso errore e consumerebbero richieste per niente.
+- Budget: lo stesso del backfill (90 richieste al giorno, contando quelle già usate),
+  cioè circa 44 partite al giorno.
 """
 
 from __future__ import annotations
@@ -20,13 +25,19 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from .api_football import DAILY_BUDGET, PROVIDER, ApiFootballClient, DailyBudgetExhausted
+from .api_football import (
+    DAILY_BUDGET,
+    PROVIDER,
+    ApiFootballClient,
+    ApiFootballError,
+    DailyBudgetExhausted,
+)
 from .api_football_backfill import JOB_TYPE as RESULTS_JOB
 from .api_football_backfill import LEAGUES, SEASONS
 from .runner import sanitize
 
 JOB_TYPE = "af.details"
-CHUNK = 20  # massimo di `ids` per chiamata (documentazione v3)
+PER_MATCH = 2  # /fixtures/statistics + /fixtures/lineups
 FINISHED = {"FT", "AET", "PEN"}
 _POSITIONS = {"G", "D", "M", "F"}
 _GRID = re.compile(r"^[0-9]{1,2}:[0-9]{1,2}$")
@@ -149,8 +160,8 @@ class DetailsSeason:
     code: str
     year: int
     status: str
-    chunks_done: int = 0
-    chunks_total: int = 0
+    done: int = 0
+    total: int = 0
     matches: int = 0
     statistics: int = 0
     lineups: int = 0
@@ -177,6 +188,10 @@ def _league_id(client: ApiFootballClient, code: str) -> int:
     return int(found[0]["league"]["id"])
 
 
+def _is_plan_error(exc: Exception) -> bool:
+    return isinstance(exc, ApiFootballError) and "plan" in str(exc).lower()
+
+
 def collect_details(
     client: ApiFootballClient,
     store: Store,
@@ -197,10 +212,11 @@ def collect_details(
     have_results = store.succeeded_windows(PROVIDER, RESULTS_JOB)
     # Per i dettagli solo SUCCEEDED conta come finito: PARTIAL vuol dire "da riprendere".
     done = store.succeeded_windows(PROVIDER, JOB_TYPE, ("SUCCEEDED",))
+    # Dalla stagione più recente: è la più utile ai modelli.
     todo = [
         (code, year)
+        for year in sorted(seasons, reverse=True)
         for code in competitions
-        for year in seasons
         if f"{code}:{year}" in have_results and f"{code}:{year}" not in done
     ]
     if not todo:
@@ -208,44 +224,53 @@ def collect_details(
         return summary
 
     league_ids: dict[str, int] = {}
+
+    def left() -> int:
+        return client.budget - client.requests_used
+
     for code, year in todo:
-        # Servono almeno 3 richieste: /leagues (se manca), elenco partite, un blocco.
-        if client.budget - client.requests_used < 3:
+        # Servono: /leagues (se manca), l'elenco delle partite e almeno una partita.
+        if left() < (0 if code in league_ids else 1) + 1 + PER_MATCH:
             summary.stopped = f"Budget di {client.budget} richieste raggiunto"
             break
         key = f"{code}:{year}"
         result = DetailsSeason(code, year, "SUCCEEDED")
         before = client.requests_used
         run_id: int | None = None
-        cursor = 0
         try:
             last = store.last_run(PROVIDER, JOB_TYPE, key)
             if last and isinstance(last.get("resume_cursor"), dict):
-                cursor = int(last["resume_cursor"].get("next", 0))
+                result.done = int(last["resume_cursor"].get("next", 0))
             run_id = store.start_run(PROVIDER, JOB_TYPE, key, triggered_by)
             if code not in league_ids:
                 league_ids[code] = _league_id(client, code)
             fixtures = client.fixtures(league=str(league_ids[code]), season=str(year))
-            ids = sorted(
-                str(f["fixture"]["id"])
-                for f in fixtures
-                if ((f.get("fixture") or {}).get("status") or {}).get("short") in FINISHED
+            finished = sorted(
+                (
+                    (str(f["fixture"]["id"]), (f.get("fixture") or {}).get("date"))
+                    for f in fixtures
+                    if ((f.get("fixture") or {}).get("status") or {}).get("short") in FINISHED
+                ),
+                key=lambda x: int(x[0]),
             )
-            chunks = [ids[i : i + CHUNK] for i in range(0, len(ids), CHUNK)]
-            result.chunks_total = len(chunks)
-            result.chunks_done = cursor
-            while result.chunks_done < len(chunks):
-                if client.requests_used >= client.budget:
+            result.total = len(finished)
+            result.done = min(result.done, result.total)
+            while result.done < result.total:
+                if left() < PER_MATCH:
                     result.status = "PARTIAL"
                     summary.stopped = f"Budget di {client.budget} richieste raggiunto"
                     break
-                part = chunks[result.chunks_done]
-                items = client.fixtures(ids="-".join(part))
-                written = store.ingest_details(run_id, normalize_details(items, observed)) or {}
-                result.matches += len(part)
+                fid, date = finished[result.done]
+                item = {
+                    "fixture": {"id": fid, "date": date},
+                    "statistics": client.fixture_statistics(fid),
+                    "lineups": client.fixture_lineups(fid),
+                }
+                written = store.ingest_details(run_id, normalize_details([item], observed)) or {}
+                result.matches += 1
                 result.statistics += int(written.get("statistics", 0))
                 result.lineups += int(written.get("lineups", 0))
-                result.chunks_done += 1
+                result.done += 1
             store.finish_run(
                 run_id,
                 result.status,
@@ -254,7 +279,7 @@ def collect_details(
                 error_count=0,
                 error_summary=None,
                 quota_remaining=client.day_remaining,
-                resume_cursor={"next": result.chunks_done} if result.status == "PARTIAL" else None,
+                resume_cursor={"next": result.done} if result.status == "PARTIAL" else None,
             )
         except DailyBudgetExhausted as exc:
             result.status = "PARTIAL"
@@ -268,11 +293,13 @@ def collect_details(
                         rows_upserted=result.statistics + result.lineups,
                         error_count=0,
                         error_summary=None,
-                        resume_cursor={"next": result.chunks_done},
+                        resume_cursor={"next": result.done},
                     )
         except Exception as exc:
             result.status = "FAILED"
             result.error = sanitize(f"{type(exc).__name__}: {exc}", secrets)
+            if _is_plan_error(exc):
+                summary.stopped = f"Limite del piano API-Football: {result.error}"
             if run_id is not None:
                 with contextlib.suppress(Exception):
                     store.finish_run(
@@ -282,7 +309,7 @@ def collect_details(
                         rows_upserted=result.statistics + result.lineups,
                         error_count=1,
                         error_summary=result.error,
-                        resume_cursor={"next": result.chunks_done},
+                        resume_cursor={"next": result.done},
                     )
         summary.seasons.append(result)
         if summary.stopped:

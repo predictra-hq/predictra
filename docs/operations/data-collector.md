@@ -77,8 +77,8 @@ Serve la migrazione `20261111170000_football_team_hint.sql` su DEV: senza, il da
 
 Statistiche di squadra (tiri, corner, possesso, cartellini, passaggi…) e formazioni (modulo, allenatore, titolari e panchina) delle stagioni dello storico già scritte.
 
-- **In automatico:** l'agente accoda ogni giorno il job `api-football.details`, insieme alla raccolta football-data.org, quando `API_FOOTBALL_KEY` è disponibile. Ogni job usa il budget del giorno (90 richieste, contando quelle già usate) e riprende dal blocco dove si era fermato. Servono circa 480 richieste, cioè circa 6 giorni. A lavoro finito il job costa solo `/status`, che è gratuito.
-- **A mano:** _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-details`. Non ha un dry run: ogni blocco scaricato viene scritto.
+- **In automatico:** l'agente accoda ogni giorno il job `api-football.details`, insieme alla raccolta football-data.org, quando `API_FOOTBALL_KEY` è disponibile. Ogni job usa il budget del giorno (90 richieste, contando quelle già usate) e riprende dalla partita dove si era fermato. Ogni partita costa 2 richieste (statistiche e formazioni), quindi circa 44 partite al giorno. La stagione 2024 richiede circa 2 mesi, tutte e tre circa 6. Un errore di piano ferma subito il lavoro del giorno. A lavoro finito il job costa solo `/status`, che è gratuito.
+- **A mano:** _Actions → Data collector → Run workflow_, branch `dev`, `job` = `api-football-details`. Non ha un dry run: ogni partita scaricata viene scritta.
 - **Avanzamento:** in `ingestion_runs`, `job_type = af.details`, una esecuzione per competizione e stagione (`PARTIAL` con `resume_cursor = {"next": n}` finché manca qualcosa, `SUCCEEDED` alla fine).
 
 ## Attivazione (una volta, `gennpalm`)

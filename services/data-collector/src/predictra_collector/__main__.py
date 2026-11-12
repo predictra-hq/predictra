@@ -155,7 +155,7 @@ def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> 
 
 def _cmd_api_football_details(args: argparse.Namespace, settings: Settings) -> int:
     if args.dry_run:
-        print("api-football-details non ha un dry run: ogni blocco scaricato viene scritto.")
+        print("api-football-details non ha un dry run: ogni partita scaricata viene scritta.")
         return 2
     client = ApiFootballClient(settings.require_api_football())
     store = SupabaseStore(*settings.require_supabase())
@@ -174,8 +174,8 @@ def _cmd_api_football_details(args: argparse.Namespace, settings: Settings) -> i
         print("  tutte le stagioni sono complete")
     for s in summary.seasons:
         line = (
-            f"  {s.code:<4} {s.year} {s.status:<9} blocchi={s.chunks_done}/{s.chunks_total} "
-            f"partite={s.matches} statistiche={s.statistics} formazioni={s.lineups}"
+            f"  {s.code:<4} {s.year} {s.status:<9} partite={s.done}/{s.total} "
+            f"scaricate={s.matches} statistiche={s.statistics} formazioni={s.lineups}"
         )
         if s.error:
             line += f" errore={s.error}"
