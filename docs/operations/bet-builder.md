@@ -18,8 +18,8 @@ oppure "Bet Builder" (solo avvio manuale)
 ```
 
 - **Selezioni ammesse:** probabilità ≥ 0,20, Confidence Score ≥ 0,40, EV ≥ 0,02 (ADR 0025 §3).
-- **Combinazioni:** singole e multiple fino a 4 selezioni, sulla **stessa giornata** (data a Roma del calcio d'inizio), con partite e squadre tutte diverse. Per giornata si considerano le 30 selezioni con il punteggio migliore.
-- **Soglie della combinazione:** probabilità ≥ 0,10, EV ≥ 0,05. Categoria dalla probabilità, ranking `C · EV / σ`, al massimo 5 proposte per giornata e categoria.
+- **Combinazioni:** singole e multiple fino a 4 selezioni sullo **stesso turno** (venerdì–lunedì o martedì–giovedì, ora di Roma; ADR 0036), con partite e squadre tutte diverse. Per turno si considerano le 30 selezioni con il punteggio migliore.
+- **Soglie della combinazione:** probabilità ≥ 0,10, EV ≥ 0,05. Categoria dalla probabilità, ranking `C · EV / σ`, al massimo 8 proposte per turno e categoria, tra cui sempre la migliore di ogni numero di selezioni (ADR 0036).
 - **Nessuna schedina forzata:** se nulla supera le soglie la run si chiude `SUCCEEDED` con zero proposte, e la pagina mostra lo stato vuoto.
 - Il database ricalcola tutti i valori e rifiuta l'intero lotto se una proposta non rispetta le regole: in quel caso la run si chiude `FAILED` con il messaggio d'errore.
 - `joint.py` (probabilità congiunta sulla stessa partita dalla matrice di M4) è pronto e testato, ma in v1 non produce proposte: manca la quota reale della combinazione (ADR 0026 §1).

@@ -13,9 +13,9 @@ from dataclasses import asdict, dataclass
 
 @dataclass(frozen=True)
 class Rules:
-    rules_version: str = "2026.11.12-1"
+    rules_version: str = "2026.11.12-2"
     max_legs: int = 4
-    max_proposals_per_category: int = 5
+    max_proposals_per_category: int = 8
     min_leg_probability: float = 0.2
     min_probability: float = 0.1
     min_leg_expected_value: float = 0.02

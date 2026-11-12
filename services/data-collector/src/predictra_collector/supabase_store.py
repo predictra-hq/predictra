@@ -134,6 +134,21 @@ class SupabaseStore:
         if issues:
             self.rpc("report_quality_issues", {"p_run_id": run_id, "p_issues": issues})
 
+    def resolve_issues(
+        self, run_id: int, check_codes: tuple[str, ...], provider_entity_ids: list[str]
+    ) -> None:
+        """Chiude i problemi aperti di questi controlli per le partite indicate (ADR 0034)."""
+        for i in range(0, len(provider_entity_ids), 500):
+            chunk = provider_entity_ids[i : i + 500]
+            self.rpc(
+                "resolve_quality_issues",
+                {
+                    "p_run_id": run_id,
+                    "p_check_codes": list(check_codes),
+                    "p_provider_entity_ids": chunk,
+                },
+            )
+
     def finish_run(
         self,
         run_id: int,

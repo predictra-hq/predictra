@@ -6,7 +6,8 @@
 - ``python -m predictra_collector api-football-probe``: verifica del piano API-Football
   (stagioni accessibili); non scrive nulla, al massimo 6 richieste
 - ``python -m predictra_collector api-football-backfill [--competitions SA] [--dry-run]``:
-  storico 2022-2024 da API-Football (M2 fase A3), al massimo 32 richieste
+  storico 2022-2024 da API-Football (M2 fase A3), al massimo 32 richieste; con
+  ``--refresh`` riscarica anche le stagioni già fatte (ADR 0034)
 """
 
 from __future__ import annotations
@@ -126,6 +127,7 @@ def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> 
         triggered_by=args.triggered_by,
         secrets=settings.secrets(),
         matcher=matcher,
+        refresh=args.refresh,
     )
     mode = "DRY RUN (nessuna scrittura)" if store is None else "scrittura su Supabase"
     print(
@@ -209,6 +211,11 @@ def main(argv: list[str] | None = None) -> int:
     bf.add_argument("--competitions", help="codici separati da virgola (default: v1)")
     bf.add_argument("--dry-run", action="store_true", help="non scrive su Supabase")
     bf.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    bf.add_argument(
+        "--refresh",
+        action="store_true",
+        help="riscarica anche le stagioni già fatte (dopo una correzione, ADR 0034)",
+    )
     dt = sub.add_parser("api-football-details", help="statistiche e formazioni da API-Football")
     dt.add_argument("--competitions", help="codici separati da virgola (default: v1)")
     dt.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
