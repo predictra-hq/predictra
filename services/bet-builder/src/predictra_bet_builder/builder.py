@@ -45,6 +45,9 @@ class Leg:
     odds_snapshot_id: int
     bookmaker: str
     price: Decimal
+    # ADR 0028: `probability` è quella usata (media pesata); qui le due componenti.
+    model_probability: Decimal | None = None
+    market_probability: Decimal | None = None
 
     @property
     def expected_value(self) -> float:
@@ -92,6 +95,12 @@ class Proposal:
                         "match_id": leg.match_id,
                         "selection": leg.selection,
                         "probability": float(leg.probability),
+                        "model_probability": None
+                        if leg.model_probability is None
+                        else float(leg.model_probability),
+                        "market_probability": None
+                        if leg.market_probability is None
+                        else float(leg.market_probability),
                         "price": float(leg.price),
                         "bookmaker": leg.bookmaker,
                         "expected_value": round(leg.expected_value, 6),
@@ -99,11 +108,18 @@ class Proposal:
                     for leg in self.legs
                 ],
             },
-            "legs": [
-                {"prediction_id": leg.prediction_id, "odds_snapshot_id": leg.odds_snapshot_id}
-                for leg in self.legs
-            ],
+            "legs": [_leg_ref(leg) for leg in self.legs],
         }
+
+
+def _leg_ref(leg: Leg) -> dict[str, object]:
+    ref: dict[str, object] = {
+        "prediction_id": leg.prediction_id,
+        "odds_snapshot_id": leg.odds_snapshot_id,
+    }
+    if leg.market_probability is not None:
+        ref["market_probability"] = float(leg.market_probability)
+    return ref
 
 
 def _round(value: Decimal, places: int) -> Decimal:
