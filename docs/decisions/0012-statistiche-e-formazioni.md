@@ -4,7 +4,7 @@
 
 ## Contesto
 
-API-Football (piano Free, stagioni 2022–2024, [scheda](../data-sources/api-football.md)) fornisce per ogni partita le statistiche di squadra e le formazioni. Con il parametro `ids` arrivano fino a 20 partite per chiamata, insieme a eventi e giocatori.
+API-Football (piano Free, stagioni 2022–2024, [scheda](../data-sources/api-football.md)) fornisce per ogni partita le statistiche di squadra e le formazioni. Il parametro `ids` (fino a 20 partite per chiamata) non è disponibile nel piano Free (verificato il 12/11/2026). Si usano gli endpoint per partita `/fixtures/statistics` e `/fixtures/lineups`, una richiesta ciascuno.
 
 Il formato è nella documentazione v3:
 
@@ -37,6 +37,6 @@ Migrazione `20261111220000_match_details.sql`, tipi in `packages/shared-types/sr
 
 ## Conseguenze
 
-- Il backfill dei dettagli è nella PR della corsia A: circa 456 richieste per 24 stagioni, quindi circa 6 giorni a 90 al giorno, con ripresa automatica.
+- Il backfill dei dettagli costa 2 richieste per partita: circa 44 partite al giorno, quindi circa 6 mesi per tutte le 24 stagioni, partendo dal 2024, con ripresa automatica. Resta a costo zero: un piano a pagamento richiederebbe l'approvazione del proprietario (regola 7).
 - I dati sono solo storici (2022–2024): il piano Free non dà la stagione in corso. Servono per le statistiche di squadra e per modelli futuri (per esempio basati sui tiri). Oggi i modelli in gara usano i gol (ADR 0024).
 - Le pagine (corsia B) potranno mostrare statistiche e formazioni nel dettaglio partita e medie per squadra.

@@ -9,7 +9,8 @@ l'adattatore alla coda.
   usate) e riprende dal punto in cui si era fermato il giorno prima. Quando tutte le
   stagioni sono complete, il job si chiude senza chiamare il provider (solo `/status`,
   gratuito).
-- Chiave mancante → errore non recuperabile; stagione fallita → un solo nuovo tentativo.
+- Chiave mancante o limite del piano → errore non recuperabile; stagione fallita → un solo
+  nuovo tentativo.
 """
 
 from __future__ import annotations
@@ -61,11 +62,13 @@ def make_handler(
             "complete": summary.complete,
             "stopped": summary.stopped,
             "seasons": {
-                f"{s.code}:{s.year}": f"{s.status} {s.chunks_done}/{s.chunks_total}"
-                for s in summary.seasons
+                f"{s.code}:{s.year}": f"{s.status} {s.done}/{s.total}" for s in summary.seasons
             },
         }
         failed = [f"{s.code}:{s.year}" for s in summary.seasons if s.status == "FAILED"]
+        if summary.stopped and summary.stopped.startswith("Limite del piano"):
+            # Ritentare darebbe lo stesso errore e consumerebbe richieste.
+            raise PermanentJobError(summary.stopped)
         if failed:
             raise RuntimeError(f"Stagioni non completate: {', '.join(failed)}")
         return result

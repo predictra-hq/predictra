@@ -30,7 +30,8 @@ Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` 
 - **`/status`:** account, piano e richieste del giorno (`requests.current`, `requests.limit_day`). "This call does not count against the daily quota."
 - **Header di risposta:** `x-ratelimit-requests-limit` e `x-ratelimit-requests-remaining` (giorno), `X-RateLimit-Limit` e `X-RateLimit-Remaining` (minuto).
 - **`/leagues`:** restituisce per ogni stagione il campo `coverage` (per esempio `lineups`, `statistics_fixtures`). "The coverage of a competition can vary from season to season and values set to True do not guarantee 100% data availability."
-- **`/fixtures`:** parametri `league` e `season` (tutte le partite di una stagione in una chiamata); `ids` con "Maximum of 20 fixtures ids" restituisce in una sola chiamata "events, lineups, statistics and players". Gli ID delle partite non cambiano mai.
+- **`/fixtures`:** parametri `league` e `season` (tutte le partite di una stagione in una chiamata); `ids` con "Maximum of 20 fixtures ids" restituisce in una sola chiamata "events, lineups, statistics and players", ma **non è disponibile nel piano Free**: verificato su DEV il 12/11/2026, risposta "Free plans do not have access to the Ids parameter". Gli ID delle partite non cambiano mai.
+- **`/fixtures/statistics?fixture=` e `/fixtures/lineups?fixture=`:** statistiche di squadra e formazioni di una partita, una richiesta ciascuna. **Disponibili nel piano Free**: verificato su DEV il 12/11/2026 su Milan 2022 (2 squadre per endpoint).
 - **Stagioni del piano Free: 2022, 2023 e 2024**, verificato l'11/11/2026 con `api-football-probe` ([run 43045871134](https://github.com/gennpalm/predictra/actions/runs/43045871134), 6 richieste). Per la Serie A (id 135):
   - 2022: 381 partite, 2023: 380, 2024: 380;
   - 2021 e 2025 rifiutate dal provider: "Free plans do not have access to this season, try from 2022 to 2024.";
@@ -41,7 +42,15 @@ Fonte: documentazione v3 (`API-FOOTBALL (3.9.3)`), pagina salvata da `gennpalm` 
 ## Piano del backfill (fase A3)
 
 - **Risultati:** 1 chiamata `/leagues` per competizione e 1 `/fixtures` per stagione, cioè 32 richieste in tutto (fatto, comando `api-football-backfill`).
-- **Formazioni e statistiche** ([ADR 0012](../decisions/0012-statistiche-e-formazioni.md)): 1 chiamata per l'elenco della stagione e circa 19 da 20 partite, cioè circa 480 richieste e 6 giorni a 90 al giorno. Job giornaliero dell'agente `api-football.details`, con ripresa dal blocco successivo (`ingestion_runs`, `af.details`).
+- **Risultati: completati il 12/11/2026**, 24 stagioni su 24: Serie A, Premier League, La Liga, Bundesliga, Ligue 1, Eredivisie, Primeira Liga e Champions League, dal 2022 al 2024.
+- **Formazioni e statistiche** ([ADR 0012](../decisions/0012-statistiche-e-formazioni.md)):
+  - una chiamata per l'elenco della stagione, poi 2 chiamate per partita, perché il piano Free non ammette `ids`;
+  - circa 44 partite al giorno con 90 richieste;
+  - dalla stagione più recente: il 2024 (circa 2.700 partite) in circa 2 mesi, tutte le circa 7.800 partite in circa 6 mesi;
+  - job giornaliero dell'agente `api-football.details`, con ripresa dalla partita successiva (`ingestion_runs`, `af.details`);
+  - un errore di piano ferma subito il lavoro del giorno e non si ritenta.
+
+  Il primo tentativo con `ids` (12/11/2026) ha consumato 56 richieste senza scrivere nulla. Da qui la regola dell'arresto immediato.
 
 ## Backfill
 
