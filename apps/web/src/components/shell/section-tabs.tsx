@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SECTION_TABS, type SectionGroup } from "@/components/shell/nav-config";
+import { SECTION_TABS, type NavItem, type SectionGroup } from "@/components/shell/nav-config";
 import { getMessages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
  */
 export function SectionTabs({ group, current }: { group: SectionGroup; current: string }) {
   const m = getMessages();
+  const tabs: readonly NavItem[] = SECTION_TABS[group];
   return (
     <nav aria-label={m.common.sectionTabs[group]} className="mb-5 flex flex-wrap gap-2">
-      {SECTION_TABS[group].map((tab) => (
+      {tabs.map((tab) => (
         <Link
           key={tab.href}
           href={tab.href}

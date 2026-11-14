@@ -1,11 +1,7 @@
 import { BET_PROPOSAL_CATEGORIES } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  BetBuilderDisclaimer,
-  BetBuilderNav,
-  CategoryBadge,
-} from "@/components/bet-builder/shared";
+import { BetBuilderDisclaimer, BetBuilderNav, CategoryBadge } from "@/components/bet-builder/shared";
 import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCategory } from "@/lib/bet-builder/format";
@@ -136,7 +132,8 @@ export default async function BetBuilderResultsPage() {
             <ul className="grid gap-3 lg:grid-cols-2">
               {closed.slice(0, LIST_LIMIT).map((p) => {
                 const category = parseCategory(p.category);
-                const meta = `${fillTemplate(r.legs, { n: p.legs.length })} · ${formatDateTime(p.last_kickoff_at)}`;
+                const legs = fillTemplate(r.legs, { n: p.legs.length });
+                const meta = `${legs} · ${formatDateTime(p.last_kickoff_at)}`;
                 return (
                   <li key={p.id}>
                     <Link

@@ -458,8 +458,7 @@ export const it = {
       noOddsYet: "Mercato raccolto, ma nessun evento con quote è ancora stato ricevuto.",
       noOdds:
         "Il modello lo calcola, ma le quote reali di bookmaker italiani non sono disponibili nella fonte gratuita, oppure si raccolgono solo per le partite più vicine: senza quota reale non si calcola il valore.",
-      unevaluable:
-        "Nessuna fonte gratuita con dati storici affidabili per questo mercato.",
+      unevaluable: "Nessuna fonte gratuita con dati storici affidabili per questo mercato.",
     },
     marketNames: {
       h2h: "Esito finale 1X2",
@@ -585,7 +584,8 @@ export const it = {
       oddsOld: "Quote lette il {at}: ricontrollale dal bookmaker prima di giocare.",
       empty:
         "Nessuna bolletta per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Le quote si raccolgono nelle 48 ore prima delle partite: le bollette compaiono a ridosso del turno. Non forziamo una bolletta pur di proporne una.",
-      note: "Come si legge: la probabilità di vincita è quella che escano tutte le selezioni, secondo il modello, considerando le partite indipendenti. Scartiamo le selezioni in cui modello e bookmaker sono troppo distanti, perché di solito è il modello a sbagliare. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+      note:
+        "Come si legge: la probabilità di vincita è quella che escano tutte le selezioni, secondo il modello, considerando le partite indipendenti. Scartiamo le selezioni in cui modello e bookmaker sono troppo distanti, perché di solito è il modello a sbagliare. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
     },
     likely: {
       title: "Le più probabili",
@@ -630,7 +630,8 @@ export const it = {
       profit: "Guadagno (unità)",
       yield: "Rendimento",
       total: "Totale",
-      help: "Uscite: quota di proposte vinte. Attese: quante ne prevedeva il modello; se le uscite sono molto sotto le attese, le probabilità sono troppo ottimiste. Guadagno: puntando 1 unità su ogni proposta. Rendimento: guadagno diviso il totale puntato. La stessa combinazione riproposta più volte conta una volta sola, alla prima quota. Si leggono le ultime 300 proposte.",
+      help:
+        "Uscite: quota di proposte vinte. Attese: quante ne prevedeva il modello; se le uscite sono molto sotto le attese, le probabilità sono troppo ottimiste. Guadagno: puntando 1 unità su ogni proposta. Rendimento: guadagno diviso il totale puntato. La stessa combinazione riproposta più volte conta una volta sola, alla prima quota. Si leggono le ultime 300 proposte.",
       pendingNote: "In attesa di risultato: {n}.",
       latest: "Ultime proposte chiuse",
       noneClosed: "Nessuna proposta ancora chiusa: mancano i risultati delle partite.",
@@ -727,7 +728,8 @@ export const it = {
       SAME_TEAM: "La stessa squadra compare in due selezioni: l'indipendenza non vale.",
       STARTED: "Una partita è già iniziata o non è più in programma.",
       NO_PREDICTION: "Manca la previsione del modello attivo per almeno una selezione.",
-      NO_ODDS: "Manca una quota aggiornata per almeno una selezione: il valore non si può calcolare.",
+      NO_ODDS:
+        "Manca una quota aggiornata per almeno una selezione: il valore non si può calcolare.",
       STALE_ODDS: "Almeno una quota non è aggiornata.",
       LOW_CONFIDENCE: "Confidence Score sotto la soglia.",
       NEGATIVE_EV: "Valore atteso negativo.",
