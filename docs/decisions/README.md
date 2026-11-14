@@ -37,6 +37,7 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0035](0035-pianificazione-agente.md)               | Pianificazione dell'agente: QStash, GitHub Actions, budget        | Accettata |
 | [0036](0036-multiple-per-turno.md)                  | Multiple sull'intero turno e multiple sempre rappresentate        | Accettata |
 | [0037](0037-bollette-consigliate.md)                | Schedine consigliate per profilo di rischio                       | Proposta  |
+| [0038](0038-modello-gol-tempo-e-neopromosse.md)     | Modello gol: peso del tempo e neopromosse più deboli              | Proposta  |
 | [0040](0040-backup.md)                              | Backup del database e test di ripristino                          | Accettata |
 | [0041](0041-retention.md)                           | Conservazione dei dati (retention)                                | Proposta  |
 | [0042](0042-ask-predictra.md)                       | Ask PREDICTRA con un LLM gratuito                                 | Accettata |

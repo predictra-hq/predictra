@@ -577,18 +577,22 @@ export const it = {
     bollette: {
       title: "Schedine consigliate",
       description:
-        "Per ogni turno, una multipla pronta per profilo di rischio. Ogni selezione deve avere insieme una buona probabilità e una quota che vale la giocata: niente quote bassissime messe solo perché sicure. Le quote sono reali, di bookmaker italiani.",
+        "Per ogni turno, una multipla pronta per profilo di rischio. In ogni partita si sceglie, tra le giocate abbastanza probabili per il profilo, quella con il valore più alto: la quota che paga di più rispetto al rischio. Niente quote bassissime messe solo perché sicure. Quote reali di bookmaker italiani.",
       profiles: { SOLID: "Solida", BALANCED: "Equilibrata", HIGH: "Alta quota" },
       profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
       legs: "{n} selezioni",
       totalOdds: "Quota totale",
       winProbability: "Probabilità di vincita",
+      value: "Valore",
+      valueShort: "valore",
+      valueHint:
+        "Valore atteso per 1 € puntato: probabilità × quota − 1. Positivo vuol dire che la quota paga più del rischio secondo modello e mercato; non è un guadagno sicuro.",
       round: "Turno {round}",
       oddsRead: "Quote lette il {at}",
       oddsOld: "Quote lette il {at}: ricontrollale dal bookmaker prima di giocare.",
       empty:
         "Nessuna schedina per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Le quote si raccolgono nelle 48 ore prima delle partite: le schedine compaiono a ridosso del turno. Non forziamo una schedina pur di proporne una.",
-      note: "Come si legge: la probabilità di vincita è quella che escano tutte le selezioni, secondo il modello, considerando le partite indipendenti. Scartiamo le selezioni in cui modello e bookmaker sono troppo distanti, perché di solito è il modello a sbagliare. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+      note: "Come si legge: la probabilità è prudente, la media tra quella del modello e quella del mercato (quote di tutti i bookmaker senza margine), come nelle proposte con valore. La probabilità di vincita è quella che escano tutte le selezioni, considerando le partite indipendenti. Valore = probabilità × quota − 1: si scartano le quote che pagano meno del giusto e i valori troppo alti per essere credibili. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
     },
     likely: {
       title: "Le più probabili",

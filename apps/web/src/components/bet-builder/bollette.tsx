@@ -23,6 +23,12 @@ const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> 
 /** Puntata d'esempio quando l'utente non ne ha indicata una. */
 const EXAMPLE_STAKE = 10;
 
+/** "+4,2%" / "−1,5%": valore atteso per 1 € puntato. */
+function formatSignedPercent(value: number): string {
+  const text = formatPercent(Math.abs(value));
+  return value >= 0 ? `+${text}` : `−${text}`;
+}
+
 function BollettaCard({
   bolletta,
   stake,
@@ -50,16 +56,28 @@ function BollettaCard({
         })}
       </p>
 
-      <dl className="mt-3 grid grid-cols-2 gap-2">
+      <dl className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-lg border border-border bg-surface px-3 py-2">
           <dt className="text-xs text-muted">{m.totalOdds}</dt>
-          <dd className="font-mono text-xl font-semibold text-positive-strong">
+          <dd className="font-mono text-lg font-semibold text-positive-strong">
             {formatOdds(bolletta.price)}
           </dd>
         </div>
         <div className="rounded-lg border border-border bg-surface px-3 py-2">
           <dt className="text-xs text-muted">{m.winProbability}</dt>
-          <dd className="font-mono text-xl font-semibold">{formatPercent(bolletta.probability)}</dd>
+          <dd className="font-mono text-lg font-semibold">{formatPercent(bolletta.probability)}</dd>
+        </div>
+        <div className="rounded-lg border border-border bg-surface px-3 py-2">
+          <dt className="text-xs text-muted" title={m.valueHint}>
+            {m.value}
+          </dt>
+          <dd
+            className={`font-mono text-lg font-semibold ${
+              bolletta.expectedValue >= 0 ? "text-positive-strong" : "text-muted"
+            }`}
+          >
+            {formatSignedPercent(bolletta.expectedValue)}
+          </dd>
         </div>
       </dl>
 
@@ -80,7 +98,9 @@ function BollettaCard({
             </span>
             <span className="shrink-0 text-right font-mono">
               <span className="block text-base font-semibold">{formatOdds(p.price)}</span>
-              <span className="block text-xs text-muted">{formatPercent(p.probability, 0)}</span>
+              <span className="block text-xs text-muted">
+                {formatPercent(p.probability, 0)} · {m.valueShort} {formatSignedPercent(p.edge)}
+              </span>
             </span>
           </li>
         ))}
@@ -152,6 +172,12 @@ export function BolletteCard({
 
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
 export async function SchedineSection({ stake }: { stake: number | null }) {
-  const { rows, prices } = await loadPicksData();
-  return <BolletteCard bollette={buildBollette(rows, prices)} stake={stake} now={new Date()} />;
+  const { rows, prices, consensus } = await loadPicksData();
+  return (
+    <BolletteCard
+      bollette={buildBollette(rows, prices, consensus)}
+      stake={stake}
+      now={new Date()}
+    />
+  );
 }

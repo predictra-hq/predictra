@@ -412,8 +412,8 @@ export function ExploreGrid() {
 // --- Schedine consigliate (ADR 0037) -------------------------------------------------
 
 async function loadBollette() {
-  const { rows, prices } = await loadPicksData();
-  return buildBollette(rows, prices);
+  const { rows, prices, consensus } = await loadPicksData();
+  return buildBollette(rows, prices, consensus);
 }
 
 /** Le schedine consigliate del turno più vicino, in breve: il dettaglio è nella pagina. */

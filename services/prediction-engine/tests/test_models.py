@@ -71,3 +71,59 @@ def test_taratura_sola_lettura(league):
     assert {"baseline", "elo", "poisson[l2=3.0]", "dixon_coles[l2=0.1,xi=0.0]"} <= labels
     assert len({r.matches for r in rows}) == 1  # tutti sulle stesse partite
     assert rows == sorted(rows, key=lambda r: (r.log_loss, r.brier))
+
+
+def _result(mid, comp, kickoff, home, away, hg=1, ag=1):
+    from predictra_engine.data import MatchResult
+
+    return MatchResult(mid, comp, kickoff, home, away, hg, ag)
+
+
+def test_neopromossa_riconosciuta_solo_se_assente_l_anno_prima(league):
+    """ADR 0038: è neopromossa chi gioca negli ultimi 300 giorni ma non nell'anno prima."""
+    start = league[0].kickoff_at
+    as_of = start + timedelta(days=800)
+    old = [_result(1, 7, start + timedelta(days=d), 1, 2) for d in (10, 200)]
+    recent = [
+        _result(3, 7, as_of - timedelta(days=30), 1, 3),  # 3 nuova
+        _result(4, 7, as_of - timedelta(days=20), 2, 1),  # 1 e 2 c'erano già
+    ]
+    model = poisson_model()
+    assert model.newcomers(old + recent, as_of) == {3}
+    # Storico troppo corto (nessuna partita nell'anno prima): nessuna neopromossa.
+    assert model.newcomers(recent, as_of) == set()
+
+
+def test_neopromossa_parte_piu_debole_a_parita_di_risultati():
+    from datetime import UTC, datetime
+
+    from predictra_engine.models.goals import GoalsModel
+
+    t0 = datetime(2024, 8, 1, tzinfo=UTC)
+    rows = []
+    mid = 0
+    # Stagione precedente: squadre 1–4 tutte uguali (pareggi 1-1).
+    for d, (h, a) in enumerate([(1, 2), (3, 4), (2, 3), (4, 1)] * 10):
+        mid += 1
+        rows.append(_result(mid, 5, t0 + timedelta(days=3 * d), h, a))
+    # Stagione corrente: entra la squadra 5, stessi risultati di tutti (1-1).
+    t1 = t0 + timedelta(days=400)
+    for d, (h, a) in enumerate([(5, 1), (2, 5), (3, 4), (5, 3)]):
+        mid += 1
+        rows.append(_result(mid, 5, t1 + timedelta(days=3 * d), h, a))
+    as_of = t1 + timedelta(days=20)
+    plain = GoalsModel("p", dixon_coles=False, xi=0.0015, l2=3.0).fit(rows, as_of)
+    prior = poisson_model().fit(rows, as_of)
+    fx = Fixture(1, 5, as_of, 5, 4)
+    # Con il prior la neopromossa in casa vince meno spesso e perde più spesso.
+    assert prior.probabilities_1x2(fx)[0] < plain.probabilities_1x2(fx)[0]
+    assert prior.probabilities_1x2(fx)[2] > plain.probabilities_1x2(fx)[2]
+
+
+def test_iperparametri_registrano_il_prior_solo_se_attivo():
+    from predictra_engine.models.goals import GoalsModel
+
+    assert "newcomer" not in GoalsModel("p", dixon_coles=False, xi=0.0).hyperparameters()
+    hp = dixon_coles_model().hyperparameters()
+    assert hp["xi_per_day"] == 0.001
+    assert hp["newcomer"] == {"attack": -0.2, "defence": -0.1, "days": 300}

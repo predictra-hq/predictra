@@ -87,13 +87,15 @@ export interface LatestOddsRow {
   selection: string;
   price: number;
   observed_at: string;
+  /** Bookmaker italiano (quota giocabile). Assente = trattata come italiana. */
+  italian?: boolean;
 }
 
 /** Migliore quota italiana per (partita, mercato, esito), tra le righe già filtrate. */
 export function bestItalianPrices(rows: readonly LatestOddsRow[]): Map<string, ItalianPrice> {
   const best = new Map<string, ItalianPrice>();
   for (const r of rows) {
-    if (r.match_id === null) continue;
+    if (r.match_id === null || r.italian === false) continue;
     const key = `${r.match_id}|${r.market}|${r.selection}`;
     const price = Number(r.price);
     const cur = best.get(key);

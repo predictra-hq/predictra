@@ -4,12 +4,16 @@ log λ_casa = μ + h + att_casa − dif_ospite;  log λ_ospite = μ + att_ospite
 Dixon-Coles aggiunge la correzione τ(ρ) sui punteggi 0-0, 0-1, 1-0, 1-1 e pesi
 esponenziali nel tempo exp(−ξ·giorni). Una leggera penalità L2 su attacco e difesa
 stabilizza la stima con poche partite; una squadra senza partite ha forza media.
+
+ADR 0038: anche Poisson pesa di più le partite recenti, e una squadra arrivata da poco
+nella competizione (neopromossa: assente nell'anno prima degli ultimi ``newcomer_days``
+giorni) parte da una forza più bassa della media invece che da zero.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import numpy as np
@@ -90,14 +94,59 @@ class GoalsFit(CompetitionFit):
 
 
 class GoalsModel(Model):
-    def __init__(self, key: str, *, dixon_coles: bool, xi: float, l2: float = 0.1) -> None:
+    def __init__(
+        self,
+        key: str,
+        *,
+        dixon_coles: bool,
+        xi: float,
+        l2: float = 0.1,
+        newcomer_attack: float = 0.0,
+        newcomer_defence: float = 0.0,
+        newcomer_days: int = 300,
+    ) -> None:
         self.key = key
         self.dixon_coles = dixon_coles
         self.xi = xi
         self.l2 = l2
+        self.newcomer_attack = newcomer_attack
+        self.newcomer_defence = newcomer_defence
+        self.newcomer_days = newcomer_days
+
+    @property
+    def _uses_newcomer_prior(self) -> bool:
+        return bool(self.newcomer_attack or self.newcomer_defence)
 
     def hyperparameters(self) -> dict[str, Any]:
-        return {"dixon_coles": self.dixon_coles, "xi_per_day": self.xi, "l2": self.l2}
+        params: dict[str, Any] = {
+            "dixon_coles": self.dixon_coles,
+            "xi_per_day": self.xi,
+            "l2": self.l2,
+        }
+        # Solo se attivo: le versioni senza prior restano identiche a prima.
+        if self._uses_newcomer_prior:
+            params["newcomer"] = {
+                "attack": self.newcomer_attack,
+                "defence": self.newcomer_defence,
+                "days": self.newcomer_days,
+            }
+        return params
+
+    def newcomers(self, results: list[MatchResult], as_of: datetime) -> set[int]:
+        """Squadre presenti negli ultimi ``newcomer_days`` giorni ma assenti nell'anno prima.
+
+        Vuoto se la competizione non ha partite in quell'anno (storico troppo corto).
+        """
+        cut = as_of - timedelta(days=self.newcomer_days)
+        prev = cut - timedelta(days=365)
+        before: set[int] = set()
+        recent: set[int] = set()
+        for r in results:
+            if prev <= r.kickoff_at < cut:
+                before.update((r.home, r.away))
+            elif cut <= r.kickoff_at < as_of:
+                recent.update((r.home, r.away))
+        return recent - before if before else set()
 
     def fit_competition(self, results: list[MatchResult], as_of: datetime) -> GoalsFit:
         team_ids = sorted({r.home for r in results} | {r.away for r in results})
@@ -113,6 +162,11 @@ class GoalsModel(Model):
         days = np.array([(as_of - r.kickoff_at).total_seconds() / 86400 for r in results])
         w = np.exp(-self.xi * days)
         const = gammaln(hg + 1) + gammaln(ag + 1)
+        # Forza di partenza: zero (media) per tutti, più bassa per le neopromosse (ADR 0038).
+        new = self.newcomers(results, as_of) if self._uses_newcomer_prior else set()
+        flag = np.array([1.0 if t in new else 0.0 for t in team_ids])
+        att_prior = flag * self.newcomer_attack
+        dfn_prior = flag * self.newcomer_defence
 
         def unpack(theta: np.ndarray) -> tuple[float, float, np.ndarray, np.ndarray, float]:
             mu, home = theta[0], theta[1]
@@ -128,12 +182,15 @@ class GoalsModel(Model):
             ll = hg * np.log(lh) - lh + ag * np.log(la) - la - const
             if self.dixon_coles:
                 ll = ll + np.log(tau(hg, ag, lh, la, rho))
-            return float(-(w * ll).sum() + self.l2 * ((att**2).sum() + (dfn**2).sum()))
+            penalty = ((att - att_prior) ** 2).sum() + ((dfn - dfn_prior) ** 2).sum()
+            return float(-(w * ll).sum() + self.l2 * penalty)
 
         size = 2 + 2 * n + (1 if self.dixon_coles else 0)
         start = np.zeros(size)
         start[0] = np.log(max(np.average((hg + ag) / 2, weights=w), 0.1))
         start[1] = 0.2
+        start[2 : 2 + n] = att_prior
+        start[2 + n : 2 + 2 * n] = dfn_prior
         bounds = [(None, None)] * (2 + 2 * n) + ([(-0.2, 0.2)] if self.dixon_coles else [])
         res = minimize(nll, start, method="L-BFGS-B", bounds=bounds)
         mu, home, att, dfn, rho = unpack(res.x)
@@ -144,11 +201,34 @@ class GoalsModel(Model):
 # L2 = 3 minimizza il Log Loss del backtest walk-forward su 560 partite reali.
 DEFAULT_L2 = 3.0
 
+# ADR 0038 (14/11/2026): con lo storico 2022–2026 il peso del tempo e le neopromosse più
+# deboli migliorano il backtest (3.483 partite di prova: Log Loss 1X2 da 0,9928 a 0,9899
+# per Poisson, da 0,9960 a 0,9897 per Dixon-Coles). Il backtest sul database ne conferma
+# o smentisce il vantaggio e l'attivazione automatica (ADR 0023) sceglie il più forte.
+NEWCOMER_ATTACK = -0.2
+NEWCOMER_DEFENCE = -0.1
+
 
 def poisson_model() -> GoalsModel:
-    return GoalsModel("poisson", dixon_coles=False, xi=0.0, l2=DEFAULT_L2)
+    # ξ = 0,0015 al giorno: emivita di circa 15 mesi.
+    return GoalsModel(
+        "poisson",
+        dixon_coles=False,
+        xi=0.0015,
+        l2=DEFAULT_L2,
+        newcomer_attack=NEWCOMER_ATTACK,
+        newcomer_defence=NEWCOMER_DEFENCE,
+    )
 
 
 def dixon_coles_model() -> GoalsModel:
-    # ξ = 0,005 al giorno (emivita di circa 140 giorni): il migliore nella taratura.
-    return GoalsModel("dixon_coles", dixon_coles=True, xi=0.005, l2=DEFAULT_L2)
+    # ξ = 0,001 al giorno: emivita di circa 23 mesi (0,005 pesava troppo poco le stagioni
+    # passate ora che lo storico ne contiene quattro).
+    return GoalsModel(
+        "dixon_coles",
+        dixon_coles=True,
+        xi=0.001,
+        l2=DEFAULT_L2,
+        newcomer_attack=NEWCOMER_ATTACK,
+        newcomer_defence=NEWCOMER_DEFENCE,
+    )

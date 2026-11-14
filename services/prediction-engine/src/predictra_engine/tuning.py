@@ -14,10 +14,10 @@ from .backtest import backtest_models
 from .data import MatchResult
 from .models import Baseline, Elo
 from .models.base import Model
-from .models.goals import GoalsModel
+from .models.goals import GoalsModel, dixon_coles_model, poisson_model
 
 L2_GRID = (0.1, 1.0, 3.0, 10.0, 30.0)
-XI_GRID = (0.0, 0.0019, 0.005)
+XI_GRID = (0.0, 0.001, 0.0015, 0.0025, 0.005)
 
 
 @dataclass
@@ -34,6 +34,11 @@ def candidates(l2_grid=L2_GRID, xi_grid=XI_GRID) -> list[Model]:  # type: ignore
     models: list[Model] = [Baseline(), Elo()]
     for l2 in l2_grid:
         models.append(GoalsModel(f"poisson[l2={l2}]", dixon_coles=False, xi=0.0, l2=l2))
+    # ADR 0038: anche Poisson con il peso del tempo, e i due modelli predefiniti.
+    for xi in xi_grid:
+        if xi:
+            models.append(GoalsModel(f"poisson[l2=3.0,xi={xi}]", dixon_coles=False, xi=xi, l2=3.0))
+    models += [poisson_model(), dixon_coles_model()]
     for l2, xi in product(l2_grid, xi_grid):
         models.append(GoalsModel(f"dixon_coles[l2={l2},xi={xi}]", dixon_coles=True, xi=xi, l2=l2))
     return models
