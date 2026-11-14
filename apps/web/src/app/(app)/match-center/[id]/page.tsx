@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import {
   FreshnessBadge,
   MatchStatusBadge,
@@ -10,7 +10,7 @@ import {
 } from "@/components/football/badges";
 import { MatchDetailsCard } from "@/components/football/match-details";
 import { MatchPredictions } from "@/components/predictions/match-predictions";
-import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
+import { Badge, Card, CardSkeleton, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { humanize } from "@/lib/football/details";
 import { formatScore, parseId, severityTone } from "@/lib/football/format";
@@ -110,11 +110,13 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
         </Card>
       </div>
 
-      <MatchPredictions
-        matchId={match.match_id}
-        status={match.status}
-        kickoffAt={match.kickoff_at}
-      />
+      <Suspense fallback={<CardSkeleton className="mt-4 h-64" />}>
+        <MatchPredictions
+          matchId={match.match_id}
+          status={match.status}
+          kickoffAt={match.kickoff_at}
+        />
+      </Suspense>
 
       <MatchDetailsCard
         home={{ id: match.home_team_id, name: match.home_team_name }}
