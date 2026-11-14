@@ -16,12 +16,7 @@ import { healthTone, overallHealth } from "@/components/agent/status";
 import { FreshnessBadge } from "@/components/football/badges";
 import { getAgentStatus } from "@/lib/agent/queries";
 import { buildBollette } from "@/lib/bet-builder/bollette";
-import { bestItalianPrices } from "@/lib/bet-builder/likely";
-import {
-  listActiveProposals,
-  listItalianLatestOdds,
-  listLikelyRows,
-} from "@/lib/bet-builder/queries";
+import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
 import { getSourceHealth } from "@/lib/football/queries";
 import {
   bankrollTotals,
@@ -35,7 +30,7 @@ import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
 import { formatDateTime, getMessages, getRequestTimeZone } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
-import { listModelVersions } from "@/lib/predictions/queries";
+import { hasActiveModel, listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 
 const formatDay = (d: Date) =>
@@ -203,9 +198,12 @@ export function ProbabilityBar({ home, draw, away }: { home: number; draw: numbe
   );
 }
 
-export async function UpcomingMatchesCard({ hasModel }: { hasModel: boolean }) {
+export async function UpcomingMatchesCard() {
   const d = getMessages().dashboard;
-  const calendar = await listNextMatches(6).catch(() => null);
+  const [calendar, hasModel] = await Promise.all([
+    listNextMatches(6).catch(() => null),
+    hasActiveModel().catch(() => false),
+  ]);
   const predictions =
     calendar && hasModel
       ? await listPredictions1x2(calendar.map((r) => r.match_id)).catch(() => [])
@@ -414,9 +412,8 @@ export function ExploreGrid() {
 // --- Schedine consigliate (ADR 0037) -------------------------------------------------
 
 async function loadBollette() {
-  const rows = await listLikelyRows(new Date());
-  const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
-  return buildBollette(rows, bestItalianPrices(await listItalianLatestOdds(matchIds)));
+  const { rows, prices } = await loadPicksData();
+  return buildBollette(rows, prices);
 }
 
 /** Le schedine consigliate del turno più vicino, in breve: il dettaglio è nella pagina. */

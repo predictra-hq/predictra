@@ -3,13 +3,16 @@ import type { PredictionMarket } from "@predictra/shared-types";
 import { CategoryBadge, StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
+  bestPicks,
   combinedItalianPrice,
   italianPriceFor,
+  likelyMultiples,
   type ItalianPrice,
   type LikelyMultiple,
   type LikelyPick,
 } from "@/lib/bet-builder/likely";
 import { confidenceLabel } from "@/lib/bet-builder/format";
+import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatLine, formatPercent } from "@/lib/predictions/format";
@@ -171,5 +174,14 @@ export function LikelyCard({
       )}
       <p className="mt-4 text-xs text-muted">{m.fairOddsNote}</p>
     </Card>
+  );
+}
+
+/** Sezione asincrona: legge previsioni e quote e mostra i pronostici più probabili. */
+export async function LikelySection({ stake }: { stake: number | null }) {
+  const { rows, prices } = await loadPicksData();
+  const picks = bestPicks(rows);
+  return (
+    <LikelyCard picks={picks} multiples={likelyMultiples(picks)} prices={prices} stake={stake} />
   );
 }

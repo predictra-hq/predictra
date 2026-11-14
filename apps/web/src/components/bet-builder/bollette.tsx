@@ -4,11 +4,13 @@ import { StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
   BOLLETTA_RULES,
+  buildBollette,
   oddsAreOld,
   type Bolletta,
   type BollettaProfile,
 } from "@/lib/bet-builder/bollette";
 import { formatRound } from "@/lib/bet-builder/format";
+import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
@@ -146,4 +148,10 @@ export function BolletteCard({
       <p className="mt-4 text-xs text-muted">{m.note}</p>
     </Card>
   );
+}
+
+/** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
+export async function SchedineSection({ stake }: { stake: number | null }) {
+  const { rows, prices } = await loadPicksData();
+  return <BolletteCard bollette={buildBollette(rows, prices)} stake={stake} now={new Date()} />;
 }

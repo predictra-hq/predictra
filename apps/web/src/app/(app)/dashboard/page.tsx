@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { hasPermission } from "@predictra/shared-types";
 import { NotificationsCard } from "@/components/agent/notifications-card";
 import {
@@ -8,10 +9,9 @@ import {
   SystemStatusCard,
   UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
-import { Alert, PageHeader } from "@/components/ui/primitives";
+import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
-import { hasActiveModel } from "@/lib/predictions/queries";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -24,7 +24,6 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const m = getMessages();
   const d = m.dashboard;
-  const hasModel = await hasActiveModel().catch(() => false);
 
   return (
     <>
@@ -42,15 +41,25 @@ export default async function DashboardPage() {
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <BankrollCard />
-        <SchedineCard />
-        <SystemStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
+        <Suspense fallback={<CardSkeleton />}>
+          <BankrollCard />
+        </Suspense>
+        <Suspense fallback={<CardSkeleton />}>
+          <SchedineCard />
+        </Suspense>
+        <Suspense fallback={<CardSkeleton />}>
+          <SystemStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
+        </Suspense>
       </div>
 
-      <NotificationsCard />
+      <Suspense fallback={null}>
+        <NotificationsCard />
+      </Suspense>
 
       <div className="mt-6">
-        <UpcomingMatchesCard hasModel={hasModel} />
+        <Suspense fallback={<CardSkeleton className="h-96" />}>
+          <UpcomingMatchesCard />
+        </Suspense>
       </div>
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>

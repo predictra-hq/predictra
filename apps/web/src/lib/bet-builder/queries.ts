@@ -11,7 +11,8 @@ import type {
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
 import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
-import { LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
+import { cache } from "react";
+import { bestItalianPrices, LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
 import { matchMarkets, type Outcome, usedProbability } from "./market";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
@@ -377,3 +378,13 @@ export async function listPastProposals(
     scores,
   };
 }
+
+/**
+ * Previsioni e migliori quote italiane delle partite dei prossimi giorni, lette una sola
+ * volta per richiesta: le usano schedine consigliate, più probabili e riquadro della Home.
+ */
+export const loadPicksData = cache(async () => {
+  const rows = await listLikelyRows(new Date());
+  const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
+  return { rows, prices: bestItalianPrices(await listItalianLatestOdds(matchIds)) };
+});
