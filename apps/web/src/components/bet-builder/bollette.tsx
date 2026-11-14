@@ -2,7 +2,12 @@ import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
-import { BOLLETTA_RULES, type Bolletta, type BollettaProfile } from "@/lib/bet-builder/bollette";
+import {
+  BOLLETTA_RULES,
+  oddsAreOld,
+  type Bolletta,
+  type BollettaProfile,
+} from "@/lib/bet-builder/bollette";
 import { formatRound } from "@/lib/bet-builder/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
@@ -16,9 +21,18 @@ const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> 
 /** Puntata d'esempio quando l'utente non ne ha indicata una. */
 const EXAMPLE_STAKE = 10;
 
-function BollettaCard({ bolletta, stake }: { bolletta: Bolletta; stake: number | null }) {
+function BollettaCard({
+  bolletta,
+  stake,
+  now,
+}: {
+  bolletta: Bolletta;
+  stake: number | null;
+  now: Date;
+}) {
   const m = getMessages().betBuilder.bollette;
   const rule = BOLLETTA_RULES[bolletta.profile];
+  const old = oddsAreOld(bolletta, now);
   return (
     <article className="flex flex-col rounded-lg border border-border bg-surface-2 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -70,7 +84,12 @@ function BollettaCard({ bolletta, stake }: { bolletta: Bolletta; stake: number |
         ))}
       </ol>
 
-      <div className="mt-3">
+      <p className={`mt-3 text-xs ${old ? "text-warning" : "text-muted"}`}>
+        {fillTemplate(old ? m.oddsOld : m.oddsRead, {
+          at: formatDateTime(bolletta.oddsObservedAt),
+        })}
+      </p>
+      <div className="mt-2">
         <StakeSimulation
           stake={stake ?? EXAMPLE_STAKE}
           price={bolletta.price}
@@ -88,9 +107,12 @@ function BollettaCard({ bolletta, stake }: { bolletta: Bolletta; stake: number |
 export function BolletteCard({
   bollette,
   stake = null,
+  now,
 }: {
   bollette: readonly Bolletta[];
   stake?: number | null;
+  /** Istante della richiesta: serve a dire se le quote sono da ricontrollare. */
+  now: Date;
 }) {
   const m = getMessages().betBuilder.bollette;
   const rounds = [...new Set(bollette.map((b) => b.round))].sort();
@@ -110,7 +132,12 @@ export function BolletteCard({
               {bollette
                 .filter((b) => b.round === round)
                 .map((b) => (
-                  <BollettaCard key={`${round}-${b.profile}`} bolletta={b} stake={stake} />
+                  <BollettaCard
+                    key={`${round}-${b.profile}`}
+                    bolletta={b}
+                    stake={stake}
+                    now={now}
+                  />
                 ))}
             </div>
           </section>

@@ -18,8 +18,9 @@
 3. **Probabilità del modello attivo**, con Confidence Score almeno 0,40 e non oltre il 90%, come in "Le più probabili".
 4. **Controllo di credibilità:** si scarta la selezione se `probabilità × quota − 1` è sotto −8% (quota cattiva) o sopra +20% (modello troppo distante dal bookmaker: l'ADR 0028 ha mostrato che in quei casi di solito sbaglia il modello).
 5. **Scelta:** per ogni partita la selezione più probabile tra quelle che rispettano il profilo; tra le partite, le più probabili. Una selezione per partita, squadre tutte diverse (ADR 0026).
-6. **Nessuna bolletta forzata:** con meno di 2 selezioni valide il profilo non compare. Due profili con le stesse selezioni compaiono una volta sola.
-7. **Dove gira:** calcolo in TypeScript a ogni visita (`apps/web/src/lib/bet-builder/bollette.ts`), dalle previsioni e dalle quote già nel database. Nessuna migrazione, nessuna scrittura: le bollette non sono versioni immutabili come le proposte del motore.
+6. **Quote e freschezza:** si usa l'ultima quota letta e la bolletta mostra quando; oltre 12 ore compare l'avviso di ricontrollarla dal bookmaker. Le quote si raccolgono nelle 48 ore prima delle partite (ADR 0032), quindi le bollette compaiono a ridosso del turno.
+7. **Nessuna bolletta forzata:** con meno di 2 selezioni valide il profilo non compare. Due profili con le stesse selezioni compaiono una volta sola.
+8. **Dove gira:** calcolo in TypeScript a ogni visita (`apps/web/src/lib/bet-builder/bollette.ts`), dalle previsioni e dalle quote già nel database. Nessuna migrazione, nessuna scrittura: le bollette non sono versioni immutabili come le proposte del motore.
 
 ## Conseguenze
 

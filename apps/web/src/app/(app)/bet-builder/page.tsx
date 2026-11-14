@@ -162,7 +162,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <BolletteCard bollette={bollette} stake={stake} />
+      <BolletteCard bollette={bollette} stake={stake} now={new Date()} />
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
       <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>

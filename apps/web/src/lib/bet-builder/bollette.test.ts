@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildBollette, playablePicks, roundOfKickoff } from "./bollette";
+import { buildBollette, oddsAreOld, playablePicks, roundOfKickoff } from "./bollette";
 import { bestItalianPrices, type LatestOddsRow, type LikelyRow } from "./likely";
 
 // Sabato 21 e domenica 22 novembre 2026: stesso turno (venerdì 20 – lunedì 23).
@@ -94,6 +94,10 @@ describe("bollette consigliate (valori DEMO)", () => {
     // Equilibrata: almeno 55% e quota 1,45.
     expect(balanced!.picks.map((p) => p.matchId)).toEqual([1, 3]);
     expect(balanced!.price).toBeCloseTo(1.65 * 1.5);
+    // Quote lette alle 08:00 del 20/11: aggiornate fino a 12 ore dopo, poi da ricontrollare.
+    expect(solid!.oddsObservedAt).toBe("2026-11-20T08:00:00Z");
+    expect(oddsAreOld(solid!, new Date("2026-11-20T19:00:00Z"))).toBe(false);
+    expect(oddsAreOld(solid!, new Date("2026-11-21T09:00:00Z"))).toBe(true);
   });
 
   it("profili con le stesse selezioni non si ripetono; squadre tutte diverse", () => {

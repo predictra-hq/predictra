@@ -392,7 +392,7 @@ export const it = {
     competition: "Competizione",
     show: "Mostra",
     disclaimer:
-      "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni arriveranno dai modelli quantitativi (M4).",
+      "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni del modello sono nel dettaglio di ogni partita e nella pagina Bollette.",
     staleNote:
       "Piano gratuito di The Odds API (500 crediti al mese): quote raccolte due volte al giorno, nessun dato live. Una quota è “Non aggiornata” dopo {hours} ore dall'ultima osservazione.",
     coverageTitle: "Copertura reale",
@@ -437,10 +437,10 @@ export const it = {
     quality: "Qualità",
     freshBookmakers: "{fresh} di {total} bookmaker aggiornati",
     methodNote:
-      "Margine = Σ 1/quota − 1. Metodo proporzionale (predefinito, ADR 0016): probabilità divise per la somma. Metodo della potenza (confronto): attribuisce più margine agli esiti meno probabili.",
+      "Margine = Σ 1/quota − 1. Metodo proporzionale (predefinito): probabilità divise per la somma. Metodo della potenza (confronto): attribuisce più margine agli esiti meno probabili.",
     marketsTitle: "Mercati",
     marketsDescription:
-      "Cosa PREDICTRA può mostrare oggi. Nessun mercato è indicato come disponibile se non ci sono quote reali (ADR 0005).",
+      "Cosa PREDICTRA può mostrare oggi. Nessun mercato è indicato come disponibile se non ci sono quote reali.",
     market: "Mercato",
     availability: "Stato",
     reason: "Motivo",
@@ -451,12 +451,12 @@ export const it = {
       unevaluable: "Non valutabile",
     },
     reasons: {
-      available: "Quote 1X2 reali da The Odds API, regione eu (ADR 0015).",
+      available: "Quote 1X2 reali da The Odds API, regione eu.",
       noOddsYet: "Mercato raccolto, ma nessun evento con quote è ancora stato ricevuto.",
       noOdds:
-        "Valutabile dal modello gol (M4), ma in v1 si raccolgono solo le quote 1X2 per restare nei 500 crediti mensili: nessuna quota reale, quindi niente EV.",
+        "Il modello lo calcola, ma le quote reali di bookmaker italiani non sono disponibili nella fonte gratuita, oppure si raccolgono solo per le partite più vicine: senza quota reale non si calcola il valore.",
       unevaluable:
-        "Nessuna fonte gratuita con dati storici affidabili per questo mercato (ADR 0004, ADR 0005).",
+        "Nessuna fonte gratuita con dati storici affidabili per questo mercato.",
     },
     marketNames: {
       h2h: "Esito finale 1X2",
@@ -578,8 +578,10 @@ export const it = {
       totalOdds: "Quota totale",
       winProbability: "Probabilità di vincita",
       round: "Turno {round}",
+      oddsRead: "Quote lette il {at}",
+      oddsOld: "Quote lette il {at}: ricontrollale dal bookmaker prima di giocare.",
       empty:
-        "Nessuna bolletta per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Non forziamo una bolletta pur di proporne una.",
+        "Nessuna bolletta per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Le quote si raccolgono nelle 48 ore prima delle partite: le bollette compaiono a ridosso del turno. Non forziamo una bolletta pur di proporne una.",
       note: "Come si legge: la probabilità di vincita è quella che escano tutte le selezioni, secondo il modello, considerando le partite indipendenti. Scartiamo le selezioni in cui modello e bookmaker sono troppo distanti, perché di solito è il modello a sbagliare. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
     },
     likely: {
@@ -655,7 +657,7 @@ export const it = {
     generatedAt: "Generata alle",
     details: "Dettaglio",
     back: "Torna alle proposte",
-    staleWarning: "{n} selezioni hanno ora una quota STALE: verifica prima di usarla.",
+    staleWarning: "{n} selezioni hanno ora una quota non aggiornata: verifica prima di usarla.",
     priceChangedWarning: "{n} selezioni hanno una quota cambiata dalla generazione.",
     stake: "Quanto vuoi giocare (€)",
     stakePlaceholder: "4",
@@ -667,43 +669,43 @@ export const it = {
     stakeNote:
       "Calcolo sulla quota della proposta e sulla probabilità del modello: è una stima, non una garanzia.",
     correlationIndependence:
-      "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (indipendenza dichiarata, ADR 0026).",
+      "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (le partite sono considerate indipendenti).",
     correlationNone: "Singola: probabilità della previsione del modello.",
     immutableNote:
       "La proposta è una versione immutabile: i valori sono quelli del momento della generazione, con il riferimento a previsioni e quote usate.",
     emptyNoRun:
       "Il motore delle combinazioni non ha ancora prodotto un'elaborazione. Le proposte arrivano quando c'è un modello attivo con previsioni e quote reali.",
     emptyZero:
-      "Nessuna combinazione supera le soglie: oggi non ci sono proposte. È il comportamento previsto (nessuna schedina forzata).",
+      "Nessuna combinazione supera le soglie: oggi non ci sono proposte. Le quote si raccolgono nelle 48 ore prima delle partite, quindi le proposte compaiono a ridosso del turno. Non forziamo una bolletta pur di proporne una.",
     emptyFailed: "L'ultima elaborazione non è riuscita. Le proposte torneranno con la prossima.",
     lastRun:
       "Ultima elaborazione: {at} · combinazioni valutate {candidates} · proposte {proposals}",
     thresholds:
-      "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote FRESH.",
+      "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote aggiornate.",
     builderTitle: "Costruisci una combinazione",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota FRESH dei bookmaker italiani.",
+      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota aggiornata dei bookmaker italiani.",
     builderEmpty:
       "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato nella pagina Modelli.",
     evaluate: "Valuta",
     evaluation: "Valutazione",
     noSelection: "Seleziona almeno un esito.",
-    notModellable: "Combinazione non modellabile: nessuna probabilità viene mostrata (ADR 0026).",
+    notModellable: "Combinazione non modellabile: nessuna probabilità viene mostrata.",
     meetsRules: "Rispetta tutte le soglie con cui il motore propone combinazioni.",
     warnings: {
       TOO_MANY: "Più selezioni del massimo previsto dalle regole ({legs}).",
       SAME_MATCH:
-        "Più esiti della stessa partita: in v1 non è modellabile (manca una quota reale della combinazione).",
+        "Più esiti della stessa partita: per ora non è valutabile (manca una quota reale della combinazione).",
       SAME_TEAM: "La stessa squadra compare in due selezioni: l'indipendenza non vale.",
       STARTED: "Una partita è già iniziata o non è più in programma.",
       NO_PREDICTION: "Manca la previsione del modello attivo per almeno una selezione.",
-      NO_ODDS: "Manca una quota FRESH per almeno una selezione: niente EV.",
-      STALE_ODDS: "Almeno una quota è STALE.",
+      NO_ODDS: "Manca una quota aggiornata per almeno una selezione: il valore non si può calcolare.",
+      STALE_ODDS: "Almeno una quota non è aggiornata.",
       LOW_CONFIDENCE: "Confidence Score sotto la soglia.",
       NEGATIVE_EV: "Valore atteso negativo.",
       BELOW_THRESHOLDS: "Non supera le soglie con cui il motore propone combinazioni.",
     },
-    noOdds: "nessuna quota FRESH",
+    noOdds: "nessuna quota aggiornata",
     slipName: "Nome della schedina",
     slipNameDefault: "Schedina del {date}",
     saveSlip: "Salva nelle mie schedine",

@@ -56,6 +56,8 @@ export const MIN_LEGS = 2;
 export interface BollettaPick extends LikelyPick {
   price: number;
   bookmaker: string;
+  /** Quando è stata letta la quota. */
+  observedAt: string;
   /** probabilità × quota − 1. */
   edge: number;
 }
@@ -67,6 +69,8 @@ export interface Bolletta {
   picks: BollettaPick[];
   /** Prodotto delle probabilità (indipendenza dichiarata, ADR 0026 §2). */
   probability: number;
+  /** Lettura più vecchia tra le quote usate: la bolletta è aggiornata quanto questa. */
+  oddsObservedAt: string;
   /** Prodotto delle quote reali. */
   price: number;
 }
@@ -116,7 +120,13 @@ export function playablePicks(
     if (!it || !(it.price > 1)) continue;
     const edge = probability * it.price - 1;
     if (edge < MIN_EDGE || edge > MAX_EDGE) continue;
-    result.push({ ...pick, price: it.price, bookmaker: it.bookmaker, edge });
+    result.push({
+      ...pick,
+      price: it.price,
+      bookmaker: it.bookmaker,
+      observedAt: it.observedAt,
+      edge,
+    });
   }
   return result;
 }
@@ -153,6 +163,7 @@ function buildOne(
     profile,
     round,
     picks: chosen.sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt) || a.matchId - b.matchId),
+    oddsObservedAt: chosen.map((p) => p.observedAt).sort()[0] ?? "",
     probability: chosen.reduce((acc, p) => acc * p.probability, 1),
     price: chosen.reduce((acc, p) => acc * p.price, 1),
   };
@@ -182,4 +193,12 @@ export function buildBollette(
     }
   }
   return result;
+}
+
+/** Oltre questa età la quota va ricontrollata dal bookmaker (12 ore, come la freschezza delle quote). */
+export const ODDS_MAX_AGE_MS = 12 * 3_600_000;
+
+export function oddsAreOld(bolletta: Pick<Bolletta, "oddsObservedAt">, now: Date): boolean {
+  const observed = new Date(bolletta.oddsObservedAt).getTime();
+  return !Number.isFinite(observed) || now.getTime() - observed > ODDS_MAX_AGE_MS;
 }
