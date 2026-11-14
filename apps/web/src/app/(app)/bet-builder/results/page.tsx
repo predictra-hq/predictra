@@ -1,7 +1,11 @@
 import { BET_PROPOSAL_CATEGORIES } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BetBuilderDisclaimer, BetBuilderNav, CategoryBadge } from "@/components/bet-builder/shared";
+import {
+  BetBuilderDisclaimer,
+  BetBuilderNav,
+  CategoryBadge,
+} from "@/components/bet-builder/shared";
 import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCategory } from "@/lib/bet-builder/format";
@@ -144,9 +148,7 @@ export default async function BetBuilderResultsPage() {
                         <span className="flex flex-wrap items-center gap-2">
                           <Badge tone={OUTCOME_TONE[p.outcome]}>{r.outcomes[p.outcome]}</Badge>
                           {category ? <CategoryBadge category={category} /> : null}
-                          <span className="text-sm text-muted">
-                            {meta}
-                          </span>
+                          <span className="text-sm text-muted">{meta}</span>
                         </span>
                         <span className="text-right font-mono text-sm">
                           {m.price} {formatOdds(p.combined_price)}

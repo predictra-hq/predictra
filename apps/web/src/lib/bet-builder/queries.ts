@@ -333,7 +333,10 @@ export async function listPastProposals(
   const legs = await supabase
     .from("bet_proposal_legs")
     .select("proposal_id, match_id, market, line, selection")
-    .in("proposal_id", rows.map((r) => r.id))
+    .in(
+      "proposal_id",
+      rows.map((r) => r.id),
+    )
     .limit(5000);
   if (legs.error) throw new BetBuilderDataUnavailable("selezioni delle proposte", legs.error);
   const legRows = (legs.data ?? []) as (ResultLeg & { proposal_id: number })[];
