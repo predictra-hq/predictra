@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PredictionMarket } from "@predictra/shared-types";
-import { StakeSimulation } from "@/components/bet-builder/shared";
+import { CategoryBadge, StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
   combinedItalianPrice,
@@ -21,6 +21,22 @@ export function pickLabel(pick: Pick<LikelyPick, "market" | "selection" | "line"
   const selection = (p.selections as Record<string, string>)[pick.selection] ?? pick.selection;
   const line = formatLine(pick.line, pick.market as PredictionMarket);
   return [market, selection, line].filter(Boolean).join(" ");
+}
+
+function marketName(market: string): string {
+  const p = getMessages().predictions;
+  return p.markets[market as PredictionMarket] ?? market;
+}
+
+/** Pronostici di una multipla raggruppati per tipo di giocata, nell'ordine in cui arrivano. */
+function groupByMarket(picks: readonly LikelyPick[]): { market: string; picks: LikelyPick[] }[] {
+  const groups: { market: string; picks: LikelyPick[] }[] = [];
+  for (const pick of picks) {
+    const last = groups.at(-1);
+    if (last && last.market === pick.market) last.picks.push(pick);
+    else groups.push({ market: pick.market, picks: [pick] });
+  }
+  return groups;
 }
 
 type Prices = ReadonlyMap<string, ItalianPrice>;
@@ -80,9 +96,15 @@ export function LikelyCard({
               <h3 className="mb-2 mt-4 text-sm font-semibold">{m.multiples}</h3>
               <div className="grid gap-3 lg:grid-cols-3">
                 {multiples.map((x) => (
-                  <div key={x.size} className="rounded-lg border border-border bg-surface-2 p-3">
+                  <div
+                    key={x.category}
+                    className="rounded-lg border border-border bg-surface-2 p-3"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-medium">{fillTemplate(m.multiple, { n: x.size })}</span>
+                      <span className="flex flex-wrap items-center gap-2 font-medium">
+                        <CategoryBadge category={x.category} />
+                        {fillTemplate(m.multiple, { n: x.size })}
+                      </span>
                       <Badge tone="positive">
                         {m.probability} {formatPercent(x.probability)}
                       </Badge>
@@ -110,11 +132,18 @@ export function LikelyCard({
                         </>
                       );
                     })()}
-                    <ul className="mt-2 text-sm">
-                      {x.picks.map((p) => (
-                        <PickRow key={p.matchId} pick={p} prices={prices} />
-                      ))}
-                    </ul>
+                    {groupByMarket(x.picks).map((g) => (
+                      <div key={g.market} className="mt-3">
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          {marketName(g.market)} · {g.picks.length}
+                        </h4>
+                        <ul className="text-sm">
+                          {g.picks.map((p) => (
+                            <PickRow key={p.matchId} pick={p} prices={prices} />
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

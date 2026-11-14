@@ -589,7 +589,7 @@ export const it = {
     likely: {
       title: "Le più probabili",
       description:
-        "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Sotto, le multiple più probabili.",
+        "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Le multiple sono una per categoria di rischio: ognuna unisce più partite possibile (al massimo 12) finché la probabilità di vincerla resta sopra la soglia della categoria, con i pronostici divisi per tipo di giocata.",
       fairOddsNote:
         "Tra parentesi la quota equa = 1 ÷ probabilità: sotto questa quota la giocata non conviene. Sotto, quando c'è, la migliore quota reale di un bookmaker italiano (1X2, doppia chance e under/over; per gol/no gol e gol di una squadra le quote italiane non sono disponibili gratis).",
       multiples: "Multiple più probabili",
