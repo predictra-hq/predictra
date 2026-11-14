@@ -34,7 +34,9 @@ import {
   roundStartOf,
   selectionLabel,
 } from "@/lib/bet-builder/format";
+import { BolletteCard } from "@/components/bet-builder/bollette";
 import { LikelyCard } from "@/components/bet-builder/likely";
+import { buildBollette } from "@/lib/bet-builder/bollette";
 import { bestItalianPrices, bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
 import {
   getLatestRun,
@@ -46,7 +48,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Smart Bet Builder" };
+export const metadata: Metadata = { title: "Bollette" };
 
 function ProposalCard({
   p,
@@ -131,7 +133,10 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
     listLikelyRows(new Date()),
   ]);
   const picks = bestPicks(likelyRows);
-  const italianOdds = bestItalianPrices(await listItalianLatestOdds(picks.map((p) => p.matchId)));
+  // Quote italiane di tutte le partite con previsioni: servono anche alle bollette.
+  const matchIds = [...new Set(likelyRows.map((r) => Number(r.match_id)))];
+  const italianOdds = bestItalianPrices(await listItalianLatestOdds(matchIds));
+  const bollette = buildBollette(likelyRows, italianOdds);
 
   // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
   const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
@@ -157,12 +162,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <LikelyCard
-        picks={picks}
-        multiples={likelyMultiples(picks)}
-        prices={italianOdds}
-        stake={stake}
-      />
+      <BolletteCard bollette={bollette} stake={stake} />
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
       <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
@@ -267,6 +267,13 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
             })}
         </>
       )}
+
+      <LikelyCard
+        picks={picks}
+        multiples={likelyMultiples(picks)}
+        prices={italianOdds}
+        stake={stake}
+      />
     </>
   );
 }

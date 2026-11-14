@@ -19,7 +19,7 @@ import {
 } from "@/lib/odds/queries";
 import { formPoints, parseForm, perMatch, rate, sortTeamStats } from "@/lib/odds/stats";
 
-export const metadata: Metadata = { title: "Statistics Center" };
+export const metadata: Metadata = { title: "Statistiche" };
 
 function Th({
   children,

@@ -24,7 +24,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatDecimal, formatOdds, formatPercent } from "@/lib/odds/format";
 import { saveProposalSlip } from "../actions";
 
-export const metadata: Metadata = { title: "Proposta — Smart Bet Builder" };
+export const metadata: Metadata = { title: "Proposta — Bollette" };
 
 export default async function ProposalPage({
   params,

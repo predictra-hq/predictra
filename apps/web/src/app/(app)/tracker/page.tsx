@@ -46,7 +46,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
 
-export const metadata: Metadata = { title: "Tracker" };
+export const metadata: Metadata = { title: "Le mie giocate" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 

@@ -11,7 +11,7 @@ import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
 
-export const metadata: Metadata = { title: "Model Intelligence" };
+export const metadata: Metadata = { title: "Modelli" };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (
