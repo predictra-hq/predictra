@@ -13,7 +13,6 @@ import {
   ScrollRegion,
   Select,
 } from "@/components/ui/primitives";
-import { SectionTabs } from "@/components/shell/section-tabs";
 import { requireUser } from "@/lib/auth/dal";
 import { listBankrolls, listLimits, listMovements } from "@/lib/bankroll/queries";
 import { parseId } from "@/lib/football/format";
@@ -38,7 +37,6 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
-      <SectionTabs group="plays" current="/bankroll" />
 
       <h2 className="mb-3 text-lg font-semibold">{m.yourBankrolls}</h2>
       {bankrolls.length === 0 ? (

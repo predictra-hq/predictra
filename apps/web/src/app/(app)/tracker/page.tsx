@@ -30,7 +30,6 @@ import {
   PageHeader,
   Select,
 } from "@/components/ui/primitives";
-import { SectionTabs } from "@/components/shell/section-tabs";
 import { requireUser } from "@/lib/auth/dal";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
 import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
@@ -47,7 +46,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
 
-export const metadata: Metadata = { title: "Le mie giocate" };
+export const metadata: Metadata = { title: "Giocate fatte" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
@@ -104,7 +103,6 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   return (
     <>
       <PageHeader title={t.title} description={t.description} />
-      <SectionTabs group="plays" current="/tracker" />
 
       <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
         <Field label={t.period} htmlFor="p">

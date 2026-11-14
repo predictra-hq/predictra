@@ -48,7 +48,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Bollette" };
+export const metadata: Metadata = { title: "Schedine" };
 
 function ProposalCard({
   p,

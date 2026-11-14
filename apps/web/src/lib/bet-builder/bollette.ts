@@ -10,7 +10,7 @@ import {
 } from "./likely";
 
 /*
- * "Bollette consigliate": per ogni turno, una multipla giocabile per profilo di rischio.
+ * "Schedine consigliate": per ogni turno, una multipla giocabile per profilo di rischio.
  *
  * Differenza da "Le più probabili": lì si prende il pronostico più probabile di ogni
  * partita, che spesso ha una quota troppo bassa per valere la giocata. Qui ogni

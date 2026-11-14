@@ -9,7 +9,7 @@ import { loadSlipViews } from "@/lib/bet-builder/slip-view";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Le mie schedine — Bollette" };
+export const metadata: Metadata = { title: "Le mie schedine — Schedine" };
 
 export default async function SlipsPage() {
   await requireUser();

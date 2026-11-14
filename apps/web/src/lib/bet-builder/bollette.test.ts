@@ -31,7 +31,7 @@ const odds = (match: number, market: string, selection: string, price: number): 
   observed_at: "2026-11-20T08:00:00Z",
 });
 
-describe("bollette consigliate (valori DEMO)", () => {
+describe("schedine consigliate (valori DEMO)", () => {
   it("turno dal calcio d'inizio nel fuso di Roma", () => {
     expect(roundOfKickoff("2026-11-21T18:00:00Z")).toBe("2026-11-20");
     expect(roundOfKickoff("2026-11-23T20:00:00Z")).toBe("2026-11-20");
