@@ -444,6 +444,7 @@ export const it = {
     freshBookmakers: "{fresh} di {total} bookmaker aggiornati",
     methodNote:
       "Margine = Σ 1/quota − 1. Metodo proporzionale (predefinito): probabilità divise per la somma. Metodo della potenza (confronto): attribuisce più margine agli esiti meno probabili.",
+    technicalSection: "Copertura delle quote e mercati disponibili",
     marketsTitle: "Mercati",
     marketsDescription:
       "Cosa PREDICTRA può mostrare oggi. Nessun mercato è indicato come disponibile se non ci sono quote reali.",

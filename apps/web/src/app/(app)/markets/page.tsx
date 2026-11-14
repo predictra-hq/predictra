@@ -185,61 +185,9 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
     <>
       <PageHeader title={m.title} description={m.description} />
 
-      <Alert className="mb-3">{m.disclaimer}</Alert>
       <Alert tone="warning" className="mb-6">
         {fillTemplate(m.staleNote, { hours })}
       </Alert>
-
-      <h2 className="mb-1 text-lg font-semibold">{m.coverageTitle}</h2>
-      <p className="mb-3 text-sm text-muted">{m.coverageDescription}</p>
-      <Card scrollLabel={m.coverageTitle} className="mb-8 p-0">
-        {coverage.every((c) => c.events === 0) ? (
-          <p className="p-5 text-sm text-muted">{m.noCoverage}</p>
-        ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <caption className="sr-only">{m.coverageTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{m.competition}</Th>
-                <Th className="text-right">{m.events}</Th>
-                <Th className="text-right">{m.matchedEvents}</Th>
-                <Th className="text-right">{m.bookmakers}</Th>
-                <Th className="text-right">{m.italianBookmakers}</Th>
-                <Th>{m.lastObservation}</Th>
-                <Th>{m.freshness}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {coverage.map((c) => (
-                <tr key={c.competition_id} className="border-b border-border last:border-0">
-                  <td className="whitespace-nowrap px-4 py-3">
-                    {c.competition_code ? (
-                      <Link
-                        href={`/markets?c=${c.competition_code}`}
-                        className="hover:text-positive"
-                      >
-                        {c.competition_name}
-                      </Link>
-                    ) : (
-                      c.competition_name
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">{c.events}</td>
-                  <td className="px-4 py-3 text-right font-mono">{c.matched_events}</td>
-                  <td className="px-4 py-3 text-right font-mono">{c.bookmakers}</td>
-                  <td className="px-4 py-3 text-right font-mono">{c.italian_bookmakers}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {c.last_observed_at ? formatDateTime(c.last_observed_at) : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <FreshnessBadge freshness={freshnessAt(c.last_observed_at, maxAge)} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Card>
 
       <h2 className="mb-3 text-lg font-semibold">{m.eventsTitle}</h2>
       {coverage.length > 0 ? (
@@ -253,7 +201,9 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
           submitLabel={m.show}
         />
       ) : null}
-      <p className="mb-3 text-xs text-muted">{m.methodNote}</p>
+      <p className="mb-3 text-xs text-muted">
+        {m.disclaimer} {m.methodNote}
+      </p>
       {groups.length === 0 ? (
         <EmptyState>{m.noEvents}</EmptyState>
       ) : (
@@ -264,9 +214,68 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
         </div>
       )}
 
-      <h2 className="mb-1 mt-8 text-lg font-semibold">{m.marketsTitle}</h2>
-      <p className="mb-3 text-sm text-muted">{m.marketsDescription}</p>
-      <MarketsTable collectedCodes={collected} eventsWithOdds={eventsWithOdds} />
+      {/* Dati tecnici sulla raccolta: chiusi, le quote delle partite vengono prima. */}
+      <details className="mt-8">
+        <summary className="cursor-pointer text-sm text-muted hover:text-fg">
+          {m.technicalSection}
+        </summary>
+        <div className="mt-4">
+          <h2 className="mb-1 text-lg font-semibold">{m.coverageTitle}</h2>
+          <p className="mb-3 text-sm text-muted">{m.coverageDescription}</p>
+          <Card scrollLabel={m.coverageTitle} className="mb-8 p-0">
+            {coverage.every((c) => c.events === 0) ? (
+              <p className="p-5 text-sm text-muted">{m.noCoverage}</p>
+            ) : (
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <caption className="sr-only">{m.coverageTitle}</caption>
+                <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                  <tr>
+                    <Th>{m.competition}</Th>
+                    <Th className="text-right">{m.events}</Th>
+                    <Th className="text-right">{m.matchedEvents}</Th>
+                    <Th className="text-right">{m.bookmakers}</Th>
+                    <Th className="text-right">{m.italianBookmakers}</Th>
+                    <Th>{m.lastObservation}</Th>
+                    <Th>{m.freshness}</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coverage.map((c) => (
+                    <tr key={c.competition_id} className="border-b border-border last:border-0">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {c.competition_code ? (
+                          <Link
+                            href={`/markets?c=${c.competition_code}`}
+                            className="hover:text-positive"
+                          >
+                            {c.competition_name}
+                          </Link>
+                        ) : (
+                          c.competition_name
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">{c.events}</td>
+                      <td className="px-4 py-3 text-right font-mono">{c.matched_events}</td>
+                      <td className="px-4 py-3 text-right font-mono">{c.bookmakers}</td>
+                      <td className="px-4 py-3 text-right font-mono">{c.italian_bookmakers}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-muted">
+                        {c.last_observed_at ? formatDateTime(c.last_observed_at) : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <FreshnessBadge freshness={freshnessAt(c.last_observed_at, maxAge)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Card>
+
+          <h2 className="mb-1 mt-6 text-lg font-semibold">{m.marketsTitle}</h2>
+          <p className="mb-3 text-sm text-muted">{m.marketsDescription}</p>
+          <MarketsTable collectedCodes={collected} eventsWithOdds={eventsWithOdds} />
+        </div>
+      </details>
 
       <ProviderAttribution texts={[provider?.attribution]} />
     </>
