@@ -37,5 +37,6 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0035](0035-pianificazione-agente.md)               | Pianificazione dell'agente: QStash, GitHub Actions, budget        | Accettata |
 | [0036](0036-multiple-per-turno.md)                  | Multiple sull'intero turno e multiple sempre rappresentate        | Accettata |
 | [0040](0040-backup.md)                              | Backup del database e test di ripristino                          | Accettata |
+| [0041](0041-retention.md)                           | Conservazione dei dati (retention)                                | Proposta  |
 | [0042](0042-ask-predictra.md)                       | Ask PREDICTRA con un LLM gratuito                                 | Accettata |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |

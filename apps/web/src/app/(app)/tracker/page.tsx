@@ -362,7 +362,18 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
         </Card>
       ) : null}
 
-      <h2 className="mb-3 mt-8 text-lg font-semibold">{t.bets}</h2>
+      <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">{t.bets}</h2>
+        {bets.length > 0 ? (
+          <a
+            href={`/tracker/export?p=${period}`}
+            download
+            className="text-sm text-muted underline underline-offset-2 hover:text-fg"
+          >
+            {t.exportCsv}
+          </a>
+        ) : null}
+      </div>
       <Card scrollLabel={t.bets} className="p-0">
         {bets.length === 0 ? (
           <p className="p-5 text-sm text-muted">{t.noBets}</p>

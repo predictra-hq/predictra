@@ -12,9 +12,9 @@ Criteri di completamento: il [piano M0](../architecture/M0-piano-tecnico.md) §6
 
 | Corsia                      | Persona   | Issue | Stato                                                                                                              |
 | --------------------------- | --------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
-| 0 — criteri e checklist     | —         | —     | da iniziare                                                                                                        |
+| 0 — criteri e checklist     | —         | —     | bozza: [checklist](../operations/checklist-produzione.md) da approvare; ADR 0041 proposto                          |
 | A — sicurezza, backup, PROD | Alfry1299 | —     | A1 (backup), A2 (CSP con nonce, audit) e A3 (revisione di sicurezza) in servizio; da fare: step-up 2FA e A4 (PROD) |
-| B — accessibilità e runbook | Alfry1299 | —     | B1 in revisione (PR `feature/m8-b-accessibilita`, [esito](../operations/accessibilita.md)); B2 e B3 da fare        |
+| B — accessibilità e runbook | Alfry1299 | —     | B1: [esito](../operations/accessibilita.md); B2: [runbook](../operations/runbook.md); B3: checklist in bozza       |
 
 ## Prerequisiti
 
@@ -32,13 +32,13 @@ Tutte le milestone precedenti su `dev`, salvo backup e restore che si possono fa
 ## Decisioni da prendere (ADR 0040–0044)
 
 - **ADR 0040 — Backup:** `pg_dump` giornaliero da GitHub Actions verso lo storage scelto, cifratura, conservazione, test di restore mensile (ADR 0002).
-- **ADR 0041 — Retention:** durata di conservazione di `audit_logs`, inviti e dati personali (in `docs/data-dictionary/identity.md` risultano "da definire in M8").
+- **ADR 0041 — Retention:** [proposta](../decisions/0041-retention.md) del 14/11/2026, da confermare. Durata di conservazione di `audit_logs`, inviti e dati personali (in `docs/data-dictionary/identity.md` risultano "da definire in M8").
 - **ADR 0042 — Ask PREDICTRA:** [accettato](../decisions/0042-ask-predictra.md): chat con Groq (piano gratuito), strumenti in sola lettura e controllo sui numeri; pagina `/ask`.
 - Passaggio a GitHub Pro per la protezione dei branch (costo: serve l'approvazione del proprietario).
 
 ## Corsia 0 — criteri e checklist
 
-**File:** `docs/operations/checklist-produzione.md` (nuovo) con i criteri di §23.3 e §26, ADR 0040–0042.
+**File:** [`docs/operations/checklist-produzione.md`](../operations/checklist-produzione.md) (bozza del 14/11/2026) con i criteri di §23.3 e §26, ADR 0040–0042.
 
 **Fatto quando:** checklist approvata dal proprietario.
 
