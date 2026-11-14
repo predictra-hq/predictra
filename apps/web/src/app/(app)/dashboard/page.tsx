@@ -1,48 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { hasPermission } from "@predictra/shared-types";
-import { AgentStatusCard } from "@/components/agent/agent-status-card";
 import { NotificationsCard } from "@/components/agent/notifications-card";
 import {
-  ActiveModelCard,
   BankrollCard,
-  ExploreGrid,
-  ProposalsCard,
-  StatCard,
+  SchedineCard,
+  SystemStatusCard,
   UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
-import { FreshnessBadge } from "@/components/football/badges";
 import { Alert, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { getSourceHealth } from "@/lib/football/queries";
-import { formatDateTime, getMessages } from "@/lib/i18n";
+import { getMessages } from "@/lib/i18n";
 import { hasActiveModel } from "@/lib/predictions/queries";
 
 export const metadata: Metadata = { title: "Home" };
 
 /**
- * Dashboard: solo dati reali (fonti, modello attivo, bankroll personale, proposte).
- * Ogni riquadro degrada da solo con un messaggio se il suo dato non è disponibile.
+ * Home: in alto bankroll, schedine consigliate e stato del sistema; sotto le prossime
+ * partite. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
+ * dato non è disponibile. Le notifiche compaiono solo quando ce ne sono.
  */
 export default async function DashboardPage() {
   const user = await requireUser();
   const m = getMessages();
   const d = m.dashboard;
-  const [sourcesAll, hasModel] = await Promise.all([
-    getSourceHealth().catch(() => []),
-    hasActiveModel().catch(() => false),
-  ]);
-  // Freschezza dei dati in uso: la fonte più aggiornata tra quelle con termini verificati.
-  const latest = sourcesAll
-    .filter((s) => s.terms_verified_at && s.last_success_at)
-    .sort((a, b) => (b.last_success_at ?? "").localeCompare(a.last_success_at ?? ""))[0];
+  const hasModel = await hasActiveModel().catch(() => false);
 
   return (
     <>
-      <PageHeader
-        title={`${d.welcome}, ${user.displayName ?? user.email}`}
-        description={m.app.motto}
-      />
+      <PageHeader title={`${d.welcome}, ${user.displayName ?? user.email}`} />
 
       {!user.hasMfa ? (
         <Alert tone="warning" className="mb-6">
@@ -55,34 +41,17 @@ export default async function DashboardPage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <BankrollCard />
-        <ActiveModelCard />
-        <StatCard href="/data-center" title={d.dataFreshness}>
-          {latest?.last_success_at ? (
-            <span className="mt-2 flex flex-col gap-1">
-              <span>
-                <FreshnessBadge freshness={latest.freshness ?? null} />
-              </span>
-              <span className="text-xs text-muted">
-                {d.lastUpdate}: {formatDateTime(latest.last_success_at)}
-              </span>
-            </span>
-          ) : (
-            <p className="mt-2 text-sm text-muted">{d.noData}</p>
-          )}
-        </StatCard>
-        <AgentStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
-      </div>
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <UpcomingMatchesCard hasModel={hasModel} />
-        <ProposalsCard />
+        <SchedineCard />
+        <SystemStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
       </div>
 
       <NotificationsCard />
 
-      <ExploreGrid />
+      <div className="mt-6">
+        <UpcomingMatchesCard hasModel={hasModel} />
+      </div>
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>
     </>

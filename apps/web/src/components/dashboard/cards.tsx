@@ -12,7 +12,17 @@ import {
 import { formatEuro } from "@/components/bankroll/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import { listBankrolls } from "@/lib/bankroll/queries";
-import { listActiveProposals } from "@/lib/bet-builder/queries";
+import { healthTone, overallHealth } from "@/components/agent/status";
+import { FreshnessBadge } from "@/components/football/badges";
+import { getAgentStatus } from "@/lib/agent/queries";
+import { buildBollette } from "@/lib/bet-builder/bollette";
+import { bestItalianPrices } from "@/lib/bet-builder/likely";
+import {
+  listActiveProposals,
+  listItalianLatestOdds,
+  listLikelyRows,
+} from "@/lib/bet-builder/queries";
+import { getSourceHealth } from "@/lib/football/queries";
 import {
   bankrollTotals,
   favourite,
@@ -398,5 +408,96 @@ export function ExploreGrid() {
         ))}
       </ul>
     </section>
+  );
+}
+
+// --- Schedine consigliate (ADR 0037) -------------------------------------------------
+
+async function loadBollette() {
+  const rows = await listLikelyRows(new Date());
+  const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
+  return buildBollette(rows, bestItalianPrices(await listItalianLatestOdds(matchIds)));
+}
+
+/** Le schedine consigliate del turno più vicino, in breve: il dettaglio è nella pagina. */
+export async function SchedineCard() {
+  const d = getMessages().dashboard;
+  const s = getMessages().betBuilder.bollette;
+  const bollette = await loadBollette().catch(() => null);
+  const round = bollette?.[0]?.round ?? null;
+  const shown = round ? (bollette ?? []).filter((b) => b.round === round) : [];
+
+  return (
+    <StatCard href="/bet-builder" title={s.title}>
+      {bollette === null ? (
+        <p className="mt-2 text-sm text-muted">{d.noData}</p>
+      ) : shown.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{d.schedineEmpty}</p>
+      ) : (
+        <ul className="mt-2 flex flex-col gap-1.5">
+          {shown.map((b) => (
+            <li key={b.profile} className="flex items-baseline justify-between gap-3 text-sm">
+              <span>
+                {s.profiles[b.profile]}{" "}
+                <span className="text-xs text-muted">
+                  · {fillTemplate(s.legs, { n: b.picks.length })}
+                </span>
+              </span>
+              <span className="text-right font-mono">
+                <span className="font-semibold text-positive-strong">{formatOdds(b.price)}</span>{" "}
+                <span className="text-xs text-muted">{formatPercent(b.probability, 0)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </StatCard>
+  );
+}
+
+// --- Stato del sistema ---------------------------------------------------------------
+
+/** Modello attivo, freschezza dei dati e (per chi può vederlo) stato dell'agente in un riquadro. */
+export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) {
+  const m = getMessages();
+  const d = m.dashboard;
+  const [versions, sources, agent] = await Promise.all([
+    listModelVersions().catch(() => null),
+    getSourceHealth().catch(() => null),
+    canMonitor ? getAgentStatus().catch(() => null) : Promise.resolve(null),
+  ]);
+  const active = versions?.find((v) => v.status === "ACTIVE") ?? null;
+  // Freschezza dei dati in uso: la fonte più aggiornata tra quelle con termini verificati.
+  const verified = (sources ?? []).filter((x) => x.terms_verified_at && x.last_success_at);
+  verified.sort((a, b) => (b.last_success_at ?? "").localeCompare(a.last_success_at ?? ""));
+  const latest = verified[0] ?? null;
+  const health = agent ? overallHealth(agent) : null;
+
+  return (
+    <StatCard href="/models" title={d.systemTitle}>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1.5 text-sm">
+        <dt className="text-xs text-muted">{d.activeModel}</dt>
+        <dd className="text-right">
+          {active ? m.modelIntelligence.modelNames[active.model_key] : d.noActiveModel}
+        </dd>
+        <dt className="text-xs text-muted">{d.dataFreshness}</dt>
+        <dd className="text-right">
+          {latest ? <FreshnessBadge freshness={latest.freshness ?? null} /> : d.noData}
+        </dd>
+        {health ? (
+          <>
+            <dt className="text-xs text-muted">{d.agentStatus}</dt>
+            <dd className="text-right">
+              <Badge tone={healthTone(health)}>{m.agent.health[health]}</Badge>
+            </dd>
+          </>
+        ) : null}
+      </dl>
+      {latest?.last_success_at ? (
+        <p className="mt-2 text-xs text-muted">
+          {d.lastUpdate}: {formatDateTime(latest.last_success_at)}
+        </p>
+      ) : null}
+    </StatCard>
   );
 }

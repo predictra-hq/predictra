@@ -11,6 +11,7 @@ import {
   Input,
   PageHeader,
 } from "@/components/ui/primitives";
+import { FilterForm } from "@/components/ui/filter-form";
 import { requireUser } from "@/lib/auth/dal";
 import { evaluateSelections, parseSelectionKeys } from "@/lib/bet-builder/evaluate";
 import { selectionLabel } from "@/lib/bet-builder/format";
@@ -45,7 +46,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
         <EmptyState>{m.builderEmpty}</EmptyState>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-          <form method="get" className="flex flex-col gap-3">
+          <FilterForm className="flex flex-col gap-3">
             {options.map((o) => (
               <fieldset
                 key={o.matchId}
@@ -86,7 +87,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
             <Button type="submit" className="self-start">
               {m.evaluate}
             </Button>
-          </form>
+          </FilterForm>
 
           <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
             <Card>

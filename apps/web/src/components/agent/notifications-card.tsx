@@ -14,7 +14,8 @@ const SEVERITY_TONE = { info: "neutral", warning: "warning", error: "negative" }
 export async function NotificationsCard() {
   const a = getMessages().agent;
   const data = await listMyNotifications().catch(() => null);
-  if (!data) return null;
+  // Nessuna notifica: il riquadro non compare.
+  if (!data || data.items.length === 0) return null;
   const { items, unread } = data;
 
   return (

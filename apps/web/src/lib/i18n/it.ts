@@ -146,6 +146,8 @@ export const it = {
     dataFreshness: "Freschezza dati",
     noData: "Nessun dato",
     lastUpdate: "Ultimo aggiornamento",
+    systemTitle: "Stato del sistema",
+    schedineEmpty: "Nessuna schedina per ora: le quote arrivano nelle 48 ore prima delle partite.",
   },
   security: {
     title: "Sicurezza",
