@@ -805,11 +805,11 @@ export const it = {
   modelIntelligence: {
     title: "Modello",
     description:
-      "Il modello PREDICTRA e il suo sfidante: si riaddestrano a ogni esecuzione sulle partite più recenti e ogni settimana si confrontano, e il più forte diventa attivo da solo. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
+      "Un solo modello PREDICTRA: Dixon-Coles sui gol combinato con l'Elo sui risultati. Si riaddestra due volte al giorno su tutte le partite giocate, pesando di più le recenti, e ogni settimana rifà il backtest per controllare che resti più preciso del riferimento. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
     activeModel: "Modello PREDICTRA (attivo)",
     noActive:
       "Nessun modello attivo: il motore attiva da solo il modello più forte alla prossima esecuzione, se batte la baseline.",
-    versions: "In gara",
+    versions: "Versione in uso",
     reference: "Riferimento (baseline)",
     history: "Storico delle versioni ritirate",
     historyHint:
@@ -830,7 +830,7 @@ export const it = {
     activate: "Attiva",
     activated: "Modello attivato.",
     activateHint:
-      "Il motore sceglie da solo il modello più forte a ogni esecuzione, due volte al giorno (03:47 e 12:47 UTC). Un Super Admin può attivare a mano lo sfidante, se batte la baseline su Brier e Log Loss, e tornare indietro quando vuole: il modello sostituito resta in gara. All'esecuzione successiva il motore rimette attivo l'altro solo se è più forte di almeno 0,001 di Log Loss.",
+      "Il motore si riaddestra due volte al giorno (03:47 e 12:47 UTC). Quando cambia il codice del modello nasce una versione nuova, che diventa attiva da sola se nel backtest batte il riferimento; le versioni precedenti restano nello storico.",
     calibration: "Curva di calibrazione",
     calibrationHint:
       "Per ogni fascia di probabilità prevista, la frequenza osservata. Sulla diagonale il modello è ben calibrato.",

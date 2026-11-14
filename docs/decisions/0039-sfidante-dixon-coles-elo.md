@@ -34,3 +34,18 @@ Il Poisson attuale in servizio ha 0,9928.
 
 - Il Confidence Score usa ancora l'Elo come secondo parere. Con Dixon-Coles + Elo attivo l'accordo tra i due sarà un po' più alto per costruzione: da valutare con i dati reali.
 - Il codice è in `services/prediction-engine/src/predictra_engine/models/blend.py`; test in `tests/test_models.py` (coerenza tra matrice e 1X2, proporzioni nelle zone, iperparametri).
+
+## Aggiornamento del 14/11/2026: un solo modello
+
+Richiesta del proprietario: "un unico modello che migliora sempre, non più modelli".
+
+- **Unico modello in gara:** `dixon_coles` (Dixon-Coles + Elo). Poisson non si registra più e non scrive previsioni; resta solo nel comando `tune`. `CONTENDERS = {"dixon_coles"}` in `selection.py`; aggiorna l'ADR 0024.
+- **Passaggio:** alla prima esecuzione con il codice nuovo, il Poisson attivo risulta "di un codice superato". Il motore attiva il modello unico se batte la baseline e ritira le versioni Poisson, che restano nello storico per la riproducibilità.
+- **Come migliora nel tempo:** si riaddestra due volte al giorno su tutte le partite, pesando di più le recenti (ADR 0038), e ogni settimana rifà il backtest. Le modifiche al modello (nuovi dati, nuovi parametri) nascono come versioni nuove e diventano attive solo se il backtest lo conferma.
+- **Provato e scartato il 14/11/2026** (banco di prova, Log Loss 1X2):
+  - Elo con K tarato: 0,9945 da solo, contro 0,9950;
+  - Elo con margine di gol: 0,9940 da solo, ma 0,9882 nella combinazione contro 0,9881;
+  - ritorno alla media a inizio stagione: peggiora (0,9953–0,9972);
+  - correzioni apprese dagli errori passati: peggiorano le giornate future (runbook del motore, "Analisi degli errori").
+
+  Con i soli risultati delle partite il modello è vicino al suo limite. Il passo successivo richiede dati nuovi.

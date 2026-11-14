@@ -8,8 +8,12 @@ from .goals import poisson_model
 
 
 def all_models() -> list[Model]:
-    """Baseline per prima: serve da riferimento per i backtest."""
-    return [Baseline(), Elo(), poisson_model(), dixon_coles_model()]
+    """Baseline per prima: serve da riferimento per i backtest.
+
+    Baseline ed Elo sono strumenti interni (riferimento e secondo parere); il modello
+    PREDICTRA è uno solo, Dixon-Coles combinato con l'Elo (ADR 0039).
+    """
+    return [Baseline(), Elo(), dixon_coles_model()]
 
 
 __all__ = [

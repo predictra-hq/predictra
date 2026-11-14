@@ -23,7 +23,9 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   - Ogni riga ha `as_of`, `features_hash` e il Confidence Score con le sue componenti in `explanation`.
 - **Anti-leakage:** il database rifiuta previsioni con `as_of` successivo al calcio d'inizio. Il motore legge lo storico solo con `training_results`.
 
-## Un modello PREDICTRA e uno sfidante (ADR 0024)
+## Un solo modello PREDICTRA (ADR 0024, aggiornato dall'ADR 0039)
+
+Dal 14/11/2026 in gara c'è un solo modello, `dixon_coles` (Dixon-Coles + Elo); Poisson resta solo in `tune`. Il testo sotto descrive la situazione precedente.
 
 In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/2026 Dixon-Coles è combinato con l'Elo, [ADR 0039](../decisions/0039-sfidante-dixon-coles-elo.md)), gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
 
