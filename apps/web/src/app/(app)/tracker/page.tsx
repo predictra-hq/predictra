@@ -30,6 +30,7 @@ import {
   PageHeader,
   Select,
 } from "@/components/ui/primitives";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { requireUser } from "@/lib/auth/dal";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
 import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
@@ -46,7 +47,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
 
-export const metadata: Metadata = { title: "Giocate fatte" };
+export const metadata: Metadata = { title: "Le mie giocate" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
@@ -103,6 +104,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   return (
     <>
       <PageHeader title={t.title} description={t.description} />
+      <SectionTabs group="plays" current="/tracker" />
 
       <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
         <Field label={t.period} htmlFor="p">
@@ -362,7 +364,18 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
         </Card>
       ) : null}
 
-      <h2 className="mb-3 mt-8 text-lg font-semibold">{t.bets}</h2>
+      <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">{t.bets}</h2>
+        {bets.length > 0 ? (
+          <a
+            href={`/tracker/export?p=${period}`}
+            download
+            className="text-sm text-muted underline underline-offset-2 hover:text-fg"
+          >
+            {t.exportCsv}
+          </a>
+        ) : null}
+      </div>
       <Card scrollLabel={t.bets} className="p-0">
         {bets.length === 0 ? (
           <p className="p-5 text-sm text-muted">{t.noBets}</p>

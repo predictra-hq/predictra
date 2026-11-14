@@ -5,7 +5,7 @@ import { askProvider } from "@/lib/ask/provider";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Ask PREDICTRA" };
+export const metadata: Metadata = { title: "Chiedi a PREDICTRA" };
 
 /** Ask PREDICTRA (ADR 0042): spiega i dati già calcolati, senza numeri propri. */
 export default async function AskPage() {

@@ -34,12 +34,17 @@ export function BetBuilderDisclaimer() {
   );
 }
 
-export function BetBuilderNav({ current }: { current: "proposals" | "builder" | "slips" }) {
+export function BetBuilderNav({
+  current,
+}: {
+  current: "proposals" | "builder" | "slips" | "results";
+}) {
   const m = getMessages().betBuilder;
   const items = [
     { key: "proposals", href: "/bet-builder", label: m.navProposals },
     { key: "builder", href: "/bet-builder/builder", label: m.navBuilder },
     { key: "slips", href: "/bet-builder/slips", label: m.navSlips },
+    { key: "results", href: "/bet-builder/results", label: m.navResults },
   ] as const;
   return (
     <nav aria-label={m.title} className="mb-4 flex flex-wrap gap-2">

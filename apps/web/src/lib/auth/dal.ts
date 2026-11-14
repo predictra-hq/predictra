@@ -8,6 +8,7 @@ import {
   type Permission,
   type Role,
 } from "@predictra/shared-types";
+import { setRequestTimeZone } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 
 export interface CurrentUser {
@@ -32,12 +33,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const sub = claimsData?.claims?.sub;
   if (!sub) return null;
 
-  const [{ data: profile }, { data: roleRows }, { data: aal }] = await Promise.all([
+  const [{ data: profile }, { data: roleRows }, { data: aal }, { data: tz }] = await Promise.all([
     supabase.from("profiles").select("id, email, display_name, status").eq("id", sub).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", sub),
     supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.from("user_preferences").select("timezone").eq("user_id", sub).maybeSingle(),
   ]);
   if (!profile) return null;
+  // Le date della richiesta escono nel fuso scelto in Impostazioni → Preferenze.
+  setRequestTimeZone(tz?.timezone);
 
   return {
     id: String(profile.id),

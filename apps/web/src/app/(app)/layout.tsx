@@ -1,5 +1,5 @@
 import { hasPermission, highestRole } from "@predictra/shared-types";
-import { ADMIN_NAV, MAIN_NAV_GROUPS, SETTINGS_NAV } from "@/components/shell/nav-config";
+import { ADMIN_NAV, MAIN_NAV, SETTINGS_NAV } from "@/components/shell/nav-config";
 import { Sidebar } from "@/components/shell/sidebar";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -22,7 +22,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </a>
       <Sidebar
         messages={m}
-        groups={MAIN_NAV_GROUPS}
+        main={MAIN_NAV}
         admin={adminNav}
         settings={SETTINGS_NAV}
         userLabel={user.displayName ?? user.email}

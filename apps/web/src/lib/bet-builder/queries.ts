@@ -15,6 +15,7 @@ import { LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
 import { matchMarkets, type Outcome, usedProbability } from "./market";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
+import type { MatchScore, PastProposal, ResultLeg } from "./results";
 
 /*
  * Letture lato server sul contratto M5 (docs/data-dictionary/bet-builder.md),
@@ -306,4 +307,73 @@ export async function listItalianLatestOdds(matchIds: readonly number[]): Promis
     ...r,
     bookmaker: titles.get(r.bookmaker) ?? r.bookmaker,
   }));
+}
+
+/** Proposte passate lette per il riepilogo dei risultati: le più recenti. */
+const PAST_PROPOSALS_LIMIT = 300;
+
+/**
+ * Proposte la cui ultima partita è già iniziata, con le selezioni e i risultati reali
+ * delle partite concluse (`v_match_results`). L'esito lo calcola `results.ts`.
+ */
+export async function listPastProposals(
+  now: Date,
+): Promise<{ proposals: PastProposal[]; scores: Map<number, MatchScore> }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bet_proposals")
+    .select("id, category, created_at, last_kickoff_at, probability, combined_price")
+    .lt("last_kickoff_at", now.toISOString())
+    .order("last_kickoff_at", { ascending: false })
+    .limit(PAST_PROPOSALS_LIMIT);
+  if (error) throw new BetBuilderDataUnavailable("proposte passate", error);
+  const rows = (data ?? []) as Omit<PastProposal, "legs">[];
+  if (rows.length === 0) return { proposals: [], scores: new Map() };
+
+  const legs = await supabase
+    .from("bet_proposal_legs")
+    .select("proposal_id, match_id, market, line, selection")
+    .in(
+      "proposal_id",
+      rows.map((r) => r.id),
+    )
+    .limit(5000);
+  if (legs.error) throw new BetBuilderDataUnavailable("selezioni delle proposte", legs.error);
+  const legRows = (legs.data ?? []) as (ResultLeg & { proposal_id: number })[];
+  const legsBy = new Map<number, ResultLeg[]>();
+  for (const l of legRows) {
+    legsBy.set(Number(l.proposal_id), [
+      ...(legsBy.get(Number(l.proposal_id)) ?? []),
+      {
+        match_id: Number(l.match_id),
+        market: l.market,
+        line: l.line === null ? null : Number(l.line),
+        selection: l.selection,
+      },
+    ]);
+  }
+
+  const matchIds = [...new Set(legRows.map((l) => Number(l.match_id)))];
+  const results = await supabase
+    .from("v_match_results")
+    .select("match_id, home_score, away_score")
+    .in("match_id", matchIds)
+    .limit(5000);
+  if (results.error) throw new BetBuilderDataUnavailable("risultati", results.error);
+  const scores = new Map<number, MatchScore>();
+  for (const r of results.data ?? []) {
+    if (r.home_score === null || r.away_score === null) continue;
+    scores.set(Number(r.match_id), { home: Number(r.home_score), away: Number(r.away_score) });
+  }
+
+  return {
+    proposals: rows.map((r) => ({
+      ...r,
+      id: Number(r.id),
+      probability: Number(r.probability),
+      combined_price: Number(r.combined_price),
+      legs: legsBy.get(Number(r.id)) ?? [],
+    })),
+    scores,
+  };
 }

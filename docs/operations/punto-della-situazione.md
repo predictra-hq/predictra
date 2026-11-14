@@ -1,6 +1,6 @@
 # Punto della situazione
 
-**Aggiornato:** 12/11/2026 (`gennpalm` con Claude Code). Chi riprende il lavoro legge prima questo file, poi [CLAUDE.md](../../CLAUDE.md) e il piano della milestone in [docs/roadmap/](../roadmap/README.md).
+**Aggiornato:** 14/11/2026 (`gennpalm` con Claude Code). Chi riprende il lavoro legge prima questo file, poi [CLAUDE.md](../../CLAUDE.md) e il piano della milestone in [docs/roadmap/](../roadmap/README.md).
 
 ## Cosa è in servizio su DEV
 
@@ -37,7 +37,15 @@
 
 ## Lavoro in corso (per chi riprende)
 
-M2 fase A3: risultati storici completi; statistiche e formazioni si scaricano da sole ogni giorno (job `api-football.details`). Prossimi passi possibili: M8 (ambiente PROD, runbook, checklist finale).
+M2 fase A3: risultati storici completi; statistiche e formazioni si scaricano da sole ogni giorno (job `api-football.details`).
+
+**Analisi del 14/11/2026 (cosa manca per chiudere).** Preparati, da unire con una PR verso `dev`:
+
+- fuso orario delle preferenze applicato a tutte le date dell'app (prima era salvato ma non usato: le date uscivano sempre in `Europe/Rome`);
+- esportazione in CSV delle giocate dal Tracker (`/tracker/export`, solo dati propri tramite RLS);
+- [runbook operativo](runbook.md) (M8, B2), [checklist di produzione](checklist-produzione.md) in bozza (M8, corsia 0 e B3) e [ADR 0041](../decisions/0041-retention.md) sulla conservazione dei dati (proposta).
+
+Restano, in ordine: approvazione della checklist e dell'ADR 0041 (`gennpalm`); step-up 2FA (da progettare e provare con un login reale); ambiente PROD (fase A4: progetti e segreti `PROD_*` li crea `gennpalm`, elenco nella checklist di produzione §7); paragrafi §23.3 e §26 del Prompt Master da aggiungere al repository.
 
 ## Punti aperti
 
