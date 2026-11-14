@@ -51,6 +51,7 @@ const PAGES = [
   "/bet-builder",
   "/bet-builder/builder",
   "/bet-builder/slips",
+  "/bet-builder/results",
   "/bankroll",
   "/tracker",
   "/ask",

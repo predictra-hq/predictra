@@ -18,7 +18,7 @@ import { getSourceHealth } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { hasActiveModel } from "@/lib/predictions/queries";
 
-export const metadata: Metadata = { title: "Home" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 /**
  * Dashboard: solo dati reali (fonti, modello attivo, bankroll personale, proposte).

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { hasPermission, type ModelVersionSummaryRow } from "@predictra/shared-types";
 import { CalibrationChart } from "@/components/predictions/calibration-chart";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Alert, Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { runStatusTone } from "@/lib/football/format";
@@ -11,7 +12,7 @@ import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
 
-export const metadata: Metadata = { title: "Modello" };
+export const metadata: Metadata = { title: "Modelli" };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -64,6 +65,7 @@ export default async function ModelsPage() {
   return (
     <>
       <PageHeader title={mi.title} description={mi.description} />
+      <SectionTabs group="system" current="/models" />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>

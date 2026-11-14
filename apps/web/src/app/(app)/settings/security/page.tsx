@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { hasPermission } from "@predictra/shared-types";
-import { SettingsTabs } from "@/components/shell/settings-tabs";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import {
   Alert,
@@ -31,7 +30,6 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
   return (
     <>
       <PageHeader title={m.security.title} />
-      <SettingsTabs current="security" />
       {mfa === "required" || (isAdmin && !user.hasMfa) ? (
         <Alert tone="warning" className="mb-6">
           {m.security.mfaRequiredForAdmin}

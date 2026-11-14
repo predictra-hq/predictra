@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/football/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
@@ -64,6 +65,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
+        <SectionTabs group="analysis" current="/leagues" />
         <EmptyState>{m.noData}</EmptyState>
       </>
     );
@@ -86,6 +88,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
+      <SectionTabs group="analysis" current="/leagues" />
 
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>

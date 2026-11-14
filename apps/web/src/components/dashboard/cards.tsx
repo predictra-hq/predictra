@@ -22,18 +22,18 @@ import {
   withPredictions,
 } from "@/lib/dashboard/summary";
 import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
-import { formatDateTime, getMessages } from "@/lib/i18n";
+import { formatDateTime, getMessages, getRequestTimeZone } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
 import { listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 
-const DAY = new Intl.DateTimeFormat("it-IT", {
-  day: "2-digit",
-  month: "2-digit",
-  timeZone: "Europe/Rome",
-});
-const formatDay = (d: Date) => DAY.format(d);
+const formatDay = (d: Date) =>
+  new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: getRequestTimeZone(),
+  }).format(d);
 
 /** Etichetta piccola in maiuscolo in cima ai riquadri. */
 function Kicker({ children }: { children: ReactNode }) {

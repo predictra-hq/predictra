@@ -8,6 +8,7 @@ import { BookmakerKindBadge } from "@/components/odds/badges";
 import { BookmakerOddsTable } from "@/components/odds/bookmaker-odds-table";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
 import { MarketsTable } from "@/components/odds/markets-table";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Alert, Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
@@ -184,6 +185,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
+      <SectionTabs group="analysis" current="/markets" />
 
       <Alert className="mb-3">{m.disclaimer}</Alert>
       <Alert tone="warning" className="mb-6">
