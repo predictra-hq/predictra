@@ -129,32 +129,40 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <CardTitle>{b.kinds[kind]}</CardTitle>
                 <KindBadge kind={kind} />
               </div>
+              {/* In vista i quattro numeri che contano; gli altri a richiesta. */}
               <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Stat label={t.bets}>
-                  {metrics.settledBets} / {metrics.bets}
-                </Stat>
                 <Stat label={t.profit}>
                   <SignedEuro value={metrics.profit} />
                 </Stat>
-                <Stat label={t.staked}>{formatEuro(metrics.staked)}</Stat>
                 <Stat label={t.yield}>{formatPercent(metrics.yield)}</Stat>
-                <Stat label={t.roi}>{formatPercent(metrics.roi)}</Stat>
                 <Stat label={t.hitRate}>{formatPercent(metrics.hitRate)}</Stat>
-                <Stat label={t.averageOdds}>{odds(metrics.averageOdds)}</Stat>
-                <Stat label={t.maxDrawdown}>
-                  {formatEuro(metrics.maxDrawdown)}
-                  {metrics.maxDrawdownPct !== null
-                    ? ` (${formatPercent(metrics.maxDrawdownPct)})`
-                    : ""}
+                <Stat label={t.bets}>
+                  {metrics.settledBets} / {metrics.bets}
                 </Stat>
-                <Stat label={t.clv}>{formatPercent(clv)}</Stat>
               </dl>
+              <details className="mt-3 text-sm">
+                <summary className="cursor-pointer text-xs text-muted hover:text-fg">
+                  {t.moreMetrics}
+                </summary>
+                <dl className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  <Stat label={t.staked}>{formatEuro(metrics.staked)}</Stat>
+                  <Stat label={t.roi}>{formatPercent(metrics.roi)}</Stat>
+                  <Stat label={t.averageOdds}>{odds(metrics.averageOdds)}</Stat>
+                  <Stat label={t.maxDrawdown}>
+                    {formatEuro(metrics.maxDrawdown)}
+                    {metrics.maxDrawdownPct !== null
+                      ? ` (${formatPercent(metrics.maxDrawdownPct)})`
+                      : ""}
+                  </Stat>
+                  <Stat label={t.clv}>{formatPercent(clv)}</Stat>
+                </dl>
+                <p className="mt-2 text-xs text-muted">{t.metricsHelp}</p>
+              </details>
               <ProfitCurve points={curve} label={b.kinds[kind]} />
             </Card>
           );
         })}
       </div>
-      <p className="mt-2 text-xs text-muted">{t.metricsHelp}</p>
 
       {bankrolls.length === 0 ? (
         <Alert className="mt-6" tone="warning">
@@ -165,8 +173,14 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
         </Alert>
       ) : (
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
-          <Card>
-            <CardTitle>{t.addBet}</CardTitle>
+          {/* Modulo chiuso finché non serve: la pagina resta corta. */}
+          <details className="group self-start rounded-[var(--radius-card)] border border-border bg-surface p-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+              <CardTitle>{t.addBet}</CardTitle>
+              <span className="rounded-lg bg-positive px-3 py-1.5 text-sm font-medium text-black group-open:hidden">
+                {t.addBetOpen}
+              </span>
+            </summary>
             <ActionForm action={addBet} className="mt-4 grid gap-3 sm:grid-cols-2">
               <Field label={t.bankroll} htmlFor="bet-bankroll">
                 <Select id="bet-bankroll" name="bankrollId" required>
@@ -212,7 +226,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
               </Field>
               <SubmitButton className="sm:col-span-2">{t.saveBet}</SubmitButton>
             </ActionForm>
-          </Card>
+          </details>
 
           <Card>
             <CardTitle>{t.suggestions}</CardTitle>
@@ -258,7 +272,10 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       {bankrolls.length > 0 ? (
         <Card className="mt-4">
           <CardTitle>{k.title}</CardTitle>
-          <p className="mt-1 text-sm text-muted">{k.description}</p>
+          <details className="mt-1 text-sm text-muted">
+            <summary className="cursor-pointer text-xs hover:text-fg">{k.howItWorks}</summary>
+            <p className="mt-1">{k.description}</p>
+          </details>
           {kellyMatches.length === 0 ? (
             <p className="mt-3 text-sm text-muted">{k.noMatches}</p>
           ) : (

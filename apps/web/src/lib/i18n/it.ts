@@ -987,6 +987,8 @@ export const it = {
     metricsHelp:
       "Yield = profitto / giocato. ROI = profitto / capitale netto versato. Successo: giocate chiuse in profitto, esclusi i rimborsi. Il CLV usa le quote di chiusura che inserisci.",
     addBet: "Nuova giocata",
+    addBetOpen: "Registra",
+    moreMetrics: "Altri indicatori",
     bankroll: "Bankroll",
     event: "Partita o evento",
     market: "Mercato",
@@ -1005,6 +1007,7 @@ export const it = {
     flatSuggestion: "Flat",
     kelly: {
       title: "Calcolatore Kelly",
+      howItWorks: "Come funziona",
       description:
         "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
       match: "Partita",

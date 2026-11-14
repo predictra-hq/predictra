@@ -26,7 +26,13 @@ export interface NavGroup {
  * Gli indirizzi delle pagine non cambiano: cambiano solo ordine, gruppi e nomi nel menu.
  */
 export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
-  { id: "home", items: [{ key: "dashboard", href: "/dashboard" }] },
+  {
+    id: "home",
+    items: [
+      { key: "dashboard", href: "/dashboard" },
+      { key: "askPredictra", href: "/ask" },
+    ],
+  },
   {
     id: "football",
     label: "groupFootball",
@@ -61,7 +67,6 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
       { key: "dataCenter", href: "/data-center" },
     ],
   },
-  { id: "ask", items: [{ key: "askPredictra", href: "/ask" }] },
 ];
 
 export const ADMIN_NAV: readonly NavItem[] = [

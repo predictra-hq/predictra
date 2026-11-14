@@ -206,8 +206,11 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
               </ActionForm>
             </Card>
 
-            <Card>
-              <CardTitle>{m.deleteBankroll}</CardTitle>
+            {/* Azione irreversibile: chiusa finché non la si apre. */}
+            <details className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
+              <summary className="cursor-pointer text-sm text-muted hover:text-fg">
+                {m.deleteBankroll}
+              </summary>
               <ActionForm action={deleteBankroll} className="mt-3 flex flex-col gap-3">
                 <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
                 <label className="flex items-start gap-2 text-sm">
@@ -216,13 +219,19 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
                 </label>
                 <SubmitButton variant="danger">{m.deleteBankroll}</SubmitButton>
               </ActionForm>
-            </Card>
+            </details>
           </div>
         </div>
       ) : null}
 
-      <Card className="mt-6">
-        <CardTitle>{m.create}</CardTitle>
+      {/* Con almeno un bankroll il modulo resta chiuso; senza, è aperto. */}
+      <details
+        open={bankrolls.length === 0}
+        className="mt-6 rounded-[var(--radius-card)] border border-border bg-surface p-5"
+      >
+        <summary className="cursor-pointer">
+          <CardTitle className="inline">{m.create}</CardTitle>
+        </summary>
         <ActionForm action={createBankroll} className="mt-4 grid gap-3 sm:grid-cols-3">
           <Field label={m.name} htmlFor="br-name">
             <Input id="br-name" name="name" maxLength={60} required />
@@ -241,7 +250,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
           </Field>
           <SubmitButton className="sm:col-span-3">{m.createButton}</SubmitButton>
         </ActionForm>
-      </Card>
+      </details>
 
       <p className="mt-8 text-xs text-subtle">{getMessages().tracker.disclaimer}</p>
     </>
