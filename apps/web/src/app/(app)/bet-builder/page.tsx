@@ -114,7 +114,8 @@ function ProposalCard({
 function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   const m = getMessages().betBuilder;
   const text = !run ? m.emptyNoRun : run.status === "FAILED" ? m.emptyFailed : m.emptyZero;
-  return <EmptyState>{text}</EmptyState>;
+  // Nessuna proposta: una riga sola, la pagina resta corta.
+  return <p className="mb-6 text-sm text-muted">{text}</p>;
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
@@ -152,27 +153,31 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       </Suspense>
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
-      <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
-      <details className="mb-4 text-xs text-muted">
-        <summary className="cursor-pointer">{m.technicalDetails}</summary>
-        <p className="mb-1 mt-2 text-xs text-muted">
-          {fillTemplate(m.thresholds, {
-            ev: formatPercent(rules.min_expected_value, 0),
-            p: formatPercent(rules.min_probability, 0),
-            c: String(rules.min_confidence_score).replace(".", ","),
-            legs: rules.max_legs,
-          })}
-        </p>
-        {run ? (
-          <p className="mb-4 text-xs text-muted">
-            {fillTemplate(m.lastRun, {
-              at: formatDateTime(run.finished_at ?? run.started_at),
-              candidates: run.candidates_evaluated,
-              proposals: run.proposals_written,
-            })}
-          </p>
-        ) : null}
-      </details>
+      {proposals.length > 0 ? (
+        <>
+          <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+          <details className="mb-4 text-xs text-muted">
+            <summary className="cursor-pointer">{m.technicalDetails}</summary>
+            <p className="mb-1 mt-2 text-xs text-muted">
+              {fillTemplate(m.thresholds, {
+                ev: formatPercent(rules.min_expected_value, 0),
+                p: formatPercent(rules.min_probability, 0),
+                c: String(rules.min_confidence_score).replace(".", ","),
+                legs: rules.max_legs,
+              })}
+            </p>
+            {run ? (
+              <p className="mb-4 text-xs text-muted">
+                {fillTemplate(m.lastRun, {
+                  at: formatDateTime(run.finished_at ?? run.started_at),
+                  candidates: run.candidates_evaluated,
+                  proposals: run.proposals_written,
+                })}
+              </p>
+            ) : null}
+          </details>
+        </>
+      ) : null}
 
       {proposals.length === 0 ? (
         <NoProposals run={run} />

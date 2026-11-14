@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -108,12 +108,30 @@ function NavLinks({
               )}
             >
               {icon}
-              <span className="min-w-0 truncate">{label}</span>
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              <PendingHint />
             </Link>
           </li>
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Puntino a destra della voce cliccata finché la pagina non arriva: riscontro immediato
+ * senza spostare nulla (sempre presente, cambia solo l'opacità).
+ */
+function PendingHint() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "size-1.5 shrink-0 rounded-full bg-positive transition-opacity",
+        pending ? "opacity-100 motion-safe:animate-pulse" : "opacity-0",
+      )}
+    />
   );
 }
 
