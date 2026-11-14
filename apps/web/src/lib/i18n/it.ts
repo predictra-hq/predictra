@@ -29,6 +29,7 @@ export const it = {
     notFoundTitle: "Pagina non trovata",
     notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
     backToDashboard: "Torna alla dashboard",
+    sectionTabs: { plays: "Le mie giocate", analysis: "Analisi", system: "Modelli e dati" },
   },
   auth: {
     loginTitle: "Accesso riservato",
@@ -72,6 +73,8 @@ export const it = {
     modelIntelligence: "Modelli",
     dataCenter: "Fonti dati",
     askPredictra: "Chiedi a PREDICTRA",
+    analysis: "Analisi",
+    system: "Modelli e dati",
     administration: "Amministrazione",
     settings: "Impostazioni",
     security: "Sicurezza",
@@ -602,9 +605,10 @@ export const it = {
       italianPrice: "quota {price} · {bookmaker}",
       combinedItalian: "Quota reale combinata (bookmaker italiani): {price}",
     },
+    likelyToggle: "Mostra anche i pronostici più probabili (quote basse)",
     valueTitle: "Proposte con valore",
     valueDescription:
-      "Singole e multiple (fino a 4 partite dello stesso turno, da venerdì a lunedì o da martedì a giovedì) su 1X2, doppia chance e under/over giocabili su bookmaker italiani (oggi Codere e Unibet Italia), solo quando la loro quota supera quella equa. La probabilità usata è la media tra quella del modello e quella del mercato, ricavata dalle quote di tutti i bookmaker, anche esteri: così il valore non viene gonfiato quando il modello si discosta troppo. Gol/no gol e gli altri tipi di giocata non hanno quote italiane gratuite: compaiono solo tra le più probabili.",
+      "Singole e multiple (fino a 4 partite dello stesso turno) in cui la quota di un bookmaker italiano è più alta di quella giusta secondo modello e mercato insieme. Sono le giocate con il miglior rapporto tra quota e probabilità: poche, e solo quando ci sono davvero.",
     technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
     navBuilder: "Costruisci",

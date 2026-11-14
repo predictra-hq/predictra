@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { healthTone, runStatusTone, severityTone } from "@/lib/football/format";
@@ -47,6 +48,7 @@ export default async function DataCenterPage() {
   return (
     <>
       <PageHeader title={d.title} description={d.description} />
+      <SectionTabs group="system" current="/data-center" />
 
       <h2 className="mb-3 text-lg font-semibold">{d.sources}</h2>
       <div className="grid gap-4 lg:grid-cols-2">

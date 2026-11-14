@@ -268,12 +268,15 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
         </>
       )}
 
-      <LikelyCard
-        picks={picks}
-        multiples={likelyMultiples(picks)}
-        prices={italianOdds}
-        stake={stake}
-      />
+      <details className="mb-6">
+        <summary className="mb-3 cursor-pointer text-sm text-positive">{m.likelyToggle}</summary>
+        <LikelyCard
+          picks={picks}
+          multiples={likelyMultiples(picks)}
+          prices={italianOdds}
+          stake={stake}
+        />
+      </details>
     </>
   );
 }

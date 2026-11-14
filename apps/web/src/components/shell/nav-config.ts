@@ -4,25 +4,44 @@ import type { Messages } from "@/lib/i18n";
 export interface NavItem {
   key: keyof Messages["nav"];
   href: string;
+  /** Altri percorsi della stessa sezione: la voce resta evidenziata anche lì. */
+  also?: readonly string[];
   /** Milestone in cui la sezione diventa disponibile; se presente la voce è disattivata. */
   milestone?: number;
   permission?: Permission;
 }
 
-/** Navigazione principale (prompt master §16.1). */
+/**
+ * Navigazione principale. Le pagine affini stanno sotto una sola voce e si scelgono
+ * con le schede in cima alla pagina (`SECTION_TABS`): menu corto, stesse pagine.
+ */
 export const MAIN_NAV: readonly NavItem[] = [
   { key: "dashboard", href: "/dashboard" },
   { key: "matchCenter", href: "/match-center" },
-  { key: "statisticsCenter", href: "/statistics" },
   { key: "betBuilder", href: "/bet-builder" },
-  { key: "marketIntelligence", href: "/markets" },
-  { key: "leagueIntelligence", href: "/leagues" },
-  { key: "bankroll", href: "/bankroll" },
-  { key: "tracker", href: "/tracker" },
-  { key: "modelIntelligence", href: "/models" },
-  { key: "dataCenter", href: "/data-center" },
+  { key: "tracker", href: "/tracker", also: ["/bankroll"] },
+  { key: "analysis", href: "/leagues", also: ["/statistics", "/markets"] },
+  { key: "system", href: "/models", also: ["/data-center"] },
   { key: "askPredictra", href: "/ask" },
 ];
+
+/** Schede delle sezioni che raggruppano più pagine. */
+export const SECTION_TABS = {
+  plays: [
+    { key: "tracker", href: "/tracker" },
+    { key: "bankroll", href: "/bankroll" },
+  ],
+  analysis: [
+    { key: "leagueIntelligence", href: "/leagues" },
+    { key: "statisticsCenter", href: "/statistics" },
+    { key: "marketIntelligence", href: "/markets" },
+  ],
+  system: [
+    { key: "modelIntelligence", href: "/models" },
+    { key: "dataCenter", href: "/data-center" },
+  ],
+} as const satisfies Record<string, readonly NavItem[]>;
+export type SectionGroup = keyof typeof SECTION_TABS;
 
 export const ADMIN_NAV: readonly NavItem[] = [
   { key: "users", href: "/admin/users", permission: "users.read" },

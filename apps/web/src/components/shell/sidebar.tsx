@@ -45,6 +45,8 @@ const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   modelIntelligence: LineChart,
   dataCenter: Database,
   askPredictra: MessageCircleQuestion,
+  analysis: BarChart3,
+  system: LineChart,
   users: Users,
   invitations: Mail,
   audit: ScrollText,
@@ -94,7 +96,9 @@ function NavLinks({
             </li>
           );
         }
-        const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = [item.href, ...(item.also ?? [])].some(
+          (href) => pathname === href || pathname.startsWith(`${href}/`),
+        );
         return (
           <li key={item.key}>
             <Link
