@@ -13,7 +13,7 @@ import {
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Data Center" };
+export const metadata: Metadata = { title: "Dati" };
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (

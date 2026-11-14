@@ -29,7 +29,7 @@ import {
   ODDS_PROVIDER,
 } from "@/lib/odds/queries";
 
-export const metadata: Metadata = { title: "Market Intelligence" };
+export const metadata: Metadata = { title: "Quote" };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (

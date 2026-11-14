@@ -28,7 +28,7 @@ import {
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Match Center" };
+export const metadata: Metadata = { title: "Partite" };
 
 export default async function MatchCenterPage({ searchParams }: PageProps<"/match-center">) {
   await requireUser();

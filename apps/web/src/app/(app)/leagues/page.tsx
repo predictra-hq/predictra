@@ -18,7 +18,7 @@ import {
 } from "@/lib/odds/queries";
 import { homeAdvantage } from "@/lib/odds/stats";
 
-export const metadata: Metadata = { title: "League Intelligence" };
+export const metadata: Metadata = { title: "Campionati" };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (

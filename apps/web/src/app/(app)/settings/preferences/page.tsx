@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SettingsTabs } from "@/components/shell/settings-tabs";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -22,6 +23,7 @@ export default async function PreferencesPage() {
   return (
     <>
       <PageHeader title={m.preferences.title} />
+      <SettingsTabs current="preferences" />
       <Card className="max-w-lg">
         <ActionForm action={savePreferences}>
           <Field label={m.preferences.displayName} htmlFor="displayName">
