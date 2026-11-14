@@ -434,9 +434,9 @@ export async function SchedineCard() {
         <ul className="mt-2 flex flex-col gap-1.5">
           {shown.map((b) => (
             <li key={b.profile} className="flex items-baseline justify-between gap-3 text-sm">
-              <span>
+              <span className="min-w-0">
                 {s.profiles[b.profile]}{" "}
-                <span className="text-xs text-muted">
+                <span className="whitespace-nowrap text-xs text-muted">
                   · {fillTemplate(s.legs, { n: b.picks.length })}
                 </span>
               </span>

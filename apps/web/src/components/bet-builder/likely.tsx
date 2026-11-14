@@ -11,14 +11,21 @@ import {
   type LikelyMultiple,
   type LikelyPick,
 } from "@/lib/bet-builder/likely";
-import { confidenceLabel } from "@/lib/bet-builder/format";
+import { confidenceLabel, selectionLabel } from "@/lib/bet-builder/format";
 import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatLine, formatPercent } from "@/lib/predictions/format";
 
 /** "Doppia chance 1X", "Totale gol Under 2,5", "Gol squadra Casa over 0,5". */
-export function pickLabel(pick: Pick<LikelyPick, "market" | "selection" | "line">): string {
+export function pickLabel(
+  pick: Pick<LikelyPick, "market" | "selection" | "line"> &
+    Partial<Pick<LikelyPick, "home" | "away">>,
+): string {
+  // 1X2 con le squadre: "1 · Manchester City" invece di "Esito finale 1X2 1".
+  if (pick.market === "1X2" && pick.home && pick.away) {
+    return selectionLabel(pick.selection, pick.home, pick.away);
+  }
   const p = getMessages().predictions;
   const market = p.markets[pick.market as PredictionMarket] ?? pick.market;
   const selection = (p.selections as Record<string, string>)[pick.selection] ?? pick.selection;

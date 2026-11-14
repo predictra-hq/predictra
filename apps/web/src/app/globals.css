@@ -156,3 +156,11 @@ body {
     text-align: left;
   }
 }
+
+/* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
+@media (max-width: 639.98px) {
+  .stack-sm table:not(.hidden) tbody td.sm-secondary,
+  .stack-sm table:not(.hidden) tbody th.sm-secondary {
+    display: none;
+  }
+}
