@@ -2,8 +2,9 @@
 
 from .base import FittedModel, Model
 from .baseline import Baseline
+from .blend import dixon_coles_model
 from .elo import Elo
-from .goals import dixon_coles_model, poisson_model
+from .goals import poisson_model
 
 
 def all_models() -> list[Model]:

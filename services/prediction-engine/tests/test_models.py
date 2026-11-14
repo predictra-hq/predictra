@@ -127,3 +127,44 @@ def test_iperparametri_registrano_il_prior_solo_se_attivo():
     hp = dixon_coles_model().hyperparameters()
     assert hp["xi_per_day"] == 0.001
     assert hp["newcomer"] == {"attack": -0.2, "defence": -0.1, "days": 300}
+
+
+def test_combinato_gol_elo_coerente_su_tutti_i_mercati(league):
+    """ADR 0039: 1X2 = media pesata gol/Elo; la matrice riporta le stesse probabilità."""
+    from predictra_engine.models.blend import EloBlendModel, rescale_to_1x2
+    from predictra_engine.models.goals import GoalsModel
+
+    as_of = league[-1].kickoff_at + timedelta(days=1)
+    goals = GoalsModel("g", dixon_coles=True, xi=0.001, l2=3.0)
+    blend = EloBlendModel("dixon_coles", goals, Elo(), 0.4).fit(league, as_of)
+    g = goals.fit(league, as_of)
+    e = Elo().fit(league, as_of)
+    fx = fixture(1, 20)
+    expected = 0.6 * g.probabilities_1x2(fx) + 0.4 * e.probabilities_1x2(fx)
+    assert blend.probabilities_1x2(fx) == pytest.approx(expected / expected.sum())
+
+    m = blend.score_matrix(fx)
+    assert m.sum() == pytest.approx(1)
+    from_matrix = np.array([np.tril(m, -1).sum(), np.trace(m), np.triu(m, 1).sum()])
+    assert from_matrix == pytest.approx(blend.probabilities_1x2(fx))
+    # Dentro una zona le proporzioni tra punteggi restano quelle del modello gol.
+    gm = g.score_matrix(fx)
+    assert m[2, 0] / m[1, 0] == pytest.approx(gm[2, 0] / gm[1, 0])
+    # Ricalibrare verso le probabilità che la matrice ha già non cambia nulla.
+    same = rescale_to_1x2(gm, g.probabilities_1x2(fx))
+    assert same == pytest.approx(gm)
+
+
+def test_sfidante_dixon_coles_con_elo_registra_gli_iperparametri():
+    hp = dixon_coles_model().hyperparameters()
+    assert hp["dixon_coles"] is True
+    assert hp["elo_weight"] == 0.4
+    assert hp["elo"] == {"k": 20.0, "home_advantage": 60.0}
+    assert dixon_coles_model().key == "dixon_coles"
+
+
+def test_peso_elo_fuori_intervallo_rifiutato():
+    from predictra_engine.models.blend import EloBlendModel
+
+    with pytest.raises(ValueError):
+        EloBlendModel("x", poisson_model(), Elo(), 1.5)

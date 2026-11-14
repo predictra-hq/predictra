@@ -14,7 +14,8 @@ from .backtest import backtest_models
 from .data import MatchResult
 from .models import Baseline, Elo
 from .models.base import Model
-from .models.goals import GoalsModel, dixon_coles_model, poisson_model
+from .models.blend import dixon_coles_model
+from .models.goals import GoalsModel, poisson_model
 
 L2_GRID = (0.1, 1.0, 3.0, 10.0, 30.0)
 XI_GRID = (0.0, 0.001, 0.0015, 0.0025, 0.005)

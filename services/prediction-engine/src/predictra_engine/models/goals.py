@@ -219,16 +219,3 @@ def poisson_model() -> GoalsModel:
         newcomer_attack=NEWCOMER_ATTACK,
         newcomer_defence=NEWCOMER_DEFENCE,
     )
-
-
-def dixon_coles_model() -> GoalsModel:
-    # ξ = 0,001 al giorno: emivita di circa 23 mesi (0,005 pesava troppo poco le stagioni
-    # passate ora che lo storico ne contiene quattro).
-    return GoalsModel(
-        "dixon_coles",
-        dixon_coles=True,
-        xi=0.001,
-        l2=DEFAULT_L2,
-        newcomer_attack=NEWCOMER_ATTACK,
-        newcomer_defence=NEWCOMER_DEFENCE,
-    )
