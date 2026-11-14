@@ -110,6 +110,22 @@ Comando in sola lettura: `python -m predictra_engine tune [--l2 2,3,4] [--xi 0,0
 
 **14/11/2026 ([ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md)):** con lo storico di quattro stagioni, Poisson usa ξ = 0,0015 e Dixon-Coles ξ = 0,001, e le neopromosse partono da attacco −0,2 e difesa −0,1. Su un banco di prova con dati pubblici (3.483 partite di cinque campionati) il Log Loss 1X2 passa da 0,9928 a 0,9899 per Poisson e da 0,9960 a 0,9897 per Dixon-Coles. Le versioni nuove si confrontano da sole sul database (ADR 0023). Per confermare i valori: `tune` senza argomenti.
 
+## Analisi degli errori giornata per giornata (14/11/2026)
+
+Richiesta del proprietario: rigiocare tutte le partite passate con i modelli attuali, confrontare ogni giornata con il risultato reale e correggere il modello dove sbaglia.
+
+- **Metodo.** Banco di prova dell'[ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md): 7.061 partite dei cinque campionati principali, 2022–2026. Ogni settimana il modello è addestrato solo sulle partite precedenti; le correzioni sono stimate solo sugli errori passati e verificate sulle giornate successive, mai viste.
+- **Errori ricorrenti trovati** (Dixon-Coles + Elo):
+  - pareggi un po' sottostimati: 24,4% previsti contro 25,3% reali, di più in Serie A (25,5% contro 27,7%);
+  - vittorie in trasferta un po' sopravvalutate: 31,8% contro 30,9%;
+  - squadre con meno di 10 partite di storico: più pareggi del previsto (28,3% contro 25,4%).
+
+  Le favorite sono ben calibrate in tutte le fasce. Poisson sottostima di più i pareggi (23,7%; in Bundesliga 21,7% contro 25,2%).
+
+- **Correzioni provate:** spostamenti di casa e pareggio stimati sugli errori passati, per tutti i campionati insieme o per campionato, sulle ultime 760 o 1.520 partite, con penalità diverse; un fattore pareggi per le squadre con poco storico.
+- **Esito: nessuna correzione adottata.** I pareggi previsti diventano uguali a quelli reali, ma sulle giornate mai viste il Log Loss di Dixon-Coles + Elo peggiora (da 0,9845 fino a 0,9856). Per Poisson il guadagno massimo è 0,0006, e resta peggiore di Dixon-Coles + Elo senza correzione. Il fattore per le squadre con poco storico, stimato su 2022–24, è 1,02 e migliora 2024–26 di 0,0001. Gli scarti visti a posteriori sono soprattutto caso: l'addestramento sulle partite passate ne incorpora già la parte ripetibile.
+- **Cosa può ancora migliorare la precisione:** dati che i modelli oggi non vedono, come statistiche di partita, formazioni e quote di chiusura. Si misurano allo stesso modo prima di adottarli.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
