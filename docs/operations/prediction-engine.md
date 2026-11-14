@@ -25,7 +25,7 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
 
 ## Un modello PREDICTRA e uno sfidante (ADR 0024)
 
-In gara ci sono solo **Poisson** e **Dixon-Coles** (dal 14/11/2026 Dixon-Coles è combinato con l'Elo, [ADR 0039](../decisions/0039-sfidante-dixon-coles-elo.md)), gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
+In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/2026 Dixon-Coles è combinato con l'Elo, [ADR 0039](../decisions/0039-sfidante-dixon-coles-elo.md)), gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
 
 ## Modello attivo: automatico (ADR 0023)
 

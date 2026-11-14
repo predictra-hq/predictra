@@ -150,7 +150,7 @@ export function BolletteCard({
             <h3 className="mb-2 mt-4 text-sm font-semibold">
               {fillTemplate(m.round, { round: formatRound(round) })}
             </h3>
-            <div className="grid gap-3 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {bollette
                 .filter((b) => b.round === round)
                 .map((b) => (

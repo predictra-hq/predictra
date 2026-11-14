@@ -847,7 +847,7 @@ export const it = {
       baseline: "Baseline (frequenze di lega)",
       elo: "Elo",
       poisson: "Poisson",
-      dixon_coles: "Dixon-Coles + Elo",
+      dixon_coles: "Dixon-Coles",
     },
     modelStatus: {
       CANDIDATE: "Candidato",

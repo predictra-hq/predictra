@@ -28,7 +28,7 @@ Il Poisson attuale in servizio ha 0,9928.
 2. **Mercati coerenti:** la matrice dei risultati esatti del Dixon-Coles viene ricalibrata in modo che le zone vittoria casa, pareggio e vittoria ospite sommino all'1X2 combinato. Dentro ogni zona le proporzioni tra i punteggi restano quelle del modello gol. Tutti i mercati derivati (doppia chance, under/over, gol/no gol, handicap, risultato esatto) sono quindi coerenti con l'1X2 mostrato. Su under/over e gol/no gol l'effetto è trascurabile (tabella).
 3. **Poisson resta solo modello gol**, con i valori dell'ADR 0038: due approcci diversi in gara.
 4. **Scelta automatica (ADR 0023):** la versione nuova fa il backtest sul database e diventa attiva solo se batte la baseline e il modello attivo di almeno 0,001 di Log Loss.
-5. **Interfaccia:** il modello si chiama "Dixon-Coles + Elo".
+5. **Interfaccia:** il nome resta "Dixon-Coles": dipende dalla chiave del modello e comparirebbe anche sulle versioni passate senza Elo. Gli iperparametri della versione (`elo_weight`) dicono se include l'Elo.
 
 ## Conseguenze
 
