@@ -14,7 +14,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { deleteSlip } from "../../actions";
 
-export const metadata: Metadata = { title: "Schedina — Smart Bet Builder" };
+export const metadata: Metadata = { title: "Schedina — Schedine" };
 
 export default async function SlipPage({ params }: PageProps<"/bet-builder/slips/[id]">) {
   await requireUser();

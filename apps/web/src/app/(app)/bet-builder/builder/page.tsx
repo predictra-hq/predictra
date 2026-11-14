@@ -19,7 +19,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { saveManualSlip } from "../actions";
 
-export const metadata: Metadata = { title: "Costruisci — Smart Bet Builder" };
+export const metadata: Metadata = { title: "Costruisci — Schedine" };
 
 export default async function BuilderPage({ searchParams }: PageProps<"/bet-builder/builder">) {
   await requireUser();

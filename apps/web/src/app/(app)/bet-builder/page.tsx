@@ -46,7 +46,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Smart Bet Builder" };
+export const metadata: Metadata = { title: "Schedine" };
 
 function ProposalCard({
   p,
