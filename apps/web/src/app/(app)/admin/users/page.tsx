@@ -118,7 +118,9 @@ export default async function UsersPage() {
                       {m.accountStatus[u.status]}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-muted">{formatDateTime(u.created_at)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
+                    {formatDateTime(u.created_at)}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {manageable ? (
                       <ActionForm

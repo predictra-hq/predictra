@@ -19,6 +19,17 @@ export const it = {
     genericError: "Si è verificato un errore. Riprova.",
     availableFrom: "Disponibile da",
     loading: "Caricamento in corso…",
+    skipToContent: "Vai al contenuto",
+    actions: "Azioni",
+    confirmDelete: "Confermi l'eliminazione? L'operazione non si può annullare.",
+    errorTitle: "Qualcosa non ha funzionato",
+    errorDescription:
+      "La pagina non è riuscita a caricare i dati. Puoi riprovare: se il problema continua, segnalalo a un amministratore.",
+    retry: "Riprova",
+    notFoundTitle: "Pagina non trovata",
+    notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
+    backToDashboard: "Torna alla dashboard",
+    sectionTabs: { plays: "Le mie giocate", analysis: "Analisi", system: "Modelli e dati" },
   },
   auth: {
     loginTitle: "Accesso riservato",
@@ -52,17 +63,19 @@ export const it = {
   },
   nav: {
     dashboard: "Dashboard",
-    matchCenter: "Match Center",
-    statisticsCenter: "Statistics Center",
-    betBuilder: "Smart Bet Builder",
-    marketIntelligence: "Market Intelligence",
-    leagueIntelligence: "League Intelligence",
-    bankroll: "Bankroll Intelligence",
-    tracker: "Prediction Tracker",
-    modelIntelligence: "AI / Model Intelligence",
-    dataCenter: "Data Center",
-    askPredictra: "Ask PREDICTRA",
-    administration: "Administration",
+    matchCenter: "Partite",
+    statisticsCenter: "Statistiche",
+    betBuilder: "Bollette",
+    marketIntelligence: "Quote",
+    leagueIntelligence: "Campionati",
+    bankroll: "Bankroll",
+    tracker: "Le mie giocate",
+    modelIntelligence: "Modelli",
+    dataCenter: "Fonti dati",
+    askPredictra: "Chiedi a PREDICTRA",
+    analysis: "Analisi",
+    system: "Modelli e dati",
+    administration: "Amministrazione",
     settings: "Impostazioni",
     security: "Sicurezza",
     preferences: "Preferenze",
@@ -102,7 +115,7 @@ export const it = {
       "Il modello calcola le probabilità per le partite dei {days} giorni successivi: le altre le mostra quando entrano nell'orizzonte.",
     predictionFrom: "Probabilità dal {date}",
     predictionNoModel:
-      "Nessun modello attivo: le probabilità compaiono quando un Super Admin attiva una versione in Model Intelligence.",
+      "Nessun modello attivo: le probabilità compaiono quando un Super Admin attiva una versione nella pagina Modelli.",
     seeAllMatches: "Tutte le partite",
     home: "1",
     draw: "X",
@@ -110,7 +123,7 @@ export const it = {
     favourite: "Favorito",
     probabilitiesLabel: "Probabilità: 1 {home}, X {draw}, 2 {away}",
     confidence: "Confidenza",
-    proposalsTitle: "Proposte del Bet Builder",
+    proposalsTitle: "Proposte con valore",
     proposalsEmpty:
       "Nessuna proposta attiva: compaiono quando il modello trova selezioni con valore e confidenza sufficienti.",
     proposalsUnavailable: "Proposte non disponibili in questo momento.",
@@ -139,7 +152,7 @@ export const it = {
     mfaDescription:
       "Usa un'app di autenticazione (es. Google Authenticator, 1Password, Authy). La 2FA è obbligatoria per gli amministratori.",
     mfaRequiredForAdmin:
-      "Come amministratore devi attivare la 2FA per accedere all'area Administration.",
+      "Come amministratore devi attivare la 2FA per accedere all'area Amministrazione.",
     mfaActive: "2FA attiva",
     mfaInactive: "2FA non attiva",
     mfaEnroll: "Attiva 2FA",
@@ -211,9 +224,9 @@ export const it = {
     noAudit: "Nessun evento.",
   },
   matchCenter: {
-    title: "Match Center",
+    title: "Partite",
     description:
-      "Calendario e risultati reali per competizione e giornata. Ogni partita indica fonte, orario di osservazione e qualità del dato.",
+      "Calendario e risultati reali per competizione, stagione e giornata: la stagione in corso e lo storico 2022–2024. Ogni partita indica fonte, orario di osservazione e qualità del dato.",
     competition: "Competizione",
     matchday: "Giornata",
     allMatchdays: "Tutte",
@@ -229,11 +242,29 @@ export const it = {
     details: "Dettagli",
     noMatches: "Nessuna partita per i filtri scelti.",
     noData:
-      "Nessuna partita disponibile. I dati compaiono dopo la prima raccolta da football-data.org (vedi Data Center).",
+      "Nessuna partita disponibile. I dati compaiono dopo la prima raccolta da football-data.org (vedi Fonti dati).",
     matchTitle: "Dettaglio partita",
-    back: "Torna al Match Center",
+    back: "Torna alle partite",
     season: "Stagione",
     stage: "Fase",
+    stages: {
+      REGULAR_SEASON: "Stagione regolare",
+      LEAGUE_STAGE: "Fase campionato",
+      GROUP_STAGE: "Fase a gironi",
+      PLAYOFFS: "Spareggi",
+      PLAYOFF_ROUND: "Spareggi",
+      LAST_32: "Sedicesimi di finale",
+      LAST_16: "Ottavi di finale",
+      QUARTER_FINALS: "Quarti di finale",
+      SEMI_FINALS: "Semifinali",
+      THIRD_PLACE: "Finale per il terzo posto",
+      FINAL: "Finale",
+      QUALIFICATION: "Qualificazioni",
+      QUALIFICATION_ROUND_1: "Primo turno di qualificazione",
+      QUALIFICATION_ROUND_2: "Secondo turno di qualificazione",
+      QUALIFICATION_ROUND_3: "Terzo turno di qualificazione",
+      PRELIMINARY_ROUND: "Turno preliminare",
+    } as Record<string, string>,
     group: "Girone",
     duration: "Durata",
     provenance: "Provenienza del dato",
@@ -241,6 +272,38 @@ export const it = {
     providerId: "ID presso la fonte",
     observedAt: "Osservato il",
     eventTime: "Aggiornato dalla fonte il",
+    detailsTitle: "Statistiche e formazioni",
+    detailsSource: "Fonte: API-Football (storico 2022–2024, scaricato un po' alla volta).",
+    noDetails:
+      "Statistiche e formazioni non ancora disponibili per questa partita. Le scarica l'agente da API-Football, circa 44 partite al giorno, a partire dalle stagioni 2022–2024.",
+    statistics: "Statistiche",
+    lineups: "Formazioni",
+    formation: "Modulo",
+    coach: "Allenatore",
+    starters: "Titolari",
+    bench: "Panchina",
+    noLineup: "Formazione non disponibile.",
+    positions: { G: "Portiere", D: "Difensore", M: "Centrocampista", F: "Attaccante" },
+    statLabels: {
+      ball_possession: "Possesso palla",
+      expected_goals: "Gol attesi (xG)",
+      total_shots: "Tiri totali",
+      shots_on_goal: "Tiri in porta",
+      shots_off_goal: "Tiri fuori",
+      blocked_shots: "Tiri respinti",
+      shots_insidebox: "Tiri da dentro l'area",
+      shots_outsidebox: "Tiri da fuori area",
+      corner_kicks: "Calci d'angolo",
+      offsides: "Fuorigioco",
+      fouls: "Falli",
+      yellow_cards: "Ammonizioni",
+      red_cards: "Espulsioni",
+      goalkeeper_saves: "Parate",
+      total_passes: "Passaggi totali",
+      passes_accurate: "Passaggi riusciti",
+      passes_pct: "Precisione passaggi",
+      goals_prevented: "Gol evitati",
+    } as Record<string, string>,
     openIssues: "Problemi di qualità aperti",
     noIssues: "Nessun problema di qualità aperto.",
     notFound: "Partita non trovata.",
@@ -272,9 +335,9 @@ export const it = {
     },
   },
   dataCenter: {
-    title: "Data Center",
+    title: "Fonti dati",
     description:
-      "Source Intelligence: stato delle fonti dati, ultime raccolte e problemi di qualità. PREDICTRA usa solo fonti con termini d'uso verificati.",
+      "Stato delle fonti dati, ultime raccolte e problemi di qualità. PREDICTRA usa solo fonti con termini d'uso verificati.",
     sources: "Fonti",
     health: "Stato",
     healthStatus: {
@@ -326,13 +389,13 @@ export const it = {
     },
   },
   marketIntelligence: {
-    title: "Market Intelligence",
+    title: "Quote",
     description:
       "Quote 1X2 reali per partita e bookmaker, con margine e probabilità implicite senza margine. Ogni quota indica fonte, ora di osservazione e freschezza.",
     competition: "Competizione",
     show: "Mostra",
     disclaimer:
-      "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni arriveranno dai modelli quantitativi (M4).",
+      "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni del modello sono nel dettaglio di ogni partita e nella pagina Bollette.",
     staleNote:
       "Piano gratuito di The Odds API (500 crediti al mese): quote raccolte due volte al giorno, nessun dato live. Una quota è “Non aggiornata” dopo {hours} ore dall'ultima osservazione.",
     coverageTitle: "Copertura reale",
@@ -345,15 +408,15 @@ export const it = {
     lastObservation: "Ultima osservazione",
     freshness: "Freschezza",
     noCoverage:
-      "Nessuna quota raccolta finora. Le quote compaiono dopo la prima raccolta (vedi Data Center).",
+      "Nessuna quota raccolta finora. Le quote compaiono dopo la prima raccolta (vedi Fonti dati).",
     eventsTitle: "Prossimi eventi con quote",
     noEvents:
       "Nessun evento in programma con quote raccolte per questa competizione. Le quote si raccolgono solo per le partite dei prossimi giorni.",
     kickoff: "Calcio d'inizio",
     unmatched: "Non abbinato a una partita",
     unmatchedHint:
-      "Nomi delle squadre non ancora riconosciuti: l'evento resta visibile ma non è collegato al Match Center.",
-    openMatch: "Apri nel Match Center",
+      "Nomi delle squadre non ancora riconosciuti: l'evento resta visibile ma non è collegato alla pagina Partite.",
+    openMatch: "Apri la partita",
     bestOdds: "Migliori quote (solo quote aggiornate)",
     noBestOdds:
       "Nessun bookmaker con quote aggiornate: le migliori quote non si calcolano su quote non aggiornate.",
@@ -377,10 +440,10 @@ export const it = {
     quality: "Qualità",
     freshBookmakers: "{fresh} di {total} bookmaker aggiornati",
     methodNote:
-      "Margine = Σ 1/quota − 1. Metodo proporzionale (predefinito, ADR 0016): probabilità divise per la somma. Metodo della potenza (confronto): attribuisce più margine agli esiti meno probabili.",
+      "Margine = Σ 1/quota − 1. Metodo proporzionale (predefinito): probabilità divise per la somma. Metodo della potenza (confronto): attribuisce più margine agli esiti meno probabili.",
     marketsTitle: "Mercati",
     marketsDescription:
-      "Cosa PREDICTRA può mostrare oggi. Nessun mercato è indicato come disponibile se non ci sono quote reali (ADR 0005).",
+      "Cosa PREDICTRA può mostrare oggi. Nessun mercato è indicato come disponibile se non ci sono quote reali.",
     market: "Mercato",
     availability: "Stato",
     reason: "Motivo",
@@ -391,12 +454,11 @@ export const it = {
       unevaluable: "Non valutabile",
     },
     reasons: {
-      available: "Quote 1X2 reali da The Odds API, regione eu (ADR 0015).",
+      available: "Quote 1X2 reali da The Odds API, regione eu.",
       noOddsYet: "Mercato raccolto, ma nessun evento con quote è ancora stato ricevuto.",
       noOdds:
-        "Valutabile dal modello gol (M4), ma in v1 si raccolgono solo le quote 1X2 per restare nei 500 crediti mensili: nessuna quota reale, quindi niente EV.",
-      unevaluable:
-        "Nessuna fonte gratuita con dati storici affidabili per questo mercato (ADR 0004, ADR 0005).",
+        "Il modello lo calcola, ma le quote reali di bookmaker italiani non sono disponibili nella fonte gratuita, oppure si raccolgono solo per le partite più vicine: senza quota reale non si calcola il valore.",
+      unevaluable: "Nessuna fonte gratuita con dati storici affidabili per questo mercato.",
     },
     marketNames: {
       h2h: "Esito finale 1X2",
@@ -416,13 +478,13 @@ export const it = {
     },
   },
   statisticsCenter: {
-    title: "Statistics Center",
+    title: "Statistiche",
     description:
       "Statistiche di squadra calcolate da PREDICTRA sulle partite concluse della stagione. Nessun dato aggiuntivo da altre fonti.",
     competition: "Competizione",
     show: "Mostra",
     season: "Stagione",
-    noData: "Nessuna competizione caricata (vedi Data Center).",
+    noData: "Nessuna competizione caricata (vedi Fonti dati).",
     noStats: "Nessuna partita conclusa in questa stagione: statistiche non ancora disponibili.",
     provenanceTitle: "Provenienza dei dati",
     provenance:
@@ -431,7 +493,7 @@ export const it = {
     lastObserved: "Ultimo aggiornamento dalla fonte",
     sourceFreshness: "Freschezza della fonte",
     rankingNote:
-      "Ordine per punti, differenza reti e gol fatti, calcolato dai risultati: non applica scontri diretti né penalizzazioni. La classifica ufficiale è in League Intelligence.",
+      "Ordine per punti, differenza reti e gol fatti, calcolato dai risultati: non applica scontri diretti né penalizzazioni. La classifica ufficiale è nella pagina Campionati.",
     team: "Squadra",
     played: "G",
     won: "V",
@@ -457,12 +519,12 @@ export const it = {
     formResult: { V: "Vittoria", N: "Pareggio", P: "Sconfitta" },
   },
   leagueIntelligence: {
-    title: "League Intelligence",
+    title: "Campionati",
     description:
       "Classifiche, medie gol e vantaggio casalingo per competizione, dalla stagione più recente raccolta.",
     competition: "Competizione",
     show: "Mostra",
-    noData: "Nessuna competizione caricata (vedi Data Center).",
+    noData: "Nessuna competizione caricata (vedi Fonti dati).",
     overviewTitle: "Confronto tra competizioni",
     overviewDescription:
       "Calcolato da PREDICTRA sulle partite concluse della stagione più recente (vista v_league_season_stats).",
@@ -503,16 +565,82 @@ export const it = {
     group: "Girone",
   },
   betBuilder: {
-    title: "Smart Bet Builder",
+    title: "Bollette",
     description:
-      "Combinazioni di selezioni costruite dalle probabilità del modello attivo e dalle quote reali FRESH, con le correlazioni gestite. Si propone solo ciò che supera le soglie: nessuna schedina forzata.",
+      "Bollette pronte e proposte costruite dalle probabilità del modello e dalle quote reali aggiornate dei bookmaker italiani. Si propone solo ciò che supera le soglie: nessuna bolletta forzata.",
     disclaimer:
       "PREDICTRA non piazza scommesse e non garantisce vincite: le proposte sono stime soggette a incertezza. Il valore atteso (EV) è calcolato sulle probabilità del modello, non è un guadagno sicuro. Gioca responsabilmente.",
+    bollette: {
+      title: "Bollette consigliate",
+      description:
+        "Per ogni turno, una multipla pronta per profilo di rischio. Ogni selezione deve avere insieme una buona probabilità e una quota che vale la giocata: niente quote bassissime messe solo perché sicure. Le quote sono reali, di bookmaker italiani.",
+      profiles: { SOLID: "Solida", BALANCED: "Equilibrata", HIGH: "Alta quota" },
+      profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
+      legs: "{n} selezioni",
+      totalOdds: "Quota totale",
+      winProbability: "Probabilità di vincita",
+      round: "Turno {round}",
+      oddsRead: "Quote lette il {at}",
+      oddsOld: "Quote lette il {at}: ricontrollale dal bookmaker prima di giocare.",
+      empty:
+        "Nessuna bolletta per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Le quote si raccolgono nelle 48 ore prima delle partite: le bollette compaiono a ridosso del turno. Non forziamo una bolletta pur di proporne una.",
+      note:
+        "Come si legge: la probabilità di vincita è quella che escano tutte le selezioni, secondo il modello, considerando le partite indipendenti. Scartiamo le selezioni in cui modello e bookmaker sono troppo distanti, perché di solito è il modello a sbagliare. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+    },
+    likely: {
+      title: "Le più probabili",
+      description:
+        "Per ogni partita dei prossimi 10 giorni, il pronostico con la probabilità più alta del modello tra 1X2, doppia chance, gol/no gol, under/over e gol di una squadra. Si escludono i pronostici quasi certi (oltre il 90%) e quelli con affidabilità bassa. Sotto, le multiple più probabili.",
+      fairOddsNote:
+        "Tra parentesi la quota equa = 1 ÷ probabilità: sotto questa quota la giocata non conviene. Sotto, quando c'è, la migliore quota reale di un bookmaker italiano (1X2, doppia chance e under/over; per gol/no gol e gol di una squadra le quote italiane non sono disponibili gratis).",
+      multiples: "Multiple più probabili",
+      multiple: "Multipla da {n}",
+      singles: "Pronostico più probabile per partita",
+      probability: "Probabilità",
+      fairOdds: "Quota equa",
+      confidence: "Affidabilità",
+      empty:
+        "Nessun pronostico disponibile: servono previsioni del modello attivo per le partite in programma.",
+      showAll: "Mostra tutti i {n} pronostici",
+      italianPrice: "quota {price} · {bookmaker}",
+      combinedItalian: "Quota reale combinata (bookmaker italiani): {price}",
+    },
+    likelyToggle: "Mostra anche i pronostici più probabili (quote basse)",
+    valueTitle: "Proposte con valore",
+    valueDescription:
+      "Singole e multiple (fino a 4 partite dello stesso turno) in cui la quota di un bookmaker italiano è più alta di quella giusta secondo modello e mercato insieme. Sono le giocate con il miglior rapporto tra quota e probabilità: poche, e solo quando ci sono davvero.",
+    technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
     navBuilder: "Costruisci",
     navSlips: "Le mie schedine",
-    slate: "Giornata",
-    allSlates: "Tutte le giornate",
+    navResults: "Risultati",
+    results: {
+      title: "Risultati delle proposte",
+      description:
+        "Come sono andate le proposte con valore già giocate: quante sono uscite e quanto avrebbero reso puntando sempre la stessa cifra, alle quote salvate nel momento della proposta.",
+      empty:
+        "Nessuna proposta passata da valutare. I risultati compaiono dopo le prime proposte, quando le loro partite sono finite.",
+      smallSample:
+        "Solo {n} proposte chiuse: sotto {min} il rendimento dipende quasi solo dal caso. Guardalo come tendenza, non come prova.",
+      settled: "Chiuse",
+      won: "Vinte",
+      hitRate: "Uscite",
+      expectedHitRate: "Attese",
+      averagePrice: "Quota media",
+      profit: "Guadagno (unità)",
+      yield: "Rendimento",
+      total: "Totale",
+      help:
+        "Uscite: quota di proposte vinte. Attese: quante ne prevedeva il modello; se le uscite sono molto sotto le attese, le probabilità sono troppo ottimiste. Guadagno: puntando 1 unità su ogni proposta. Rendimento: guadagno diviso il totale puntato. La stessa combinazione riproposta più volte conta una volta sola, alla prima quota. Si leggono le ultime 300 proposte.",
+      pendingNote: "In attesa di risultato: {n}.",
+      latest: "Ultime proposte chiuse",
+      noneClosed: "Nessuna proposta ancora chiusa: mancano i risultati delle partite.",
+      legs: "{n} selezioni",
+      outcomes: { WON: "Vinta", LOST: "Persa", PENDING: "In attesa" },
+    },
+    slate: "Turno",
+    allSlates: "Tutti i turni",
+    roundTitle: "Turno {round}",
     category: "Categoria",
     allCategories: "Tutte",
     show: "Mostra",
@@ -558,46 +686,56 @@ export const it = {
     generatedAt: "Generata alle",
     details: "Dettaglio",
     back: "Torna alle proposte",
-    staleWarning: "{n} selezioni hanno ora una quota STALE: verifica prima di usarla.",
+    staleWarning: "{n} selezioni hanno ora una quota non aggiornata: verifica prima di usarla.",
     priceChangedWarning: "{n} selezioni hanno una quota cambiata dalla generazione.",
+    stake: "Quanto vuoi giocare (€)",
+    stakePlaceholder: "4",
+    emptyFiltered: "Nessuna proposta con questi filtri. Prova un altro turno o un'altra categoria.",
+    stakeTitle: "Se giochi {stake}",
+    stakeWin: "Vinci {payout} (guadagno {profit})",
+    stakeWinProbability: "probabilità {p}",
+    stakeLose: "Perdi {stake}",
+    stakeNote:
+      "Calcolo sulla quota della proposta e sulla probabilità del modello: è una stima, non una garanzia.",
     correlationIndependence:
-      "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (indipendenza dichiarata, ADR 0026).",
+      "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (le partite sono considerate indipendenti).",
     correlationNone: "Singola: probabilità della previsione del modello.",
     immutableNote:
       "La proposta è una versione immutabile: i valori sono quelli del momento della generazione, con il riferimento a previsioni e quote usate.",
     emptyNoRun:
       "Il motore delle combinazioni non ha ancora prodotto un'elaborazione. Le proposte arrivano quando c'è un modello attivo con previsioni e quote reali.",
     emptyZero:
-      "Nessuna combinazione supera le soglie: oggi non ci sono proposte. È il comportamento previsto (nessuna schedina forzata).",
+      "Nessuna combinazione supera le soglie: oggi non ci sono proposte. Le quote si raccolgono nelle 48 ore prima delle partite, quindi le proposte compaiono a ridosso del turno. Non forziamo una bolletta pur di proporne una.",
     emptyFailed: "L'ultima elaborazione non è riuscita. Le proposte torneranno con la prossima.",
     lastRun:
       "Ultima elaborazione: {at} · combinazioni valutate {candidates} · proposte {proposals}",
     thresholds:
-      "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote FRESH.",
+      "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote aggiornate.",
     builderTitle: "Costruisci una combinazione",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 7 giorni. La valutazione usa le probabilità del modello attivo e la migliore quota FRESH tra i bookmaker.",
+      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota aggiornata dei bookmaker italiani.",
     builderEmpty:
-      "Nessuna partita in programma con previsioni del modello attivo. Le previsioni arrivano quando un modello è attivo (Model Intelligence).",
+      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato nella pagina Modelli.",
     evaluate: "Valuta",
     evaluation: "Valutazione",
     noSelection: "Seleziona almeno un esito.",
-    notModellable: "Combinazione non modellabile: nessuna probabilità viene mostrata (ADR 0026).",
+    notModellable: "Combinazione non modellabile: nessuna probabilità viene mostrata.",
     meetsRules: "Rispetta tutte le soglie con cui il motore propone combinazioni.",
     warnings: {
       TOO_MANY: "Più selezioni del massimo previsto dalle regole ({legs}).",
       SAME_MATCH:
-        "Più esiti della stessa partita: in v1 non è modellabile (manca una quota reale della combinazione).",
+        "Più esiti della stessa partita: per ora non è valutabile (manca una quota reale della combinazione).",
       SAME_TEAM: "La stessa squadra compare in due selezioni: l'indipendenza non vale.",
       STARTED: "Una partita è già iniziata o non è più in programma.",
       NO_PREDICTION: "Manca la previsione del modello attivo per almeno una selezione.",
-      NO_ODDS: "Manca una quota FRESH per almeno una selezione: niente EV.",
-      STALE_ODDS: "Almeno una quota è STALE.",
+      NO_ODDS:
+        "Manca una quota aggiornata per almeno una selezione: il valore non si può calcolare.",
+      STALE_ODDS: "Almeno una quota non è aggiornata.",
       LOW_CONFIDENCE: "Confidence Score sotto la soglia.",
       NEGATIVE_EV: "Valore atteso negativo.",
       BELOW_THRESHOLDS: "Non supera le soglie con cui il motore propone combinazioni.",
     },
-    noOdds: "nessuna quota FRESH",
+    noOdds: "nessuna quota aggiornata",
     slipName: "Nome della schedina",
     slipNameDefault: "Schedina del {date}",
     saveSlip: "Salva nelle mie schedine",
@@ -610,6 +748,10 @@ export const it = {
     deleteSlip: "Elimina",
     slipDeleted: "Schedina eliminata.",
     savedAt: "Salvata il {date}",
+    slipSummary: "{n} selezioni",
+    slipProbability: "Probabilità",
+    openSlip: "Apri la schedina",
+    backToSlips: "← Torna alle mie schedine",
   },
   teamAliases: {
     title: "Alias delle squadre",
@@ -618,7 +760,7 @@ export const it = {
     rules:
       "Gli alias non si inventano: si aggiungono solo guardando il nome reale ricevuto. Ogni alias è registrato in audit. Serve un Super Admin con la verifica a due fattori.",
     nextRunNote:
-      "Dopo il salvataggio l'abbinamento avviene alla prossima raccolta delle quote (07:23 e 16:37 UTC). Gli eventi già giocati non vengono più ricevuti e restano non abbinati.",
+      "Dopo il salvataggio l'evento si abbina subito, anche se la partita è già stata giocata. Se i due nomi sono già noti e l'evento resta non abbinato, la partita non è nel calendario a quell'ora (di solito è stata rinviata): non serve un alias, l'avviso si chiude da solo alla raccolta successiva.",
     namesTitle: "Nomi da abbinare",
     noIssues: "Nessun evento di quote non abbinato. Tutti i nomi ricevuti sono riconosciuti.",
     receivedName: "Nome ricevuto",
@@ -630,7 +772,7 @@ export const it = {
     otherTeams: "Altre squadre",
     suggestion: "Possibile corrispondenza: {team} (verifica prima di salvare)",
     save: "Salva alias",
-    saved: "Alias salvato. L'evento si abbinerà alla prossima raccolta delle quote.",
+    saved: "Alias salvato. Gli eventi con questo nome sono stati ricollegati.",
     duplicate: "Questo alias esiste già.",
     invalid: "Scegli una squadra e un nome validi.",
     resolution: {
@@ -638,7 +780,8 @@ export const it = {
       ambiguous: "Ambiguo: più squadre",
       known: "Alias presente",
     },
-    knownHint: "Alias già presente: l'evento si abbinerà alla prossima raccolta.",
+    knownHint:
+      "Nome già riconosciuto: non serve un alias. Se l'evento resta non abbinato, la partita non è nel calendario a quell'ora (rinvio): l'avviso si chiude da solo.",
     ambiguousHint:
       "Il nome corrisponde a più squadre: l'abbinamento non avviene finché l'ambiguità resta. Va risolta nel database con una PR dedicata.",
     eventsTitle: "Eventi non abbinati",
@@ -654,13 +797,17 @@ export const it = {
     createdAt: "Aggiunto il",
   },
   modelIntelligence: {
-    title: "Model Intelligence",
+    title: "Modelli",
     description:
-      "Versioni dei modelli di previsione, backtest walk-forward e modello attivo. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
-    activeModel: "Modello attivo",
+      "Il modello PREDICTRA e il suo sfidante: si riaddestrano a ogni esecuzione sulle partite più recenti e ogni settimana si confrontano, e il più forte diventa attivo da solo. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
+    activeModel: "Modello PREDICTRA (attivo)",
     noActive:
-      "Nessun modello attivo: nessuna previsione PREDICTRA viene mostrata finché un Super Admin non attiva una versione che batte la baseline.",
-    versions: "Versioni",
+      "Nessun modello attivo: il motore attiva da solo il modello più forte alla prossima esecuzione, se batte la baseline.",
+    versions: "In gara",
+    reference: "Riferimento (baseline)",
+    history: "Storico delle versioni ritirate",
+    historyHint:
+      "Versioni superate da un codice più recente o non più in gara. Restano nel database per riprodurre le previsioni già fatte.",
     noVersions: "Nessuna versione registrata: il motore non è ancora stato eseguito.",
     model: "Modello",
     version: "Versione",
@@ -677,7 +824,7 @@ export const it = {
     activate: "Attiva",
     activated: "Modello attivato.",
     activateHint:
-      "Si può attivare solo una versione con un backtest migliore della baseline su Brier e Log Loss. L'attivazione ritira il modello attivo precedente ed è registrata in audit.",
+      "Il motore sceglie da solo il modello più forte a ogni esecuzione, due volte al giorno (03:47 e 12:47 UTC). Un Super Admin può attivare a mano lo sfidante, se batte la baseline su Brier e Log Loss, e tornare indietro quando vuole: il modello sostituito resta in gara. All'esecuzione successiva il motore rimette attivo l'altro solo se è più forte di almeno 0,001 di Log Loss.",
     calibration: "Curva di calibrazione",
     calibrationHint:
       "Per ogni fascia di probabilità prevista, la frequenza osservata. Sulla diagonale il modello è ben calibrato.",
@@ -708,11 +855,11 @@ export const it = {
       "Nessuna previsione disponibile per questa partita: nessun modello attivo, oppure il motore non l'ha ancora valutata.",
     emptyReasons: {
       NO_ACTIVE_MODEL:
-        "Nessun modello attivo: un Super Admin può attivarne uno da Model Intelligence.",
+        "Nessun modello attivo: un Super Admin può attivarne uno dalla pagina Modelli.",
       NOT_UPCOMING:
         "Le previsioni riguardano solo le partite non ancora iniziate: questa è già iniziata, conclusa o non in programma.",
       NOT_YET_EVALUATED:
-        "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 7 giorni, due volte al giorno (05:40 e 14:40 UTC).",
+        "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 10 giorni, due volte al giorno (03:47 e 12:47 UTC).",
     },
     disclaimer:
       "Probabilità stimate da un modello quantitativo sui risultati storici: sono stime incerte, non garanzie.",
@@ -765,7 +912,7 @@ export const it = {
     },
   },
   bankroll: {
-    title: "Bankroll Intelligence",
+    title: "Bankroll",
     description:
       "Il tuo registro personale: saldi, movimenti e limiti. PREDICTRA non movimenta denaro e non piazza scommesse. Questi dati li vedi solo tu: nessun amministratore può leggerli.",
     yourBankrolls: "I tuoi bankroll",
@@ -817,7 +964,7 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
-    title: "Prediction Tracker",
+    title: "Le mie giocate",
     description:
       "Registra le tue giocate e misurane i risultati. Reali e simulate sono sempre separate. PREDICTRA non piazza scommesse.",
     needBankroll: "Per registrare una giocata crea prima un bankroll.",
@@ -853,8 +1000,31 @@ export const it = {
     betSaved: "Giocata registrata.",
     suggestions: "Stake suggerito",
     suggestionsHint:
-      "Solo informativo. Flat: percentuale del disponibile del bankroll. Kelly frazionario: disponibile quando la giocata ha una probabilità del modello attivo (non ancora collegato in questa pagina).",
+      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per lo stake con Kelly usa il calcolatore qui sotto.",
     flatSuggestion: "Flat",
+    kelly: {
+      title: "Calcolatore Kelly",
+      description:
+        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
+      match: "Partita",
+      chooseMatch: "Scegli una partita",
+      selection: "Esito",
+      selections: { HOME: "1 (casa)", DRAW: "X (pareggio)", AWAY: "2 (trasferta)" },
+      odds: "Quota del bookmaker",
+      calculate: "Calcola",
+      noMatches:
+        "Nessuna partita in programma con le probabilità del modello attivo. Il motore prevede le partite dei prossimi 10 giorni, due volte al giorno.",
+      invalidOdds: "Inserisci una quota maggiore di 1 (es. 2,10).",
+      incomplete: "Scegli partita ed esito e inserisci la quota.",
+      modelProbability: "Probabilità del modello",
+      marketProbability: "Probabilità del mercato",
+      probability: "Probabilità usata (media)",
+      fairOdds: "Quota equa (1/p)",
+      expectedValue: "Valore atteso per 1 € puntato",
+      stake: "Stake Kelly",
+      noValue: "Nessun valore: la quota è più bassa di quella equa, stake zero.",
+      capped: "ridotto allo stake massimo dei tuoi limiti",
+    },
     limitReached: "Limite raggiunto",
     limitNames: {
       MAX_STAKE: "stake massimo",
@@ -880,6 +1050,26 @@ export const it = {
     deleteBet: "Elimina",
     betDeleted: "Giocata eliminata.",
     noBets: "Nessuna giocata nel periodo scelto.",
+    exportCsv: "Esporta in CSV",
+    csvColumns: {
+      placedAt: "Data (UTC)",
+      bankroll: "Bankroll",
+      kind: "Tipo",
+      event: "Partita o evento",
+      market: "Mercato",
+      selection: "Selezione",
+      line: "Linea",
+      odds: "Quota",
+      stake: "Stake (€)",
+      bookmaker: "Bookmaker",
+      status: "Stato",
+      payout: "Incasso (€)",
+      profit: "Profitto (€)",
+      closingOdds: "Quota di chiusura",
+      modelProbability: "Probabilità del modello",
+      settledAt: "Chiusa il (UTC)",
+      note: "Nota",
+    },
     disclaimer:
       "Registro personale a scopo di analisi. Il gioco comporta rischi: imposta limiti e gioca in modo responsabile.",
   },
@@ -969,7 +1159,7 @@ export const it = {
     open: "Apri",
   },
   ask: {
-    title: "Ask PREDICTRA",
+    title: "Chiedi a PREDICTRA",
     description:
       "Fai una domanda su partite, previsioni, quote, statistiche e classifiche. Le risposte usano solo i dati già presenti in PREDICTRA: i numeri vengono dai modelli e dalle fonti, mai dall’" +
       "assistente.",
@@ -984,7 +1174,7 @@ export const it = {
       "Che probabilità dà il modello alla prossima partita del Milan?",
       "Com’" + "è la classifica della Serie A?",
       "Come sta andando il Napoli in questa stagione?",
-      "Quali sono le proposte attive del Bet Builder?",
+      "Quali sono le proposte con valore attive?",
     ],
     remaining: "Domande rimaste oggi: {n}",
     quotaExceeded: "Hai finito le domande di oggi. La quota si azzera a mezzanotte UTC.",
@@ -1011,7 +1201,7 @@ export const it = {
       teamStats: "Statistiche di stagione",
       standings: "Classifica",
       model: "Modello",
-      proposals: "Proposte del Bet Builder",
+      proposals: "Proposte con valore",
       unknown: "Strumento sconosciuto",
       date: "Data",
       competition: "Competizione",

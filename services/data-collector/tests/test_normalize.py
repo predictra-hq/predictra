@@ -138,6 +138,18 @@ def test_supplementari_segnalati_da_verificare(matches_payload):
     assert result.issues[0]["check_code"] == "match.score_non_regular"
 
 
+def test_adr_0034_supplementari_con_risultato_al_90(matches_payload):
+    payload = copy.deepcopy(matches_payload)
+    score = payload["matches"][0]["score"]
+    score["duration"] = "PENALTY_SHOOTOUT"
+    score["regularTime"] = {"home": 1, "away": 1}
+    score["fullTime"] = {"home": 6, "away": 5}
+    result = normalize_competition(payload, None, OBS)
+    m = result.batch["matches"][0]
+    assert (m["home_score"], m["away_score"], m["quality"]) == (1, 1, "OK")
+    assert not [i for i in result.issues if i["check_code"] == "match.score_non_regular"]
+
+
 def test_risposta_vuota_non_produce_lotto():
     result = normalize_competition(None, None, OBS)
     assert result.batch is None

@@ -6,12 +6,18 @@ from pathlib import Path
 import httpx
 import pytest
 
-from predictra_collector.odds_runner import has_upcoming, run_odds
+from predictra_collector.odds_runner import (
+    daily_allowance,
+    has_upcoming,
+    plan_daily,
+    run_odds,
+)
 from predictra_collector.the_odds_api import (
     BudgetExhausted,
     OddsApiClient,
     OddsApiError,
     normalize_odds,
+    totals_market_code,
 )
 
 FIXTURE = Path(__file__).parent / "fixtures" / "odds_v4_example_nfl.json"
@@ -158,16 +164,32 @@ class FakeStore:
         self.calls.append(("finish", status, kw))
 
 
+NOW = datetime(2026, 11, 20, 7, 0, tzinfo=UTC)
+
+
+def soon(nfl, hours=10):
+    """Eventi DEMO con calcio d'inizio tra `hours` ore rispetto a NOW."""
+    events = soccer_from(nfl, (2, 3.4, 4))
+    events[0]["commence_time"] = (NOW + __import__("datetime").timedelta(hours=hours)).isoformat()
+    return events
+
+
 def test_run_odds_daily(nfl):
     store = FakeStore()
-    client = make_client(lambda r: httpx.Response(200, json=soccer_from(nfl, (2, 3.4, 4))))
-    summary = run_odds(client, store, ("SA",), mode="daily", triggered_by="manual")
+
+    def handler(request):
+        if request.url.path == "/v4/sports":
+            return httpx.Response(200, json=[])
+        return httpx.Response(200, json=soon(nfl))
+
+    client = make_client(handler, remaining="30")  # budget del giorno: solo 1X2
+    summary = run_odds(client, store, ("SA",), mode="daily", triggered_by="manual", now=NOW)
     assert not summary.failed
     assert store.calls[0] == ("start", "the-odds-api", "odds.h2h", "SA:daily")
     finish = store.calls[-1]
     assert finish[1] == "SUCCEEDED"
     assert finish[2]["requests_used"] == 1
-    assert finish[2]["quota_remaining"] == 400
+    assert finish[2]["quota_remaining"] == 30
     assert summary.results[0].matched == 1
 
 
@@ -197,3 +219,131 @@ def test_has_upcoming():
     assert not has_upcoming(
         [{"commence_time": "non-una-data"}], now, __import__("datetime").timedelta(hours=6)
     )
+
+
+def test_under_over_una_voce_per_linea(nfl):
+    events = soccer_from(nfl, (2, 3.4, 4))
+    events[0]["bookmakers"][0]["markets"].append(
+        {
+            "key": "totals",
+            "last_update": "2026-11-07T17:00:00Z",
+            "outcomes": [
+                {"name": "Over", "price": 1.9, "point": 2.5},
+                {"name": "Under", "price": 1.95, "point": 2.5},
+                {"name": "Over", "price": 1.8, "point": 2.25},  # linea asiatica: scartata
+                {"name": "Under", "price": 0.9, "point": 2.5},  # quota non valida
+            ],
+        }
+    )
+    result = normalize_odds(events, "SA", "soccer_italy_serie_a", OBS)
+    markets = result.batch["events"][0]["bookmakers"][0]["markets"]
+    assert [m["key"] for m in markets] == ["h2h", "totals_2_5"]
+    assert markets[1]["outcomes"] == [
+        {"selection": "OVER", "price": 1.9},
+        {"selection": "UNDER", "price": 1.95},
+    ]
+    assert totals_market_code(0.5) == "totals_0_5"
+    assert totals_market_code(3.0) is None
+    assert totals_market_code("2.5") is None
+
+
+def test_budget_del_giorno():
+    now = datetime(2026, 11, 12, 7, 0, tzinfo=UTC)  # 19 giorni con oggi
+    assert daily_allowance(448, now) == (448 - 20) // 19  # 22
+    assert daily_allowance(10, now) == 0
+    assert daily_allowance(None, now) is None
+
+
+def test_piano_priorita_1x2_under_over_doppia_chance(nfl):
+    def ev(eid, hours):
+        return {
+            "id": eid,
+            "commence_time": (NOW + __import__("datetime").timedelta(hours=hours)).isoformat(),
+        }
+
+    events = {
+        "SA": [ev("a", 5), ev("b", 30), ev("c", 40)],
+        "PL": [ev("d", 10)],
+        "BL1": [ev("e", 100)],  # nessuna partita nelle 48 ore: nessun credito
+    }
+    # 11 giorni con oggi (20-30/11): budget (100 - 20) // 11 = 7
+    plan = plan_daily(events, 100, NOW)
+    assert plan.allowance == 7 and plan.due == ("SA", "PL")
+    assert plan.markets == ("h2h", "totals")  # 2 x 2 = 4 crediti
+    # restano 3 crediti: doppia chance per le partite entro 36 ore, dalla più vicina
+    assert plan.double_chance == {"SA": ["a", "b"], "PL": ["d"]}
+    assert plan.planned_credits == 7
+    # budget stretto: solo 1X2, nessuna doppia chance
+    tight = plan_daily(events, 20 + 11 * 2, NOW)
+    assert tight.markets == ("h2h",) and tight.double_chance == {}
+    # senza il dato dei crediti: solo 1X2
+    assert plan_daily(events, None, NOW).markets == ("h2h",)
+
+
+def test_run_odds_daily_segue_il_piano(nfl):
+    seen = []
+
+    def handler(request):
+        path = request.url.path
+        if path == "/v4/sports":
+            return httpx.Response(200, json=[])
+        if path.endswith("/events"):
+            return httpx.Response(200, json=soon(nfl))
+        if "/events/" in path:
+            seen.append(("event", request.url.params["markets"]))
+            ev = soon(nfl)[0]
+            ev["bookmakers"][0]["markets"] = [
+                {
+                    "key": "double_chance",
+                    "last_update": "2026-11-20T06:00:00Z",
+                    "outcomes": [
+                        {"name": "DEMO Casa or Draw", "price": 1.3},
+                        {"name": "DEMO Ospite or Draw", "price": 2.1},
+                        {"name": "DEMO Casa or DEMO Ospite", "price": 1.25},
+                    ],
+                }
+            ]
+            return httpx.Response(200, json=ev)
+        seen.append(("league", request.url.params["markets"]))
+        return httpx.Response(200, json=soon(nfl))
+
+    store = FakeStore()
+    store.batches = []
+    original = store.ingest_odds
+
+    def ingest(run_id, batch):
+        store.batches.append(batch)
+        return original(run_id, batch)
+
+    store.ingest_odds = ingest
+    summary = run_odds(make_client(handler, remaining="451"), store, ("SA",), now=NOW)
+    assert seen == [("league", "h2h,totals"), ("event", "double_chance")]
+    markets = [m["key"] for m in store.batches[0]["events"][0]["bookmakers"][0]["markets"]]
+    assert markets == ["h2h", "double_chance"]
+    dc = store.batches[0]["events"][0]["bookmakers"][0]["markets"][1]["outcomes"]
+    assert [o["selection"] for o in dc] == ["HOME_DRAW", "DRAW_AWAY", "HOME_AWAY"]
+    assert summary.plan.double_chance == {"SA": [soon(nfl)[0]["id"]]}
+    # prima della partita: solo 1X2, nessun piano
+    seen.clear()
+
+    def prematch(request):
+        if request.url.path.endswith("/events"):
+            return httpx.Response(200, json=soon(nfl, 2))
+        return handler(request)
+
+    run_odds(make_client(prematch, remaining="451"), None, ("SA",), mode="prematch", now=NOW)
+    assert seen == [("league", "h2h")]
+
+
+def test_competizione_senza_partite_vicine_non_spende(nfl):
+    calls = []
+
+    def handler(request):
+        calls.append(request.url.path)
+        if request.url.path == "/v4/sports":
+            return httpx.Response(200, json=[])
+        return httpx.Response(200, json=soon(nfl, 100))
+
+    summary = run_odds(make_client(handler, remaining="451"), None, ("SA",), now=NOW)
+    assert summary.results[0].status == "SKIPPED"
+    assert not any(p.endswith("/odds") for p in calls)

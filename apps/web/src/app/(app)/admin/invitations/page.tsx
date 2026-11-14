@@ -114,8 +114,12 @@ export default async function InvitationsPage() {
                   <td className="px-4 py-3">
                     <Badge tone={statusTone[inv.status]}>{m.invitationStatus[inv.status]}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-muted">{formatDateTime(inv.created_at)}</td>
-                  <td className="px-4 py-3 text-muted">{formatDateTime(inv.expires_at)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
+                    {formatDateTime(inv.created_at)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted">
+                    {formatDateTime(inv.expires_at)}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     {inv.status === "PENDING" && canGrantRole(user.roles, inv.role) ? (
                       <ActionForm

@@ -8,7 +8,7 @@ Servizio Python in `services/prediction-engine/`. Decisioni: [ADR 0020](../decis
 GitHub Actions "Agent (Python)" (03:47 e 12:47 UTC: job predictions.run della coda, dopo la raccolta dello stesso ciclo, M7)
 oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   1. training_results(as_of = adesso)              → partite concluse fino a ora
-  2. v_match_center: partite SCHEDULED dei prossimi 7 giorni
+  2. v_match_center: partite SCHEDULED dei prossimi 10 giorni
   3. per ogni modello (baseline, elo, poisson, dixon_coles), adattato per competizione:
        versione = famiglia + iperparametri + commit del codice del motore
        se la versione è nuova: register_model_version + backtest walk-forward → record_backtest
@@ -22,6 +22,20 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   - Poisson e Dixon-Coles producono tutti i mercati della v1 (98 righe per partita) e la matrice dei risultati esatti fino a 10 gol.
   - Ogni riga ha `as_of`, `features_hash` e il Confidence Score con le sue componenti in `explanation`.
 - **Anti-leakage:** il database rifiuta previsioni con `as_of` successivo al calcio d'inizio. Il motore legge lo storico solo con `training_results`.
+
+## Un modello PREDICTRA e uno sfidante (ADR 0024)
+
+In gara ci sono solo **Poisson** e **Dixon-Coles**, gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
+
+## Modello attivo: automatico (ADR 0023)
+
+Dall'11/11/2026 il motore attiva da solo il modello più forte: tra le versioni del codice corrente che battono la baseline, quella con il Log Loss più basso nel backtest. La cambia se il modello attivo è di un codice superato, oppure se un'altra versione lo batte di almeno 0,001 di Log Loss. Ogni cambio compare in _Audit_ come `model.auto_activated`, con il motivo.
+
+Ogni 7 giorni il motore rifà il backtest di tutti i modelli con i dati aggiornati e ripete la scelta (confronto settimanale).
+
+Una versione nuova nasce solo quando cambia il codice che produce i numeri (`models/`, `data.py`, `markets.py`, `confidence.py`): il log di ogni esecuzione riporta `codice dei modelli: <impronta>`.
+
+L'attivazione manuale descritta sotto resta possibile; il motore la cambia solo se trova un modello più forte.
 
 ## Attivare un modello
 
@@ -37,7 +51,7 @@ La pagina Model Intelligence, con un pulsante di attivazione, arriva con la cors
 _Actions → Prediction engine → Run workflow_, branch `dev`.
 
 - `dry_run`: calcola backtest e previsioni senza scrivere nulla e stampa le metriche.
-- `horizon_days`: quanti giorni di partite prevedere (predefinito 7).
+- `horizon_days`: quanti giorni di partite prevedere (predefinito 10).
 
 Dall'8/11/2026 (M7 fase A5) le esecuzioni programmate passano dalla coda dell'agente: finestre `morning` 03–12 UTC e `afternoon` 12–21 UTC, una esecuzione per finestra, al massimo 2 tentativi, il commit calcolato come prima (ultimo commit di `services/prediction-engine`, ADR 0020; nell'agente si chiama `PREDICTION_ENGINE_COMMIT`). Le versioni di numpy e scipy dell'agente sono verificate uguali a quelle del motore da un test ([runbook dell'agente](agent.md)). Come per il Data collector, il pulsante _Run workflow_ esiste solo quando il workflow è su `main`.
 
@@ -66,7 +80,7 @@ Se il pannello "Previsioni PREDICTRA" resta vuoto: _Run workflow_ con `command =
 
 - versioni, stato, backtest e numero di previsioni;
 - la versione attiva;
-- le partite in programma nei 7 giorni;
+- le partite in programma nei 10 giorni;
 - quante di queste la vista `v_active_predictions` restituisce.
 
 Chiude con un **esito**: nessun modello attivo, versione attiva senza previsioni, vista che non restituisce righe, oppure dati corretti (problema lato utente).

@@ -1,51 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EvaluationPanel } from "@/components/bet-builder/evaluation";
+import { ChevronRight } from "lucide-react";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
-import { SubmitButton } from "@/components/ui/form";
-import { Card, PageHeader } from "@/components/ui/primitives";
+import { Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { evaluateSelections, type ManualSelection } from "@/lib/bet-builder/evaluate";
-import { selectionLabel } from "@/lib/bet-builder/format";
-import { listManualOptions, listMatches, listSlips } from "@/lib/bet-builder/queries";
+import { evaluateSelections } from "@/lib/bet-builder/evaluate";
+import { loadSlipViews } from "@/lib/bet-builder/slip-view";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { fillTemplate } from "@/lib/odds/format";
-import { deleteSlip } from "../actions";
+import { fillTemplate, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Le mie schedine — Smart Bet Builder" };
+export const metadata: Metadata = { title: "Le mie schedine — Bollette" };
 
 export default async function SlipsPage() {
   await requireUser();
   const m = getMessages().betBuilder;
   const now = new Date();
-  const slips = await listSlips();
-  const matchIds = [...new Set(slips.flatMap((s) => s.selections.map((x) => x.match_id)))];
-  const [options, matches] = await Promise.all([
-    listManualOptions(now, matchIds),
-    listMatches(matchIds),
-  ]);
-  const outcomes = options.flatMap((o) => o.outcomes);
-
-  // Valori sempre ricalcolati con previsioni e quote attuali.
-  const current = (matchId: number, market: string, selection: string): ManualSelection => {
-    const found =
-      market === "1X2"
-        ? outcomes.find((o) => o.matchId === matchId && o.selection === selection)
-        : undefined;
-    if (found) return found;
-    const match = matches.get(matchId);
-    return {
-      matchId,
-      homeTeam: match?.home_team_name ?? `#${matchId}`,
-      awayTeam: match?.away_team_name ?? "",
-      kickoffAt: match?.kickoff_at ?? now.toISOString(),
-      selection,
-      probability: null,
-      confidence: null,
-      price: null,
-      freshness: null,
-    };
-  };
+  const views = await loadSlipViews(now);
 
   return (
     <>
@@ -53,50 +23,42 @@ export default async function SlipsPage() {
       <BetBuilderDisclaimer />
       <BetBuilderNav current="slips" />
 
-      {slips.length === 0 ? (
-        <Card>
-          <p className="text-sm text-muted">{m.slipsEmpty}</p>
-        </Card>
+      {views.length === 0 ? (
+        <EmptyState>{m.slipsEmpty}</EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {slips.map((slip) => {
-            const selections = slip.selections.map((x) =>
-              current(x.match_id, x.market, x.selection),
-            );
+        <ul className="grid gap-3 lg:grid-cols-2">
+          {views.map(({ slip, selections }) => {
+            const evaluation = evaluateSelections(selections, now);
             return (
-              <Card key={slip.id} className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="font-semibold">{slip.name}</h2>
-                  <span className="text-xs text-muted">
-                    {fillTemplate(m.savedAt, { date: formatDateTime(slip.created_at) })}
-                  </span>
-                </div>
-                {slip.source_proposal_id ? (
-                  <Link
-                    href={`/bet-builder/${slip.source_proposal_id}`}
-                    className="text-xs text-positive hover:underline"
-                  >
-                    {m.fromProposal}
-                  </Link>
-                ) : null}
-                <ul className="flex flex-col gap-1 text-sm">
-                  {selections.map((x, i) => (
-                    <li key={slip.selections[i]!.id}>
-                      {x.homeTeam} – {x.awayTeam} ·{" "}
-                      {selectionLabel(x.selection, x.homeTeam, x.awayTeam)} ·{" "}
-                      <span className="text-muted">{formatDateTime(x.kickoffAt)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <EvaluationPanel evaluation={evaluateSelections(selections, now)} />
-                <form action={deleteSlip}>
-                  <input type="hidden" name="slipId" value={slip.id} />
-                  <SubmitButton variant="danger">{m.deleteSlip}</SubmitButton>
-                </form>
-              </Card>
+              <li key={slip.id}>
+                {/* Tutta la scheda è il link al dettaglio della schedina. */}
+                <Link
+                  href={`/bet-builder/slips/${slip.id}`}
+                  className="block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  <Card className="flex items-center gap-3 transition-colors hover:border-positive/40">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{slip.name}</p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {fillTemplate(m.slipSummary, { n: selections.length })} ·{" "}
+                        {fillTemplate(m.savedAt, { date: formatDateTime(slip.created_at) })}
+                      </p>
+                      <p className="mt-1 truncate text-sm text-muted">
+                        {selections.map((x) => `${x.homeTeam} – ${x.awayTeam}`).join(" · ")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-muted">{m.slipProbability}</p>
+                      <p className="font-mono">{formatPercent(evaluation.probability)}</p>
+                    </div>
+                    <ChevronRight aria-hidden className="size-4 shrink-0 text-muted" />
+                    <span className="sr-only">{m.openSlip}</span>
+                  </Card>
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </>
   );

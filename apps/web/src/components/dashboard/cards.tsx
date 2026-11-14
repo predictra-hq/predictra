@@ -22,18 +22,18 @@ import {
   withPredictions,
 } from "@/lib/dashboard/summary";
 import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
-import { formatDateTime, getMessages } from "@/lib/i18n";
+import { formatDateTime, getMessages, getRequestTimeZone } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
 import { listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 
-const DAY = new Intl.DateTimeFormat("it-IT", {
-  day: "2-digit",
-  month: "2-digit",
-  timeZone: "Europe/Rome",
-});
-const formatDay = (d: Date) => DAY.format(d);
+const formatDay = (d: Date) =>
+  new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: getRequestTimeZone(),
+  }).format(d);
 
 /** Etichetta piccola in maiuscolo in cima ai riquadri. */
 function Kicker({ children }: { children: ReactNode }) {
@@ -41,18 +41,26 @@ function Kicker({ children }: { children: ReactNode }) {
 }
 
 /** Riquadro-indicatore con link: tutto il riquadro è cliccabile. */
-function StatCard({ href, title, children }: { href: string; title: string; children: ReactNode }) {
+export function StatCard({
+  href,
+  title,
+  children,
+}: {
+  href: string;
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="group block rounded-[var(--radius-card)] border border-border bg-surface p-5 transition-colors hover:border-border-strong hover:bg-surface-2"
+      className="group block rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_2px_rgb(0_0_0/0.4)] transition-colors hover:border-positive/40 hover:bg-surface-2"
     >
       <div className="flex items-center justify-between">
         <Kicker>{title}</Kicker>
         <ChevronRight
           size={16}
           aria-hidden="true"
-          className="text-subtle transition-transform group-hover:translate-x-0.5"
+          className="text-subtle transition-[transform,color] group-hover:translate-x-0.5 group-hover:text-positive-strong"
         />
       </div>
       {children}
@@ -376,7 +384,7 @@ export function ExploreGrid() {
           <li key={key}>
             <Link
               href={href}
-              className="group flex h-full items-start gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-2"
+              className="group flex h-full items-start gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-4 transition-colors hover:border-positive/40 hover:bg-surface-2"
             >
               <span className="rounded-lg bg-positive-soft p-2 text-positive-strong">
                 <Icon size={18} aria-hidden="true" />

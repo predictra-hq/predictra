@@ -31,7 +31,7 @@ from .worker import Handler, JobContext, PermanentJobError
 
 JOB_TYPE = "predictions.run"
 MAX_ATTEMPTS = 2
-HORIZON_DAYS = 7
+HORIZON_DAYS = 10
 WINDOWS: dict[str, tuple[int, int]] = {"morning": (3, 12), "afternoon": (12, 21)}
 COMMIT_RE = re.compile(r"[0-9a-f]{7,40}")
 

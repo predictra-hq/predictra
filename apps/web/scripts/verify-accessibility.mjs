@@ -10,7 +10,10 @@
  *    persona: login, codice 2FA, poi ogni pagina, anche in larghezza mobile.
  * 3. Su ogni pagina esegue axe (WCAG 2.1 A e AA) e un controllo da tastiera: il primo
  *    Tab raggiunge il link "Vai al contenuto".
- * 4. Cancella SEMPRE l'account (e a cascata i suoi dati), anche in caso di errore.
+ * 4. Su ogni pagina raccoglie anche gli errori di funzionamento: eccezioni JavaScript,
+ *    errori nella console del browser (es. violazioni della CSP) e risposte HTTP 4xx/5xx
+ *    dell'app (pagina, dati, Server Action).
+ * 5. Cancella SEMPRE l'account (e a cascata i suoi dati), anche in caso di errore.
  *
  * Esce con codice 1 se c'è almeno una violazione. Riepilogo anche in GITHUB_STEP_SUMMARY.
  *
@@ -48,6 +51,7 @@ const PAGES = [
   "/bet-builder",
   "/bet-builder/builder",
   "/bet-builder/slips",
+  "/bet-builder/results",
   "/bankroll",
   "/tracker",
   "/ask",
@@ -139,6 +143,9 @@ async function createSuperAdmin() {
       .from("bankroll_movements")
       .insert({ bankroll_id: bankroll.id, kind: "DEPOSIT", amount: 100, note: "DEMO" });
 
+    // Schedine DEMO, così "Le mie schedine" mostra schede vere (una da proposta, se c'è).
+    await createDemoSlips(client);
+
     return { id, email, password, totpSecret, lastCounter: first.counter };
   } catch (e) {
     await admin.auth.admin.deleteUser(id);
@@ -146,9 +153,72 @@ async function createSuperAdmin() {
   }
 }
 
+/** Schedine DEMO con la sessione dell'utente temporaneo (RLS come nell'app). */
+async function createDemoSlips(client) {
+  const slips = [];
+  const { data: proposal } = await admin
+    .from("v_active_bet_proposals")
+    .select("proposal_id")
+    .limit(1)
+    .maybeSingle();
+  if (proposal) {
+    const { data: legs } = await admin
+      .from("bet_proposal_legs")
+      .select("leg_no, match_id, market, line, selection")
+      .eq("proposal_id", proposal.proposal_id)
+      .order("leg_no");
+    if (legs?.length) slips.push({ name: "DEMO da proposta", source: proposal.proposal_id, legs });
+  }
+  const { data: prediction } = await admin
+    .from("v_active_predictions")
+    .select("match_id")
+    .eq("market", "1X2")
+    .gte("kickoff_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (prediction) {
+    slips.push({
+      name: "DEMO manuale",
+      source: null,
+      legs: [
+        { leg_no: 1, match_id: prediction.match_id, market: "1X2", line: null, selection: "HOME" },
+      ],
+    });
+  }
+  for (const slip of slips) {
+    const { data, error } = await client
+      .from("user_bet_slips")
+      .insert({ name: slip.name, source_proposal_id: slip.source })
+      .select("id")
+      .single();
+    if (error) throw new Error(`Schedina DEMO: ${error.message}`);
+    const { error: legsError } = await client
+      .from("user_bet_slip_selections")
+      .insert(slip.legs.map((l) => ({ ...l, slip_id: data.id })));
+    if (legsError) throw new Error(`Selezioni DEMO: ${legsError.message}`);
+  }
+}
+
 // --- Controlli -----------------------------------------------------------------------
 
+/** Errori di funzionamento della pagina in corso (riazzerati a ogni audit). */
+let runtime = [];
+
+function watchRuntime(page) {
+  page.on("pageerror", (e) => runtime.push(`eccezione JS: ${String(e.message).slice(0, 200)}`));
+  page.on("console", (m) => {
+    if (m.type() === "error") runtime.push(`console: ${m.text().slice(0, 200)}`);
+  });
+  page.on("response", (r) => {
+    const u = new URL(r.url());
+    if (r.status() >= 400 && u.origin === appUrl) {
+      runtime.push(`HTTP ${r.status()} ${u.pathname}${u.search.slice(0, 60)}`);
+    }
+  });
+}
+
 async function audit(page, path, label = path) {
+  runtime = [];
   const response = await page.goto(`${appUrl}${path}`, { waitUntil: "networkidle" });
   const status = response?.status() ?? 0;
   const landed = new URL(page.url()).pathname;
@@ -169,14 +239,19 @@ async function audit(page, path, label = path) {
     );
   }
 
-  results.push({ label, status, landed, violations, skipLink });
-  const marker = violations.length === 0 && skipLink !== false && status < 400 ? "OK" : "KO";
+  const errors = [...new Set(runtime)];
+  results.push({ label, status, landed, violations, skipLink, errors });
+  const marker =
+    violations.length === 0 && skipLink !== false && status < 400 && errors.length === 0
+      ? "OK"
+      : "KO";
   console.log(`${marker} ${label} (${status}${landed !== path ? ` → ${landed}` : ""})`);
   for (const v of violations) {
     console.log(`   - [${v.impact}] ${v.id}: ${v.help} (${v.nodes.length} elementi)`);
     for (const n of v.nodes.slice(0, 3)) console.log(`       ${n.target.join(" ")}`);
   }
   if (skipLink === false) console.log("   - il primo Tab non raggiunge «Vai al contenuto»");
+  for (const e of errors) console.log(`   - ${e}`);
 }
 
 async function login(page, account) {
@@ -208,7 +283,7 @@ async function firstDetailLink(page, listPath, pattern) {
 
 function summary() {
   const lines = [
-    "### Audit di accessibilità (axe, WCAG 2.1 AA)",
+    "### Audit di accessibilità (axe, WCAG 2.1 AA) ed errori di funzionamento",
     "",
     "| Pagina | Esito |",
     "| --- | --- |",
@@ -218,6 +293,7 @@ function summary() {
       ...r.violations.map((v) => `${v.id} (${v.impact}, ${v.nodes.length})`),
       ...(r.skipLink === false ? ["link «Vai al contenuto» non raggiunto"] : []),
       ...(r.status >= 400 ? [`HTTP ${r.status}`] : []),
+      ...(r.errors ?? []),
     ];
     lines.push(`| \`${r.label}\` | ${problems.length ? `❌ ${problems.join(", ")}` : "✅"} |`);
   }
@@ -230,6 +306,7 @@ async function main() {
   try {
     const context = await browser.newContext({ locale: "it-IT" });
     const page = await context.newPage();
+    watchRuntime(page);
     await audit(page, "/login");
     await audit(page, "/forgot-password");
 
@@ -240,8 +317,10 @@ async function main() {
 
     const match = await firstDetailLink(page, "/match-center", /^\/match-center\/[^/?#]+$/);
     if (match) await audit(page, match, "/match-center/[id]");
-    const proposal = await firstDetailLink(page, "/bet-builder", /^\/bet-builder\/[0-9a-f-]{36}$/);
+    const proposal = await firstDetailLink(page, "/bet-builder", /^\/bet-builder\/\d+$/);
     if (proposal) await audit(page, proposal, "/bet-builder/[id]");
+    const slip = await firstDetailLink(page, "/bet-builder/slips", /^\/bet-builder\/slips\/\d+$/);
+    if (slip) await audit(page, slip, "/bet-builder/slips/[id]");
 
     // Larghezza mobile: menu chiuso fuori dalla tabulazione, menu aperto accessibile.
     await page.setViewportSize({ width: 375, height: 812 });
@@ -281,7 +360,7 @@ async function main() {
   const text = summary();
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${text}\n`);
   const failed = results.filter(
-    (r) => r.violations.length > 0 || r.skipLink === false || r.status >= 400,
+    (r) => r.violations.length > 0 || r.skipLink === false || r.status >= 400 || r.errors?.length,
   );
   console.log(`\n${results.length - failed.length}/${results.length} controlli superati.`);
   if (failed.length) process.exit(1);

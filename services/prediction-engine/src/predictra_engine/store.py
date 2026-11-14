@@ -111,24 +111,37 @@ class SupabaseStore:
         )
         return int(rows[0]["id"]) if rows else None
 
-    def latest_backtest_ece(self, model_version_id: int) -> float | bool | None:
-        """ECE dell'ultimo backtest; ``False`` se la versione non ha backtest."""
+    def latest_backtest(self, model_version_id: int) -> dict[str, Any] | None:
+        """Metriche dell'ultimo backtest della versione; ``None`` se non ne ha."""
         rows = self.select(
             "backtests",
             {
-                "select": "ece",
+                "select": "brier,log_loss,ece,baseline_brier,baseline_log_loss,created_at",
                 "model_version_id": f"eq.{model_version_id}",
                 "order": "created_at.desc",
                 "limit": "1",
             },
         )
-        if not rows:
-            return False
-        return None if rows[0]["ece"] is None else float(rows[0]["ece"])
+        return rows[0] if rows else None
+
+    def active_model_version(self) -> int | None:
+        rows = self.select("model_versions", {"select": "id", "status": "eq.ACTIVE"})
+        return int(rows[0]["id"]) if rows else None
 
     # -------------------------------------------------------------- scritture
     def register_model_version(self, payload: dict[str, Any]) -> int:
         return int(self.rpc("register_model_version", {"p": payload}))
+
+    def auto_activate(self, model_version_id: int, reason: str) -> None:
+        """Attivazione automatica del modello più forte (ADR 0023), con audit."""
+        self.rpc(
+            "auto_activate_model_version",
+            {"p_model_version_id": model_version_id, "p_reason": reason[:500]},
+        )
+
+    def retire_superseded(self, keep: list[int]) -> int:
+        """Ritira le versioni candidate fuori da ``keep`` (ADR 0024); restituisce quante."""
+        return int(self.rpc("retire_superseded_model_versions", {"p_keep": keep}) or 0)
 
     def record_backtest(self, payload: dict[str, Any]) -> int:
         return int(self.rpc("record_backtest", {"p": payload}))

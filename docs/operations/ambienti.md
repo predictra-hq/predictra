@@ -50,21 +50,22 @@ Si gestiscono in _Settings → Secrets and variables → Actions_ (solo `gennpal
 
 Segreti dei provider dati (usati dal workflow _Data collector_, che scrive su Supabase con `DEV_SUPABASE_SECRET_KEY`):
 
-| Segreto                                                                            | Provider                                                       | Stato                                          |
-| ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
-| `FOOTBALL_DATA_API_KEY`                                                            | football-data.org (piano Free)                                 | presente dal 7/11/2026                         |
-| `ODDS_API_KEY`                                                                     | The Odds API (piano Starter, 500 crediti/mese)                 | presente dal 7/11/2026                         |
-| `BACKUP_PASSPHRASE`, `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET`, `B2_ENDPOINT` | Backblaze B2, backup cifrati (ADR 0040, regione `us-east-005`) | presenti dall'8/11/2026                        |
-| `API_FOOTBALL_KEY`                                                                 | API-Football                                                   | non creato: termini da verificare (M2 fase A3) |
+| Segreto                                                                            | Provider                                                       | Stato                                                 |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------- |
+| `FOOTBALL_DATA_API_KEY`                                                            | football-data.org (piano Free)                                 | presente dal 7/11/2026                                |
+| `ODDS_API_KEY`                                                                     | The Odds API (piano Starter, 500 crediti/mese)                 | presente dal 7/11/2026                                |
+| `BACKUP_PASSPHRASE`, `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET`, `B2_ENDPOINT` | Backblaze B2, backup cifrati (ADR 0040, regione `us-east-005`) | presenti dall'8/11/2026                               |
+| `API_FOOTBALL_KEY`                                                                 | API-Football                                                   | presente dall'11/11/2026 (account registrato l'11/11) |
 
 ## Credenziali da rinnovare
 
-I due token usati dai deploy sono stati creati **senza scadenza** (verificato dal proprietario l'8/11/2026). Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
+I due token usati dai deploy (verificato dal proprietario l'8/11/2026) e il token dell'avvio di riserva dell'agente (11/11/2026) sono stati creati **senza scadenza**. Vanno sostituiti solo se vengono revocati o compromessi: in quel caso i deploy si fermano con un errore di autenticazione. Se un giorno ne crei uno con scadenza, scrivi qui la data.
 
-| Credenziale                               | Dove si rinnova                        | Scadenza |
-| ----------------------------------------- | -------------------------------------- | -------- |
-| Token Supabase `github-actions-predictra` | supabase.com → Account → Access Tokens | nessuna  |
-| Token Vercel `github-actions-predictra`   | vercel.com → Account Settings → Tokens | nessuna  |
+| Credenziale                                                                   | Dove si rinnova                                                                                                     | Scadenza                                                                                                                                                      |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token Supabase `github-actions-predictra`                                     | supabase.com → Account → Access Tokens                                                                              | nessuna                                                                                                                                                       |
+| Token Vercel `github-actions-predictra`                                       | vercel.com → Account Settings → Tokens                                                                              | nessuna                                                                                                                                                       |
+| Token GitHub `predictra-agent-dispatch` (Vercel DEV, `GITHUB_DISPATCH_TOKEN`) | github.com → Settings → Developer settings → Fine-grained tokens; poi Vercel → Environment Variables e nuovo deploy | nessuna (verificato dal proprietario l'11/11/2026). Se viene revocato, l'avvio di riserva risponde `failed` e i cicli dipendono solo dallo schedule di GitHub |
 
 Dopo la sostituzione aggiorna il segreto GitHub con lo stesso nome e rilancia l'ultimo run della CI su `dev`.
 

@@ -92,11 +92,57 @@ def test_mai_stessa_partita_o_stessa_squadra():
     assert len(proposals) == 3
 
 
-def test_solo_stessa_giornata():
-    legs = [leg(1, "0.5", "2.5"), leg(2, "0.5", "2.5", offset_h=24)]
+def test_adr_0036_multiple_nello_stesso_turno():
+    # Venerdì 20, sabato 21 e lunedì 23: stesso turno. Martedì 24: turno successivo.
+    legs = [
+        leg(1, "0.5", "2.5", offset_h=-24),
+        leg(2, "0.5", "2.5"),
+        leg(3, "0.5", "2.5", offset_h=48),
+        leg(4, "0.5", "2.5", offset_h=72),
+    ]
     proposals, _ = build_proposals(legs, DEFAULT_RULES)
-    assert {len(p.legs) for p in proposals} == {1}
-    assert {str(p.slate_date) for p in proposals} == {"2026-11-21", "2026-11-22"}
+    multiples = [p for p in proposals if len(p.legs) > 1]
+    assert max(len(p.legs) for p in proposals) == 3
+    assert all(104 not in {x.prediction_id for x in p.legs} for p in multiples)
+    triple = next(p for p in proposals if len(p.legs) == 3)
+    assert str(triple.slate_date) == "2026-11-20"  # data della prima partita
+    assert {str(p.slate_date) for p in proposals if len(p.legs) == 1} == {
+        "2026-11-20",
+        "2026-11-21",
+        "2026-11-23",
+        "2026-11-24",
+    }
+
+
+def test_adr_0036_inizio_del_turno():
+    from datetime import date
+
+    from predictra_bet_builder.builder import round_start
+
+    friday, tuesday = date(2026, 11, 20), date(2026, 11, 24)
+    for d, start in [
+        (date(2026, 11, 20), friday),
+        (date(2026, 11, 22), friday),
+        (date(2026, 11, 23), friday),
+        (date(2026, 11, 24), tuesday),
+        (date(2026, 11, 26), tuesday),
+    ]:
+        assert round_start(d) == start
+
+
+def test_adr_0036_ogni_numero_di_selezioni_rappresentato():
+    # Singole molto forti e multiple più deboli: la migliore multipla di ogni misura resta.
+    legs = [leg(i, "0.6", "2.0") for i in range(1, 7)]  # EV 0,2 ciascuna
+    rules = Rules(max_legs=3, max_proposals_per_category=4)
+    proposals, _ = build_proposals(legs, rules)
+    sizes_by_cat: dict[str, set[int]] = {}
+    for p in proposals:
+        sizes_by_cat.setdefault(p.category, set()).add(len(p.legs))
+    assert sizes_by_cat["CONSERVATIVE"] == {1}  # le multiple hanno p < 0,5
+    assert {2, 3} <= sizes_by_cat["AGGRESSIVE"] | sizes_by_cat["BALANCED"]
+    for cat in sizes_by_cat:
+        group = [p for p in proposals if p.category == cat]
+        assert [p.rank_score for p in group] == sorted((p.rank_score for p in group), reverse=True)
 
 
 def test_giornata_nel_fuso_di_roma():

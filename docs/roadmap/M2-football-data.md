@@ -1,6 +1,6 @@
 # M2 — Football data: piano e corsie
 
-**Stato:** completata su DEV il 7/11/2026, tranne la fase A3 (backfill API-Football, bloccata dai termini d'uso) · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** completata su DEV il 7/11/2026. Fase A3: risultati 2022–2024 completati il 12/11/2026; statistiche e formazioni in corso, scaricate in automatico ogni giorno, circa 6 mesi per tutto lo storico · **Dipende da:** M1 (in servizio su DEV) · **Può partire quando:** subito · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -15,22 +15,22 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia          | Persona   | Issue | Stato                                                                                  |
-| --------------- | --------- | ----- | -------------------------------------------------------------------------------------- |
-| 0 — contratto   | Alfry1299 | —     | unita (#5)                                                                             |
-| A — ingestion   | Alfry1299 | —     | unita (#6): A1, A2, A4 (controlli di base), A5. **A3 bloccata** (termini API-Football) |
-| B — interfaccia | Alfry1299 | —     | unita (#7)                                                                             |
+| Corsia          | Persona   | Issue | Stato                                                                                                                                          |
+| --------------- | --------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 — contratto   | Alfry1299 | —     | unita (#5)                                                                                                                                     |
+| A — ingestion   | Alfry1299 | —     | unita (#6): A1, A2, A4 (controlli di base), A5. A3: risultati 2022–2024 completati il 12/11/2026, statistiche e formazioni in corso (#71, #72) |
+| B — interfaccia | Alfry1299 | —     | unita (#7)                                                                                                                                     |
 
 Chi prende una corsia scrive il proprio nome qui nella sua prima PR.
 
 ## Prerequisiti
 
-| #   | Cosa                                                                                                                                                                                                                                                       | Chi                   | Serve a             |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------- |
-| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                                                                                                                                                       | `gennpalm`            | corsia A, fase A2   |
-| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                                                                                                                                                 | `gennpalm`            | corsia A, fase A3   |
-| P3  | Lettura dei termini d'uso, registrata in `docs/data-sources/`: football-data.org ✅ verificato; API-Football ⛔ **non verificato** (sito non leggibile in automatico): lo legge a mano `gennpalm`, vedi [api-football.md](../data-sources/api-football.md) | corsia 0 / `gennpalm` | tutte (A3 bloccata) |
-| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)                                                                                                                                       | `gennpalm`            | ordine              |
+| #   | Cosa                                                                                                                                                                                                                    | Chi                   | Serve a             |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------- |
+| P1  | Registrazione gratuita su football-data.org e segreto GitHub `FOOTBALL_DATA_API_KEY`                                                                                                                                    | `gennpalm`            | corsia A, fase A2   |
+| P2  | Registrazione gratuita su API-Football (api-sports.io) e segreto GitHub `API_FOOTBALL_KEY`                                                                                                                              | `gennpalm`            | corsia A, fase A3   |
+| P3  | Lettura dei termini d'uso, registrata in `docs/data-sources/`: football-data.org ✅ verificato; API-Football ✅ verificato l'11/11/2026, letto a mano da `gennpalm`: [api-football.md](../data-sources/api-football.md) | corsia 0 / `gennpalm` | tutte (A3 bloccata) |
+| P4  | Verifica che esista un solo progetto Supabase DEV (l'integrazione Vercel può averne creato un secondo, da eliminare)                                                                                                    | `gennpalm`            | ordine              |
 
 Le corsie possono partire anche senza P1 e P2: i test usano fixture. Le fixture sono **risposte reali registrate** (o esempi della documentazione ufficiale del provider), salvate con fonte e data di registrazione; mai costruite a mano.
 

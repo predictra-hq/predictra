@@ -56,9 +56,9 @@ describe("prossime partite", () => {
 });
 
 describe("data attesa della previsione", () => {
-  it("calcio d'inizio meno l'orizzonte di 7 giorni", () => {
+  it("calcio d'inizio meno l'orizzonte di 10 giorni", () => {
     expect(predictionExpectedFrom("2026-11-20T19:30:00Z").toISOString()).toBe(
-      "2026-11-13T19:30:00.000Z",
+      "2026-11-10T19:30:00.000Z",
     );
   });
 });

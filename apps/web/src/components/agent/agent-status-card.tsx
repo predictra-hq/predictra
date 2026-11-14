@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { StatCard } from "@/components/dashboard/cards";
 import { Badge, Card } from "@/components/ui/primitives";
 import { getAgentStatus } from "@/lib/agent/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -38,9 +38,8 @@ export async function AgentStatusCard({ canMonitor }: { canMonitor: boolean }) {
   const active = rows.filter((r) => r.last_run_at);
 
   return (
-    <Card>
-      {title}
-      <Link href="/admin/agent" className="mt-2 flex flex-col gap-1">
+    <StatCard href="/admin/agent" title={m.dashboard.agentStatus}>
+      <span className="mt-2 flex flex-col gap-1">
         <span>
           <Badge tone={healthTone(health)}>{a.health[health]}</Badge>
         </span>
@@ -56,7 +55,7 @@ export async function AgentStatusCard({ canMonitor }: { canMonitor: boolean }) {
             </span>
           );
         })}
-      </Link>
-    </Card>
+      </span>
+    </StatCard>
   );
 }

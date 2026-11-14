@@ -8,11 +8,13 @@ import {
   ProviderAttribution,
   QualityBadge,
 } from "@/components/football/badges";
+import { MatchDetailsCard } from "@/components/football/match-details";
 import { MatchPredictions } from "@/components/predictions/match-predictions";
 import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { humanize } from "@/lib/football/details";
 import { formatScore, parseId, severityTone } from "@/lib/football/format";
-import { getMatch } from "@/lib/football/queries";
+import { getMatch, getMatchDetails } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Dettaglio partita" };
@@ -32,12 +34,15 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
   const { id } = await params;
   const matchId = parseId(id);
   if (matchId === null) notFound();
-  const { match, issues, attribution } = await getMatch(matchId);
+  const [{ match, issues, attribution }, details] = await Promise.all([
+    getMatch(matchId),
+    getMatchDetails(matchId),
+  ]);
   if (!match) notFound();
 
-  const back = `/match-center?c=${encodeURIComponent(match.competition_code ?? "")}${
-    match.matchday ? `&g=${match.matchday}` : ""
-  }`;
+  const back = `/match-center?c=${encodeURIComponent(match.competition_code ?? "")}&s=${
+    match.season_id
+  }${match.matchday ? `&g=${match.matchday}` : ""}`;
 
   return (
     <>
@@ -56,9 +61,14 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardTitle>{m.matchCenter.matchTitle}</CardTitle>
-          <p className="mt-4 text-center font-mono text-3xl font-semibold">
-            {formatScore(match.home_score, match.away_score)}
-          </p>
+          {/* Tabellone: squadre ai lati del risultato. */}
+          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-lg bg-surface-2 px-3 py-4">
+            <p className="text-right text-sm font-medium sm:text-base">{match.home_team_name}</p>
+            <p className="whitespace-nowrap font-mono text-3xl font-semibold">
+              {formatScore(match.home_score, match.away_score)}
+            </p>
+            <p className="text-sm font-medium sm:text-base">{match.away_team_name}</p>
+          </div>
           <dl className="mt-4">
             <Row label={m.matchCenter.status}>
               <MatchStatusBadge status={match.status} />
@@ -72,7 +82,11 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
                 {m.matchCenter.scoreDuration[match.score_duration]}
               </Row>
             ) : null}
-            {match.stage ? <Row label={m.matchCenter.stage}>{match.stage}</Row> : null}
+            {match.stage ? (
+              <Row label={m.matchCenter.stage}>
+                {m.matchCenter.stages[match.stage] ?? humanize(match.stage)}
+              </Row>
+            ) : null}
             {match.group_name ? <Row label={m.matchCenter.group}>{match.group_name}</Row> : null}
           </dl>
         </Card>
@@ -100,6 +114,12 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
         matchId={match.match_id}
         status={match.status}
         kickoffAt={match.kickoff_at}
+      />
+
+      <MatchDetailsCard
+        home={{ id: match.home_team_id, name: match.home_team_name }}
+        away={{ id: match.away_team_id, name: match.away_team_name }}
+        details={details}
       />
 
       <Card className="mt-4">

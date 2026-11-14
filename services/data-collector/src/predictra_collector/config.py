@@ -29,6 +29,7 @@ class ConfigError(RuntimeError):
 class Settings:
     football_data_api_key: str | None
     odds_api_key: str | None
+    api_football_api_key: str | None
     supabase_url: str | None
     supabase_secret_key: str | None
 
@@ -50,10 +51,20 @@ class Settings:
             raise ConfigError("Variabile ODDS_API_KEY mancante.")
         return self.odds_api_key
 
+    def require_api_football(self) -> str:
+        if not self.api_football_api_key:
+            raise ConfigError("Variabile API_FOOTBALL_KEY mancante.")
+        return self.api_football_api_key
+
     def secrets(self) -> tuple[str, ...]:
         return tuple(
             s
-            for s in (self.football_data_api_key, self.odds_api_key, self.supabase_secret_key)
+            for s in (
+                self.football_data_api_key,
+                self.odds_api_key,
+                self.api_football_api_key,
+                self.supabase_secret_key,
+            )
             if s
         )
 
@@ -66,6 +77,7 @@ def load_settings(env: dict[str, str] | None = None) -> Settings:
     return Settings(
         football_data_api_key=(source.get("FOOTBALL_DATA_API_KEY") or "").strip() or None,
         odds_api_key=(source.get("ODDS_API_KEY") or "").strip() or None,
+        api_football_api_key=(source.get("API_FOOTBALL_KEY") or "").strip() or None,
         supabase_url=url or None,
         supabase_secret_key=(source.get("SUPABASE_SECRET_KEY") or "").strip() or None,
     )

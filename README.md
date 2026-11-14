@@ -6,17 +6,17 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 
 ## Stato
 
-| Milestone                                                                      | Stato                                                                                                                                                                                           |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                                                                    |
-| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                                                                         |
-| M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football rimandato: [piano](docs/roadmap/M2-football-data.md)                                               |
-| M3 — Statistiche e quote                                                       | in corso: quote reali su DEV, manca l'interfaccia ([punto della situazione](docs/operations/punto-della-situazione.md))                                                                         |
-| M5 — Smart Bet Builder                                                         | ✅ in servizio su DEV: proposte da modello attivo e quote reali FRESH, nessuna schedina forzata ([piano](docs/roadmap/M5-bet-builder.md), [runbook](docs/operations/bet-builder.md))            |
-| M4 — Prediction engine                                                         | ✅ in servizio su DEV (modello attivo: Poisson; [runbook](docs/operations/prediction-engine.md))                                                                                                |
-| M6 — Bankroll e tracker                                                        | ✅ in servizio su DEV (isolamento verificato con il workflow _Verifica DEV_)                                                                                                                    |
-| M7 — Agente autonomo                                                           | 🔄 in servizio su DEV, in verifica: coda su Postgres, raccolte, previsioni e proposte programmate dall'agente, monitoraggio in _Amministrazione → Agente_ ([runbook](docs/operations/agent.md)) |
-| M8                                                                             | [roadmap](docs/roadmap/README.md)                                                                                                                                                               |
+| Milestone                                                                      | Stato                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                                                                                                |
+| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                                                                                                     |
+| M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football in preparazione (termini verificati l'11/11/2026): [piano](docs/roadmap/M2-football-data.md)                                   |
+| M3 — Statistiche e quote                                                       | ✅ completata l'11/11/2026, in servizio su DEV: quote 1X2 reali, margine e de-margin, pagine Market, Statistics e League Intelligence, alias squadre ([piano](docs/roadmap/M3-statistiche-e-quote.md))                      |
+| M5 — Smart Bet Builder                                                         | ✅ in servizio su DEV: proposte da modello attivo e quote reali FRESH, nessuna schedina forzata ([piano](docs/roadmap/M5-bet-builder.md), [runbook](docs/operations/bet-builder.md))                                        |
+| M4 — Prediction engine                                                         | ✅ in servizio su DEV (modello attivo: Poisson; [runbook](docs/operations/prediction-engine.md))                                                                                                                            |
+| M6 — Bankroll e tracker                                                        | ✅ in servizio su DEV (isolamento verificato con il workflow _Verifica DEV_)                                                                                                                                                |
+| M7 — Agente autonomo                                                           | ✅ completata, in servizio su DEV: coda su Postgres, raccolte, previsioni e proposte programmate dall'agente, watchdog e avvio di riserva, monitoraggio in _Amministrazione → Agente_ ([runbook](docs/operations/agent.md)) |
+| M8                                                                             | [roadmap](docs/roadmap/README.md)                                                                                                                                                                                           |
 
 ## Struttura
 
@@ -54,6 +54,8 @@ pnpm format        # formattazione Prettier
 - **Checklist di messa in servizio (da zero):** [docs/operations/checklist-messa-in-servizio.md](docs/operations/checklist-messa-in-servizio.md)
 - Setup e deploy: [docs/operations/setup.md](docs/operations/setup.md)
 - Controlli di sicurezza: [docs/operations/security.md](docs/operations/security.md)
+- Runbook operativo (deploy, rollback, guasti, ripristino): [docs/operations/runbook.md](docs/operations/runbook.md)
+- Checklist di produzione (M8): [docs/operations/checklist-produzione.md](docs/operations/checklist-produzione.md)
 - Data dictionary: [identità](docs/data-dictionary/identity.md), [calcio](docs/data-dictionary/football.md), [quote e statistiche](docs/data-dictionary/odds.md), [previsioni](docs/data-dictionary/predictions.md), [bankroll](docs/data-dictionary/bankroll.md)
 - Fonti dati e termini d'uso: [docs/data-sources/](docs/data-sources/README.md)
 

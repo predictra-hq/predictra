@@ -33,7 +33,7 @@
   | `FINISHED`                                            | `FINISHED`  |
   | `POSTPONED`, `SUSPENDED`, `CANCELLED`, `AWARDED`      | uguale      |
 
-  La corrispondenza per API-Football si definisce quando i suoi termini e la documentazione saranno verificati.
+  La corrispondenza per API-Football si definisce nella PR del backfill. L'abbinamento delle stesse entità tra provider è nell'[ADR 0011](0011-abbinamento-tra-provider.md).
 
 - **Viste** (punto di contatto tra le corsie A e B e con le milestone successive), tutte con `security_invoker`:
   - `v_match_center`;
@@ -102,7 +102,11 @@ Le soglie sono nella tabella `source_freshness_rules`. Oltre la soglia il dato �
 
   I termini non trattano esplicitamente conservazione, uso commerciale e visualizzazione a più utenti. Per una piattaforma privata con pochi utenti invitati, senza ricavi, l'uso è ritenuto compatibile. Se PREDICTRA diventasse commerciale va chiesto al gestore.
 
-- **API-Football:** **NON VERIFICATO.** Il sito blocca la lettura automatica (HTTP 403 e verifica anti-bot). La fase A3 (backfill) è **bloccata** finché il proprietario non legge i termini a mano e li registra in [api-football.md](../data-sources/api-football.md). Poi una migrazione nuova imposta `terms_verified_at`.
+- **API-Football:** verificato l'11/11/2026 (testo letto a mano dal proprietario, il sito blocca la lettura automatica; migrazione `20261111150000_api_football_termini.sql`). Vincoli che il codice deve rispettare (dettagli in [api-football.md](../data-sources/api-football.md)):
+  - un solo account; la chiave sta solo nel segreto `API_FOOTBALL_KEY`;
+  - mai superare il limite al minuto, pena la sospensione; budget giornaliero sotto la quota (90 su 100), perché al limite l'account resta sospeso fino a fine giornata;
+  - niente rivendita; nessuna licenza di pubblicazione: i dati restano interni a una piattaforma privata, e un'apertura al pubblico richiede una nuova ADR;
+  - niente loghi.
 
 ## Conseguenze
 

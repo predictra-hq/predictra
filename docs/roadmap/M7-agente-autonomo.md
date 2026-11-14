@@ -1,6 +1,6 @@
 # M7 — Agente autonomo: piano e corsie
 
-**Stato:** in servizio su DEV (corsie 0, A1–A3, A5 e B unite); restano A4 e chiusura · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
+**Stato:** ✅ completata l'11/11/2026, in servizio su DEV (corsie 0, A e B unite; cadenza adattiva rinviata, ADR 0035) · **Dipende da:** M2–M5 · **Può partire quando:** il contratto (coda, ADR 0003) **subito**; l'integrazione dei job quando i job di M2–M5 esistono · **Regole di lavoro:** [collaborazione.md](../operations/collaborazione.md)
 
 ## Obiettivo
 
@@ -13,11 +13,11 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 
 ## Assegnazione
 
-| Corsia                       | Persona  | Issue | Stato                                                                                                                                   |
-| ---------------------------- | -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                                             |
-| A — coda e scheduler         | gennpalm | —     | A1–A3 e A5 unite (#33, #35, #40–#43); A4 ridotta (watchdog e avvio di riserva) in revisione (#52), cadenza adattiva rinviata (ADR 0035) |
-| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                                                       |
+| Corsia                       | Persona  | Issue | Stato                                                                                                         |
+| ---------------------------- | -------- | ----- | ------------------------------------------------------------------------------------------------------------- |
+| 0 — contratto                | gennpalm | —     | unita (#26)                                                                                                   |
+| A — coda e scheduler         | gennpalm | —     | A1–A5 unite (#33, #35, #40–#43, #52); in A4 watchdog e avvio di riserva, cadenza adattiva rinviata (ADR 0035) |
+| B — monitoraggio e notifiche | gennpalm | —     | B1–B3 unite (#38)                                                                                             |
 
 ## Prerequisiti
 
@@ -91,3 +91,12 @@ Criteri di completamento (dal [piano M0](../architecture/M0-piano-tecnico.md) §
 1. Corsie unite su `dev`, deploy DEV verde, job reali in coda.
 2. Test di idempotenza e riavvio verdi; frequenza reale visibile.
 3. Stato aggiornato in `README.md`, `CLAUDE.md` e nella [roadmap](README.md).
+
+**Verifica di chiusura (11/11/2026):**
+
+1. Corsie unite: 0 (#26), A (#33, #35, #40–#43, #52), B (#38). Ultimo deploy DEV verde (#55).
+2. Job reali in coda: dal 9/11 alle 23:45 all'11/11 alle 11:30 UTC, 14 cicli _Agent (Python)_ riusciti, nessun job fallito o in dead-letter (cicli 118–273). Raccolta football-data.org a ogni finestra di 3 ore; quote, previsioni e proposte nelle loro finestre.
+3. Idempotenza in servizio: quando due cicli cadono nella stessa finestra (avvio di riserva e schedule in ritardo), il secondo trova i job `già presente (done)` e non li riesegue. Test di idempotenza e riavvio verdi in CI (`supabase/tests/agent.test.ts`, test del worker).
+4. Avvio di riserva attivo dal 9/11 (`GITHUB_DISPATCH_TOKEN`): GitHub ha avviato solo 5 schedule su 14 cicli, gli altri 9 sono partiti dal giro QStash.
+5. Consumo misurato: 28 minuti fatturati in circa 36 ore, cioè circa 570 al mese, dentro il budget di 900 (ADR 0035 §2).
+6. Frequenza reale e ultimo ciclo riuscito in `v_agent_status`, mostrati dalla card _Stato agente_ e da _Amministrazione → Agente_ (#38).

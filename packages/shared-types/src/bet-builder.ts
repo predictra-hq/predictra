@@ -28,19 +28,33 @@ export interface BetBuilderRules {
   min_leg_expected_value: number;
   min_expected_value: number;
   min_confidence_score: number;
+  /**
+   * Peso del mercato nella probabilità usata per EV e soglie (ADR 0028):
+   * `(1 − w)·modello + w·mercato`. Assente nelle run precedenti: 0.
+   */
+  market_weight?: number;
+  /** Solo quote di bookmaker italiani nelle proposte (ADR 0028). Assente: false. */
+  italian_bookmakers_only?: boolean;
 }
 
 /** Valori iniziali (ADR 0025): si rivedono con un nuovo ADR dopo i primi dati reali. */
 export const DEFAULT_BET_BUILDER_RULES: Readonly<BetBuilderRules> = {
-  rules_version: "2026.11.08-1",
+  rules_version: "2026.11.12-2",
   max_legs: 4,
-  max_proposals_per_category: 5,
+  max_proposals_per_category: 8,
   min_leg_probability: 0.2,
   min_probability: 0.1,
   min_leg_expected_value: 0.02,
   min_expected_value: 0.05,
   min_confidence_score: 0.4,
+  market_weight: 0.5,
+  italian_bookmakers_only: true,
 };
+
+/** Probabilità usata (ADR 0028): media pesata tra modello e consenso di mercato. */
+export function blendedProbability(model: number, market: number, weight: number): number {
+  return (1 - weight) * model + weight * market;
+}
 
 /** Limite inferiore della probabilità combinata per categoria (ADR 0027 §3). */
 export const CATEGORY_MIN_PROBABILITY: Readonly<Record<BetProposalCategory, number>> = {

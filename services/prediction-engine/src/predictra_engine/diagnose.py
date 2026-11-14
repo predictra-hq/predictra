@@ -34,7 +34,7 @@ def _in(ids: list[int]) -> str:
     return f"in.({','.join(str(i) for i in ids)})"
 
 
-def diagnose(store: Store, now: datetime, horizon_days: int = 7) -> Diagnosis:
+def diagnose(store: Store, now: datetime, horizon_days: int = 10) -> Diagnosis:
     d = Diagnosis()
     versions = store.select(
         "model_versions",

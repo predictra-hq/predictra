@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2"
       >
-        Vai al contenuto
+        {m.common.skipToContent}
       </a>
       <Sidebar
         messages={m}

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { hasPermission, type ModelVersionSummaryRow } from "@predictra/shared-types";
 import { CalibrationChart } from "@/components/predictions/calibration-chart";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { Alert, Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { runStatusTone } from "@/lib/football/format";
@@ -11,7 +12,7 @@ import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
 
-export const metadata: Metadata = { title: "Model Intelligence" };
+export const metadata: Metadata = { title: "Modelli" };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -55,12 +56,16 @@ export default async function ModelsPage() {
   const canManage = hasPermission(user.roles, "models.manage") && user.aal2;
   const [versions, runs] = await Promise.all([listModelVersions(), listPredictionRuns()]);
   const active = versions.find((v) => v.status === "ACTIVE") ?? null;
+  // In gara: il modello attivo e lo sfidante (ADR 0024). Lo storico è a parte.
+  const current = versions.filter((v) => v.status !== "RETIRED");
+  const retired = versions.filter((v) => v.status === "RETIRED");
   // Curva mostrata: modello attivo, altrimenti la versione più recente con un backtest.
   const featured = active ?? versions.find((v) => v.backtest_id !== null) ?? null;
 
   return (
     <>
       <PageHeader title={mi.title} description={mi.description} />
+      <SectionTabs group="system" current="/models" />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
@@ -75,6 +80,12 @@ export default async function ModelsPage() {
                 {mi.brier} {metric(active.brier)} · {mi.logLoss} {metric(active.log_loss)} ·{" "}
                 {mi.ece} {metric(active.ece)}
               </p>
+              {active.baseline_log_loss !== null ? (
+                <p className="text-xs text-muted">
+                  {mi.reference}: {mi.brier} {metric(active.baseline_brier)} · {mi.logLoss}{" "}
+                  {metric(active.baseline_log_loss)}
+                </p>
+              ) : null}
               {active.activated_at ? (
                 <p className="text-xs text-muted">{formatDateTime(active.activated_at)}</p>
               ) : null}
@@ -104,7 +115,7 @@ export default async function ModelsPage() {
       <h2 className="mb-3 mt-8 text-lg font-semibold">{mi.versions}</h2>
       {canManage ? <p className="mb-3 text-xs text-muted">{mi.activateHint}</p> : null}
       <Card scrollLabel={mi.versions} className="p-0">
-        {versions.length === 0 ? (
+        {current.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noVersions}</p>
         ) : (
           <table className="w-full min-w-[960px] text-left text-sm">
@@ -119,16 +130,20 @@ export default async function ModelsPage() {
                 <Th className="text-right">{mi.logLoss}</Th>
                 <Th className="text-right">{mi.ece}</Th>
                 <Th>{mi.vsBaseline}</Th>
-                {canManage ? <Th>{""}</Th> : null}
+                {canManage ? (
+                  <Th>
+                    <span className="sr-only">{getMessages().common.actions}</span>
+                  </Th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
-              {versions.map((v) => (
+              {current.map((v) => (
                 <tr
                   key={v.model_version_id}
                   className="border-b border-border align-top last:border-0"
                 >
-                  <td className="px-3 py-3">
+                  <td className="whitespace-nowrap px-3 py-3">
                     <span className="font-medium">{mi.modelNames[v.model_key]}</span>
                     <span className="block font-mono text-xs text-muted">{v.version}</span>
                   </td>
@@ -174,6 +189,26 @@ export default async function ModelsPage() {
           </table>
         )}
       </Card>
+
+      {retired.length > 0 ? (
+        <details className="mt-6 rounded-lg border border-border p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            {mi.history} ({retired.length})
+          </summary>
+          <p className="mt-2 text-xs text-muted">{mi.historyHint}</p>
+          <ul className="mt-3 flex flex-col gap-1 text-sm">
+            {retired.map((v) => (
+              <li key={v.model_version_id} className="flex flex-wrap gap-x-3">
+                <span className="font-medium">{mi.modelNames[v.model_key]}</span>
+                <span className="font-mono text-xs text-muted">{v.version}</span>
+                <span className="text-xs text-muted">
+                  {mi.logLoss} {metric(v.log_loss)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
 
       <h2 className="mb-3 mt-8 text-lg font-semibold">{mi.recentRuns}</h2>
       <Card scrollLabel={mi.recentRuns} className="p-0">

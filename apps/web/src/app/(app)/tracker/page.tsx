@@ -7,14 +7,22 @@ import {
   flatStake,
   lossSince,
   profitCurve,
+  suggestStake,
 } from "@predictra/bankroll";
-import { BANKROLL_KINDS, BET_STATUSES, type BankrollKind } from "@predictra/shared-types";
+import {
+  BANKROLL_KINDS,
+  BET_STATUSES,
+  DEFAULT_BET_BUILDER_RULES,
+  type BankrollKind,
+} from "@predictra/shared-types";
 import { ProfitCurve } from "@/components/bankroll/profit-curve";
-import { formatEuro, KindBadge, Stat, Th } from "@/components/bankroll/shared";
+import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
+import { FilterForm } from "@/components/ui/filter-form";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import {
   Alert,
   Badge,
+  Button,
   Card,
   CardTitle,
   Field,
@@ -22,14 +30,24 @@ import {
   PageHeader,
   Select,
 } from "@/components/ui/primitives";
+import { SectionTabs } from "@/components/shell/section-tabs";
 import { requireUser } from "@/lib/auth/dal";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
-import { listBankrolls, listBets, listLimits, listMovements } from "@/lib/bankroll/queries";
+import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
+import {
+  listBankrolls,
+  listBets,
+  getMarketConsensus,
+  listKellyMatches,
+  listLimits,
+  listMovements,
+} from "@/lib/bankroll/queries";
+import { usedProbability } from "@/lib/bet-builder/market";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
 import { addBet, deleteBet, settleBet } from "./actions";
 
-export const metadata: Metadata = { title: "Tracker" };
+export const metadata: Metadata = { title: "Le mie giocate" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
@@ -37,16 +55,38 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   await requireUser();
   const t = getMessages().tracker;
   const b = getMessages().bankroll;
+  const c = getMessages().common;
   const params = await searchParams;
   const period = parsePeriod(params.p);
   const { since, dayAgo, weekAgo } = timeWindows(period);
 
-  const [bankrolls, allBets, movements, limits] = await Promise.all([
+  const [bankrolls, allBets, movements, limits, kellyMatches] = await Promise.all([
     listBankrolls(),
     listBets(),
     listMovements(),
     listLimits(),
+    listKellyMatches(),
   ]);
+  const k = t.kelly;
+  const kellyInput = parseKellyInput(params);
+  const kellyMatch = kellyMatches.find((x) => x.matchId === kellyInput.matchId) ?? null;
+  const modelProbability =
+    kellyMatch && kellyInput.selection
+      ? (kellyMatch.probabilities[kellyInput.selection] ?? null)
+      : null;
+  // ADR 0028: probabilità prudente = media tra modello e consenso di mercato.
+  const consensus = kellyMatch ? await getMarketConsensus(kellyMatch.matchId) : {};
+  const marketProbability = kellyInput.selection ? consensus[kellyInput.selection] : undefined;
+  const kellyProbability =
+    modelProbability === null
+      ? null
+      : usedProbability(
+          modelProbability,
+          marketProbability,
+          DEFAULT_BET_BUILDER_RULES.market_weight ?? 0,
+        );
+  const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
+  const kellyAsked = params.km !== undefined || params.ko !== undefined;
   const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
   const kindOf = new Map(bankrolls.map((x) => [x.bankroll_id, x.kind]));
 
@@ -64,8 +104,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   return (
     <>
       <PageHeader title={t.title} description={t.description} />
+      <SectionTabs group="plays" current="/tracker" />
 
-      <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
+      <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
         <Field label={t.period} htmlFor="p">
           <Select id="p" name="p" defaultValue={period} className="w-48">
             {PERIODS.map((p) => (
@@ -75,13 +116,10 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
             ))}
           </Select>
         </Field>
-        <button
-          type="submit"
-          className="h-10 rounded-lg border border-border-strong bg-surface-2 px-4 text-sm hover:bg-border"
-        >
+        <Button type="submit" variant="secondary">
           {t.apply}
-        </button>
-      </form>
+        </Button>
+      </FilterForm>
 
       <h2 className="mb-3 text-lg font-semibold">{t.metrics}</h2>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -97,7 +135,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <Stat label={t.bets}>
                   {metrics.settledBets} / {metrics.bets}
                 </Stat>
-                <Stat label={t.profit}>{formatEuro(metrics.profit)}</Stat>
+                <Stat label={t.profit}>
+                  <SignedEuro value={metrics.profit} />
+                </Stat>
                 <Stat label={t.staked}>{formatEuro(metrics.staked)}</Stat>
                 <Stat label={t.yield}>{formatPercent(metrics.yield)}</Stat>
                 <Stat label={t.roi}>{formatPercent(metrics.roi)}</Stat>
@@ -217,7 +257,125 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
         </div>
       )}
 
-      <h2 className="mb-3 mt-8 text-lg font-semibold">{t.bets}</h2>
+      {bankrolls.length > 0 ? (
+        <Card className="mt-4">
+          <CardTitle>{k.title}</CardTitle>
+          <p className="mt-1 text-sm text-muted">{k.description}</p>
+          {kellyMatches.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">{k.noMatches}</p>
+          ) : (
+            <FilterForm className="mt-4 grid gap-3 sm:grid-cols-[1fr_11rem_9rem_auto] sm:items-end">
+              <input type="hidden" name="p" value={period} />
+              <Field label={k.match} htmlFor="km">
+                <Select
+                  id="km"
+                  name="km"
+                  defaultValue={kellyMatch ? String(kellyMatch.matchId) : ""}
+                >
+                  <option value="" disabled>
+                    {k.chooseMatch}
+                  </option>
+                  {kellyMatches.map((x) => (
+                    <option key={x.matchId} value={x.matchId}>
+                      {formatDateTime(x.kickoffAt)} · {x.home} – {x.away}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={k.selection} htmlFor="ks">
+                <Select id="ks" name="ks" defaultValue={kellyInput.selection ?? "HOME"}>
+                  {KELLY_SELECTIONS.map((sel) => (
+                    <option key={sel} value={sel}>
+                      {k.selections[sel]}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label={k.odds} htmlFor="ko">
+                <Input
+                  id="ko"
+                  name="ko"
+                  inputMode="decimal"
+                  defaultValue={typeof params.ko === "string" ? params.ko : ""}
+                  placeholder="2,10"
+                />
+              </Field>
+              <Button type="submit" variant="secondary">
+                {k.calculate}
+              </Button>
+            </FilterForm>
+          )}
+          {kellyInput.invalidOdds ? (
+            <Alert className="mt-3" tone="warning">
+              {k.invalidOdds}
+            </Alert>
+          ) : kellyAsked && !kellyReady ? (
+            <p className="mt-3 text-sm text-muted">{k.incomplete}</p>
+          ) : null}
+          {kellyReady && kellyProbability !== null && kellyInput.odds !== null ? (
+            <div className="mt-4">
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <Stat label={k.modelProbability}>{formatPercent(modelProbability)}</Stat>
+                <Stat label={k.marketProbability}>{formatPercent(marketProbability)}</Stat>
+                <Stat label={k.probability}>{formatPercent(kellyProbability)}</Stat>
+                <Stat label={k.fairOdds}>{odds(fairOdds(kellyProbability))}</Stat>
+                <Stat label={k.expectedValue}>
+                  {formatPercent(expectedValue(kellyProbability, kellyInput.odds))}
+                </Stat>
+              </dl>
+              <ul className="mt-4 flex flex-col gap-2 text-sm">
+                {bankrolls.map((x) => {
+                  const lim = limits.find((l) => l.bankroll_id === x.bankroll_id) ?? null;
+                  const s = suggestStake({
+                    available: Number(x.available),
+                    flatPct: Number(x.flat_stake_pct),
+                    probability: kellyProbability,
+                    odds: kellyInput.odds,
+                    limits: lim,
+                  });
+                  return (
+                    <li
+                      key={x.bankroll_id}
+                      className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2 last:border-0"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{x.name}</span>
+                        <KindBadge kind={x.kind} />
+                      </span>
+                      {s.kellyNote === "NON_POSITIVE_EV" ? (
+                        <span className="text-muted">{k.noValue}</span>
+                      ) : (
+                        <span>
+                          {k.stake}:{" "}
+                          <span className="font-mono text-fg">{formatEuro(s.kelly ?? 0)}</span>
+                          {lim?.max_stake != null &&
+                          s.kelly !== null &&
+                          s.kelly >= Number(lim.max_stake) ? (
+                            <span className="ml-1 text-xs text-muted">({k.capped})</span>
+                          ) : null}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
+
+      <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">{t.bets}</h2>
+        {bets.length > 0 ? (
+          <a
+            href={`/tracker/export?p=${period}`}
+            download
+            className="text-sm text-muted underline underline-offset-2 hover:text-fg"
+          >
+            {t.exportCsv}
+          </a>
+        ) : null}
+      </div>
       <Card scrollLabel={t.bets} className="p-0">
         {bets.length === 0 ? (
           <p className="p-5 text-sm text-muted">{t.noBets}</p>
@@ -233,7 +391,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <Th className="text-right">{t.stake}</Th>
                 <Th>{t.status}</Th>
                 <Th className="text-right">{t.profit}</Th>
-                <Th />
+                <Th>
+                  <span className="sr-only">{c.actions}</span>
+                </Th>
               </tr>
             </thead>
             <tbody>
@@ -271,7 +431,9 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                       {t.statuses[bet.status]}
                     </Badge>
                   </td>
-                  <td className="px-3 py-3 text-right font-mono">{formatEuro(bet.profit)}</td>
+                  <td className="px-3 py-3 text-right font-mono">
+                    <SignedEuro value={bet.profit} />
+                  </td>
                   <td className="px-3 py-3">
                     <div className="flex flex-col gap-2">
                       {bet.status === "OPEN" ? (
@@ -312,7 +474,11 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                       ) : null}
                       <ActionForm action={deleteBet} className="inline">
                         <input type="hidden" name="betId" value={bet.id} />
-                        <SubmitButton variant="ghost" className="h-7 px-2 text-xs">
+                        <SubmitButton
+                          variant="ghost"
+                          className="h-7 px-2 text-xs hover:text-negative-strong"
+                          confirmMessage={c.confirmDelete}
+                        >
                           {t.deleteBet}
                         </SubmitButton>
                       </ActionForm>

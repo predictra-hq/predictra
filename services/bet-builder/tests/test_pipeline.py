@@ -5,7 +5,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from predictra_bet_builder.pipeline import parse_interval, run
-from predictra_bet_builder.rules import DEFAULT_RULES
+from predictra_bet_builder.rules import DEFAULT_RULES, Rules
+
+# Regole precedenti all'ADR 0028 (solo modello, tutti i bookmaker): i test qui sotto
+# verificano lettura, scelta della quota e scrittura con il comportamento originale.
+LEGACY = Rules(rules_version="2026.11.08-1", market_weight=0.0, italian_bookmakers_only=False)
 
 NOW = datetime(2026, 11, 20, 8, 0, tzinfo=UTC)
 
@@ -92,7 +96,7 @@ class FakeStore:
             if e["match_id"] in set(match_ids)
         ]
 
-    def h2h_snapshots(self, event_ids):
+    def market_snapshots(self, event_ids):
         return [s for s in self.snaps if s["event_id"] in set(event_ids)]
 
     def odds_max_age(self):
@@ -122,8 +126,8 @@ def test_intervalli_di_postgres():
 
 def test_run_completa():
     store = FakeStore()
-    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234", triggered_by="schedule")
-    assert store.started == [{"model": 7, "rules": DEFAULT_RULES.as_json(), "by": "schedule"}]
+    summary = run(store, LEGACY, now=NOW, code_commit="abc1234", triggered_by="schedule")
+    assert store.started == [{"model": 7, "rules": LEGACY.as_json(), "by": "schedule"}]
     items = [i for batch in store.recorded for i in batch]
     # Partita 1 casa con la quota più recente e più alta ammessa (demo_a 2,50, snapshot 12).
     single = next(i for i in items if i["category"] == "CONSERVATIVE")
@@ -140,7 +144,7 @@ def test_run_completa():
 def test_zero_proposte_resta_una_run_riuscita():
     store = FakeStore()
     store.snaps = [s for s in store.snaps if s["selection"] == "DRAW"]  # solo EV negativo
-    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234")
+    summary = run(store, LEGACY, now=NOW, code_commit="abc1234")
     assert summary.proposals == []
     assert store.recorded == []
     # Il pareggio non supera le soglie per selezione: nessuna combinazione da valutare.
@@ -149,14 +153,14 @@ def test_zero_proposte_resta_una_run_riuscita():
 
 def test_senza_modello_attivo_nessuna_run():
     store = FakeStore(model=None)
-    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234")
+    summary = run(store, LEGACY, now=NOW, code_commit="abc1234")
     assert summary.skipped_reason == "nessun modello attivo"
     assert store.started == []
 
 
 def test_dry_run_non_scrive():
     store = FakeStore()
-    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234", dry_run=True)
+    summary = run(store, LEGACY, now=NOW, code_commit="abc1234", dry_run=True)
     assert summary.proposals
     assert store.started == [] and store.recorded == [] and store.finished == []
 
@@ -164,7 +168,7 @@ def test_dry_run_non_scrive():
 def test_errore_chiude_la_run_come_fallita():
     store = FakeStore(fail=True)
     with pytest.raises(RuntimeError):
-        run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234")
+        run(store, LEGACY, now=NOW, code_commit="abc1234")
     assert store.finished[0][1] == "FAILED"
     assert "sotto le soglie" in store.finished[0][3]
 
@@ -172,5 +176,94 @@ def test_errore_chiude_la_run_come_fallita():
 def test_partite_troppo_vicine_al_calcio_d_inizio_escluse():
     store = FakeStore()
     store.fixtures[0]["kickoff_at"] = iso(timedelta(minutes=10))
-    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234", dry_run=True)
+    summary = run(store, LEGACY, now=NOW, code_commit="abc1234", dry_run=True)
     assert all(leg.match_id == 2 for p in summary.proposals for leg in p.legs)
+
+
+def test_adr_0028_mercato_e_solo_bookmaker_italiani():
+    """Probabilità usata = media modello/mercato; quota giocabile solo da bookmaker italiani."""
+    store = FakeStore()
+    fresh = iso(timedelta(hours=-1))
+    t = iso(timedelta(hours=-3))
+    # Partita 1: due bookmaker completi (uno internazionale, uno italiano) per il consenso.
+    store.snaps = [
+        store._s(31, 101, "demo_int", "HOME", 2.00, t, fresh),
+        store._s(32, 101, "demo_int", "DRAW", 3.50, t, fresh),
+        store._s(33, 101, "demo_int", "AWAY", 4.00, t, fresh),
+        store._s(41, 101, "demo_it", "HOME", 2.40, t, fresh),
+        store._s(42, 101, "demo_it", "DRAW", 3.30, t, fresh),
+        store._s(43, 101, "demo_it", "AWAY", 3.20, t, fresh),
+        # Quota internazionale più alta sulla partita 2: non giocabile in Italia.
+        store._s(51, 102, "demo_int", "HOME", 9.00, t, fresh),
+    ]
+    summary = run(store, DEFAULT_RULES, now=NOW, code_commit="abc1234", dry_run=True)
+    legs = {leg.prediction_id: leg for p in summary.proposals for leg in p.legs}
+    assert set(legs) == {2}  # partita 2 senza quote italiane: esclusa
+    leg = legs[2]
+    assert leg.bookmaker == "demo_it" and float(leg.price) == 2.40
+    # Consenso casa: media di (1/2,00)/Σ e (1/2,40)/Σ per i due bookmaker.
+    s_int = 1 / 2.00 + 1 / 3.50 + 1 / 4.00
+    s_it = 1 / 2.40 + 1 / 3.30 + 1 / 3.20
+    market = ((1 / 2.00) / s_int + (1 / 2.40) / s_it) / 2
+    assert float(leg.market_probability) == pytest.approx(market, abs=1e-8)
+    assert float(leg.model_probability) == 0.5
+    assert float(leg.probability) == pytest.approx(0.5 * 0.5 + 0.5 * market, abs=1e-8)
+    item = summary.proposals[0].as_batch_item(DEFAULT_RULES)
+    assert item["legs"][0]["market_probability"] == pytest.approx(market, abs=1e-8)
+
+
+def test_adr_0033_tutti_i_mercati_con_quote_italiane():
+    """1X2, doppia chance e under/over: consenso per mercato, quota solo italiana."""
+    store = FakeStore()
+    fresh = iso(timedelta(hours=-1))
+    t = iso(timedelta(hours=-3))
+
+    def snap(sid, book, market, sel, price):
+        s = store._s(sid, 101, book, sel, price, t, fresh)
+        s["market"] = market
+        return s
+
+    store.snaps = [
+        # 1X2 di un bookmaker estero: serve solo al consenso (anche per la doppia chance).
+        snap(1, "demo_int", "h2h", "HOME", 2.0),
+        snap(2, "demo_int", "h2h", "DRAW", 3.5),
+        snap(3, "demo_int", "h2h", "AWAY", 4.0),
+        # Doppia chance e under/over 2,5 di un bookmaker italiano.
+        snap(4, "demo_it", "double_chance", "HOME_DRAW", 1.45),
+        snap(5, "demo_it", "double_chance", "HOME_AWAY", 1.35),
+        snap(6, "demo_it", "double_chance", "DRAW_AWAY", 2.0),
+        snap(7, "demo_it", "totals_2_5", "OVER", 2.2),
+        snap(8, "demo_it", "totals_2_5", "UNDER", 1.6),
+        snap(9, "demo_int", "totals_2_5", "OVER", 2.0),
+        snap(10, "demo_int", "totals_2_5", "UNDER", 1.8),
+    ]
+    store.preds = [
+        {**store._p(31, 1, "HOME_DRAW", 0.75, iso(timedelta(hours=-2))), "market": "DOUBLE_CHANCE"},
+        {
+            **store._p(32, 1, "OVER", 0.55, iso(timedelta(hours=-2))),
+            "market": "TOTAL_GOALS",
+            "line": 2.5,
+        },
+        # Linea senza quote (3,0) e mercato senza quote (BTTS): ignorati.
+        {
+            **store._p(33, 1, "OVER", 0.4, iso(timedelta(hours=-2))),
+            "market": "TOTAL_GOALS",
+            "line": 3.0,
+        },
+        {**store._p(34, 1, "YES", 0.6, iso(timedelta(hours=-2))), "market": "BTTS"},
+    ]
+    from predictra_bet_builder.pipeline import collect_legs
+
+    legs, _ = collect_legs(store, 7, NOW, timedelta(days=10), DEFAULT_RULES)
+    by = {(leg.market, leg.selection): leg for leg in legs}
+    assert set(by) == {("DOUBLE_CHANCE", "HOME_DRAW"), ("TOTAL_GOALS", "OVER")}
+    dc = by[("DOUBLE_CHANCE", "HOME_DRAW")]
+    s = 1 / 2.0 + 1 / 3.5 + 1 / 4.0
+    assert float(dc.market_probability) == pytest.approx((1 / 2.0 + 1 / 3.5) / s, abs=1e-8)
+    assert dc.bookmaker == "demo_it" and float(dc.price) == 1.45
+    over = by[("TOTAL_GOALS", "OVER")]
+    m_it = (1 / 2.2) / (1 / 2.2 + 1 / 1.6)
+    m_int = (1 / 2.0) / (1 / 2.0 + 1 / 1.8)
+    assert float(over.market_probability) == pytest.approx((m_it + m_int) / 2, abs=1e-8)
+    assert over.line == 2.5 and float(over.price) == 2.2
+    assert float(over.probability) == pytest.approx(0.5 * 0.55 + 0.5 * (m_it + m_int) / 2, abs=1e-8)

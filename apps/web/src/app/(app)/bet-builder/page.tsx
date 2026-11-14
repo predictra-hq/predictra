@@ -12,22 +12,53 @@ import {
   BetBuilderNav,
   CategoryBadge,
   Metrics,
+  StakeSimulation,
 } from "@/components/bet-builder/shared";
-import { Alert, Badge, Button, Card, PageHeader, Select } from "@/components/ui/primitives";
+import { FilterForm } from "@/components/ui/filter-form";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  Input,
+  PageHeader,
+  Select,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
-  formatSlateDate,
+  formatRound,
   parseCategory,
   parseSlateDate,
+  parseStake,
+  roundStartOf,
   selectionLabel,
 } from "@/lib/bet-builder/format";
-import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
+import { BolletteCard } from "@/components/bet-builder/bollette";
+import { LikelyCard } from "@/components/bet-builder/likely";
+import { buildBollette } from "@/lib/bet-builder/bollette";
+import { bestItalianPrices, bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
+import {
+  getLatestRun,
+  listActiveProposals,
+  listItalianLatestOdds,
+  listLikelyRows,
+  listProposalLegs,
+} from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Smart Bet Builder" };
+export const metadata: Metadata = { title: "Bollette" };
 
-function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalLegRow[] }) {
+function ProposalCard({
+  p,
+  legs,
+  stake,
+}: {
+  p: ActiveBetProposalRow;
+  legs: BetProposalLegRow[];
+  stake: number | null;
+}) {
   const m = getMessages().betBuilder;
   return (
     <Card className="flex flex-col gap-3">
@@ -38,7 +69,7 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
           {m.rank} {p.rank}
         </span>
         <Link
-          href={`/bet-builder/${p.proposal_id}`}
+          href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
           className="ml-auto text-sm text-positive hover:underline"
         >
           {m.details}
@@ -52,8 +83,9 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
                 {l.home_team_name} – {l.away_team_name}
               </span>{" "}
               <span className="text-muted">
-                · {selectionLabel(l.selection, l.home_team_name, l.away_team_name)} ·{" "}
-                {formatDateTime(l.kickoff_at)}
+                ·{" "}
+                {selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}{" "}
+                · {formatDateTime(l.kickoff_at)}
               </span>
             </span>
             <span className="font-mono text-xs text-muted">
@@ -68,6 +100,9 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
         expectedValue={p.expected_value}
         confidence={p.confidence_score}
       />
+      {stake !== null && p.combined_price !== null && p.probability !== null ? (
+        <StakeSimulation stake={stake} price={p.combined_price} probability={p.probability} />
+      ) : null}
       {p.legs_stale > 0 ? (
         <Alert tone="warning">{fillTemplate(m.staleWarning, { n: p.legs_stale })}</Alert>
       ) : null}
@@ -82,28 +117,38 @@ function ProposalCard({ p, legs }: { p: ActiveBetProposalRow; legs: BetProposalL
   );
 }
 
-function EmptyState({ run }: { run: BetBuilderLatestRunRow | null }) {
+function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   const m = getMessages().betBuilder;
   const text = !run ? m.emptyNoRun : run.status === "FAILED" ? m.emptyFailed : m.emptyZero;
-  return (
-    <Card>
-      <p className="text-sm">{text}</p>
-    </Card>
-  );
+  return <EmptyState>{text}</EmptyState>;
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
   await requireUser();
   const m = getMessages().betBuilder;
   const params = await searchParams;
-  const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
+  const [run, proposals, likelyRows] = await Promise.all([
+    getLatestRun(),
+    listActiveProposals(),
+    listLikelyRows(new Date()),
+  ]);
+  const picks = bestPicks(likelyRows);
+  // Quote italiane di tutte le partite con previsioni: servono anche alle bollette.
+  const matchIds = [...new Set(likelyRows.map((r) => Number(r.match_id)))];
+  const italianOdds = bestItalianPrices(await listItalianLatestOdds(matchIds));
+  const bollette = buildBollette(likelyRows, italianOdds);
 
-  const slates = [...new Set(proposals.map((p) => p.slate_date))];
+  // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
+  const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
   const slate = parseSlateDate(params.d);
   const category = parseCategory(params.cat);
-  const shown = proposals.filter(
-    (p) => (!slate || p.slate_date === slate) && (!category || p.category === category),
-  );
+  const stake = parseStake(params.s);
+  const shown = proposals
+    .filter(
+      (p) =>
+        (!slate || roundStartOf(p.slate_date) === slate) && (!category || p.category === category),
+    )
+    .sort((a, b) => a.rank - b.rank);
   const legs = await listProposalLegs(shown.map((p) => p.proposal_id));
   const legsBy = new Map<number, BetProposalLegRow[]>();
   for (const l of legs) legsBy.set(l.proposal_id, [...(legsBy.get(l.proposal_id) ?? []), l]);
@@ -117,36 +162,43 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <p className="mb-1 text-xs text-muted">
-        {fillTemplate(m.thresholds, {
-          ev: formatPercent(rules.min_expected_value, 0),
-          p: formatPercent(rules.min_probability, 0),
-          c: String(rules.min_confidence_score).replace(".", ","),
-          legs: rules.max_legs,
-        })}
-      </p>
-      {run ? (
-        <p className="mb-4 text-xs text-muted">
-          {fillTemplate(m.lastRun, {
-            at: formatDateTime(run.finished_at ?? run.started_at),
-            candidates: run.candidates_evaluated,
-            proposals: run.proposals_written,
+      <BolletteCard bollette={bollette} stake={stake} now={new Date()} />
+
+      <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
+      <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+      <details className="mb-4 text-xs text-muted">
+        <summary className="cursor-pointer">{m.technicalDetails}</summary>
+        <p className="mb-1 mt-2 text-xs text-muted">
+          {fillTemplate(m.thresholds, {
+            ev: formatPercent(rules.min_expected_value, 0),
+            p: formatPercent(rules.min_probability, 0),
+            c: String(rules.min_confidence_score).replace(".", ","),
+            legs: rules.max_legs,
           })}
         </p>
-      ) : null}
+        {run ? (
+          <p className="mb-4 text-xs text-muted">
+            {fillTemplate(m.lastRun, {
+              at: formatDateTime(run.finished_at ?? run.started_at),
+              candidates: run.candidates_evaluated,
+              proposals: run.proposals_written,
+            })}
+          </p>
+        ) : null}
+      </details>
 
       {proposals.length === 0 ? (
-        <EmptyState run={run} />
+        <NoProposals run={run} />
       ) : (
         <>
-          <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
+          <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-xs text-muted">{m.slate}</span>
               <Select name="d" defaultValue={slate ?? ""}>
                 <option value="">{m.allSlates}</option>
                 {slates.map((d) => (
                   <option key={d} value={d}>
-                    {formatSlateDate(d)}
+                    {formatRound(d)}
                   </option>
                 ))}
               </Select>
@@ -162,19 +214,32 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                 ))}
               </Select>
             </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-xs text-muted">{m.stake}</span>
+              <Input
+                name="s"
+                inputMode="decimal"
+                placeholder={m.stakePlaceholder}
+                defaultValue={typeof params.s === "string" ? params.s : ""}
+                className="w-40"
+              />
+            </label>
             <Button type="submit" variant="secondary">
               {m.show}
             </Button>
-          </form>
+          </FilterForm>
 
+          {shown.length === 0 ? <EmptyState>{m.emptyFiltered}</EmptyState> : null}
           {slates
             .filter((d) => !slate || d === slate)
             .map((d) => {
-              const day = shown.filter((p) => p.slate_date === d);
+              const day = shown.filter((p) => roundStartOf(p.slate_date) === d);
               if (day.length === 0) return null;
               return (
                 <section key={d} className="mb-6">
-                  <h2 className="mb-3 text-lg font-semibold capitalize">{formatSlateDate(d)}</h2>
+                  <h2 className="mb-3 text-lg font-semibold">
+                    {fillTemplate(m.roundTitle, { round: formatRound(d) })}
+                  </h2>
                   {BET_PROPOSAL_CATEGORIES.map((c) => {
                     const group = day.filter((p) => p.category === c);
                     if (group.length === 0) return null;
@@ -190,6 +255,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                               key={p.proposal_id}
                               p={p}
                               legs={legsBy.get(p.proposal_id) ?? []}
+                              stake={stake}
                             />
                           ))}
                         </div>
@@ -201,6 +267,16 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
             })}
         </>
       )}
+
+      <details className="mb-6">
+        <summary className="mb-3 cursor-pointer text-sm text-positive">{m.likelyToggle}</summary>
+        <LikelyCard
+          picks={picks}
+          multiples={likelyMultiples(picks)}
+          prices={italianOdds}
+          stake={stake}
+        />
+      </details>
     </>
   );
 }

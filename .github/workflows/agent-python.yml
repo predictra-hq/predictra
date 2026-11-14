@@ -47,7 +47,7 @@ on:
         type: number
         default: 10
       plan_football_data:
-        description: "Accoda la finestra corrente di raccolta football-data.org (come lo schedule)"
+        description: "Accoda la finestra corrente di raccolta football-data.org (come lo schedule) e il job giornaliero di statistiche e formazioni API-Football"
         type: boolean
         default: false
       plan_odds:
@@ -81,8 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
       - name: Dipendenze
         run: uv sync --locked
       - name: Formattazione
@@ -102,6 +102,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
       FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
     steps:
       - name: Verifica segreti
         id: secrets
@@ -116,7 +117,7 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.secrets.outputs.skip != 'true'
         with:
           # Schedule: sempre il codice di dev. Avvio manuale: il branch scelto in "Run workflow".
@@ -124,7 +125,7 @@ jobs:
           # Storia completa: le versioni dipendono dall'ultimo commit di ogni servizio (ADR 0020).
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         if: steps.secrets.outputs.skip != 'true'
 
       - name: Dipendenze

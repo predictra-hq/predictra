@@ -5,6 +5,9 @@ name: Data collector
 # - Dall'8/11/2026 le raccolte automatiche le fa l'agente (workflow "Agent (Python)",
 #   M7 fase A5): football-data.org ogni 3 ore (job football-data.collect) e quote
 #   The Odds API daily e prematch (job odds.collect). Qui resta l'avvio manuale.
+# - api-football-probe: verifica del piano API-Football (stagioni accessibili), M2 fase A3.
+# - api-football-backfill: storico 2022-2024 da API-Football (risultati), M2 fase A3.
+# - api-football-rescore: lo stesso storico riscaricato, dopo una correzione (ADR 0034).
 # - Avvio manuale con la scelta del lavoro.
 #   L'avvio manuale funziona solo quando questo file è sul branch di default
 #   (main) ed esegue il codice del branch scelto (usare `dev`).
@@ -25,7 +28,16 @@ on:
       job:
         description: "Lavoro"
         type: choice
-        options: [football-data, odds-daily, odds-prematch]
+        options:
+          [
+            football-data,
+            odds-daily,
+            odds-prematch,
+            api-football-probe,
+            api-football-backfill,
+            api-football-rescore,
+            api-football-details,
+          ]
         default: football-data
       competitions:
         description: "Codici separati da virgola (vuoto = tutte le competizioni della v1)"
@@ -54,8 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
       - name: Dipendenze
         run: uv sync --locked
       - name: Formattazione
@@ -74,6 +86,7 @@ jobs:
       JOB: ${{ inputs.job }}
       FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
       SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
       SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
     steps:
@@ -84,6 +97,7 @@ jobs:
           case "$JOB" in
             football-data) needed="FOOTBALL_DATA_API_KEY" ;;
             odds-*) needed="ODDS_API_KEY" ;;
+            api-football-*) needed="API_FOOTBALL_KEY" ;;
             *) echo "::error::Lavoro sconosciuto: $JOB"; exit 1 ;;
           esac
           missing=""
@@ -95,13 +109,13 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.secrets.outputs.skip != 'true'
         with:
           # Schedule: sempre il codice di dev. Avvio manuale: il branch scelto in "Run workflow".
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v7
         if: steps.secrets.outputs.skip != 'true'
 
       - name: Dipendenze
@@ -120,6 +134,14 @@ jobs:
             football-data) args=(run) ;;
             odds-daily) args=(odds --mode daily) ;;
             odds-prematch) args=(odds --mode prematch) ;;
+            # Verifica del piano API-Football: non scrive nulla, al massimo 6 richieste.
+            api-football-probe) uv run python -m predictra_collector api-football-probe; exit $? ;;
+            # Storico 2022-2024 (M2 fase A3): riprende dalle stagioni mancanti, al massimo 32 richieste.
+            api-football-backfill) args=(api-football-backfill) ;;
+            # Riscarica tutto lo storico con la normalizzazione attuale (ADR 0034): 32 richieste.
+            api-football-rescore) args=(api-football-backfill --refresh) ;;
+            # Statistiche e formazioni (ADR 0012): riprende dal punto in cui si era fermato.
+            api-football-details) args=(api-football-details) ;;
           esac
           args+=(--triggered-by "$TRIGGERED_BY")
           if [ -n "$COMPETITIONS" ]; then args+=(--competitions "$COMPETITIONS"); fi

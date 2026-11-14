@@ -177,3 +177,49 @@ export interface SourceHealthRow {
   freshness: FreshnessStatus | null;
   health: SourceHealthState;
 }
+
+/** Ruoli nelle formazioni di API-Football (`pos`): portiere, difensore, centrocampista, attaccante. */
+export const LINEUP_POSITIONS = ["G", "D", "M", "F"] as const;
+export type LineupPosition = (typeof LINEUP_POSITIONS)[number];
+
+/** Riga di `match_team_statistics` (ADR 0012): una voce statistica per squadra e partita. */
+export interface MatchTeamStatisticRow {
+  match_id: number;
+  team_id: number;
+  provider: FootballProvider;
+  provider_match_id: string;
+  /** Nome della voce del provider in snake_case, es. `shots_on_goal`, `passes_pct`. */
+  stat: string;
+  /** Numero; le percentuali sono 0–100. `null` se il provider non ha il dato. */
+  value: number | null;
+  observed_at: string;
+  event_time: string;
+  quality: QualityStatus;
+}
+
+/** Riga di `match_lineups` (ADR 0012). */
+export interface MatchLineupRow {
+  match_id: number;
+  team_id: number;
+  provider: FootballProvider;
+  provider_match_id: string;
+  formation: string | null;
+  coach_provider_id: string | null;
+  coach_name: string | null;
+  observed_at: string;
+  event_time: string;
+  quality: QualityStatus;
+}
+
+/** Riga di `match_lineup_players` (ADR 0012). */
+export interface MatchLineupPlayerRow {
+  match_id: number;
+  team_id: number;
+  provider: FootballProvider;
+  player_provider_id: string;
+  player_name: string;
+  shirt_number: number | null;
+  position: LineupPosition | null;
+  grid: string | null;
+  is_starter: boolean;
+}

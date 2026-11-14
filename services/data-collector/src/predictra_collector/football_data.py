@@ -215,13 +215,21 @@ def normalize_competition(
         score = raw.get("score") or {}
         full = score.get("fullTime") or {}
         half = score.get("halfTime") or {}
-        home_score, away_score = full.get("home"), full.get("away")
+        duration = score.get("duration") if score.get("duration") in SCORE_DURATIONS else None
+        # Supplementari o rigori: si conserva il risultato al 90' (ADR 0034), da
+        # `regularTime` quando la risposta lo contiene. Senza, resta l'avviso.
+        regular = score.get("regularTime") or {}
+        non_regular = duration in {"EXTRA_TIME", "PENALTY_SHOOTOUT"}
+        regular_known = regular.get("home") is not None and regular.get("away") is not None
+        if non_regular and regular_known:
+            home_score, away_score = regular.get("home"), regular.get("away")
+        else:
+            home_score, away_score = full.get("home"), full.get("away")
         if (home_score is None) != (away_score is None):
             home_score = away_score = None
         ht_home, ht_away = half.get("home"), half.get("away")
         if (ht_home is None) != (ht_away is None):
             ht_home = ht_away = None
-        duration = score.get("duration") if score.get("duration") in SCORE_DURATIONS else None
 
         quality = "OK"
         if status in FINAL_STATUSES and home_score is None:
@@ -234,8 +242,8 @@ def normalize_competition(
             issues.append(
                 _issue("match.score_unexpected", "WARNING", "match", match_id, status=raw_status)
             )
-        if status in FINAL_STATUSES and duration in {"EXTRA_TIME", "PENALTY_SHOOTOUT"}:
-            # Da verificare con dati reali: se fullTime includa supplementari e rigori.
+        if status in FINAL_STATUSES and non_regular and not regular_known:
+            # Risultato al 90' non disponibile: `fullTime` può includere supplementari.
             quality = "WARNING" if quality == "OK" else quality
             issues.append(
                 _issue("match.score_non_regular", "WARNING", "match", match_id, duration=duration)

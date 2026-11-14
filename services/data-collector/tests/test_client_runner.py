@@ -63,6 +63,10 @@ class FakeStore:
         self.calls.append(("ingest", run_id, len(batch["matches"])))
         return {"matches": len(batch["matches"]), "teams": len(batch["teams"])}
 
+    def resolve_issues(self, run_id, check_codes, ids):
+
+        self.resolved = getattr(self, "resolved", []) + list(ids)
+
     def report_issues(self, run_id, issues):
         self.calls.append(("issues", run_id, len(issues)))
 

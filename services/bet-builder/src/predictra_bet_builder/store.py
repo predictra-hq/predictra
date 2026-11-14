@@ -13,6 +13,10 @@ PAGE = 1000
 CHUNK = 100  # id per filtro `in.(...)`, per restare sotto i limiti di lunghezza dell'URL
 
 
+# Mercati di quote letti dal motore (ADR 0033): 1X2, doppia chance, under/over .5.
+ODDS_MARKETS = ("h2h", "double_chance", *(f"totals_{n}_5" for n in range(6)))
+
+
 class StoreError(RuntimeError):
     """Errore di Supabase. Non contiene mai la chiave."""
 
@@ -98,7 +102,8 @@ class SupabaseStore:
                     "select": "id,match_id,market,line,selection,probability,push_probability,"
                     "confidence_score,as_of",
                     "model_version_id": f"eq.{model_version_id}",
-                    "market": "eq.1X2",
+                    # Mercati con quote reali (ADR 0033): 1X2, doppia chance, under/over.
+                    "market": "in.(1X2,DOUBLE_CHANCE,TOTAL_GOALS)",
                     "match_id": _in(chunk),
                     "order": "id",
                 },
@@ -114,15 +119,15 @@ class SupabaseStore:
             ),
         )
 
-    def h2h_snapshots(self, event_ids: Iterable[int]) -> list[dict[str, Any]]:
+    def market_snapshots(self, event_ids: Iterable[int]) -> list[dict[str, Any]]:
         return self._by_ids(
             event_ids,
             lambda chunk: self._paged(
                 "odds_snapshots",
                 {
-                    "select": "id,event_id,bookmaker,selection,price,provider,event_time,"
+                    "select": "id,event_id,bookmaker,market,selection,price,provider,event_time,"
                     "observed_at,quality",
-                    "market": "eq.h2h",
+                    "market": f"in.({','.join(ODDS_MARKETS)})",
                     "event_id": _in(chunk),
                     "order": "id",
                 },

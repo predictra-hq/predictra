@@ -18,6 +18,9 @@ class Store(Protocol):
     ) -> int: ...
     def ingest(self, run_id: int, batch: dict[str, Any]) -> dict[str, Any]: ...
     def report_issues(self, run_id: int, issues: list[dict[str, Any]]) -> None: ...
+    def resolve_issues(
+        self, run_id: int, check_codes: tuple[str, ...], provider_entity_ids: list[str]
+    ) -> None: ...
     def finish_run(
         self,
         run_id: int,
@@ -52,6 +55,22 @@ class RunSummary:
 
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
+
+
+# Controlli sul punteggio: chiusi da soli quando la partita torna senza problemi (ADR 0034).
+SCORE_CHECKS = ("match.score_missing", "match.score_non_regular", "match.score_unexpected")
+
+
+def resolvable_matches(batch: dict[str, Any] | None, issues: list[dict[str, Any]]) -> list[str]:
+    """ID provider delle partite del lotto senza problemi di punteggio in questa raccolta."""
+    if not batch:
+        return []
+    flagged = {
+        i.get("provider_entity_id")
+        for i in issues
+        if i.get("entity_type") == "match" and i.get("check_code") in SCORE_CHECKS
+    }
+    return [m["provider_id"] for m in batch.get("matches") or [] if m["provider_id"] not in flagged]
 
 
 def sanitize(message: str, secrets: tuple[str, ...]) -> str:
@@ -107,6 +126,7 @@ def run(
                     written = store.ingest(run_id, batch)
                     rows = int(written.get("matches", 0)) + int(written.get("teams", 0))
                 store.report_issues(run_id, issues)
+                store.resolve_issues(run_id, SCORE_CHECKS, resolvable_matches(batch, issues))
                 store.finish_run(
                     run_id,
                     result.status,
