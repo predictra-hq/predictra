@@ -63,7 +63,7 @@ export default async function DataCenterPage() {
                 <FreshnessBadge freshness={s.freshness} />
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
               <Stat label={d.terms}>
                 {s.terms_verified_at ? (
                   `${d.termsVerified} ${new Date(s.terms_verified_at).toLocaleDateString("it-IT")}`
