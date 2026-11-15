@@ -192,6 +192,12 @@ Banco di prova, Dixon-Coles walk-forward (λ casa, λ ospite, ρ), stima su 2024
 - Con parametri diversi per linea il guadagno è in parte adattamento; con parametri comuni (k 1,027, r 59,7) quasi sparisce e l'Over 3,5 peggiora. **Non adottato.**
 - Taratura per famiglia di mercato, p′ = σ(a·logit p + b), stimata su 2024-25: doppia chance a 0,984, 1X2 a 0,984, under/over a 0,973 (nessun guadagno sul 2025-26); gol/no gol a 0,707 (Log Loss da 0,6897 a 0,6880: il modello è troppo sicuro, ma queste giocate quasi mai superano il 70%). **Non adottata**: le differenze sulle fasce alte del 2025-26 (under/over 85–90%: 86,9% previsto, 84,0% uscito) non si ripetono sul 2024-25.
 
+## Peso del mercato (15/11/2026)
+
+Comando `market` (sola lettura): partite finite degli ultimi 60 giorni con l'ultima previsione fatta prima del calcio d'inizio (vista `v_pre_kickoff_predictions`, stessa famiglia del modello attivo) e quote 1X2 osservate prima del via, senza margine e mediate tra i bookmaker.
+
+Prima misura ([run 48](https://github.com/predictra-hq/predictra/actions/runs/43728372630)), **19 partite**: modello 0,8136, mercato 0,8072, combinata con peso 0,5 (in uso) 0,8063, con peso 0,6–0,7 0,8057. La combinazione batte modello e mercato da soli; tra 0,5 e 0,7 la differenza è rumore su 19 partite: **peso invariato a 0,5**. Da rilanciare quando le partite saranno qualche centinaio.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
