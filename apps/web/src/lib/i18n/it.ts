@@ -185,6 +185,9 @@ export const it = {
     decimal: "Decimale",
     italian: "Italiano",
     saved: "Preferenze salvate.",
+    theme: "Tema",
+    themeHint: "Vale per questo browser e si applica subito.",
+    themes: { dark: "Scuro", light: "Chiaro" },
   },
   admin: {
     invitationsTitle: "Inviti",

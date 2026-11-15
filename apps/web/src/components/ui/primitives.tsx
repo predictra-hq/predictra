@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
 
 const buttonVariants: Record<ButtonVariant, string> = {
-  primary: "bg-positive text-black hover:bg-positive-strong",
+  primary: "bg-positive text-on-positive hover:bg-positive-strong",
   secondary: "border border-border-strong bg-surface-2 text-fg hover:bg-border",
   danger: "border border-negative/40 bg-negative-soft text-negative-strong hover:bg-negative/20",
   ghost: "text-muted hover:bg-surface-2 hover:text-fg",

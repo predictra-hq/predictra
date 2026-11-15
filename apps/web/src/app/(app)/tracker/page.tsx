@@ -202,7 +202,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
               <CardTitle>{t.addBet}</CardTitle>
-              <span className="rounded-lg bg-positive px-3 py-1.5 text-sm font-medium text-black group-open:hidden">
+              <span className="rounded-lg bg-positive px-3 py-1.5 text-sm font-medium text-on-positive group-open:hidden">
                 {t.addBetOpen}
               </span>
             </summary>
