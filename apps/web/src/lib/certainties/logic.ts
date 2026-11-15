@@ -6,14 +6,20 @@ import type { ActivePredictionRow, PredictionMarket } from "@predictra/shared-ty
  * filtrano, si tolgono i doppioni e si verifica quante volte la stessa fascia è uscita.
  */
 
-/** Mercati con esito secco, sempre risolvibili dal risultato al 90'. */
+/**
+ * Mercati giocabili con quote italiane e con esito secco: 1X2, doppia chance,
+ * under/over e gol/no gol. Le linee estreme (Over 0,5, Under 4,5) sono quasi sempre
+ * vere ma a quote che non fanno guadagnare: restano fuori.
+ */
 export const CERTAINTY_MARKETS: readonly PredictionMarket[] = [
   "1X2",
   "DOUBLE_CHANCE",
   "TOTAL_GOALS",
   "BTTS",
-  "TEAM_GOALS",
 ];
+export const TOTAL_LINES: readonly number[] = [1.5, 2.5, 3.5];
+/** Giocate mostrate per partita: le più probabili. */
+export const MAX_PICKS_PER_MATCH = 3;
 
 export const THRESHOLDS = [0.7, 0.75, 0.8, 0.85, 0.9] as const;
 export const DEFAULT_THRESHOLD = 0.75;
@@ -67,9 +73,8 @@ export function parseThreshold(value: unknown): number {
 
 function isEligible(row: ActivePredictionRow): boolean {
   if (!CERTAINTY_MARKETS.includes(row.market)) return false;
-  // Le linee intere hanno il rimborso: restano fuori.
-  if (row.line !== null && Number.isInteger(Number(row.line))) return false;
-  return true;
+  if (row.market === "TOTAL_GOALS") return TOTAL_LINES.includes(Number(row.line));
+  return row.line === null;
 }
 
 export function toPick(
@@ -128,7 +133,13 @@ export function selectPicks(
     .map((r) => toPick(r, market, weight))
     .filter((p) => p.probability >= threshold);
   const kept = candidates.filter((b) => !candidates.some((a) => a !== b && implies(a, b)));
-  return kept.sort(
+  // Al massimo MAX_PICKS_PER_MATCH per partita, le più probabili.
+  const perMatch = new Map<number, Pick[]>();
+  for (const p of kept) perMatch.set(p.matchId, [...(perMatch.get(p.matchId) ?? []), p]);
+  const limited = [...perMatch.values()].flatMap((list) =>
+    list.sort((a, b) => b.probability - a.probability).slice(0, MAX_PICKS_PER_MATCH),
+  );
+  return limited.sort(
     (a, b) =>
       a.kickoffAt.localeCompare(b.kickoffAt) ||
       a.matchId - b.matchId ||

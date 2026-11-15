@@ -9,6 +9,16 @@ import {
 
 export type Tone = "neutral" | "positive" | "negative" | "warning";
 
+/** Linee del totale gol mostrate subito; le altre (estreme o con rimborso) sono in "Altri mercati". */
+export const PRIMARY_TOTAL_LINES: readonly number[] = [1.5, 2.5, 3.5];
+
+/** Vero se il gruppo va mostrato subito e non in "Altri mercati". */
+export function isPrimaryGroup(group: { market: PredictionMarket; line: number | null }): boolean {
+  if (!PRIMARY_MARKETS.includes(group.market)) return false;
+  if (group.market === "TOTAL_GOALS") return PRIMARY_TOTAL_LINES.includes(group.line ?? -1);
+  return group.market !== "DNB";
+}
+
 /** Mercati mostrati subito; gli altri finiscono in "Altri mercati". */
 export const PRIMARY_MARKETS: readonly PredictionMarket[] = [
   "1X2",
