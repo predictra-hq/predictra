@@ -86,6 +86,7 @@ export const it = {
     audit: "Audit",
     teamAliases: "Alias squadre",
     agent: "Agente",
+    quickNav: "Pagine principali",
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
   },
