@@ -137,6 +137,21 @@ Banco di prova dell'[ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse
 - **Nella combinazione:** al massimo 0,9877 (K 25, scarto gol 0,5, neopromosse −100), cioè 0,0004 in meno. È dentro il rumore su 3.483 partite: **nessuna modifica adottata**. Il ritorno verso la media peggiora sempre.
 - **Conclusione:** con i soli gol il modello è al suo limite. L'informazione in più viene dalle quote: dal 15/11/2026 la pagina _Certezze_ usa la probabilità combinata modello/mercato (peso 0,5, come il Bet Builder, ADR 0028) e la verifica per fascia sulle partite finite.
 
+## Probabilità alte: calibrazione e sharpening (15/11/2026)
+
+Stesso banco (3.483 partite), Dixon-Coles + Elo, selezioni 1X2 e doppia chance:
+
+| Fascia    | Selezioni | Previsto | Uscito |
+| --------- | --------- | -------- | ------ |
+| 70–75%    | 2.524     | 72,6%    | 73,2%  |
+| 75–80%    | 1.850     | 77,2%    | 75,4%  |
+| 80–85%    | 1.006     | 82,3%    | 81,7%  |
+| 85–90%    | 616       | 87,1%    | 88,6%  |
+| 90% e più | 280       | 92,5%    | 93,6%  |
+
+- Le probabilità alte sono ben tarate: il modello non è troppo prudente.
+- Sharpening con temperatura (p^a normalizzato): esponente stimato su 2024-25 = 0,987, cioè nessun cambiamento; su 2025-26 (mai vista) il Log Loss resta 0,9926. **Non adottato**: non c'è prudenza da togliere.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
