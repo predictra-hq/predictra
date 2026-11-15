@@ -226,12 +226,29 @@ function watchRuntime(page) {
   });
 }
 
+/**
+ * Pagine di cui stampare il testo visibile nel log (PRINT_TEXT=1): serve a controllare
+ * cosa mostrano davvero, senza scaricare gli screenshot. Solo pagine senza dati personali.
+ */
+const PRINT_TEXT = new Set(["/dashboard", "/certezze", "/match-center", "/match-center/[id]"]);
+
+async function printText(page, label) {
+  if (process.env.PRINT_TEXT !== "1" || !PRINT_TEXT.has(label)) return;
+  const text = await page
+    .locator("main")
+    .innerText()
+    .catch(() => "");
+  const compact = text.replace(/\n{2,}/g, "\n").slice(0, 4000);
+  console.log(`----- TESTO ${label} -----\n${compact}\n----- FINE ${label} -----`);
+}
+
 async function audit(page, path, label = path) {
   runtime = [];
   const response = await page.goto(`${appUrl}${path}`, { waitUntil: "networkidle" });
   const status = response?.status() ?? 0;
   const landed = new URL(page.url()).pathname;
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
+  await printText(page, label);
   if (process.env.SCREENSHOT_DIR && SCREENSHOTS.has(label)) {
     const name = label.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
     await page.screenshot({ path: `${process.env.SCREENSHOT_DIR}/${name}.png`, fullPage: true });
