@@ -37,6 +37,8 @@
 
 ## Lavoro in corso (per chi riprende)
 
+**15/11/2026, pagina Certezze (`/certezze`).** Giocate del modello attivo sopra una soglia scelta (70–90%) su 1X2, doppia chance, under/over a linea mezza, gol/no gol e gol di una squadra, senza doppioni implicati; verifica per fascia sulle partite finite degli ultimi 120 giorni (quante volte la fascia è uscita rispetto al previsto). Solo letture su `v_active_predictions` e `v_match_results`: nessuna migrazione.
+
 M2 fase A3: risultati storici completi; statistiche e formazioni si scaricano da sole ogni giorno (job `api-football.details`).
 
 **Analisi del 14/11/2026 (cosa manca per chiudere).** Preparati, da unire con una PR verso `dev`:
