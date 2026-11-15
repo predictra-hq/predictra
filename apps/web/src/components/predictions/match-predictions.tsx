@@ -17,6 +17,16 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 
 type Components = Partial<Record<"sample" | "calibration" | "agreement" | "data", number>>;
 
+/** Barra decorativa: la probabilità si legge a colpo d'occhio, il numero resta accanto. */
+function ProbabilityBar({ value }: { value: number }) {
+  const pct = Math.min(100, Math.max(0, value * 100));
+  return (
+    <span aria-hidden="true" className="mt-1 block h-1 overflow-hidden rounded-full bg-border">
+      <span className="block h-full rounded-full bg-positive" style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
+
 function GroupTable({ group }: { group: PredictionGroup }) {
   const m = getMessages().predictions;
   const selections = m.selections as Record<string, string>;
@@ -38,8 +48,9 @@ function GroupTable({ group }: { group: PredictionGroup }) {
       <tbody>
         {sortSelections(group).map((r) => (
           <tr key={r.selection} className="border-b border-border last:border-0">
-            <th scope="row" className="py-1 pr-2 font-medium">
+            <th scope="row" className="w-full py-1.5 pr-2 font-medium">
               {selections[r.selection] ?? r.selection}
+              <ProbabilityBar value={Number(r.probability)} />
             </th>
             <td className="py-1 pr-2 text-right font-mono">{formatPercent(r.probability)}</td>
             {hasPush ? (
