@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/*
+ * PREDICTRA — tema Dark Premium.
+ * Nero/carbone, verde smeraldo per indicatori positivi, rosso per rischi/perdite,
+ * grigi per informazioni secondarie. Contrasti verificati (M8, B1) su bg, surface e
+ * surface-2: testo ≥ 4.5:1 (anche `subtle`), bordo dei campi (`input`) ≥ 3:1.
+ * Test: src/lib/theme-contrast.test.ts.
+ */
+@theme {
+  --color-bg: #0a0b0d;
+  --color-surface: #121418;
+  --color-surface-2: #181b21;
+  --color-border: #262a33;
+  --color-border-strong: #353b47;
+  --color-fg: #eceef2;
+  --color-muted: #9aa1ad;
+  --color-subtle: #8e94a0;
+  --color-input: #646b79;
+
+  --color-positive: #10b981;
+  --color-positive-strong: #34d399;
+  --color-positive-soft: rgb(16 185 129 / 0.12);
+  --color-negative: #ef4444;
+  --color-negative-strong: #f87171;
+  --color-negative-soft: rgb(239 68 68 / 0.12);
+  --color-warning: #f59e0b;
+  --color-warning-soft: rgb(245 158 11 / 0.12);
+  --color-info: #60a5fa;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 0.875rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+  /* Alone smeraldo appena accennato in alto: dà profondità senza togliere contrasto. */
+  background-image:
+    radial-gradient(56rem 28rem at 78% -8rem, rgb(16 185 129 / 0.08), transparent 70%),
+    radial-gradient(40rem 24rem at 8% -10rem, rgb(96 165 250 / 0.05), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* Caselle di spunta e radio nel colore del tema. */
+  accent-color: var(--color-positive);
+}
+
+::selection {
+  background: rgb(16 185 129 / 0.35);
+}
+
+/* Barre di scorrimento discrete, coerenti con il tema scuro. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+@layer base {
+  /* Intestazioni delle tabelle leggermente in rilievo rispetto alle righe. */
+  thead:not(.sr-only) {
+    background-color: rgb(255 255 255 / 0.025);
+  }
+
+  /* Le righe delle tabelle si evidenziano al passaggio: più facile seguire i numeri. */
+  tbody tr {
+    transition: background-color 120ms;
+  }
+  tbody tr:hover {
+    background-color: rgb(255 255 255 / 0.025);
+  }
+
+  /* Il triangolo nativo di <details> è sostituito da un'icona dove serve. */
+  summary {
+    cursor: pointer;
+  }
+  summary.list-none::-webkit-details-marker {
+    display: none;
+  }
+}
+
+/* Focus sempre visibile per la navigazione da tastiera. */
+:focus-visible {
+  outline: 2px solid var(--color-positive);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Tabelle sul telefono (sotto 640 px): ogni riga diventa una scheda e ogni cella mostra
+ * a sinistra l'intestazione della sua colonna (`data-label`, da TableLabels). Vale per
+ * le tabelle dentro `Card scrollLabel` e `ScrollRegion`. Le tabelle nascoste su schermo
+ * piccolo (`hidden sm:table`) restano nascoste. Regole fuori dai layer di Tailwind: così
+ * prevalgono su `min-w-[…]`, `whitespace-nowrap` e sui padding delle celle.
+ */
+@media (max-width: 639.98px) {
+  .stack-sm {
+    overflow-x: visible;
+  }
+  .stack-sm table:not(.hidden) {
+    display: block;
+    min-width: 0;
+  }
+  .stack-sm table:not(.hidden) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .stack-sm table:not(.hidden) tbody,
+  .stack-sm table:not(.hidden) tr {
+    display: block;
+  }
+  .stack-sm table:not(.hidden) tbody tr {
+    padding: 0.625rem 1rem;
+  }
+  .stack-sm table:not(.hidden) tbody td,
+  .stack-sm table:not(.hidden) tbody th {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.2rem 0;
+    text-align: right;
+    white-space: normal;
+  }
+  .stack-sm table:not(.hidden) tbody td[data-label]::before,
+  .stack-sm table:not(.hidden) tbody th[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 50%;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    text-align: left;
+  }
+}
+
+/* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
+@media (max-width: 639.98px) {
+  .stack-sm table:not(.hidden) tbody td.sm-secondary,
+  .stack-sm table:not(.hidden) tbody th.sm-secondary {
+    display: none;
+  }
+}

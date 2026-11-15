@@ -1,0 +1,40 @@
+# dipendenze
+node_modules/
+.pnpm-store/
+
+# build
+.next/
+out/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# segreti e ambienti: MAI committare
+.env
+.env.*
+!.env.example
+*.pem
+supabase/.temp/
+supabase/.branches/
+
+# vercel
+.vercel
+
+# sistema / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# log
+*.log

@@ -1,0 +1,89 @@
+name: Bootstrap Super Admin
+
+# Avvio manuale: Actions → Bootstrap Super Admin → Run workflow.
+# Crea un invito SUPER_ADMIN (scripts/bootstrap-super-admin.mjs) senza eseguire nulla in locale.
+# Il link di attivazione NON finisce nei log: compare solo nel riepilogo del run.
+# È personale, monouso e scade in 24 h. Dopo l'attivazione elimina il run (menu ⋯ → Delete workflow run).
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Ambiente
+        type: choice
+        options: [dev, prod]
+        default: dev
+      email:
+        description: Email del Super Admin
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bootstrap-super-admin
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    name: Invito Super Admin (${{ inputs.environment }})
+    # Solo il proprietario può creare Super Admin. Login fisso: dal 15/11/2026 il
+    # repository è dell'organizzazione predictra-hq e `github.repository_owner` vale quella.
+    if: github.actor == 'gennpalm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_PROJECT_ID: ${{ inputs.environment == 'prod' && secrets.PROD_SUPABASE_PROJECT_ID || secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_SECRET_KEY: ${{ inputs.environment == 'prod' && secrets.PROD_SUPABASE_SECRET_KEY || secrets.DEV_SUPABASE_SECRET_KEY }}
+      APP_BASE_URL: ${{ inputs.environment == 'prod' && secrets.PROD_APP_BASE_URL || secrets.DEV_APP_BASE_URL }}
+      INVITE_EMAIL: ${{ inputs.email }}
+      TARGET_ENV: ${{ inputs.environment }}
+    steps:
+      - name: Verifica configurazione
+        run: |
+          missing=""
+          for v in SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY APP_BASE_URL; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Configurazione mancante::Segreti mancanti per ${TARGET_ENV}:$missing (vedi docs/operations/setup.md)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Crea invito
+        run: |
+          export NEXT_PUBLIC_SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          out="$RUNNER_TEMP/bootstrap.out"
+          set +e
+          node apps/web/scripts/bootstrap-super-admin.mjs "$INVITE_EMAIL" > "$out"
+          code=$?
+          set -e
+          if [ "$code" -ne 0 ]; then
+            echo "::error title=Bootstrap non riuscito::Lo script è terminato con codice $code (dettagli sopra)."
+            exit "$code"
+          fi
+          # Il link (ultima riga) va solo nel riepilogo del run, mai nel log.
+          {
+            echo "### Invito SUPER_ADMIN creato per \`$INVITE_EMAIL\`"
+            echo ""
+            echo "Link di attivazione personale, monouso, valido 24 h. Consegnalo solo a questa persona, poi elimina questo run."
+            echo ""
+            echo '```text'
+            tail -n 1 "$out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          rm -f "$out"
+          echo "Invito creato. Il link è nel riepilogo del run (Summary)."
