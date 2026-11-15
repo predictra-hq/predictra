@@ -35,8 +35,28 @@ export interface Pick {
   market: PredictionMarket;
   line: number | null;
   selection: string;
+  /** Probabilità usata: combinata modello/mercato se ci sono quote, altrimenti del modello. */
   probability: number;
+  modelProbability: number;
+  /** Probabilità del mercato senza margine (consenso dei bookmaker), se raccolta. */
+  marketProbability: number | null;
   confidence: number;
+}
+
+/** Probabilità del mercato per una previsione, se ci sono quote (`null` altrimenti). */
+export type MarketLookup = (row: ActivePredictionRow) => number | null;
+
+const noMarket: MarketLookup = () => null;
+
+/** Peso del mercato nella probabilità combinata (ADR 0028), come nel Bet Builder. */
+export const DEFAULT_MARKET_WEIGHT = 0.5;
+
+export function combinedProbability(
+  model: number,
+  market: number | null,
+  weight: number = DEFAULT_MARKET_WEIGHT,
+): number {
+  return market === null ? model : (1 - weight) * model + weight * market;
 }
 
 /** Soglia dalla query string (`?soglia=80`); valori non previsti → predefinita. */
@@ -52,7 +72,13 @@ function isEligible(row: ActivePredictionRow): boolean {
   return true;
 }
 
-export function toPick(row: ActivePredictionRow): Pick {
+export function toPick(
+  row: ActivePredictionRow,
+  market: MarketLookup = noMarket,
+  weight: number = DEFAULT_MARKET_WEIGHT,
+): Pick {
+  const modelProbability = Number(row.probability);
+  const marketProbability = market(row);
   return {
     matchId: row.match_id,
     kickoffAt: row.kickoff_at,
@@ -61,7 +87,9 @@ export function toPick(row: ActivePredictionRow): Pick {
     market: row.market,
     line: row.line === null ? null : Number(row.line),
     selection: row.selection,
-    probability: Number(row.probability),
+    probability: combinedProbability(modelProbability, marketProbability, weight),
+    modelProbability,
+    marketProbability,
     confidence: Number(row.confidence_score),
   };
 }
@@ -89,10 +117,16 @@ export function implies(a: Pick, b: Pick): boolean {
 }
 
 /** Giocate sopra soglia, senza doppioni, ordinate per calcio d'inizio e probabilità. */
-export function selectPicks(rows: readonly ActivePredictionRow[], threshold: number): Pick[] {
+export function selectPicks(
+  rows: readonly ActivePredictionRow[],
+  threshold: number,
+  market: MarketLookup = noMarket,
+  weight: number = DEFAULT_MARKET_WEIGHT,
+): Pick[] {
   const candidates = rows
-    .filter((r) => isEligible(r) && Number(r.probability) >= threshold)
-    .map(toPick);
+    .filter(isEligible)
+    .map((r) => toPick(r, market, weight))
+    .filter((p) => p.probability >= threshold);
   const kept = candidates.filter((b) => !candidates.some((a) => a !== b && implies(a, b)));
   return kept.sort(
     (a, b) =>
@@ -170,13 +204,15 @@ export interface BandStat {
 export function bandStats(
   rows: readonly ActivePredictionRow[],
   results: ReadonlyMap<number, { home: number; away: number }>,
+  market: MarketLookup = noMarket,
+  weight: number = DEFAULT_MARKET_WEIGHT,
 ): BandStat[] {
   const stats = BANDS.map(([from, to]) => ({ from, to, count: 0, wins: 0, sum: 0 }));
   for (const r of rows) {
     if (!isEligible(r)) continue;
     const score = results.get(r.match_id);
     if (!score) continue;
-    const p = Number(r.probability);
+    const p = combinedProbability(Number(r.probability), market(r), weight);
     const band = stats.find((b) => p >= b.from && p < b.to);
     if (!band) continue;
     const won = settle(

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivePredictionRow } from "@predictra/shared-types";
 import {
   bandStats,
+  combinedProbability,
   DEFAULT_THRESHOLD,
   groupByMatch,
   parseThreshold,
@@ -111,5 +112,28 @@ describe("bandStats", () => {
     expect(band80.predicted).toBeCloseTo(0.82);
     expect(stats.at(-1)!.count).toBe(1);
     expect(stats[0]!.observed).toBeNull();
+  });
+});
+
+describe("probabilità combinata modello/mercato", () => {
+  it("usa la media con il mercato quando ci sono quote, e filtra su quella", () => {
+    const market = (r: ActivePredictionRow) => (r.match_id === 1 ? 0.6 : null);
+    const picks = selectPicks(
+      [row({ match_id: 1, probability: 0.8 }), row({ match_id: 2, probability: 0.8 })],
+      0.75,
+      market,
+    );
+    expect(picks.map((p) => p.matchId)).toEqual([2]);
+    expect(combinedProbability(0.8, 0.9)).toBeCloseTo(0.85);
+    expect(combinedProbability(0.8, null)).toBe(0.8);
+  });
+
+  it("verifica per fascia sulla probabilità combinata", () => {
+    const stats = bandStats(
+      [row({ match_id: 1, probability: 0.8 })],
+      new Map([[1, { home: 1, away: 0 }]]),
+      () => 0.9,
+    );
+    expect(stats.find((s) => s.from === 0.85)!.count).toBe(1);
   });
 });

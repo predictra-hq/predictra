@@ -128,6 +128,15 @@ Richiesta del proprietario: rigiocare tutte le partite passate con i modelli att
 - **Esito: nessuna correzione adottata.** I pareggi previsti diventano uguali a quelli reali, ma sulle giornate mai viste il Log Loss di Dixon-Coles + Elo peggiora (da 0,9845 fino a 0,9856). Per Poisson il guadagno massimo è 0,0006, e resta peggiore di Dixon-Coles + Elo senza correzione. Il fattore per le squadre con poco storico, stimato su 2022–24, è 1,02 e migliora 2024–26 di 0,0001. Gli scarti visti a posteriori sono soprattutto caso: l'addestramento sulle partite passate ne incorpora già la parte ripetibile.
 - **Cosa può ancora migliorare la precisione:** dati che i modelli oggi non vedono, come statistiche di partita, formazioni e quote di chiusura. Si misurano allo stesso modo prima di adottarli.
 
+## Prove sull'Elo (15/11/2026)
+
+Banco di prova dell'[ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md) (openfootball, 3.483 partite valutate dal 1/7/2024). Riferimento: Dixon-Coles + Elo (peso 0,4), Log Loss 1X2 **0,9881**; Dixon-Coles da solo 0,9897.
+
+- **Provato:** scarto gol nell'aggiornamento (fattore 1 + m·ln(scarto), m 0,5 e 1), neopromosse più deboli (−60, −100, −150 punti), ritorno verso la media tra le stagioni (20%), K 15–30, vantaggio casa 40–80, peso dell'Elo 0,3–0,6.
+- **Elo da solo:** migliora da 0,9950 a 0,9923 (scarto gol 0,5 e neopromosse −100).
+- **Nella combinazione:** al massimo 0,9877 (K 25, scarto gol 0,5, neopromosse −100), cioè 0,0004 in meno. È dentro il rumore su 3.483 partite: **nessuna modifica adottata**. Il ritorno verso la media peggiora sempre.
+- **Conclusione:** con i soli gol il modello è al suo limite. L'informazione in più viene dalle quote: dal 15/11/2026 la pagina _Certezze_ usa la probabilità combinata modello/mercato (peso 0,5, come il Bet Builder, ADR 0028) e la verifica per fascia sulle partite finite.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.

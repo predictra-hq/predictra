@@ -144,7 +144,7 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
   return out;
 }
 
-function consensusFor(
+export function consensusFor(
   consensus: ReadonlyMap<string, number>,
   pick: Pick<LikelyPick, "matchId" | "market" | "line" | "selection">,
 ): number | null {
