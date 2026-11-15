@@ -70,6 +70,15 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
   },
 ];
 
+/** Barra in basso sul telefono: le pagine di tutti i giorni. */
+export const BOTTOM_NAV: readonly NavItem[] = [
+  { key: "dashboard", href: "/dashboard" },
+  { key: "matchCenter", href: "/match-center" },
+  { key: "certainties", href: "/certezze" },
+  { key: "betBuilder", href: "/bet-builder" },
+  { key: "tracker", href: "/tracker" },
+];
+
 export const ADMIN_NAV: readonly NavItem[] = [
   { key: "users", href: "/admin/users", permission: "users.read" },
   { key: "invitations", href: "/admin/invitations", permission: "invitations.manage" },
