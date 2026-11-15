@@ -50,6 +50,27 @@ export const metadata: Metadata = { title: "Giocate fatte" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
+/** Valori precompilati dal link "Registra" delle Certezze (`/tracker?add=1&d=…`). */
+function parsePrefill(params: Record<string, string | string[] | undefined>) {
+  const text = (key: string, max: number) => {
+    const v = params[key];
+    return (Array.isArray(v) ? v[0] : v)?.slice(0, max) ?? "";
+  };
+  const number = (key: string) => {
+    const v = text(key, 12).replace(",", ".");
+    return /^\d{1,4}(\.\d{1,3})?$/.test(v) ? v : "";
+  };
+  return {
+    open: text("add", 1) === "1",
+    description: text("d", 200),
+    market: text("mk", 40),
+    selection: text("sel", 40),
+    odds: number("o"),
+    line: number("ln"),
+    bookmaker: text("bk", 60),
+  };
+}
+
 export default async function TrackerPage({ searchParams }: PageProps<"/tracker">) {
   await requireUser();
   const t = getMessages().tracker;
@@ -57,6 +78,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const c = getMessages().common;
   const params = await searchParams;
   const period = parsePeriod(params.p);
+  const prefill = parsePrefill(params);
   const { since, dayAgo, weekAgo } = timeWindows(period);
 
   const [bankrolls, allBets, movements, limits, kellyMatches] = await Promise.all([
@@ -174,7 +196,10 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       ) : (
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
           {/* Modulo chiuso finché non serve: la pagina resta corta. */}
-          <details className="group self-start rounded-[var(--radius-card)] border border-border bg-surface p-5">
+          <details
+            open={prefill.open}
+            className="group self-start rounded-[var(--radius-card)] border border-border bg-surface p-5"
+          >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
               <CardTitle>{t.addBet}</CardTitle>
               <span className="rounded-lg bg-positive px-3 py-1.5 text-sm font-medium text-black group-open:hidden">
@@ -192,10 +217,23 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 </Select>
               </Field>
               <Field label={t.event} htmlFor="bet-event">
-                <Input id="bet-event" name="description" maxLength={200} required />
+                <Input
+                  id="bet-event"
+                  name="description"
+                  maxLength={200}
+                  required
+                  defaultValue={prefill.description}
+                />
               </Field>
               <Field label={t.market} htmlFor="bet-market">
-                <Input id="bet-market" name="market" maxLength={40} required placeholder="1X2" />
+                <Input
+                  id="bet-market"
+                  name="market"
+                  maxLength={40}
+                  required
+                  placeholder="1X2"
+                  defaultValue={prefill.market}
+                />
               </Field>
               <Field label={t.selection} htmlFor="bet-selection">
                 <Input
@@ -204,19 +242,31 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                   maxLength={40}
                   required
                   placeholder="1"
+                  defaultValue={prefill.selection}
                 />
               </Field>
               <Field label={t.odds} htmlFor="bet-odds">
-                <Input id="bet-odds" name="odds" inputMode="decimal" required />
+                <Input
+                  id="bet-odds"
+                  name="odds"
+                  inputMode="decimal"
+                  required
+                  defaultValue={prefill.odds}
+                />
               </Field>
               <Field label={t.stake} htmlFor="bet-stake">
                 <Input id="bet-stake" name="stake" inputMode="decimal" required />
               </Field>
               <Field label={t.line} htmlFor="bet-line">
-                <Input id="bet-line" name="line" inputMode="decimal" />
+                <Input id="bet-line" name="line" inputMode="decimal" defaultValue={prefill.line} />
               </Field>
               <Field label={t.bookmaker} htmlFor="bet-bookmaker">
-                <Input id="bet-bookmaker" name="bookmaker" maxLength={60} />
+                <Input
+                  id="bet-bookmaker"
+                  name="bookmaker"
+                  maxLength={60}
+                  defaultValue={prefill.bookmaker}
+                />
               </Field>
               <Field label={t.placedAt} htmlFor="bet-date">
                 <Input id="bet-date" name="placedAt" type="datetime-local" />
