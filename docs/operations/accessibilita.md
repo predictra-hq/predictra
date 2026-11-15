@@ -16,6 +16,10 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
   - Alla fine cancella sempre l'account. Lo script è `apps/web/scripts/verify-accessibility.mjs`, il riepilogo per pagina compare nel run.
   - Si può avviare anche da un branch di lavoro, prima del merge. Dura circa 5 minuti e non va lanciato a ogni PR, per il budget di minuti di GitHub Actions.
 
+## Esito del 15/11/2026
+
+**33 controlli su 33 superati** ([run 25](https://github.com/predictra-hq/predictra/actions/runs/43720105371)): aggiunte la pagina Certezze e le versioni da telefono (375 px) di Certezze, Partite e dettaglio partita, con screenshot nell'artefatto del run (3 giorni).
+
 ## Esito del 9/11/2026
 
 **26 controlli su 26 superati.**
