@@ -949,6 +949,7 @@ export const it = {
     multipleProbability: "Probabilità di vincerla: {value}",
     multiplePrice: "Quota italiana combinata {price}",
     multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",
+    register: "Registra tra le giocate fatte",
     pastTitle: "Multiple delle settimane passate",
     pastHint:
       "Le stesse multiple ricostruite per ogni settimana con le previsioni fatte prima delle partite (stessa soglia), e il loro esito reale.",
