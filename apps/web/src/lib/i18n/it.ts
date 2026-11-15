@@ -95,6 +95,9 @@ export const it = {
     mfaWarning:
       "La 2FA non è attiva sul tuo account: attivala per proteggere l'accesso (obbligatoria per gli amministratori).",
     mfaWarningAction: "Attiva la 2FA",
+    certaintiesTitle: "Certezze delle prossime 72 ore",
+    certaintiesEmpty:
+      "Nessuna giocata dall'80% in su nelle prossime 72 ore: apri Certezze per vedere le altre soglie.",
     activeModel: "Modello attivo",
     noActiveModel: "Nessun modello attivo",
     brier: "Brier",
