@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { PickChip } from "@/components/certainties/pick-chip";
-import { combinedItalianPrice, type ItalianPrice } from "@/lib/bet-builder/likely";
+import { combinedItalianPrice, italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { Alert, Badge, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
   bandStats,
   buildMultiple,
+  buildValueMultiple,
+  flatReturn,
   groupByMatch,
   MULTIPLE_TARGET,
   pastMultiples,
+  pastValueMultiples,
   type PastMultiple,
+  type PastValueMultiple,
   type Pick,
   parseThreshold,
   selectPicks,
@@ -79,6 +83,47 @@ function Verification({ stats }: { stats: BandStat[] }) {
   );
 }
 
+function MultipleCard({
+  title,
+  picks,
+  probability,
+  prices,
+}: {
+  title: string;
+  picks: readonly Pick[];
+  probability: number;
+  prices: ReadonlyMap<string, ItalianPrice>;
+}) {
+  return (
+    <Card>
+      <CardTitle>{title}</CardTitle>
+      <ul className="mt-3 flex flex-col gap-1 text-sm">
+        {picks.map((p) => {
+          const price = italianPriceFor(prices, p);
+          return (
+            <li key={p.matchId} className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0">
+                <Link href={`/match-center/${p.matchId}`} className="hover:underline">
+                  {p.home} – {p.away}
+                </Link>{" "}
+                <span className="text-muted">· {pickLabel(p)}</span>
+              </span>
+              <span className="whitespace-nowrap font-mono">
+                {formatPercent(p.probability, 0)}
+                {price ? (
+                  <span className="text-xs text-muted"> @{formatOdds(price.price)}</span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <MultipleTotals picks={picks} probability={probability} prices={prices} />
+    </Card>
+  );
+}
+
+/** Due multiple: la più sicura e quella con valore (quote sopra il giusto). */
 function Multiples({
   picks,
   prices,
@@ -87,31 +132,36 @@ function Multiples({
   prices: ReadonlyMap<string, ItalianPrice>;
 }) {
   const c = getMessages().certainties;
-  const multiple = buildMultiple(picks, MULTIPLE_TARGET);
-  if (!multiple) return null;
+  const safe = buildMultiple(picks, MULTIPLE_TARGET);
+  const value = buildValueMultiple(picks, (p) => italianPriceFor(prices, p)?.price ?? null);
+  if (!safe && !value) return null;
   return (
-    <Card>
-      <CardTitle>
-        {fillTemplate(c.multipleTitle, {
-          target: formatPercent(MULTIPLE_TARGET, 0),
-          legs: String(multiple.picks.length),
-        })}
-      </CardTitle>
-      <ul className="mt-3 flex flex-col gap-1 text-sm">
-        {multiple.picks.map((p) => (
-          <li key={p.matchId} className="flex items-baseline justify-between gap-3">
-            <span className="min-w-0">
-              <Link href={`/match-center/${p.matchId}`} className="hover:underline">
-                {p.home} – {p.away}
-              </Link>{" "}
-              <span className="text-muted">· {pickLabel(p)}</span>
-            </span>
-            <span className="font-mono">{formatPercent(p.probability, 0)}</span>
-          </li>
-        ))}
-      </ul>
-      <MultipleTotals picks={multiple.picks} probability={multiple.probability} prices={prices} />
-    </Card>
+    <div className="grid gap-4 lg:grid-cols-2">
+      {safe ? (
+        <MultipleCard
+          title={fillTemplate(c.multipleTitle, {
+            target: formatPercent(MULTIPLE_TARGET, 0),
+            legs: String(safe.picks.length),
+          })}
+          picks={safe.picks}
+          probability={safe.probability}
+          prices={prices}
+        />
+      ) : null}
+      {value ? (
+        <MultipleCard
+          title={fillTemplate(c.valueTitle, { legs: String(value.picks.length) })}
+          picks={value.picks}
+          probability={value.probability}
+          prices={prices}
+        />
+      ) : (
+        <Card>
+          <CardTitle>{c.valueTitleEmpty}</CardTitle>
+          <p className="mt-2 text-sm text-muted">{c.valueEmpty}</p>
+        </Card>
+      )}
+    </div>
   );
 }
 
@@ -148,9 +198,31 @@ function MultipleTotals({
   );
 }
 
-function PastMultiples({ past }: { past: readonly PastMultiple[] }) {
+function PastValue({ past }: { past: readonly PastValueMultiple[] }) {
   const c = getMessages().certainties;
   if (past.length === 0) return null;
+  const wins = past.filter((m) => m.won).length;
+  const roi = flatReturn(past)!;
+  return (
+    <p className="mt-3 rounded-md border border-border p-3 text-sm">
+      {fillTemplate(c.pastValueSummary, {
+        wins: String(wins),
+        count: String(past.length),
+        roi: `${roi >= 0 ? "+" : "−"}${formatPercent(Math.abs(roi), 0)}`,
+      })}
+    </p>
+  );
+}
+
+function PastMultiples({
+  past,
+  pastValue,
+}: {
+  past: readonly PastMultiple[];
+  pastValue: readonly PastValueMultiple[];
+}) {
+  const c = getMessages().certainties;
+  if (past.length === 0 && pastValue.length === 0) return null;
   return (
     <Card>
       <CardTitle>{c.pastTitle}</CardTitle>
@@ -188,6 +260,7 @@ function PastMultiples({ past }: { past: readonly PastMultiple[] }) {
           );
         })}
       </div>
+      <PastValue past={pastValue} />
     </Card>
   );
 }
@@ -292,6 +365,13 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
               verification.rows,
               verification.results,
               threshold,
+              verification.market,
+            )}
+            pastValue={pastValueMultiples(
+              verification.rows,
+              verification.results,
+              threshold,
+              (p) => italianPriceFor(verification.prices, p)?.price ?? null,
               verification.market,
             )}
           />

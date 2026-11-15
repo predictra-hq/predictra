@@ -53,12 +53,22 @@ export const loadUpcoming = cache(async (): Promise<UpcomingData> => {
 
 export interface VerificationData extends Verification {
   market: MarketLookup;
+  /** Migliori quote italiane osservate prima del calcio d'inizio. */
+  prices: Map<string, ItalianPrice>;
 }
 
 export const loadVerification = cache(async (): Promise<VerificationData> => {
   const verification = await recentVerification();
-  const odds = await oddsFor(matchIds(verification.rows));
-  return { ...verification, market: marketLookup(marketConsensus(odds)) };
+  const kickoff = new Map(verification.rows.map((r) => [r.match_id, Date.parse(r.kickoff_at)]));
+  // Solo quote raccolte prima della partita: quelle che si potevano davvero giocare.
+  const odds = (await oddsFor(matchIds(verification.rows))).filter(
+    (o) => o.match_id !== null && Date.parse(o.observed_at) < (kickoff.get(o.match_id) ?? 0),
+  );
+  return {
+    ...verification,
+    market: marketLookup(marketConsensus(odds)),
+    prices: bestItalianPrices(odds),
+  };
 });
 
 /** Soglia, orizzonte e numero di giocate del riquadro in Home. */

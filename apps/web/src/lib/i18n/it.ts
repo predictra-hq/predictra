@@ -941,7 +941,13 @@ export const it = {
     fairOdds: "quota equa",
     split: "modello {model} · mercato {market}",
     multiplesTitle: "Multiple delle certezze",
-    multipleTitle: "Multipla del giorno: almeno {target} di vincerla ({legs} partite)",
+    multipleTitle: "Più sicura: almeno {target} di vincerla ({legs} partite)",
+    valueTitle: "Con valore: quote sopra il giusto ({legs} partite)",
+    valueTitleEmpty: "Con valore",
+    valueEmpty:
+      "Oggi non ci sono almeno due giocate di questa soglia con una quota italiana sopra il giusto: meglio non forzare. Prova una soglia più bassa.",
+    pastValueSummary:
+      "Multiple con valore, con le quote raccolte prima delle partite: {wins} vinte su {count}, rendimento a puntata fissa {roi}.",
     multipleProbability: "Probabilità di vincerla: {value}",
     multiplePrice: "Quota italiana combinata {price}",
     multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",

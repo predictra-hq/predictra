@@ -3,6 +3,8 @@ import type { ActivePredictionRow } from "@predictra/shared-types";
 import {
   bandStats,
   buildMultiple,
+  buildValueMultiple,
+  flatReturn,
   combinedProbability,
   DEFAULT_THRESHOLD,
   groupByMatch,
@@ -175,5 +177,37 @@ describe("pastMultiples", () => {
       ["2026-11-02", 2, true],
       ["2026-11-09", 2, false],
     ]);
+  });
+});
+
+describe("multipla con valore", () => {
+  const pick = (matchId: number, probability: number) =>
+    selectPicks([row({ match_id: matchId, probability })], 0)[0]!;
+
+  it("usa solo giocate con quota sopra il giusto e resta sopra il traguardo", () => {
+    const prices = new Map([
+      [1, 1.2], // 0,90 × 1,20 = 1,08: conviene
+      [2, 1.1], // 0,85 × 1,10 = 0,935: non conviene
+      [3, 1.4], // 0,80 × 1,40 = 1,12: conviene
+      [4, 1.6], // 0,65 × 1,60 = 1,04: conviene, ma la multipla scenderebbe al 46,8%
+    ]);
+    const m = buildValueMultiple(
+      [pick(1, 0.9), pick(2, 0.85), pick(3, 0.8), pick(4, 0.65)],
+      (p) => prices.get(p.matchId) ?? null,
+    );
+    expect(m!.picks.map((p) => p.matchId)).toEqual([1, 3]);
+    expect(m!.probability).toBeCloseTo(0.72);
+    expect(m!.price).toBeCloseTo(1.68);
+    expect(m!.value).toBeCloseTo(0.2096);
+  });
+
+  it("rendimento a puntata fissa", () => {
+    expect(
+      flatReturn([
+        { won: true, price: 3 },
+        { won: false, price: 2 },
+      ]),
+    ).toBeCloseTo(0.5);
+    expect(flatReturn([])).toBeNull();
   });
 });
