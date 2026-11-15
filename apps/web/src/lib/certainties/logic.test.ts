@@ -7,6 +7,7 @@ import {
   DEFAULT_THRESHOLD,
   groupByMatch,
   parseThreshold,
+  pastMultiples,
   selectPicks,
   settle,
 } from "./logic";
@@ -152,5 +153,27 @@ describe("buildMultiple", () => {
 
   it("una sola giocata per partita e almeno due partite", () => {
     expect(buildMultiple([pick(1, 0.95), pick(1, 0.9)], 0.5)).toBeNull();
+  });
+});
+
+describe("pastMultiples", () => {
+  it("ricostruisce le multiple per settimana e ne calcola l'esito", () => {
+    const rows = [
+      row({ match_id: 1, kickoff_at: "2026-11-07T15:00:00Z", probability: 0.9 }),
+      row({ match_id: 2, kickoff_at: "2026-11-08T15:00:00Z", probability: 0.88 }),
+      row({ match_id: 3, kickoff_at: "2026-11-14T15:00:00Z", probability: 0.9 }),
+      row({ match_id: 4, kickoff_at: "2026-11-15T15:00:00Z", probability: 0.9 }),
+    ];
+    const results = new Map([
+      [1, { home: 1, away: 0 }],
+      [2, { home: 2, away: 0 }],
+      [3, { home: 1, away: 0 }],
+      [4, { home: 0, away: 1 }],
+    ]);
+    const past = pastMultiples(rows, results, 0.75).filter((m) => m.target === 0.7);
+    expect(past.map((m) => [m.week, m.legs, m.won])).toEqual([
+      ["2026-11-02", 2, true],
+      ["2026-11-09", 2, false],
+    ]);
   });
 });

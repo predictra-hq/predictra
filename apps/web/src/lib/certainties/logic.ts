@@ -271,3 +271,60 @@ export function buildMultiple(
   }
   return legs.length >= 2 ? { picks: legs, probability } : null;
 }
+
+export interface PastMultiple {
+  /** Lunedì della settimana (UTC, AAAA-MM-GG). */
+  week: string;
+  target: number;
+  legs: number;
+  probability: number;
+  won: boolean;
+}
+
+/** Lunedì (UTC) della settimana di un calcio d'inizio. */
+export function weekOf(kickoffAt: string): string {
+  const d = new Date(kickoffAt);
+  const monday = new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)),
+  );
+  return monday.toISOString().slice(0, 10);
+}
+
+/**
+ * Multiple che la pagina avrebbe proposto ogni settimana, con le previsioni fatte prima
+ * delle partite, e il loro esito reale.
+ */
+export function pastMultiples(
+  rows: readonly ActivePredictionRow[],
+  results: ReadonlyMap<number, { home: number; away: number }>,
+  threshold: number,
+  market: MarketLookup = noMarket,
+  weight: number = DEFAULT_MARKET_WEIGHT,
+): PastMultiple[] {
+  const byWeek = new Map<string, ActivePredictionRow[]>();
+  for (const r of rows) {
+    if (!results.has(r.match_id)) continue;
+    const week = weekOf(r.kickoff_at);
+    byWeek.set(week, [...(byWeek.get(week) ?? []), r]);
+  }
+  const out: PastMultiple[] = [];
+  for (const [week, weekRows] of [...byWeek.entries()].sort()) {
+    const picks = selectPicks(weekRows, threshold, market, weight);
+    for (const target of MULTIPLE_TARGETS) {
+      const multiple = buildMultiple(picks, target);
+      if (!multiple) continue;
+      const won = multiple.picks.every((p) => {
+        const score = results.get(p.matchId)!;
+        return settle(p.market, p.line, p.selection, score.home, score.away) === true;
+      });
+      out.push({
+        week,
+        target,
+        legs: multiple.picks.length,
+        probability: multiple.probability,
+        won,
+      });
+    }
+  }
+  return out;
+}
