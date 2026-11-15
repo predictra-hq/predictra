@@ -65,7 +65,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REF: ${{ inputs.ref }}
-          OWNER: ${{ github.repository_owner }}
+          # Login dell'account proprietario (piano Vercel Hobby). Non `github.repository_owner`:
+          # dal 15/11/2026 il repository è dell'organizzazione predictra-hq.
+          OWNER: gennpalm
         run: |
           # Sul piano Hobby Vercel pubblica solo i commit dell'account proprietario: niente
           # collaborazione su repository privati. Il merge su dev e main lo fa il proprietario
