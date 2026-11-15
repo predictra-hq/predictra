@@ -5,7 +5,12 @@ import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
 import { bestItalianPrices, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { listLatestOdds } from "@/lib/bet-builder/queries";
 import { selectPicks, type MarketLookup, type Pick } from "./logic";
-import { recentVerification, upcomingHighProbability, type Verification } from "./queries";
+import {
+  predictionsFor,
+  recentVerification,
+  upcomingHighProbability,
+  type Verification,
+} from "./queries";
 
 /*
  * Caricamento condiviso tra la pagina Certezze e il riquadro in Home: previsioni del
@@ -61,35 +66,30 @@ export const HOME_CERTAINTY_THRESHOLD = 0.8;
 const HOME_CERTAINTY_HOURS = 72;
 const HOME_CERTAINTY_MAX = 5;
 
-/** Le giocate più forti delle prossime 72 ore, dalla più probabile. */
+/** Le giocate più forti delle prossime 72 ore, dalla più probabile (solo quelle partite). */
 export async function loadHomeCertainties(now = new Date()): Promise<Pick[]> {
-  const data = await loadUpcoming();
-  const limit = now.getTime() + HOME_CERTAINTY_HOURS * 3_600_000;
-  return selectPicks(
-    data.rows.filter((r) => new Date(r.kickoff_at).getTime() <= limit),
-    HOME_CERTAINTY_THRESHOLD,
-    data.market,
-  )
+  const rows = await upcomingHighProbability(now, HOME_CERTAINTY_HOURS);
+  const odds = await oddsFor(matchIds(rows));
+  return selectPicks(rows, HOME_CERTAINTY_THRESHOLD, marketLookup(marketConsensus(odds)))
     .sort((a, b) => b.probability - a.probability)
     .slice(0, HOME_CERTAINTY_MAX);
 }
+
+const STRONGEST_THRESHOLD = 0.7;
 
 /** Giocata più forte (dal 70%) di ciascuna partita richiesta, se ce n'è una. */
 export async function strongestPicks(ids: readonly number[]): Promise<Map<number, Pick>> {
   const out = new Map<number, Pick>();
   if (ids.length === 0) return out;
-  const wanted = new Set(ids);
-  const data = await loadUpcoming();
-  const picks = selectPicks(
-    data.rows.filter((r) => wanted.has(r.match_id)),
-    STRONGEST_THRESHOLD,
-    data.market,
+  const rows = (await predictionsFor(ids, "certezze delle partite")).filter(
+    (r) => r.match_status === "SCHEDULED",
   );
+  if (rows.length === 0) return out;
+  const odds = await oddsFor(matchIds(rows));
+  const picks = selectPicks(rows, STRONGEST_THRESHOLD, marketLookup(marketConsensus(odds)));
   for (const p of picks) {
     const cur = out.get(p.matchId);
     if (!cur || p.probability > cur.probability) out.set(p.matchId, p);
   }
   return out;
 }
-
-const STRONGEST_THRESHOLD = 0.7;
