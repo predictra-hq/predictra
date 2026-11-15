@@ -6,6 +6,7 @@ import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/
 import { CompetitionFilter } from "@/components/odds/competition-filter";
 import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { chooseCompetition, readFavoriteCompetition } from "@/lib/football/favorite";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -69,7 +70,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     );
   }
   const requested = parseCompetitionCode(params.c);
-  const competition = competitions.find((c) => c.code === requested) ?? competitions[0]!;
+  const competition = chooseCompetition(competitions, requested, await readFavoriteCompetition())!;
   const seasonIds = competitions.map((c) => c.seasonId).filter((id): id is number => id !== null);
 
   const [leagueStats, standings, sources] = await Promise.all([

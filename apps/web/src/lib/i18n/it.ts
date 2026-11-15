@@ -232,6 +232,10 @@ export const it = {
   },
   matchCenter: {
     title: "Partite",
+    favoriteOff: "Imposta come campionato preferito",
+    favoriteOn: "Campionato preferito",
+    favoriteHint:
+      "Il campionato preferito è quello che Partite e Campionati aprono per primo. Vale per questo browser.",
     description:
       "Calendario e risultati reali per competizione, stagione e giornata: la stagione in corso e lo storico 2022–2024. Ogni partita indica fonte, orario di osservazione e qualità del dato.",
     competition: "Competizione",
