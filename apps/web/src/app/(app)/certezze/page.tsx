@@ -10,6 +10,8 @@ import {
   buildMultiple,
   groupByMatch,
   MULTIPLE_TARGETS,
+  pastMultiples,
+  type PastMultiple,
   type Pick,
   parseThreshold,
   selectPicks,
@@ -160,6 +162,53 @@ function MultipleTotals({
   );
 }
 
+function PastMultiples({ past }: { past: readonly PastMultiple[] }) {
+  const c = getMessages().certainties;
+  if (past.length === 0) return null;
+  return (
+    <Card>
+      <CardTitle>{c.pastTitle}</CardTitle>
+      <p className="mt-1 text-sm text-muted">{c.pastHint}</p>
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        {MULTIPLE_TARGETS.map((target) => {
+          const list = past.filter((m) => m.target === target);
+          if (list.length === 0) return null;
+          const wins = list.filter((m) => m.won).length;
+          const predicted = list.reduce((sum, m) => sum + m.probability, 0) / list.length;
+          return (
+            <div key={target} className="rounded-md border border-border p-3 text-sm">
+              <p className="font-medium">
+                {fillTemplate(c.pastSummary, {
+                  target: formatPercent(target, 0),
+                  wins: String(wins),
+                  count: String(list.length),
+                  observed: formatPercent(wins / list.length, 0),
+                  predicted: formatPercent(predicted, 0),
+                })}
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {list.slice(-8).map((m) => (
+                  <li key={m.week}>
+                    <Badge tone={m.won ? "positive" : "negative"}>
+                      {fillTemplate(m.won ? c.pastWon : c.pastLost, {
+                        week: formatDay(m.week),
+                        legs: String(m.legs),
+                      })}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+/** "2026-11-09" → "09/11". */
+const formatDay = (isoDate: string) => `${isoDate.slice(8, 10)}/${isoDate.slice(5, 7)}`;
+
 export default async function CertaintiesPage({ searchParams }: PageProps<"/certezze">) {
   await requireUser();
   const m = getMessages();
@@ -209,6 +258,15 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
       <Verification stats={stats} />
 
       <Multiples picks={matches.flatMap((g) => g.picks)} prices={prices} />
+
+      <PastMultiples
+        past={pastMultiples(
+          verification.rows,
+          verification.results,
+          threshold,
+          verification.market,
+        )}
+      />
 
       <Card>
         <CardTitle>

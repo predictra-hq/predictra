@@ -949,6 +949,13 @@ export const it = {
     multipleProbability: "Probabilità di vincerla: {value}",
     multiplePrice: "Quota italiana combinata {price}",
     multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",
+    pastTitle: "Multiple delle settimane passate",
+    pastHint:
+      "Le stesse multiple ricostruite per ogni settimana con le previsioni fatte prima delle partite (stessa soglia), e il loro esito reale.",
+    pastSummary:
+      "Almeno {target}: {wins} uscite su {count} ({observed}; prevista in media {predicted})",
+    pastWon: "sett. {week} · {legs} partite · uscita",
+    pastLost: "sett. {week} · {legs} partite · persa",
     matchTitle: "Certezze della partita (da {value})",
     bestPrice: "Quota migliore {price} ({bookmaker})",
     worth: "conviene: +{value}",
