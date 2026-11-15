@@ -9,7 +9,7 @@ import {
   bandStats,
   buildMultiple,
   groupByMatch,
-  MULTIPLE_TARGETS,
+  MULTIPLE_TARGET,
   pastMultiples,
   type PastMultiple,
   type Pick,
@@ -87,44 +87,30 @@ function Multiples({
   prices: ReadonlyMap<string, ItalianPrice>;
 }) {
   const c = getMessages().certainties;
-  const multiples = MULTIPLE_TARGETS.map((t) => ({ target: t, multiple: buildMultiple(picks, t) }));
-  if (multiples.every((x) => x.multiple === null)) return null;
+  const multiple = buildMultiple(picks, MULTIPLE_TARGET);
+  if (!multiple) return null;
   return (
     <Card>
-      <CardTitle>{c.multiplesTitle}</CardTitle>
-      <p className="mt-1 text-sm text-muted">{c.multiplesHint}</p>
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
-        {multiples.map(({ target, multiple }) =>
-          multiple ? (
-            <div key={target} className="rounded-md border border-border p-3">
-              <p className="text-sm font-medium">
-                {fillTemplate(c.multipleTitle, {
-                  target: formatPercent(target, 0),
-                  legs: String(multiple.picks.length),
-                })}
-              </p>
-              <ul className="mt-2 flex flex-col gap-1 text-sm">
-                {multiple.picks.map((p) => (
-                  <li key={p.matchId} className="flex items-baseline justify-between gap-3">
-                    <span className="min-w-0">
-                      <Link href={`/match-center/${p.matchId}`} className="hover:underline">
-                        {p.home} – {p.away}
-                      </Link>{" "}
-                      <span className="text-muted">· {pickLabel(p)}</span>
-                    </span>
-                    <span className="font-mono">{formatPercent(p.probability, 0)}</span>
-                  </li>
-                ))}
-              </ul>
-              <MultipleTotals
-                picks={multiple.picks}
-                probability={multiple.probability}
-                prices={prices}
-              />
-            </div>
-          ) : null,
-        )}
-      </div>
+      <CardTitle>
+        {fillTemplate(c.multipleTitle, {
+          target: formatPercent(MULTIPLE_TARGET, 0),
+          legs: String(multiple.picks.length),
+        })}
+      </CardTitle>
+      <ul className="mt-3 flex flex-col gap-1 text-sm">
+        {multiple.picks.map((p) => (
+          <li key={p.matchId} className="flex items-baseline justify-between gap-3">
+            <span className="min-w-0">
+              <Link href={`/match-center/${p.matchId}`} className="hover:underline">
+                {p.home} – {p.away}
+              </Link>{" "}
+              <span className="text-muted">· {pickLabel(p)}</span>
+            </span>
+            <span className="font-mono">{formatPercent(p.probability, 0)}</span>
+          </li>
+        ))}
+      </ul>
+      <MultipleTotals picks={multiple.picks} probability={multiple.probability} prices={prices} />
     </Card>
   );
 }
@@ -170,7 +156,7 @@ function PastMultiples({ past }: { past: readonly PastMultiple[] }) {
       <CardTitle>{c.pastTitle}</CardTitle>
       <p className="mt-1 text-sm text-muted">{c.pastHint}</p>
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
-        {MULTIPLE_TARGETS.map((target) => {
+        {[MULTIPLE_TARGET].map((target) => {
           const list = past.filter((m) => m.target === target);
           if (list.length === 0) return null;
           const wins = list.filter((m) => m.won).length;
@@ -255,18 +241,7 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
         })}
       </nav>
 
-      <Verification stats={stats} />
-
       <Multiples picks={matches.flatMap((g) => g.picks)} prices={prices} />
-
-      <PastMultiples
-        past={pastMultiples(
-          verification.rows,
-          verification.results,
-          threshold,
-          verification.market,
-        )}
-      />
 
       <Card>
         <CardTitle>
@@ -275,14 +250,13 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
             value: formatPercent(threshold, 0),
           })}
         </CardTitle>
-        <p className="mt-1 text-sm text-muted">{c.upcomingHint}</p>
         {matches.length === 0 ? (
           <EmptyState className="mt-3">{c.empty}</EmptyState>
         ) : (
           <ul className="mt-3 divide-y divide-border">
             {matches.map((match) => (
               <li key={match.matchId} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
-                <div className="sm:w-64 sm:shrink-0">
+                <div className="sm:w-56 sm:shrink-0">
                   <Link
                     href={`/match-center/${match.matchId}`}
                     className="font-medium hover:underline"
@@ -305,6 +279,24 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
           </ul>
         )}
       </Card>
+
+      {/* Affidabilità: chiusa, per chi vuole controllare. */}
+      <details className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
+        <summary className="cursor-pointer text-sm font-medium text-muted hover:text-fg">
+          {c.reliability}
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          <Verification stats={stats} />
+          <PastMultiples
+            past={pastMultiples(
+              verification.rows,
+              verification.results,
+              threshold,
+              verification.market,
+            )}
+          />
+        </div>
+      </details>
     </>
   );
 }

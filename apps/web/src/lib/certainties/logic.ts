@@ -243,8 +243,8 @@ export interface CertaintyMultiple {
   probability: number;
 }
 
-/** Soglie della multipla: probabilità minima di vincerla tutta. */
-export const MULTIPLE_TARGETS = [0.7, 0.5] as const;
+/** Traguardo della multipla: probabilità minima di vincerla tutta. */
+export const MULTIPLE_TARGET = 0.7;
 export const MAX_MULTIPLE_LEGS = 10;
 
 /**
@@ -310,7 +310,7 @@ export function pastMultiples(
   const out: PastMultiple[] = [];
   for (const [week, weekRows] of [...byWeek.entries()].sort()) {
     const picks = selectPicks(weekRows, threshold, market, weight);
-    for (const target of MULTIPLE_TARGETS) {
+    for (const target of [MULTIPLE_TARGET]) {
       const multiple = buildMultiple(picks, target);
       if (!multiple) continue;
       const won = multiple.picks.every((p) => {
