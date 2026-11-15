@@ -40,7 +40,7 @@ Non serve eseguire SQL né cambiare impostazioni Auth a mano: lo fa la pipeline.
 
 ## 2. Vercel — progetto DEV
 
-1. Crea il progetto (es. `predictra-dev`) importando il repository GitHub `gennpalm/predictra`:
+1. Crea il progetto (es. `predictra-dev`) importando il repository GitHub `predictra-hq/predictra`:
    - _Framework Preset_: **Next.js**;
    - _Root Directory_: **`apps/web`**.
 

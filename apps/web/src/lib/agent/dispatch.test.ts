@@ -15,7 +15,7 @@ const NOW = Date.parse("2026-11-09T09:00:00Z");
 const minutesAgo = (m: number) => new Date(NOW - m * 60_000).toISOString();
 const CONFIG = {
   token: "ghp_DEMO_NON_REALE",
-  repo: "gennpalm/predictra",
+  repo: "predictra-hq/predictra",
   workflow: "agent-python.yml",
   ref: "dev",
 };
@@ -47,7 +47,7 @@ describe("configurazione", () => {
   it("repository predefinito e validazione", () => {
     expect(dispatchConfigFromEnv({ GITHUB_DISPATCH_TOKEN: "t" })).toEqual({
       token: "t",
-      repo: "gennpalm/predictra",
+      repo: "predictra-hq/predictra",
       workflow: "agent-python.yml",
       ref: "dev",
     });
@@ -115,7 +115,7 @@ describe("dispatchIfMissed", () => {
     expect(quotaArgs).toEqual(["github-dispatch", 1]);
     const call = f.calls[0]!;
     expect(call.url).toBe(
-      "https://api.github.com/repos/gennpalm/predictra/actions/workflows/agent-python.yml/dispatches",
+      "https://api.github.com/repos/predictra-hq/predictra/actions/workflows/agent-python.yml/dispatches",
     );
     expect(call.init.method).toBe("POST");
     expect((call.init.headers as Record<string, string>).Authorization).toBe(

@@ -112,7 +112,7 @@ Ogni milestone aggiunge il proprio file in `packages/shared-types/src/` e una so
 
 ## 8. Lavorare con Claude Code
 
-Si può lavorare da **Claude Code sul web** (claude.ai/code, collegato a `gennpalm/predictra`) o in locale (Node.js 22 o superiore e pnpm 10). Controlli, test, migrazioni e deploy girano comunque su GitHub Actions: non serve installare nulla.
+Si può lavorare da **Claude Code sul web** (claude.ai/code, collegato a `predictra-hq/predictra`) o in locale (Node.js 22 o superiore e pnpm 10). Controlli, test, migrazioni e deploy girano comunque su GitHub Actions: non serve installare nulla.
 
 Messaggio di avvio consigliato per ogni sessione:
 

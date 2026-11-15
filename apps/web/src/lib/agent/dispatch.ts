@@ -30,7 +30,7 @@ export function dispatchConfigFromEnv(
 ): DispatchConfig | null {
   const token = env.GITHUB_DISPATCH_TOKEN?.trim();
   if (!token) return null;
-  const repo = env.GITHUB_DISPATCH_REPO?.trim() || "gennpalm/predictra";
+  const repo = env.GITHUB_DISPATCH_REPO?.trim() || "predictra-hq/predictra";
   if (!REPO_RE.test(repo)) return null;
   return { token, repo, workflow: "agent-python.yml", ref: "dev" };
 }
