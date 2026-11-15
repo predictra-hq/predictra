@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { bestItalianPrices, italianPriceFor } from "@/lib/bet-builder/likely";
+import { listLatestOdds } from "@/lib/bet-builder/queries";
 import { Alert, Badge, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
@@ -17,7 +19,7 @@ import {
   VERIFY_DAYS,
 } from "@/lib/certainties/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { fillTemplate } from "@/lib/odds/format";
+import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatPercent } from "@/lib/predictions/format";
 import { hasActiveModel } from "@/lib/predictions/queries";
 
@@ -96,6 +98,7 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
     recentVerification(),
   ]);
   const matches = groupByMatch(selectPicks(upcoming, threshold));
+  const prices = bestItalianPrices(await listLatestOdds(matches.map((g) => g.matchId)));
   const stats = bandStats(verification.rows, verification.results);
 
   return (
@@ -149,18 +152,37 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
                   <p className="text-xs text-muted">{formatDateTime(match.kickoffAt)}</p>
                 </div>
                 <ul className="flex flex-wrap gap-2">
-                  {match.picks.map((p) => (
-                    <li
-                      key={`${p.market}|${p.line ?? ""}|${p.selection}`}
-                      className="rounded-md border border-border px-3 py-1.5 text-sm"
-                    >
-                      <span>{pickLabel(p)}</span>{" "}
-                      <span className="font-semibold">{formatPercent(p.probability)}</span>{" "}
-                      <span className="text-xs text-muted">
-                        ({c.fairOdds} {formatFairOdds(p.probability)})
-                      </span>
-                    </li>
-                  ))}
+                  {match.picks.map((p) => {
+                    const price = italianPriceFor(prices, p);
+                    const value = price ? p.probability * price.price - 1 : null;
+                    return (
+                      <li
+                        key={`${p.market}|${p.line ?? ""}|${p.selection}`}
+                        className="rounded-md border border-border px-3 py-1.5 text-sm"
+                      >
+                        <span>{pickLabel(p)}</span>{" "}
+                        <span className="font-semibold">{formatPercent(p.probability)}</span>{" "}
+                        <span className="text-xs text-muted">
+                          ({c.fairOdds} {formatFairOdds(p.probability)})
+                        </span>
+                        {price && value !== null ? (
+                          <span className="mt-1 flex items-center gap-2 text-xs">
+                            <span>
+                              {fillTemplate(c.bestPrice, {
+                                price: formatOdds(price.price),
+                                bookmaker: price.bookmaker,
+                              })}
+                            </span>
+                            <Badge tone={value >= 0 ? "positive" : "neutral"}>
+                              {value >= 0
+                                ? fillTemplate(c.worth, { value: formatPercent(value) })
+                                : c.notWorth}
+                            </Badge>
+                          </span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </li>
             ))}
