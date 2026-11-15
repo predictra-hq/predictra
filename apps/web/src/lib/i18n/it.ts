@@ -586,6 +586,16 @@ export const it = {
         "Per ogni turno, una multipla pronta per profilo di rischio. In ogni partita si sceglie, tra le giocate abbastanza probabili per il profilo, quella con il valore più alto: la quota che paga di più rispetto al rischio. Niente quote bassissime messe solo perché sicure. Quote reali di bookmaker italiani.",
       profiles: { SOLID: "Solida", BALANCED: "Equilibrata", HIGH: "Alta quota" },
       profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
+      register: "L'ho giocata",
+      registerHint:
+        "Apre il modulo delle giocate già compilato: controlla quota e puntata e salva.",
+      registerMarket: "Multipla",
+      registerSelection: "{profile} · {n} selezioni",
+      advice: "Puntata consigliata per «{name}»: {stake}",
+      adviceCapped: "ridotta al tuo stake massimo",
+      adviceNone:
+        "Per «{name}» nessuna puntata consigliata: a questa quota la schedina non ha valore.",
+      adviceHint: "Un quarto di Kelly, al massimo il 2% del disponibile. Solo informativo.",
       legs: "{n} selezioni",
       totalOdds: "Quota totale",
       winProbability: "Probabilità di vincita",

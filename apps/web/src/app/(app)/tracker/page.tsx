@@ -50,7 +50,7 @@ export const metadata: Metadata = { title: "Giocate fatte" };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
-/** Valori precompilati dal link "Registra" delle Certezze (`/tracker?add=1&d=…`). */
+/** Valori precompilati dai link "Registra" delle Certezze e "L'ho giocata" delle schedine (`/tracker?add=1&d=…`). */
 function parsePrefill(params: Record<string, string | string[] | undefined>) {
   const text = (key: string, max: number) => {
     const v = params[key];
@@ -66,6 +66,7 @@ function parsePrefill(params: Record<string, string | string[] | undefined>) {
     market: text("mk", 40),
     selection: text("sel", 40),
     odds: number("o"),
+    stake: number("st"),
     line: number("ln"),
     bookmaker: text("bk", 60),
   };
@@ -255,7 +256,13 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 />
               </Field>
               <Field label={t.stake} htmlFor="bet-stake">
-                <Input id="bet-stake" name="stake" inputMode="decimal" required />
+                <Input
+                  id="bet-stake"
+                  name="stake"
+                  inputMode="decimal"
+                  required
+                  defaultValue={prefill.stake}
+                />
               </Field>
               <Field label={t.line} htmlFor="bet-line">
                 <Input id="bet-line" name="line" inputMode="decimal" defaultValue={prefill.line} />
