@@ -8,7 +8,6 @@ import {
   CertaintiesCard,
   SchedineCard,
   SystemStatusCard,
-  UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -17,8 +16,8 @@ import { getMessages } from "@/lib/i18n";
 export const metadata: Metadata = { title: "Home" };
 
 /**
- * Home: in alto bankroll, schedine consigliate e stato del sistema; sotto le certezze
- * delle prossime 72 ore e le prossime partite. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
+ * Home: in alto le certezze delle prossime 72 ore, sotto bankroll, schedine consigliate
+ * e stato del sistema. Le partite hanno la loro pagina. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
  * dato non è disponibile. Le notifiche compaiono solo quando ce ne sono.
  */
 export default async function DashboardPage() {
@@ -41,7 +40,11 @@ export default async function DashboardPage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Suspense fallback={<CardSkeleton />}>
+        <CertaintiesCard />
+      </Suspense>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
           <BankrollCard />
         </Suspense>
@@ -56,18 +59,6 @@ export default async function DashboardPage() {
       <Suspense fallback={null}>
         <NotificationsCard />
       </Suspense>
-
-      <div className="mt-6">
-        <Suspense fallback={<CardSkeleton />}>
-          <CertaintiesCard />
-        </Suspense>
-      </div>
-
-      <div className="mt-6">
-        <Suspense fallback={<CardSkeleton className="h-96" />}>
-          <UpcomingMatchesCard />
-        </Suspense>
-      </div>
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>
     </>
