@@ -84,7 +84,7 @@ def run_market(store: Any, now: datetime) -> list[str]:
     for i in range(0, len(ids), 150):
         chunk = ",".join(str(x) for x in ids[i : i + 150])
         rows = store.select_all(
-            "v_active_predictions",
+            "v_pre_kickoff_predictions",
             {
                 "select": "match_id,selection,probability",
                 "market": "eq.1X2",
