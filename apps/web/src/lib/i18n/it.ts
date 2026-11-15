@@ -251,6 +251,7 @@ export const it = {
     noData:
       "Nessuna partita disponibile. I dati compaiono dopo la prima raccolta da football-data.org (vedi la pagina Dati).",
     matchTitle: "Dettaglio partita",
+    technical: "Dettagli tecnici (provenienza dei dati e controlli di qualità)",
     back: "Torna alle partite",
     season: "Stagione",
     stage: "Fase",
@@ -940,6 +941,7 @@ export const it = {
       "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
     fairOdds: "quota equa",
     split: "modello {model} · mercato {market}",
+    matchTitle: "Certezze della partita (da {value})",
     bestPrice: "Quota migliore {price} ({bookmaker})",
     worth: "conviene: +{value}",
     notWorth: "quota sotto il giusto",
