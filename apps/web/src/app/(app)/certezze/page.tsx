@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
 import { bestItalianPrices, italianPriceFor } from "@/lib/bet-builder/likely";
 import { listLatestOdds } from "@/lib/bet-builder/queries";
 import { Alert, Badge, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
@@ -11,6 +12,7 @@ import {
   parseThreshold,
   selectPicks,
   THRESHOLDS,
+  type MarketLookup,
   type BandStat,
 } from "@/lib/certainties/logic";
 import {
@@ -97,9 +99,29 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
     upcomingHighProbability(),
     recentVerification(),
   ]);
-  const matches = groupByMatch(selectPicks(upcoming, threshold));
-  const prices = bestItalianPrices(await listLatestOdds(matches.map((g) => g.matchId)));
-  const stats = bandStats(verification.rows, verification.results);
+  const ids = (rows: readonly { match_id: number }[]) => [...new Set(rows.map((r) => r.match_id))];
+  const [upcomingOdds, pastOdds] = await Promise.all([
+    listLatestOdds(ids(upcoming)),
+    listLatestOdds(ids(verification.rows)),
+  ]);
+  const lookup =
+    (consensus: ReadonlyMap<string, number>): MarketLookup =>
+    (r) =>
+      consensusFor(consensus, {
+        matchId: r.match_id,
+        market: r.market,
+        line: r.line === null ? null : Number(r.line),
+        selection: r.selection,
+      });
+  const matches = groupByMatch(
+    selectPicks(upcoming, threshold, lookup(marketConsensus(upcomingOdds))),
+  );
+  const prices = bestItalianPrices(upcomingOdds);
+  const stats = bandStats(
+    verification.rows,
+    verification.results,
+    lookup(marketConsensus(pastOdds)),
+  );
 
   return (
     <>
@@ -165,6 +187,14 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
                         <span className="text-xs text-muted">
                           ({c.fairOdds} {formatFairOdds(p.probability)})
                         </span>
+                        {p.marketProbability !== null ? (
+                          <span className="block text-xs text-muted">
+                            {fillTemplate(c.split, {
+                              model: formatPercent(p.modelProbability),
+                              market: formatPercent(p.marketProbability),
+                            })}
+                          </span>
+                        ) : null}
                         {price && value !== null ? (
                           <span className="mt-1 flex items-center gap-2 text-xs">
                             <span>

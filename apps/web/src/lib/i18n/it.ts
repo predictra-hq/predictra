@@ -921,7 +921,7 @@ export const it = {
   certainties: {
     title: "Certezze",
     description:
-      "Le giocate più probabili delle partite in arrivo secondo il modello attivo, su 1X2, doppia chance, under/over, gol/no gol e gol di una squadra. Per ogni partita restano solo le giocate più forti: se c'è l'1, la doppia chance 1X non compare; se c'è l'Over 1,5, l'Over 0,5 non compare.",
+      "Le giocate più probabili delle partite in arrivo, su 1X2, doppia chance, under/over, gol/no gol e gol di una squadra. Per ogni partita restano solo le giocate più forti: se c'è l'1, la doppia chance 1X non compare; se c'è l'Over 1,5, l'Over 0,5 non compare. Quando ci sono quote, la probabilità è la media tra il modello e il mercato senza margine (consenso di tutti i bookmaker): è più precisa del solo modello, soprattutto su under/over.",
     thresholdLabel: "Probabilità minima",
     atLeast: "da {value}",
     verifyTitle: "Quante volte sono uscite",
@@ -936,6 +936,7 @@ export const it = {
     upcomingHint:
       "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
     fairOdds: "quota equa",
+    split: "modello {model} · mercato {market}",
     bestPrice: "Quota migliore {price} ({bookmaker})",
     worth: "conviene: +{value}",
     notWorth: "quota sotto il giusto",
