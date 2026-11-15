@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
 
 /** Un'icona per voce: il menu si riconosce a colpo d'occhio, non solo leggendo. */
-const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
+export const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   dashboard: LayoutDashboard,
   matchCenter: CalendarDays,
   statisticsCenter: BarChart3,
