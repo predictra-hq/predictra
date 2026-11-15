@@ -34,21 +34,19 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     ],
   },
   {
-    id: "football",
-    label: "groupFootball",
-    items: [
-      { key: "matchCenter", href: "/match-center" },
-      { key: "leagueIntelligence", href: "/leagues" },
-      { key: "statisticsCenter", href: "/statistics" },
-    ],
-  },
-  {
     id: "bets",
     label: "groupBets",
     items: [
       { key: "certainties", href: "/certezze" },
       { key: "betBuilder", href: "/bet-builder" },
-      { key: "marketIntelligence", href: "/markets" },
+    ],
+  },
+  {
+    id: "football",
+    label: "groupFootball",
+    items: [
+      { key: "matchCenter", href: "/match-center" },
+      { key: "leagueIntelligence", href: "/leagues" },
     ],
   },
   {
@@ -64,6 +62,8 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     label: "groupSystem",
     collapsible: true,
     items: [
+      { key: "marketIntelligence", href: "/markets" },
+      { key: "statisticsCenter", href: "/statistics" },
       { key: "modelIntelligence", href: "/models" },
       { key: "dataCenter", href: "/data-center" },
     ],
