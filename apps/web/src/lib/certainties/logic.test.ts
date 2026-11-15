@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivePredictionRow } from "@predictra/shared-types";
 import {
   bandStats,
+  buildMultiple,
   combinedProbability,
   DEFAULT_THRESHOLD,
   groupByMatch,
@@ -135,5 +136,21 @@ describe("probabilità combinata modello/mercato", () => {
       () => 0.9,
     );
     expect(stats.find((s) => s.from === 0.85)!.count).toBe(1);
+  });
+});
+
+describe("buildMultiple", () => {
+  const pick = (matchId: number, probability: number) =>
+    selectPicks([row({ match_id: matchId, probability })], 0)[0]!;
+
+  it("aggiunge le giocate più forti finché la probabilità resta sopra la soglia", () => {
+    const multiple = buildMultiple([pick(1, 0.95), pick(2, 0.9), pick(3, 0.85), pick(4, 0.8)], 0.7);
+    // 0,95 × 0,90 × 0,85 = 0,727; con la quarta (0,80) scenderebbe a 0,581.
+    expect(multiple!.picks.map((p) => p.matchId)).toEqual([1, 2, 3]);
+    expect(multiple!.probability).toBeCloseTo(0.72675);
+  });
+
+  it("una sola giocata per partita e almeno due partite", () => {
+    expect(buildMultiple([pick(1, 0.95), pick(1, 0.9)], 0.5)).toBeNull();
   });
 });

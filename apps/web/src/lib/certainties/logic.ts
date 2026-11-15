@@ -236,3 +236,38 @@ export function bandStats(
     observed: count ? wins / count : null,
   }));
 }
+
+export interface CertaintyMultiple {
+  picks: Pick[];
+  /** Probabilità di vincere tutte le giocate (partite diverse, trattate come indipendenti). */
+  probability: number;
+}
+
+/** Soglie della multipla: probabilità minima di vincerla tutta. */
+export const MULTIPLE_TARGETS = [0.7, 0.5] as const;
+export const MAX_MULTIPLE_LEGS = 10;
+
+/**
+ * Multipla con le giocate più forti, una per partita: si aggiungono dalla più probabile
+ * finché la probabilità complessiva resta almeno `target`. Servono almeno due partite.
+ */
+export function buildMultiple(
+  picks: readonly Pick[],
+  target: number,
+  maxLegs: number = MAX_MULTIPLE_LEGS,
+): CertaintyMultiple | null {
+  const best = new Map<number, Pick>();
+  for (const p of picks) {
+    const cur = best.get(p.matchId);
+    if (!cur || p.probability > cur.probability) best.set(p.matchId, p);
+  }
+  const ordered = [...best.values()].sort((a, b) => b.probability - a.probability);
+  const legs: Pick[] = [];
+  let probability = 1;
+  for (const p of ordered) {
+    if (legs.length >= maxLegs || probability * p.probability < target) break;
+    legs.push(p);
+    probability *= p.probability;
+  }
+  return legs.length >= 2 ? { picks: legs, probability } : null;
+}
