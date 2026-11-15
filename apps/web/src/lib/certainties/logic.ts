@@ -328,3 +328,98 @@ export function pastMultiples(
   }
   return out;
 }
+
+/** Quota reale giocabile per una giocata (`null` se non raccolta). */
+export type PriceLookup = (pick: Pick) => number | null;
+
+/** Traguardo della multipla con valore: abbastanza probabile da vincere spesso. */
+export const VALUE_MULTIPLE_TARGET = 0.5;
+/** Vantaggio minimo di ogni giocata: probabilità × quota − 1. */
+export const MIN_LEG_VALUE = 0;
+
+export interface ValueMultiple extends CertaintyMultiple {
+  /** Quota reale combinata. */
+  price: number;
+  /** Valore atteso: probabilità × quota − 1. */
+  value: number;
+}
+
+/**
+ * Multipla che vince spesso e conviene: solo giocate con quota reale sopra il giusto,
+ * una per partita, dalla più probabile, finché la multipla resta sopra `target`.
+ */
+export function buildValueMultiple(
+  picks: readonly Pick[],
+  priceFor: PriceLookup,
+  target: number = VALUE_MULTIPLE_TARGET,
+  maxLegs: number = MAX_MULTIPLE_LEGS,
+): ValueMultiple | null {
+  const best = new Map<number, { pick: Pick; price: number }>();
+  for (const p of picks) {
+    const price = priceFor(p);
+    if (price === null || p.probability * price - 1 < MIN_LEG_VALUE) continue;
+    const cur = best.get(p.matchId);
+    if (!cur || p.probability > cur.pick.probability) best.set(p.matchId, { pick: p, price });
+  }
+  const ordered = [...best.values()].sort((a, b) => b.pick.probability - a.pick.probability);
+  const legs: Pick[] = [];
+  let probability = 1;
+  let price = 1;
+  for (const { pick, price: legPrice } of ordered) {
+    if (legs.length >= maxLegs || probability * pick.probability < target) break;
+    legs.push(pick);
+    probability *= pick.probability;
+    price *= legPrice;
+  }
+  if (legs.length < 2) return null;
+  return { picks: legs, probability, price, value: probability * price - 1 };
+}
+
+export interface PastValueMultiple {
+  week: string;
+  legs: number;
+  probability: number;
+  price: number;
+  won: boolean;
+}
+
+/** Multiple con valore ricostruite per settimana, con le quote raccolte prima delle partite. */
+export function pastValueMultiples(
+  rows: readonly ActivePredictionRow[],
+  results: ReadonlyMap<number, { home: number; away: number }>,
+  threshold: number,
+  priceFor: PriceLookup,
+  market: MarketLookup = noMarket,
+  weight: number = DEFAULT_MARKET_WEIGHT,
+): PastValueMultiple[] {
+  const byWeek = new Map<string, ActivePredictionRow[]>();
+  for (const r of rows) {
+    if (!results.has(r.match_id)) continue;
+    const week = weekOf(r.kickoff_at);
+    byWeek.set(week, [...(byWeek.get(week) ?? []), r]);
+  }
+  const out: PastValueMultiple[] = [];
+  for (const [week, weekRows] of [...byWeek.entries()].sort()) {
+    const multiple = buildValueMultiple(selectPicks(weekRows, threshold, market, weight), priceFor);
+    if (!multiple) continue;
+    const won = multiple.picks.every((p) => {
+      const score = results.get(p.matchId)!;
+      return settle(p.market, p.line, p.selection, score.home, score.away) === true;
+    });
+    out.push({
+      week,
+      legs: multiple.picks.length,
+      probability: multiple.probability,
+      price: multiple.price,
+      won,
+    });
+  }
+  return out;
+}
+
+/** Rendimento a puntata fissa (1 per multipla): (vincite − puntate) ÷ puntate. */
+export function flatReturn(multiples: readonly { won: boolean; price: number }[]): number | null {
+  if (multiples.length === 0) return null;
+  const payout = multiples.reduce((sum, m) => sum + (m.won ? m.price : 0), 0);
+  return payout / multiples.length - 1;
+}
