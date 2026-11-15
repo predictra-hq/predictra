@@ -28,8 +28,9 @@ concurrency:
 jobs:
   bootstrap:
     name: Invito Super Admin (${{ inputs.environment }})
-    # Solo il proprietario del repository può creare Super Admin.
-    if: github.actor == github.repository_owner
+    # Solo il proprietario può creare Super Admin. Login fisso: dal 15/11/2026 il
+    # repository è dell'organizzazione predictra-hq e `github.repository_owner` vale quella.
+    if: github.actor == 'gennpalm'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
