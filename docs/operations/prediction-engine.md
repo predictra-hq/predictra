@@ -152,6 +152,17 @@ Stesso banco (3.483 partite), Dixon-Coles + Elo, selezioni 1X2 e doppia chance:
 - Le probabilità alte sono ben tarate: il modello non è troppo prudente.
 - Sharpening con temperatura (p^a normalizzato): esponente stimato su 2024-25 = 0,987, cioè nessun cambiamento; su 2025-26 (mai vista) il Log Loss resta 0,9926. **Non adottato**: non c'è prudenza da togliere.
 
+## Multiple delle certezze rigiocate (15/11/2026)
+
+Stesso banco, stagioni 2024-26 settimana per settimana: per ogni settimana la giocata più forte di ogni partita (1X2 o doppia chance, dal 75%), dalla più probabile, finché la multipla resta sopra il traguardo (regola della pagina _Certezze_).
+
+| Traguardo  | Multiple | Partite in media | Prevista | Uscite |
+| ---------- | -------- | ---------------- | -------- | ------ |
+| almeno 70% | 74       | 3,7              | 73,9%    | 82,4%  |
+| almeno 50% | 74       | 6,3              | 53,6%    | 66,2%  |
+
+- Le multiple escono più del previsto: le giocate più forti (soprattutto doppie chance oltre il 90%) sono un po' sottostimate e lo scarto si somma. Con 74 multiple il margine è circa ±5 punti: **nessuna correzione**, ma le multiple delle certezze sono prudenti.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
