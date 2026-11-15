@@ -18,10 +18,11 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// Il manifest dell'app non contiene dati e il browser lo scarica senza sessione.
 // /api/jobs/* non ha sessione: lo chiama QStash e l'autorizzazione è la sua firma
 // (src/lib/agent/qstash.ts), verificata dalla route prima di ogni accesso al database.
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|api/jobs/|favicon.ico|robots.txt|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|api/jobs/|favicon.ico|robots.txt|manifest.webmanifest|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
