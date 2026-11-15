@@ -31,24 +31,54 @@ async function pagedPredictions(
   return out;
 }
 
+/** Partite per gruppi: `match_id` è la chiave del DISTINCT ON della vista e usa l'indice. */
+const ID_CHUNK = 200;
+/** Orizzonte delle previsioni del motore (prossimi 10 giorni) con un margine. */
+const UPCOMING_DAYS = 14;
+
+async function predictionsFor(
+  ids: readonly number[],
+  what: string,
+): Promise<ActivePredictionRow[]> {
+  const supabase = await createClient();
+  const out: ActivePredictionRow[] = [];
+  for (let i = 0; i < ids.length; i += ID_CHUNK) {
+    const chunk = ids.slice(i, i + ID_CHUNK) as number[];
+    out.push(
+      ...(await pagedPredictions(what, (from, to) =>
+        supabase
+          .from("v_active_predictions")
+          .select("*")
+          .in("match_id", chunk)
+          .in("market", [...CERTAINTY_MARKETS])
+          .gte("probability", MIN_PROBABILITY)
+          .order("match_id", { ascending: true })
+          .order("market", { ascending: true })
+          .order("selection", { ascending: true })
+          .order("line", { ascending: true })
+          .range(from, to),
+      )),
+    );
+  }
+  return out;
+}
+
 /** Previsioni sopra la soglia minima per le partite non ancora iniziate. */
 export async function upcomingHighProbability(now = new Date()): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();
-  return pagedPredictions("certezze in arrivo", (from, to) =>
-    supabase
-      .from("v_active_predictions")
-      .select("*")
-      .gt("kickoff_at", now.toISOString())
-      .eq("match_status", "SCHEDULED")
-      .in("market", [...CERTAINTY_MARKETS])
-      .gte("probability", MIN_PROBABILITY)
-      .order("kickoff_at", { ascending: true })
-      .order("match_id", { ascending: true })
-      .order("market", { ascending: true })
-      .order("selection", { ascending: true })
-      .order("line", { ascending: true })
-      .range(from, to),
-  );
+  const end = new Date(now.getTime() + UPCOMING_DAYS * 86_400_000).toISOString();
+  const { data, error } = await supabase
+    .from("v_match_center")
+    .select("match_id")
+    .eq("status", "SCHEDULED")
+    .gt("kickoff_at", now.toISOString())
+    .lt("kickoff_at", end)
+    .order("match_id")
+    .limit(1000);
+  if (error) throw new PredictionsUnavailable("partite in arrivo", error);
+  const ids = (data ?? []).map((r) => Number(r.match_id));
+  const rows = await predictionsFor(ids, "certezze in arrivo");
+  return rows.sort((a, b) => a.kickoff_at.localeCompare(b.kickoff_at) || a.match_id - b.match_id);
 }
 
 export interface Verification {
@@ -60,40 +90,28 @@ export interface Verification {
 export async function recentVerification(now = new Date()): Promise<Verification> {
   const supabase = await createClient();
   const since = new Date(now.getTime() - VERIFY_DAYS * 86_400_000).toISOString();
-  const rows = await pagedPredictions("verifica delle certezze", (from, to) =>
-    supabase
-      .from("v_active_predictions")
-      .select("*")
-      .gte("kickoff_at", since)
-      .lt("kickoff_at", now.toISOString())
-      .eq("match_status", "FINISHED")
-      .in("market", [...CERTAINTY_MARKETS])
-      .gte("probability", MIN_PROBABILITY)
-      .order("kickoff_at", { ascending: true })
-      .order("match_id", { ascending: true })
-      .order("market", { ascending: true })
-      .order("selection", { ascending: true })
-      .order("line", { ascending: true })
-      .range(from, to),
-  );
-
   const results = new Map<number, { home: number; away: number }>();
-  const ids = [...new Set(rows.map((r) => r.match_id))];
-  for (let i = 0; i < ids.length; i += 200) {
+  for (let from = 0; from < MAX_ROWS; from += PAGE) {
     const { data, error } = await supabase
       .from("v_match_results")
       .select("match_id, home_score, away_score")
-      .in("match_id", ids.slice(i, i + 200));
+      .gte("kickoff_at", since)
+      .lt("kickoff_at", now.toISOString())
+      .order("match_id")
+      .range(from, from + PAGE - 1);
     if (error) throw new PredictionsUnavailable("risultati per la verifica", error);
-    for (const r of (data ?? []) as {
+    const page = (data ?? []) as {
       match_id: number;
       home_score: number | null;
       away_score: number | null;
-    }[]) {
+    }[];
+    for (const r of page) {
       if (r.home_score !== null && r.away_score !== null) {
-        results.set(r.match_id, { home: r.home_score, away: r.away_score });
+        results.set(Number(r.match_id), { home: r.home_score, away: r.away_score });
       }
     }
+    if (page.length < PAGE) break;
   }
+  const rows = await predictionsFor([...results.keys()], "verifica delle certezze");
   return { rows, results };
 }

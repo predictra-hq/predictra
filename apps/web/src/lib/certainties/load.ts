@@ -16,6 +16,14 @@ const matchIds = (rows: readonly ActivePredictionRow[]) => [
   ...new Set(rows.map((r) => r.match_id)),
 ];
 
+/** Ultime quote a gruppi di partite, per tenere corto l'indirizzo della richiesta. */
+async function oddsFor(ids: readonly number[]) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += 200)
+    out.push(...(await listLatestOdds(ids.slice(i, i + 200))));
+  return out;
+}
+
 export function marketLookup(consensus: ReadonlyMap<string, number>): MarketLookup {
   return (r) =>
     consensusFor(consensus, {
@@ -34,7 +42,7 @@ export interface UpcomingData {
 
 export const loadUpcoming = cache(async (): Promise<UpcomingData> => {
   const rows = await upcomingHighProbability();
-  const odds = await listLatestOdds(matchIds(rows));
+  const odds = await oddsFor(matchIds(rows));
   return { rows, market: marketLookup(marketConsensus(odds)), prices: bestItalianPrices(odds) };
 });
 
@@ -44,7 +52,7 @@ export interface VerificationData extends Verification {
 
 export const loadVerification = cache(async (): Promise<VerificationData> => {
   const verification = await recentVerification();
-  const odds = await listLatestOdds(matchIds(verification.rows));
+  const odds = await oddsFor(matchIds(verification.rows));
   return { ...verification, market: marketLookup(marketConsensus(odds)) };
 });
 
