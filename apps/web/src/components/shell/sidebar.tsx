@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
   Bot,
   CalendarDays,
+  ChevronDown,
   Database,
   Layers,
   LayoutDashboard,
@@ -18,7 +19,6 @@ import {
   MessageCircleQuestion,
   ScrollText,
   Settings2,
-  ShieldCheck,
   Tags,
   TrendingUp,
   Trophy,
@@ -30,7 +30,7 @@ import {
 import { Logo } from "@/components/shell/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import type { NavItem } from "./nav-config";
+import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
 
 /** Un'icona per voce: il menu si riconosce a colpo d'occhio, non solo leggendo. */
 const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
@@ -45,20 +45,17 @@ const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   modelIntelligence: LineChart,
   dataCenter: Database,
   askPredictra: MessageCircleQuestion,
-  analysis: BarChart3,
-  system: LineChart,
   users: Users,
   invitations: Mail,
   audit: ScrollText,
   teamAliases: Tags,
   agent: Bot,
-  security: ShieldCheck,
-  preferences: Settings2,
+  settings: Settings2,
 };
 
 interface SidebarProps {
   messages: Messages;
-  main: readonly NavItem[];
+  groups: readonly NavGroup[];
   admin: readonly NavItem[];
   settings: readonly NavItem[];
   userLabel: string;
@@ -96,9 +93,7 @@ function NavLinks({
             </li>
           );
         }
-        const active = [item.href, ...(item.also ?? [])].some(
-          (href) => pathname === href || pathname.startsWith(`${href}/`),
-        );
+        const active = isNavItemActive(item, pathname);
         return (
           <li key={item.key}>
             <Link
@@ -113,7 +108,8 @@ function NavLinks({
               )}
             >
               {icon}
-              <span className="min-w-0 truncate">{label}</span>
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              <PendingHint />
             </Link>
           </li>
         );
@@ -122,7 +118,79 @@ function NavLinks({
   );
 }
 
-export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel }: SidebarProps) {
+/**
+ * Puntino a destra della voce cliccata finché la pagina non arriva: riscontro immediato
+ * senza spostare nulla (sempre presente, cambia solo l'opacità).
+ */
+function PendingHint() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "size-1.5 shrink-0 rounded-full bg-positive transition-opacity",
+        pending ? "opacity-100 motion-safe:animate-pulse" : "opacity-0",
+      )}
+    />
+  );
+}
+
+const GROUP_TITLE = "px-3 text-[11px] font-semibold uppercase tracking-wider text-subtle";
+
+/** Un gruppo del menu: titolo facoltativo e, se richiudibile, aperto solo quando serve. */
+function NavGroupSection({
+  group,
+  messages,
+  onNavigate,
+}: {
+  group: NavGroup;
+  messages: Messages;
+  onNavigate: () => void;
+}) {
+  const pathname = usePathname();
+  const [expanded, setExpanded] = useState(false);
+  const links = <NavLinks items={group.items} messages={messages} onNavigate={onNavigate} />;
+  if (!group.label) return <div className="mt-4 first:mt-0">{links}</div>;
+
+  const title = messages.nav[group.label];
+  if (!group.collapsible) {
+    return (
+      <div className="mt-4">
+        <p className={cn(GROUP_TITLE, "mb-1")}>{title}</p>
+        {links}
+      </div>
+    );
+  }
+  // Su una pagina del gruppo resta aperto, così la voce attiva è sempre visibile.
+  const open = expanded || group.items.some((item) => isNavItemActive(item, pathname));
+  const panelId = `nav-group-${group.id}`;
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!open)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className={cn(
+          GROUP_TITLE,
+          "mb-1 flex w-full cursor-pointer items-center justify-between rounded-md py-1 hover:text-fg",
+        )}
+      >
+        {title}
+        <ChevronDown
+          size={14}
+          aria-hidden="true"
+          className={cn("transition-transform", open && "rotate-180")}
+        />
+      </button>
+      <div id={panelId} hidden={!open}>
+        {links}
+      </div>
+    </div>
+  );
+}
+
+export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabel }: SidebarProps) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -187,19 +255,18 @@ export function Sidebar({ messages, main, admin, settings, userLabel, roleLabel 
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Navigazione principale">
-          <NavLinks items={main} messages={messages} onNavigate={close} />
+          {groups.map((group) => (
+            <NavGroupSection key={group.id} group={group} messages={messages} onNavigate={close} />
+          ))}
           {admin.length > 0 ? (
-            <>
-              <p className="mb-1 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                {messages.nav.administration}
-              </p>
+            <div className="mt-4">
+              <p className={cn(GROUP_TITLE, "mb-1")}>{messages.nav.administration}</p>
               <NavLinks items={admin} messages={messages} onNavigate={close} />
-            </>
+            </div>
           ) : null}
-          <p className="mb-1 mt-5 px-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">
-            {messages.nav.settings}
-          </p>
-          <NavLinks items={settings} messages={messages} onNavigate={close} />
+          <div className="mt-4 border-t border-border pt-3">
+            <NavLinks items={settings} messages={messages} onNavigate={close} />
+          </div>
         </nav>
 
         <div className="border-t border-border p-4">

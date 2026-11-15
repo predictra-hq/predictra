@@ -1,7 +1,10 @@
+import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { roundStartOf } from "./format";
 import {
   italianPriceFor,
   LIKELY_MARKETS,
+  oddsMarketFor,
+  type LatestOddsRow,
   MAX_PICK_PROBABILITY,
   MIN_CONFIDENCE,
   type ItalianPrice,
@@ -10,7 +13,7 @@ import {
 } from "./likely";
 
 /*
- * "Bollette consigliate": per ogni turno, una multipla giocabile per profilo di rischio.
+ * "Schedine consigliate": per ogni turno, una multipla giocabile per profilo di rischio.
  *
  * Differenza da "Le più probabili": lì si prende il pronostico più probabile di ogni
  * partita, che spesso ha una quota troppo bassa per valere la giocata. Qui ogni
@@ -20,13 +23,17 @@ import {
  * Regole (nessun dato inventato, nessuna schedina forzata):
  * - solo selezioni con una quota REALE di un bookmaker italiano (ADR 0028): la quota
  *   totale è il prodotto delle quote reali;
- * - probabilità del modello attivo, con affidabilità almeno `MIN_CONFIDENCE`;
- * - controllo di credibilità: se modello e bookmaker sono troppo distanti (vantaggio
- *   oltre `MAX_EDGE`, come nei casi dell'ADR 0028, o sotto `MIN_EDGE`) la selezione è
- *   scartata;
+ * - probabilità prudente, come nelle proposte con valore (ADR 0028): media tra quella
+ *   del modello attivo (affidabilità almeno `MIN_CONFIDENCE`) e quella del mercato senza
+ *   margine, calcolata dalle quote di tutti i bookmaker (`marketConsensus`). Senza quote
+ *   di mercato resta quella del modello;
+ * - valore = probabilità × quota − 1: si scartano le quote troppo basse (sotto
+ *   `MIN_EDGE`, il bookmaker paga meno del giusto) e i valori non credibili (sopra
+ *   `MAX_EDGE`: modello e mercato troppo distanti, casi dell'ADR 0028);
  * - una selezione per partita, squadre tutte diverse, stesso turno (ADR 0026, 0036);
- * - per ogni partita si sceglie la selezione più probabile tra quelle che rispettano
- *   le soglie del profilo; tra le partite, le più probabili;
+ * - per ogni partita, tra le selezioni che rispettano probabilità e quota minime del
+ *   profilo, si sceglie quella con il valore più alto: "sicura" per la soglia, con il
+ *   margine migliore tra quelle sicure. Tra le partite, prima quelle con più valore;
  * - se le selezioni valide sono meno di `MIN_LEGS`, quel profilo non viene proposto.
  */
 
@@ -48,12 +55,18 @@ export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
   HIGH: { minProbability: 0.42, minPrice: 1.8, legs: 4 },
 };
 
-/** Vantaggio = probabilità × quota − 1. Fuori da questo intervallo la selezione è scartata. */
-export const MIN_EDGE = -0.08;
-export const MAX_EDGE = 0.2;
+/** Valore = probabilità × quota − 1. Fuori da questo intervallo la selezione è scartata. */
+export const MIN_EDGE = -0.03;
+export const MAX_EDGE = 0.15;
+/** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
+export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
 export const MIN_LEGS = 2;
 
 export interface BollettaPick extends LikelyPick {
+  /** Probabilità del solo modello; `probability` è quella prudente usata per le scelte. */
+  modelProbability: number;
+  /** Probabilità del mercato senza margine, se ci sono quote. */
+  marketProbability: number | null;
   price: number;
   bookmaker: string;
   /** Quando è stata letta la quota. */
@@ -73,6 +86,70 @@ export interface Bolletta {
   oddsObservedAt: string;
   /** Prodotto delle quote reali. */
   price: number;
+  /** Valore atteso per 1 € puntato: probabilità × quota − 1. */
+  expectedValue: number;
+}
+
+const IMPLIED_SELECTIONS: Readonly<Record<string, readonly string[]>> = {
+  h2h: ["HOME", "DRAW", "AWAY"],
+  double_chance: ["HOME_DRAW", "HOME_AWAY", "DRAW_AWAY"],
+};
+
+/**
+ * Probabilità di mercato senza margine (ADR 0016, 0033), chiave `partita|mercato|esito`.
+ * Per ogni bookmaker si normalizzano le probabilità implicite (1 ÷ quota) del mercato,
+ * poi si fa la media tra i bookmaker. La doppia chance viene dal consenso 1X2 quando c'è
+ * (somma di due esiti), altrimenti dalle sue quote normalizzate a somma 2.
+ */
+export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, number> {
+  const books = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const price = Number(r.price);
+    if (r.match_id === null || !(price > 1)) continue;
+    const key = `${r.match_id}|${r.bookmaker}|${r.market}`;
+    const book = books.get(key) ?? new Map<string, number>();
+    book.set(r.selection, price);
+    books.set(key, book);
+  }
+  const sums = new Map<string, { total: number; n: number }>();
+  for (const [key, book] of books) {
+    const [match, , market] = key.split("|");
+    const selections =
+      IMPLIED_SELECTIONS[market!] ?? (market!.startsWith("totals_") ? ["OVER", "UNDER"] : null);
+    if (!selections || !selections.every((x) => book.has(x))) continue;
+    const implied = selections.map((x) => 1 / book.get(x)!);
+    const target = market === "double_chance" ? 2 : 1;
+    const total = implied.reduce((a, b) => a + b, 0);
+    selections.forEach((x, i) => {
+      const k = `${match}|${market}|${x}`;
+      const cur = sums.get(k) ?? { total: 0, n: 0 };
+      cur.total += (implied[i]! / total) * target;
+      cur.n += 1;
+      sums.set(k, cur);
+    });
+  }
+  const out = new Map<string, number>();
+  for (const [k, v] of sums) out.set(k, v.total / v.n);
+  for (const k of [...out.keys()]) {
+    const [match, market] = k.split("|");
+    if (market !== "h2h") continue;
+    const h = out.get(`${match}|h2h|HOME`);
+    const d = out.get(`${match}|h2h|DRAW`);
+    const a = out.get(`${match}|h2h|AWAY`);
+    if (h === undefined || d === undefined || a === undefined) continue;
+    out.set(`${match}|double_chance|HOME_DRAW`, h + d);
+    out.set(`${match}|double_chance|HOME_AWAY`, h + a);
+    out.set(`${match}|double_chance|DRAW_AWAY`, d + a);
+  }
+  return out;
+}
+
+function consensusFor(
+  consensus: ReadonlyMap<string, number>,
+  pick: Pick<LikelyPick, "matchId" | "market" | "line" | "selection">,
+): number | null {
+  const market = oddsMarketFor(pick.market, pick.line);
+  return market ? (consensus.get(`${pick.matchId}|${market}|${pick.selection}`) ?? null) : null;
 }
 
 const ROME_DAY = new Intl.DateTimeFormat("en-CA", {
@@ -98,13 +175,15 @@ function allowedMarket(row: LikelyRow): boolean {
 export function playablePicks(
   rows: readonly LikelyRow[],
   prices: ReadonlyMap<string, ItalianPrice>,
+  consensus: ReadonlyMap<string, number> = new Map(),
+  weight: number = MARKET_WEIGHT,
 ): BollettaPick[] {
   const result: BollettaPick[] = [];
   for (const r of rows) {
-    const probability = Number(r.probability);
+    const modelProbability = Number(r.probability);
     const confidence = Number(r.confidence_score);
     if (!allowedMarket(r) || confidence < MIN_CONFIDENCE) continue;
-    if (!(probability > 0) || probability > MAX_PICK_PROBABILITY) continue;
+    if (!(modelProbability > 0)) continue;
     const pick: LikelyPick = {
       matchId: Number(r.match_id),
       kickoffAt: r.kickoff_at,
@@ -113,15 +192,22 @@ export function playablePicks(
       market: r.market,
       line: r.line === null ? null : Number(r.line),
       selection: r.selection,
-      probability,
+      probability: modelProbability,
       confidence,
     };
     const it = italianPriceFor(prices, pick);
     if (!it || !(it.price > 1)) continue;
+    const market = consensusFor(consensus, pick);
+    const probability =
+      market === null ? modelProbability : (1 - weight) * modelProbability + weight * market;
+    if (probability > MAX_PICK_PROBABILITY) continue;
     const edge = probability * it.price - 1;
     if (edge < MIN_EDGE || edge > MAX_EDGE) continue;
     result.push({
       ...pick,
+      probability,
+      modelProbability,
+      marketProbability: market,
       price: it.price,
       bookmaker: it.bookmaker,
       observedAt: it.observedAt,
@@ -131,9 +217,10 @@ export function playablePicks(
   return result;
 }
 
-const byStrength = (a: BollettaPick, b: BollettaPick) =>
-  b.probability - a.probability ||
+/** Prima il valore più alto, a parità la probabilità più alta. */
+const byValue = (a: BollettaPick, b: BollettaPick) =>
   b.edge - a.edge ||
+  b.probability - a.probability ||
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
 
@@ -143,29 +230,32 @@ function buildOne(
   pool: readonly BollettaPick[],
 ): Bolletta | null {
   const rule = BOLLETTA_RULES[profile];
-  // La selezione più probabile di ogni partita tra quelle che rispettano il profilo.
+  // Per ogni partita, la selezione con più valore tra quelle "sicure" per il profilo.
   const perMatch = new Map<number, BollettaPick>();
   for (const p of pool) {
     if (p.probability < rule.minProbability || p.price < rule.minPrice) continue;
     const current = perMatch.get(p.matchId);
-    if (!current || byStrength(p, current) < 0) perMatch.set(p.matchId, p);
+    if (!current || byValue(p, current) < 0) perMatch.set(p.matchId, p);
   }
   const chosen: BollettaPick[] = [];
   const teams = new Set<string>();
-  for (const p of [...perMatch.values()].sort(byStrength)) {
+  for (const p of [...perMatch.values()].sort(byValue)) {
     if (chosen.length >= rule.legs) break;
     if (teams.has(p.home) || teams.has(p.away)) continue;
     teams.add(p.home).add(p.away);
     chosen.push(p);
   }
   if (chosen.length < MIN_LEGS) return null;
+  const probability = chosen.reduce((acc, p) => acc * p.probability, 1);
+  const price = chosen.reduce((acc, p) => acc * p.price, 1);
   return {
     profile,
     round,
     picks: chosen.sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt) || a.matchId - b.matchId),
     oddsObservedAt: chosen.map((p) => p.observedAt).sort()[0] ?? "",
-    probability: chosen.reduce((acc, p) => acc * p.probability, 1),
-    price: chosen.reduce((acc, p) => acc * p.price, 1),
+    probability,
+    price,
+    expectedValue: probability * price - 1,
   };
 }
 
@@ -176,9 +266,10 @@ const signature = (b: Bolletta) =>
 export function buildBollette(
   rows: readonly LikelyRow[],
   prices: ReadonlyMap<string, ItalianPrice>,
+  consensus: ReadonlyMap<string, number> = new Map(),
 ): Bolletta[] {
   const byRound = new Map<string, BollettaPick[]>();
-  for (const p of playablePicks(rows, prices)) {
+  for (const p of playablePicks(rows, prices, consensus)) {
     const round = roundOfKickoff(p.kickoffAt);
     byRound.set(round, [...(byRound.get(round) ?? []), p]);
   }

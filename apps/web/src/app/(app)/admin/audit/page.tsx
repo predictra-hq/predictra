@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
+import { FilterForm } from "@/components/ui/filter-form";
 import { requirePermission } from "@/lib/auth/dal";
 import {
   AUDIT_ACTIONS,
@@ -55,10 +56,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
     <>
       <PageHeader title={m.admin.auditTitle} description={m.admin.auditDescription} />
 
-      <form
-        method="get"
-        className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_10rem_auto_auto] sm:items-end"
-      >
+      <FilterForm className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_10rem_auto_auto] sm:items-end">
         <Field label={m.admin.action} htmlFor="action">
           <Select id="action" name="action" defaultValue={filters.action ?? ""}>
             <option value="">{m.admin.allActions}</option>
@@ -81,7 +79,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
         <Link href="/admin/audit" className="h-10 content-center text-sm text-muted hover:text-fg">
           {m.admin.resetFilters}
         </Link>
-      </form>
+      </FilterForm>
 
       <Card scrollLabel={m.admin.auditTitle} className="p-0">
         {rows.length === 0 ? (

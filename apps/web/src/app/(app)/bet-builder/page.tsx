@@ -7,6 +7,7 @@ import {
 } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   BetBuilderDisclaimer,
   BetBuilderNav,
@@ -20,6 +21,7 @@ import {
   Badge,
   Button,
   Card,
+  CardSkeleton,
   EmptyState,
   Input,
   PageHeader,
@@ -34,21 +36,13 @@ import {
   roundStartOf,
   selectionLabel,
 } from "@/lib/bet-builder/format";
-import { BolletteCard } from "@/components/bet-builder/bollette";
-import { LikelyCard } from "@/components/bet-builder/likely";
-import { buildBollette } from "@/lib/bet-builder/bollette";
-import { bestItalianPrices, bestPicks, likelyMultiples } from "@/lib/bet-builder/likely";
-import {
-  getLatestRun,
-  listActiveProposals,
-  listItalianLatestOdds,
-  listLikelyRows,
-  listProposalLegs,
-} from "@/lib/bet-builder/queries";
+import { SchedineSection } from "@/components/bet-builder/bollette";
+import { LikelySection } from "@/components/bet-builder/likely";
+import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Bollette" };
+export const metadata: Metadata = { title: "Schedine" };
 
 function ProposalCard({
   p,
@@ -120,23 +114,15 @@ function ProposalCard({
 function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   const m = getMessages().betBuilder;
   const text = !run ? m.emptyNoRun : run.status === "FAILED" ? m.emptyFailed : m.emptyZero;
-  return <EmptyState>{text}</EmptyState>;
+  // Nessuna proposta: una riga sola, la pagina resta corta.
+  return <p className="mb-6 text-sm text-muted">{text}</p>;
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
   await requireUser();
   const m = getMessages().betBuilder;
   const params = await searchParams;
-  const [run, proposals, likelyRows] = await Promise.all([
-    getLatestRun(),
-    listActiveProposals(),
-    listLikelyRows(new Date()),
-  ]);
-  const picks = bestPicks(likelyRows);
-  // Quote italiane di tutte le partite con previsioni: servono anche alle bollette.
-  const matchIds = [...new Set(likelyRows.map((r) => Number(r.match_id)))];
-  const italianOdds = bestItalianPrices(await listItalianLatestOdds(matchIds));
-  const bollette = buildBollette(likelyRows, italianOdds);
+  const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
 
   // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
   const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
@@ -162,30 +148,36 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
-      <BolletteCard bollette={bollette} stake={stake} now={new Date()} />
+      <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
+        <SchedineSection stake={stake} />
+      </Suspense>
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
-      <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
-      <details className="mb-4 text-xs text-muted">
-        <summary className="cursor-pointer">{m.technicalDetails}</summary>
-        <p className="mb-1 mt-2 text-xs text-muted">
-          {fillTemplate(m.thresholds, {
-            ev: formatPercent(rules.min_expected_value, 0),
-            p: formatPercent(rules.min_probability, 0),
-            c: String(rules.min_confidence_score).replace(".", ","),
-            legs: rules.max_legs,
-          })}
-        </p>
-        {run ? (
-          <p className="mb-4 text-xs text-muted">
-            {fillTemplate(m.lastRun, {
-              at: formatDateTime(run.finished_at ?? run.started_at),
-              candidates: run.candidates_evaluated,
-              proposals: run.proposals_written,
-            })}
-          </p>
-        ) : null}
-      </details>
+      {proposals.length > 0 ? (
+        <>
+          <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+          <details className="mb-4 text-xs text-muted">
+            <summary className="cursor-pointer">{m.technicalDetails}</summary>
+            <p className="mb-1 mt-2 text-xs text-muted">
+              {fillTemplate(m.thresholds, {
+                ev: formatPercent(rules.min_expected_value, 0),
+                p: formatPercent(rules.min_probability, 0),
+                c: String(rules.min_confidence_score).replace(".", ","),
+                legs: rules.max_legs,
+              })}
+            </p>
+            {run ? (
+              <p className="mb-4 text-xs text-muted">
+                {fillTemplate(m.lastRun, {
+                  at: formatDateTime(run.finished_at ?? run.started_at),
+                  candidates: run.candidates_evaluated,
+                  proposals: run.proposals_written,
+                })}
+              </p>
+            ) : null}
+          </details>
+        </>
+      ) : null}
 
       {proposals.length === 0 ? (
         <NoProposals run={run} />
@@ -270,12 +262,9 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
 
       <details className="mb-6">
         <summary className="mb-3 cursor-pointer text-sm text-positive">{m.likelyToggle}</summary>
-        <LikelyCard
-          picks={picks}
-          multiples={likelyMultiples(picks)}
-          prices={italianOdds}
-          stake={stake}
-        />
+        <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
+          <LikelySection stake={stake} />
+        </Suspense>
       </details>
     </>
   );

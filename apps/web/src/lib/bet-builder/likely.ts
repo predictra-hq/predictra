@@ -9,7 +9,15 @@
  *   con Confidence Score sotto la soglia del Bet Builder (ADR 0025).
  * - Multipla di k partite: i k pronostici più probabili su partite diverse. Con
  *   l'indipendenza dichiarata (ADR 0026 §2) è la multipla di k selezioni più probabile.
+ *   Se ne propone una per categoria di rischio: la più lunga che resta sopra la soglia.
  */
+
+import {
+  BET_PROPOSAL_CATEGORIES,
+  CATEGORY_MIN_PROBABILITY,
+  DEFAULT_BET_BUILDER_RULES,
+  type BetProposalCategory,
+} from "@predictra/shared-types";
 
 export const LIKELY_MARKETS: Readonly<Record<string, readonly (number | null)[]>> = {
   "1X2": [null],
@@ -21,7 +29,15 @@ export const LIKELY_MARKETS: Readonly<Record<string, readonly (number | null)[]>
 export const MAX_PICK_PROBABILITY = 0.9;
 export const MIN_PICK_PROBABILITY = 0.5;
 export const MIN_CONFIDENCE = 0.4;
-export const MULTIPLE_SIZES = [2, 3, 4] as const;
+export const MIN_MULTIPLE_LEGS = 2;
+/** Oltre queste partite la multipla non si allunga più, anche se la soglia lo permetterebbe. */
+export const MAX_MULTIPLE_LEGS = 12;
+/** Probabilità combinata minima della multipla di ogni categoria (ADR 0027 §3, ADR 0025). */
+export const MULTIPLE_MIN_PROBABILITY: Readonly<Record<BetProposalCategory, number>> = {
+  CONSERVATIVE: CATEGORY_MIN_PROBABILITY.CONSERVATIVE,
+  BALANCED: CATEGORY_MIN_PROBABILITY.BALANCED,
+  AGGRESSIVE: DEFAULT_BET_BUILDER_RULES.min_probability,
+};
 
 export interface LikelyRow {
   match_id: number;
@@ -71,13 +87,15 @@ export interface LatestOddsRow {
   selection: string;
   price: number;
   observed_at: string;
+  /** Bookmaker italiano (quota giocabile). Assente = trattata come italiana. */
+  italian?: boolean;
 }
 
 /** Migliore quota italiana per (partita, mercato, esito), tra le righe già filtrate. */
 export function bestItalianPrices(rows: readonly LatestOddsRow[]): Map<string, ItalianPrice> {
   const best = new Map<string, ItalianPrice>();
   for (const r of rows) {
-    if (r.match_id === null) continue;
+    if (r.match_id === null || r.italian === false) continue;
     const key = `${r.match_id}|${r.market}|${r.selection}`;
     const price = Number(r.price);
     const cur = best.get(key);
@@ -112,7 +130,9 @@ export function combinedItalianPrice(
 }
 
 export interface LikelyMultiple {
+  category: BetProposalCategory;
   size: number;
+  /** Pronostici ordinati per tipo di giocata, poi per calcio d'inizio. */
   picks: LikelyPick[];
   probability: number;
   fairOdds: number;
@@ -161,17 +181,45 @@ export function bestPicks(rows: readonly LikelyRow[]): LikelyPick[] {
   );
 }
 
-/** Le multiple più probabili da 2, 3 e 4 partite. */
+/**
+ * Una multipla per categoria di rischio (ADR 0027 §3): la più lunga, fatta dei pronostici
+ * più probabili su partite diverse, la cui probabilità combinata resta sopra la soglia
+ * della categoria. Più partite → probabilità più bassa → categoria più rischiosa.
+ * Una categoria non compare se non riesce ad aggiungere partite rispetto alla precedente
+ * o se nemmeno due pronostici restano sopra la sua soglia.
+ */
 export function likelyMultiples(picks: readonly LikelyPick[]): LikelyMultiple[] {
-  return MULTIPLE_SIZES.filter((k) => picks.length >= k).map((k) => {
-    const chosen = picks.slice(0, k);
-    const probability = chosen.reduce((acc, p) => acc * p.probability, 1);
-    return {
-      size: k,
-      picks: [...chosen].sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt)),
+  const out: LikelyMultiple[] = [];
+  let previousSize = 0;
+  for (const category of BET_PROPOSAL_CATEGORIES) {
+    const floor = MULTIPLE_MIN_PROBABILITY[category];
+    let size = 0;
+    let probability = 1;
+    for (const p of picks.slice(0, MAX_MULTIPLE_LEGS)) {
+      if (probability * p.probability < floor) break;
+      probability *= p.probability;
+      size += 1;
+    }
+    if (size < MIN_MULTIPLE_LEGS || size <= previousSize) continue;
+    previousSize = size;
+    const chosen = picks.slice(0, size);
+    out.push({
+      category,
+      size,
+      picks: [...chosen].sort(
+        (a, b) =>
+          marketOrder(a.market) - marketOrder(b.market) || a.kickoffAt.localeCompare(b.kickoffAt),
+      ),
       probability,
       fairOdds: 1 / probability,
       confidence: Math.min(...chosen.map((p) => p.confidence)),
-    };
-  });
+    });
+  }
+  return out;
+}
+
+/** Posizione del tipo di giocata nell'ordine di `LIKELY_MARKETS`. */
+function marketOrder(market: string): number {
+  const i = Object.keys(LIKELY_MARKETS).indexOf(market);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 }

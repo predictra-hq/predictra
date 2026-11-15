@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
-import { SectionTabs } from "@/components/shell/section-tabs";
 import { Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { healthTone, runStatusTone, severityTone } from "@/lib/football/format";
@@ -14,7 +13,7 @@ import {
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Fonti dati" };
+export const metadata: Metadata = { title: "Dati" };
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -48,7 +47,6 @@ export default async function DataCenterPage() {
   return (
     <>
       <PageHeader title={d.title} description={d.description} />
-      <SectionTabs group="system" current="/data-center" />
 
       <h2 className="mb-3 text-lg font-semibold">{d.sources}</h2>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -65,7 +63,7 @@ export default async function DataCenterPage() {
                 <FreshnessBadge freshness={s.freshness} />
               </div>
             </div>
-            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-2 2xl:grid-cols-3">
               <Stat label={d.terms}>
                 {s.terms_verified_at ? (
                   `${d.termsVerified} ${new Date(s.terms_verified_at).toLocaleDateString("it-IT")}`

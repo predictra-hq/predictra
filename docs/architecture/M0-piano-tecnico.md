@@ -14,7 +14,7 @@
 
 | Voce              | Stato                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------- |
-| Repository        | `gennpalm/predictra`. È **privato**: l'API GitHub senza autenticazione risponde 404.      |
+| Repository        | `predictra-hq/predictra`. È **privato**: l'API GitHub senza autenticazione risponde 404.  |
 | Branch remoti     | `main` e `dev`, entrambi al commit `f38547c Initial commit`                               |
 | Contenuto         | solo `README.md` (`# predictra`)                                                          |
 | Codice esistente  | nessuno, quindi non c'è nulla da preservare o migrare                                     |

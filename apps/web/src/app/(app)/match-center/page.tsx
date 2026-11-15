@@ -115,8 +115,37 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
       <Card scrollLabel={`${competition.name} ${season?.label ?? ""}`.trim()} className="p-0">
         {matches.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.matchCenter.noMatches}</p>
-        ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
+        ) : null}
+        {/* Telefono: una riga per partita, tutta cliccabile, senza scorrere di lato. */}
+        {matches.length > 0 ? (
+          <ul className="divide-y divide-border sm:hidden">
+            {matches.map((r) => (
+              <li key={r.match_id}>
+                <Link
+                  href={`/match-center/${r.match_id}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2 text-xs text-muted">
+                      {formatDateTime(r.kickoff_at)}
+                      <MatchStatusBadge status={r.status} />
+                    </span>
+                    <span className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
+                      <span className="truncate text-right">
+                        {r.home_team_short_name ?? r.home_team_name}
+                      </span>
+                      <span className="font-mono">{formatScore(r.home_score, r.away_score)}</span>
+                      <span className="truncate">{r.away_team_short_name ?? r.away_team_name}</span>
+                    </span>
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-muted" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {matches.length === 0 ? null : (
+          <table className="hidden w-full min-w-[760px] text-left text-sm sm:table">
             <caption className="sr-only">
               {competition.name} {season?.label ?? ""} — {m.matchCenter.matchday}{" "}
               {matchday === "all" ? m.matchCenter.allMatchdays : matchday}

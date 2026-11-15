@@ -3,8 +3,12 @@ name: CI
 on:
   pull_request:
     branches: [dev, main]
+    # Le modifiche solo alla documentazione non fanno girare la CI (né il deploy):
+    # risparmia minuti del piano gratuito (2.000/mese sui repo privati).
+    paths-ignore: ["docs/**"]
   push:
     branches: [dev, main]
+    paths-ignore: ["docs/**"]
 
 # Un solo run per PR o per branch: annulla quelli superati (risparmia minuti free tier).
 # PR e push hanno gruppi separati: un run di PR non può annullare un push (che fa
@@ -32,6 +36,20 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+
+      # Cache di Turborepo e di Next: i pacchetti con input invariati non rifanno
+      # lint, typecheck, test e build. La chiave cambia a ogni commit; si riparte
+      # dalla cache più recente dello stesso branch, poi da quella di dev.
+      - name: Cache Turborepo e Next
+        uses: actions/cache@v4
+        with:
+          path: |
+            .turbo/cache
+            apps/web/.next/cache
+          key: turbo-${{ runner.os }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            turbo-${{ runner.os }}-dev-
 
       - name: Install
         run: pnpm install --frozen-lockfile

@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution } from "@/components/football/badges";
 import { FormBadges } from "@/components/odds/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { SectionTabs } from "@/components/shell/section-tabs";
 import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
@@ -57,7 +56,6 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <SectionTabs group="analysis" current="/statistics" />
         <EmptyState>{m.noData}</EmptyState>
       </>
     );
@@ -79,7 +77,6 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
-      <SectionTabs group="analysis" current="/statistics" />
 
       <CompetitionFilter
         competitions={competitions}
@@ -152,22 +149,22 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                     {r.team_name}
                   </td>
                   <td className="px-3 py-2 text-right font-mono">{r.played}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.won}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.draw}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.lost}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.goals_for}</td>
-                  <td className="px-3 py-2 text-right font-mono">{r.goals_against}</td>
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.lost}</td>
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_for}</td>
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_against}</td>
                   <td className="px-3 py-2 text-right font-mono">
                     {formatSigned(r.goals_for - r.goals_against, 0)}
                   </td>
                   <td className="px-3 py-2 text-right font-mono font-semibold">{r.points}</td>
-                  <td className="px-3 py-2 text-right font-mono">
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">
                     {formatDecimal(perMatch(r.goals_for, r.played))}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono">
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">
                     {formatDecimal(perMatch(r.goals_against, r.played))}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">
+                  <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
                     {fillTemplate(m.homeAwayRecord, {
                       won: r.home_won,
                       played: r.home_played,
@@ -175,7 +172,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                       ga: r.home_goals_against,
                     })}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-xs text-muted">
+                  <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
                     {fillTemplate(m.homeAwayRecord, {
                       won: r.away_won,
                       played: r.away_played,
@@ -183,13 +180,13 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                       ga: r.away_goals_against,
                     })}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono">
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">
                     {formatPercent(rate(r.clean_sheets, r.played), 0)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono">
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">
                     {formatPercent(rate(r.both_scored, r.played), 0)}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono">
+                  <td className="sm-secondary px-3 py-2 text-right font-mono">
                     {formatPercent(rate(r.over_2_5, r.played), 0)}
                   </td>
                   <td className="px-3 py-2">

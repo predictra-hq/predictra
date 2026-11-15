@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/football/badges";
 import { CompetitionFilter } from "@/components/odds/competition-filter";
-import { SectionTabs } from "@/components/shell/section-tabs";
 import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { parseCompetitionCode } from "@/lib/football/format";
@@ -65,7 +64,6 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     return (
       <>
         <PageHeader title={m.title} description={m.description} />
-        <SectionTabs group="analysis" current="/leagues" />
         <EmptyState>{m.noData}</EmptyState>
       </>
     );
@@ -88,7 +86,6 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
-      <SectionTabs group="analysis" current="/leagues" />
 
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>
@@ -126,26 +123,26 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                       c.name
                     )}
                   </td>
-                  <td className="px-3 py-2 text-muted">{c.seasonLabel ?? "—"}</td>
+                  <td className="sm-secondary px-3 py-2 text-muted">{c.seasonLabel ?? "—"}</td>
                   {s ? (
                     <>
                       <td className="px-3 py-2 text-right font-mono">{s.matches}</td>
                       <td className="px-3 py-2 text-right font-mono">
                         {formatDecimal(Number(s.avg_goals))}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
                         {formatDecimal(Number(s.avg_home_goals))}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
                         {formatDecimal(Number(s.avg_away_goals))}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
                         {formatPercent(Number(s.home_win_rate), 0)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
                         {formatPercent(Number(s.draw_rate), 0)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
                         {formatPercent(Number(s.away_win_rate), 0)}
                       </td>
                       <td className="px-3 py-2 text-right font-mono">
@@ -242,16 +239,18 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                       <td className="px-3 py-2 text-muted">{r.position}</td>
                       <td className="whitespace-nowrap px-3 py-2 font-medium">{r.team_name}</td>
                       <td className="px-3 py-2 text-right font-mono">{r.played}</td>
-                      <td className="px-3 py-2 text-right font-mono">{r.won}</td>
-                      <td className="px-3 py-2 text-right font-mono">{r.draw}</td>
-                      <td className="px-3 py-2 text-right font-mono">{r.lost}</td>
-                      <td className="px-3 py-2 text-right font-mono">{r.goals_for}</td>
-                      <td className="px-3 py-2 text-right font-mono">{r.goals_against}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{r.lost}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_for}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
+                        {r.goals_against}
+                      </td>
                       <td className="px-3 py-2 text-right font-mono">
                         {formatSigned(r.goal_difference, 0)}
                       </td>
                       <td className="px-3 py-2 text-right font-mono font-semibold">{r.points}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 sm-secondary">
                         <QualityBadge quality={r.quality} />
                       </td>
                     </tr>

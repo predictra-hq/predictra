@@ -7,6 +7,7 @@ import type {
   SelectHTMLAttributes,
 } from "react";
 import { CircleAlert, CircleCheck, Inbox, Info, TriangleAlert } from "lucide-react";
+import { TableLabels } from "@/components/ui/table-labels";
 import { cn } from "@/lib/utils";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
@@ -108,6 +109,7 @@ export function Field({
 export function Card({
   className,
   scrollLabel,
+  children,
   ...props
 }: HTMLAttributes<HTMLDivElement> & { scrollLabel?: string }) {
   return (
@@ -115,11 +117,14 @@ export function Card({
       {...(scrollLabel ? { role: "region", "aria-label": scrollLabel, tabIndex: 0 } : {})}
       className={cn(
         "rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_2px_rgb(0_0_0/0.4)]",
-        scrollLabel && "overflow-x-auto",
+        scrollLabel && "stack-sm overflow-x-auto",
         className,
       )}
       {...props}
-    />
+    >
+      {scrollLabel ? <TableLabels /> : null}
+      {children}
+    </div>
   );
 }
 
@@ -127,6 +132,7 @@ export function Card({
 export function ScrollRegion({
   label,
   className,
+  children,
   ...props
 }: HTMLAttributes<HTMLDivElement> & { label: string }) {
   return (
@@ -134,9 +140,12 @@ export function ScrollRegion({
       role="region"
       aria-label={label}
       tabIndex={0}
-      className={cn("overflow-x-auto", className)}
+      className={cn("stack-sm overflow-x-auto", className)}
       {...props}
-    />
+    >
+      <TableLabels />
+      {children}
+    </div>
   );
 }
 
@@ -224,5 +233,21 @@ export function PageHeader({ title, description }: { title: string; description?
       <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{title}</h1>
       {description ? <p className="mt-1 max-w-3xl text-sm text-muted">{description}</p> : null}
     </header>
+  );
+}
+
+/**
+ * Segnaposto di un riquadro che si sta caricando (dentro `<Suspense>`): la pagina compare
+ * subito e ogni sezione arriva quando i suoi dati sono pronti.
+ */
+export function CardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "h-36 rounded-[var(--radius-card)] border border-border bg-surface motion-safe:animate-pulse",
+        className,
+      )}
+    />
   );
 }

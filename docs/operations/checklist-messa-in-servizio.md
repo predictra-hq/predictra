@@ -43,7 +43,7 @@ Su Supabase **non serve altro**: niente SQL e niente impostazioni Auth, ci pensa
 
 ### B1. Crea il progetto
 
-Su https://vercel.com/new importa il repository `gennpalm/predictra`. Se il repository non compare, autorizza l'app Vercel sull'account GitHub `gennpalm` (_Adjust GitHub App Permissions_).
+Su https://vercel.com/new importa il repository `predictra-hq/predictra`. Se il repository non compare, autorizza l'app Vercel sull'organizzazione GitHub `predictra-hq` (_Adjust GitHub App Permissions_).
 
 - _Vercel Team_: il team del progetto (es. **Predictra**)
 - _Project Name_: `predictra-dev`
@@ -85,7 +85,7 @@ Se `VERCEL_ORG_ID` o lo scope del token non corrispondono al team del progetto, 
 
 ### C1. Segreti della pipeline
 
-Vai su https://github.com/gennpalm/predictra → _Settings → Secrets and variables → Actions → New repository secret_. Servono i permessi di admin sul repository; se non li hai, li inserisce `gennpalm`.
+Vai su https://github.com/predictra-hq/predictra → _Settings → Secrets and variables → Actions → New repository secret_. Servono i permessi di admin sul repository; se non li hai, li inserisce `gennpalm`.
 
 | Nome segreto (esatto)      | Valore                               |
 | -------------------------- | ------------------------------------ |

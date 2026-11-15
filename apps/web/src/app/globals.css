@@ -104,3 +104,63 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Tabelle sul telefono (sotto 640 px): ogni riga diventa una scheda e ogni cella mostra
+ * a sinistra l'intestazione della sua colonna (`data-label`, da TableLabels). Vale per
+ * le tabelle dentro `Card scrollLabel` e `ScrollRegion`. Le tabelle nascoste su schermo
+ * piccolo (`hidden sm:table`) restano nascoste. Regole fuori dai layer di Tailwind: così
+ * prevalgono su `min-w-[…]`, `whitespace-nowrap` e sui padding delle celle.
+ */
+@media (max-width: 639.98px) {
+  .stack-sm {
+    overflow-x: visible;
+  }
+  .stack-sm table:not(.hidden) {
+    display: block;
+    min-width: 0;
+  }
+  .stack-sm table:not(.hidden) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .stack-sm table:not(.hidden) tbody,
+  .stack-sm table:not(.hidden) tr {
+    display: block;
+  }
+  .stack-sm table:not(.hidden) tbody tr {
+    padding: 0.625rem 1rem;
+  }
+  .stack-sm table:not(.hidden) tbody td,
+  .stack-sm table:not(.hidden) tbody th {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.2rem 0;
+    text-align: right;
+    white-space: normal;
+  }
+  .stack-sm table:not(.hidden) tbody td[data-label]::before,
+  .stack-sm table:not(.hidden) tbody th[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    max-width: 50%;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    text-align: left;
+  }
+}
+
+/* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
+@media (max-width: 639.98px) {
+  .stack-sm table:not(.hidden) tbody td.sm-secondary,
+  .stack-sm table:not(.hidden) tbody th.sm-secondary {
+    display: none;
+  }
+}

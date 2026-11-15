@@ -20,7 +20,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent, formatSigned } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Risultati — Bollette" };
+export const metadata: Metadata = { title: "Risultati — Schedine" };
 
 const OUTCOME_TONE: Record<ProposalOutcome, "positive" | "negative" | "neutral"> = {
   WON: "positive",

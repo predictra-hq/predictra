@@ -20,6 +20,7 @@ import {
   ScrollRegion,
   Select,
 } from "@/components/ui/primitives";
+import { FilterForm } from "@/components/ui/filter-form";
 import {
   getAgentStatus,
   getQueueSummary,
@@ -221,7 +222,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
       <Card className="mt-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <CardTitle>{a.jobsTitle}</CardTitle>
-          <form method="get" className="flex items-end gap-2">
+          <FilterForm className="flex items-end gap-2">
             <Field label={a.status} htmlFor="status">
               <Select id="status" name="status" defaultValue={status ?? ""} className="h-9 text-sm">
                 <option value="">{a.allStatuses}</option>
@@ -235,7 +236,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
             <Button type="submit" variant="secondary" className="h-9">
               {a.filter}
             </Button>
-          </form>
+          </FilterForm>
         </div>
         {jobs && jobs.length === 0 ? (
           <p className="mt-2 text-sm text-muted">{a.jobsEmpty}</p>

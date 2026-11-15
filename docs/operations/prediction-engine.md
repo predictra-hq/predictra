@@ -23,9 +23,11 @@ oppure "Prediction engine" (solo avvio manuale: run, tune, diagnose)
   - Ogni riga ha `as_of`, `features_hash` e il Confidence Score con le sue componenti in `explanation`.
 - **Anti-leakage:** il database rifiuta previsioni con `as_of` successivo al calcio d'inizio. Il motore legge lo storico solo con `training_results`.
 
-## Un modello PREDICTRA e uno sfidante (ADR 0024)
+## Un solo modello PREDICTRA (ADR 0024, aggiornato dall'ADR 0039)
 
-In gara ci sono solo **Poisson** e **Dixon-Coles**, gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
+Dal 14/11/2026 in gara c'è un solo modello, `dixon_coles` (Dixon-Coles + Elo); Poisson resta solo in `tune`. Il testo sotto descrive la situazione precedente.
+
+In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/2026 Dixon-Coles è combinato con l'Elo, [ADR 0039](../decisions/0039-sfidante-dixon-coles-elo.md)), gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
 
 ## Modello attivo: automatico (ADR 0023)
 
@@ -107,6 +109,24 @@ Comando in sola lettura: `python -m predictra_engine tune [--l2 2,3,4] [--xi 0,0
 - Valori adottati: **L2 = 3** per Poisson e Dixon-Coles, **ξ = 0,005/giorno** per Dixon-Coles.
 - Cambiare gli iperparametri crea versioni nuove, ciascuna con il proprio backtest.
 - Ripetere la taratura quando lo storico cresce, per esempio a metà stagione, per non adattare i valori a un solo periodo.
+
+**14/11/2026 ([ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md)):** con lo storico di quattro stagioni, Poisson usa ξ = 0,0015 e Dixon-Coles ξ = 0,001, e le neopromosse partono da attacco −0,2 e difesa −0,1. Su un banco di prova con dati pubblici (3.483 partite di cinque campionati) il Log Loss 1X2 passa da 0,9928 a 0,9899 per Poisson e da 0,9960 a 0,9897 per Dixon-Coles. Le versioni nuove si confrontano da sole sul database (ADR 0023). Per confermare i valori: `tune` senza argomenti.
+
+## Analisi degli errori giornata per giornata (14/11/2026)
+
+Richiesta del proprietario: rigiocare tutte le partite passate con i modelli attuali, confrontare ogni giornata con il risultato reale e correggere il modello dove sbaglia.
+
+- **Metodo.** Banco di prova dell'[ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md): 7.061 partite dei cinque campionati principali, 2022–2026. Ogni settimana il modello è addestrato solo sulle partite precedenti; le correzioni sono stimate solo sugli errori passati e verificate sulle giornate successive, mai viste.
+- **Errori ricorrenti trovati** (Dixon-Coles + Elo):
+  - pareggi un po' sottostimati: 24,4% previsti contro 25,3% reali, di più in Serie A (25,5% contro 27,7%);
+  - vittorie in trasferta un po' sopravvalutate: 31,8% contro 30,9%;
+  - squadre con meno di 10 partite di storico: più pareggi del previsto (28,3% contro 25,4%).
+
+  Le favorite sono ben calibrate in tutte le fasce. Poisson sottostima di più i pareggi (23,7%; in Bundesliga 21,7% contro 25,2%).
+
+- **Correzioni provate:** spostamenti di casa e pareggio stimati sugli errori passati, per tutti i campionati insieme o per campionato, sulle ultime 760 o 1.520 partite, con penalità diverse; un fattore pareggi per le squadre con poco storico.
+- **Esito: nessuna correzione adottata.** I pareggi previsti diventano uguali a quelli reali, ma sulle giornate mai viste il Log Loss di Dixon-Coles + Elo peggiora (da 0,9845 fino a 0,9856). Per Poisson il guadagno massimo è 0,0006, e resta peggiore di Dixon-Coles + Elo senza correzione. Il fattore per le squadre con poco storico, stimato su 2022–24, è 1,02 e migliora 2024–26 di 0,0001. Gli scarti visti a posteriori sono soprattutto caso: l'addestramento sulle partite passate ne incorpora già la parte ripetibile.
+- **Cosa può ancora migliorare la precisione:** dati che i modelli oggi non vedono, come statistiche di partita, formazioni e quote di chiusura. Si misurano allo stesso modo prima di adottarli.
 
 ## Limiti noti
 

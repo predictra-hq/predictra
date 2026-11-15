@@ -185,14 +185,15 @@ def test_versione_dipende_da_iperparametri_e_codice_dei_modelli():
     assert version_label(dixon_coles_model(), "def5678" + "0" * 57) != a
 
 
-def test_in_gara_solo_poisson_e_dixon_coles(league):
+def test_in_gara_solo_il_modello_predictra(league):
     from predictra_engine.models import all_models
 
     past, upcoming, now = setup(league)
     store = FakeStore(past, upcoming)
     store.clock = now
     summary = run(store, all_models(), now=now, code_commit=COMMIT, model_code=CODE)
-    assert {k for k, _ in store.versions} == {"poisson", "dixon_coles"}
+    # Un solo modello PREDICTRA (Dixon-Coles + Elo, ADR 0039): Poisson non è più in gara.
+    assert {k for k, _ in store.versions} == {"dixon_coles"}
     # Baseline ed Elo lavorano comunque: backtest di riferimento e secondo parere.
     by_key = {m.key: m for m in summary.models}
     assert by_key["baseline"].backtest is not None and by_key["elo"].backtest is not None
