@@ -98,7 +98,7 @@ jobs:
             bankroll-isolation) node apps/web/scripts/verify-bankroll-isolation.mjs ;;
             accessibility)
               mkdir -p "$RUNNER_TEMP/screenshots"
-              APP_URL=http://localhost:3000 SCREENSHOT_DIR="$RUNNER_TEMP/screenshots"                 node apps/web/scripts/verify-accessibility.mjs ;;
+              APP_URL=http://localhost:3000 SCREENSHOT_DIR="$RUNNER_TEMP/screenshots" PRINT_TEXT=1                 node apps/web/scripts/verify-accessibility.mjs ;;
           esac
 
       # Screenshot di dashboard e lista utenti (account temporaneo, dati DEV), per
