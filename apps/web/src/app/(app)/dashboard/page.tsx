@@ -5,6 +5,7 @@ import { hasPermission } from "@predictra/shared-types";
 import { NotificationsCard } from "@/components/agent/notifications-card";
 import {
   BankrollCard,
+  CertaintiesCard,
   SchedineCard,
   SystemStatusCard,
   UpcomingMatchesCard,
@@ -16,8 +17,8 @@ import { getMessages } from "@/lib/i18n";
 export const metadata: Metadata = { title: "Home" };
 
 /**
- * Home: in alto bankroll, schedine consigliate e stato del sistema; sotto le prossime
- * partite. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
+ * Home: in alto bankroll, schedine consigliate e stato del sistema; sotto le certezze
+ * delle prossime 72 ore e le prossime partite. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
  * dato non è disponibile. Le notifiche compaiono solo quando ce ne sono.
  */
 export default async function DashboardPage() {
@@ -55,6 +56,12 @@ export default async function DashboardPage() {
       <Suspense fallback={null}>
         <NotificationsCard />
       </Suspense>
+
+      <div className="mt-6">
+        <Suspense fallback={<CardSkeleton />}>
+          <CertaintiesCard />
+        </Suspense>
+      </div>
 
       <div className="mt-6">
         <Suspense fallback={<CardSkeleton className="h-96" />}>

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
-import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
-import { bestItalianPrices, italianPriceFor } from "@/lib/bet-builder/likely";
-import { listLatestOdds } from "@/lib/bet-builder/queries";
+import { italianPriceFor } from "@/lib/bet-builder/likely";
 import { Alert, Badge, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
@@ -12,14 +10,10 @@ import {
   parseThreshold,
   selectPicks,
   THRESHOLDS,
-  type MarketLookup,
   type BandStat,
 } from "@/lib/certainties/logic";
-import {
-  recentVerification,
-  upcomingHighProbability,
-  VERIFY_DAYS,
-} from "@/lib/certainties/queries";
+import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
+import { VERIFY_DAYS } from "@/lib/certainties/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatPercent } from "@/lib/predictions/format";
@@ -95,33 +89,10 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
     );
   }
 
-  const [upcoming, verification] = await Promise.all([
-    upcomingHighProbability(),
-    recentVerification(),
-  ]);
-  const ids = (rows: readonly { match_id: number }[]) => [...new Set(rows.map((r) => r.match_id))];
-  const [upcomingOdds, pastOdds] = await Promise.all([
-    listLatestOdds(ids(upcoming)),
-    listLatestOdds(ids(verification.rows)),
-  ]);
-  const lookup =
-    (consensus: ReadonlyMap<string, number>): MarketLookup =>
-    (r) =>
-      consensusFor(consensus, {
-        matchId: r.match_id,
-        market: r.market,
-        line: r.line === null ? null : Number(r.line),
-        selection: r.selection,
-      });
-  const matches = groupByMatch(
-    selectPicks(upcoming, threshold, lookup(marketConsensus(upcomingOdds))),
-  );
-  const prices = bestItalianPrices(upcomingOdds);
-  const stats = bandStats(
-    verification.rows,
-    verification.results,
-    lookup(marketConsensus(pastOdds)),
-  );
+  const [upcoming, verification] = await Promise.all([loadUpcoming(), loadVerification()]);
+  const matches = groupByMatch(selectPicks(upcoming.rows, threshold, upcoming.market));
+  const prices = upcoming.prices;
+  const stats = bandStats(verification.rows, verification.results, verification.market);
 
   return (
     <>
