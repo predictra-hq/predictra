@@ -163,6 +163,22 @@ Stesso banco, stagioni 2024-26 settimana per settimana: per ogni settimana la gi
 
 - Le multiple escono più del previsto: le giocate più forti (soprattutto doppie chance oltre il 90%) sono un po' sottostimate e lo scarto si somma. Con 74 multiple il margine è circa ±5 punti: **nessuna correzione**, ma le multiple delle certezze sono prudenti.
 
+## Tiri e xG nel modello gol (15/11/2026)
+
+Comando `stats` (sola lettura, _Actions → Prediction engine → Run workflow_ con `command = stats`): copertura di `match_team_statistics` e backtest settimanale dal 1/7/2024 del Poisson allenato su `(1 − a)·gol + a·attesi` (xG del provider, altrimenti tiri in porta × conversione della competizione calcolata sulle sole partite passate), valutato sui risultati veri.
+
+Prima esecuzione ([run 44](https://github.com/predictra-hq/predictra/actions/runs/43722908436)): **125 partite su 8.716** con statistiche, tutte della competizione 1.
+
+| Modello                    | Log Loss 1X2 (3.442 partite) | Sulle 125 con statistiche |
+| -------------------------- | ---------------------------- | ------------------------- |
+| Poisson (gol)              | 0,9772                       | 0,9755                    |
+| Poisson, attesi 0,3        | 0,9770                       | 0,9749                    |
+| Poisson, attesi 0,5        | 0,9769                       | 0,9750                    |
+| Poisson, attesi 0,7        | 0,9768                       | 0,9754                    |
+| Dixon-Coles + Elo (attivo) | 0,9757                       | 0,9719                    |
+
+- Campione troppo piccolo: **nessuna modifica**. Da rilanciare quando il job `api-football.details` avrà coperto qualche migliaio di partite (circa 44 al giorno).
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
