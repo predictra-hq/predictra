@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 
 from .data import MatchResult
 from .diagnose import diagnose
+from .market import run_market
 from .models import all_models
 from .pipeline import run
 from .stats import run_stats
@@ -32,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
     sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
     sub.add_parser("stats", help="prova tiri e xG nel modello gol (sola lettura)")
+    sub.add_parser("market", help="peso del mercato nella probabilità combinata (sola lettura)")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -56,6 +58,10 @@ def main(argv: list[str] | None = None) -> int:
         for line in result.lines:
             print(line)
         print(f"ESITO: {result.verdict}")
+        return 0
+    if args.command == "market":
+        for line in run_market(store, datetime.now(UTC).replace(microsecond=0)):
+            print(line, flush=True)
         return 0
     if args.command == "stats":
         for line in run_stats(store, datetime.now(UTC).replace(microsecond=0)):

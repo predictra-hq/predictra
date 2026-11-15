@@ -179,6 +179,19 @@ Prima esecuzione ([run 44](https://github.com/predictra-hq/predictra/actions/run
 
 - Campione troppo piccolo: **nessuna modifica**. Da rilanciare quando il job `api-football.details` avrà coperto qualche migliaio di partite (circa 44 al giorno).
 
+## Under/over e taratura per mercato (15/11/2026)
+
+Banco di prova, Dixon-Coles walk-forward (λ casa, λ ospite, ρ), stima su 2024-25 e verifica su 2025-26 (1.751 partite).
+
+| Mercato  | Frequenza fissa | Dixon-Coles | Binomiale negativa, parametri per linea | Binomiale negativa, parametri comuni |
+| -------- | --------------- | ----------- | --------------------------------------- | ------------------------------------ |
+| Over 1,5 | 0,5446          | 0,5396      | 0,5376                                  | 0,5391                               |
+| Over 2,5 | 0,6913          | 0,6853      | 0,6831                                  | 0,6846                               |
+| Over 3,5 | 0,6094          | 0,5983      | 0,5980                                  | 0,5992                               |
+
+- Con parametri diversi per linea il guadagno è in parte adattamento; con parametri comuni (k 1,027, r 59,7) quasi sparisce e l'Over 3,5 peggiora. **Non adottato.**
+- Taratura per famiglia di mercato, p′ = σ(a·logit p + b), stimata su 2024-25: doppia chance a 0,984, 1X2 a 0,984, under/over a 0,973 (nessun guadagno sul 2025-26); gol/no gol a 0,707 (Log Loss da 0,6897 a 0,6880: il modello è troppo sicuro, ma queste giocate quasi mai superano il 70%). **Non adottata**: le differenze sulle fasce alte del 2025-26 (under/over 85–90%: 86,9% previsto, 84,0% uscito) non si ripetono sul 2024-25.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
