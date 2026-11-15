@@ -942,6 +942,13 @@ export const it = {
       "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
     fairOdds: "quota equa",
     split: "modello {model} · mercato {market}",
+    multiplesTitle: "Multiple delle certezze",
+    multiplesHint:
+      "Le giocate più forti della soglia scelta, una per partita, dalla più probabile, finché la probabilità di vincere tutta la multipla resta sopra il traguardo. Partite diverse sono trattate come indipendenti.",
+    multipleTitle: "Almeno {target} di vincerla · {legs} partite",
+    multipleProbability: "Probabilità di vincerla: {value}",
+    multiplePrice: "Quota italiana combinata {price}",
+    multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",
     matchTitle: "Certezze della partita (da {value})",
     bestPrice: "Quota migliore {price} ({bookmaker})",
     worth: "conviene: +{value}",

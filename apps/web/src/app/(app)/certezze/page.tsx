@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { pickLabel } from "@/components/bet-builder/likely";
 import { PickChip } from "@/components/certainties/pick-chip";
+import { combinedItalianPrice, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { Alert, Badge, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import {
   bandStats,
+  buildMultiple,
   groupByMatch,
+  MULTIPLE_TARGETS,
+  type Pick,
   parseThreshold,
   selectPicks,
   THRESHOLDS,
@@ -14,8 +19,8 @@ import {
 import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
 import { VERIFY_DAYS } from "@/lib/certainties/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { fillTemplate } from "@/lib/odds/format";
-import { formatPercent } from "@/lib/predictions/format";
+import { fillTemplate, formatOdds } from "@/lib/odds/format";
+import { formatFairOdds, formatPercent } from "@/lib/predictions/format";
 import { hasActiveModel } from "@/lib/predictions/queries";
 
 export const metadata: Metadata = { title: "Certezze" };
@@ -72,6 +77,89 @@ function Verification({ stats }: { stats: BandStat[] }) {
   );
 }
 
+function Multiples({
+  picks,
+  prices,
+}: {
+  picks: readonly Pick[];
+  prices: ReadonlyMap<string, ItalianPrice>;
+}) {
+  const c = getMessages().certainties;
+  const multiples = MULTIPLE_TARGETS.map((t) => ({ target: t, multiple: buildMultiple(picks, t) }));
+  if (multiples.every((x) => x.multiple === null)) return null;
+  return (
+    <Card>
+      <CardTitle>{c.multiplesTitle}</CardTitle>
+      <p className="mt-1 text-sm text-muted">{c.multiplesHint}</p>
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
+        {multiples.map(({ target, multiple }) =>
+          multiple ? (
+            <div key={target} className="rounded-md border border-border p-3">
+              <p className="text-sm font-medium">
+                {fillTemplate(c.multipleTitle, {
+                  target: formatPercent(target, 0),
+                  legs: String(multiple.picks.length),
+                })}
+              </p>
+              <ul className="mt-2 flex flex-col gap-1 text-sm">
+                {multiple.picks.map((p) => (
+                  <li key={p.matchId} className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0">
+                      <Link href={`/match-center/${p.matchId}`} className="hover:underline">
+                        {p.home} – {p.away}
+                      </Link>{" "}
+                      <span className="text-muted">· {pickLabel(p)}</span>
+                    </span>
+                    <span className="font-mono">{formatPercent(p.probability, 0)}</span>
+                  </li>
+                ))}
+              </ul>
+              <MultipleTotals
+                picks={multiple.picks}
+                probability={multiple.probability}
+                prices={prices}
+              />
+            </div>
+          ) : null,
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function MultipleTotals({
+  picks,
+  probability,
+  prices,
+}: {
+  picks: readonly Pick[];
+  probability: number;
+  prices: ReadonlyMap<string, ItalianPrice>;
+}) {
+  const c = getMessages().certainties;
+  const price = combinedItalianPrice(prices, picks);
+  return (
+    <p className="mt-2 border-t border-border pt-2 text-sm">
+      {fillTemplate(c.multipleProbability, { value: formatPercent(probability) })}{" "}
+      <span className="text-xs text-muted">
+        ({c.fairOdds} {formatFairOdds(probability)})
+      </span>
+      {price !== null ? (
+        <span className="block text-xs">
+          {fillTemplate(c.multiplePrice, { price: formatOdds(price) })}{" "}
+          <Badge tone={probability * price >= 1 ? "positive" : "neutral"}>
+            {probability * price >= 1
+              ? fillTemplate(c.worth, { value: formatPercent(probability * price - 1) })
+              : c.notWorth}
+          </Badge>
+        </span>
+      ) : (
+        <span className="block text-xs text-muted">{c.multipleNoPrice}</span>
+      )}
+    </p>
+  );
+}
+
 export default async function CertaintiesPage({ searchParams }: PageProps<"/certezze">) {
   await requireUser();
   const m = getMessages();
@@ -119,6 +207,8 @@ export default async function CertaintiesPage({ searchParams }: PageProps<"/cert
       </nav>
 
       <Verification stats={stats} />
+
+      <Multiples picks={matches.flatMap((g) => g.picks)} prices={prices} />
 
       <Card>
         <CardTitle>
