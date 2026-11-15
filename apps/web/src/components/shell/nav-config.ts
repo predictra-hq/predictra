@@ -46,6 +46,7 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     id: "bets",
     label: "groupBets",
     items: [
+      { key: "certainties", href: "/certezze" },
       { key: "betBuilder", href: "/bet-builder" },
       { key: "marketIntelligence", href: "/markets" },
     ],

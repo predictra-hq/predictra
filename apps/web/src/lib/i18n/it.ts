@@ -65,6 +65,7 @@ export const it = {
     matchCenter: "Partite",
     statisticsCenter: "Statistiche",
     betBuilder: "Schedine",
+    certainties: "Certezze",
     marketIntelligence: "Quote",
     leagueIntelligence: "Campionati",
     bankroll: "Bankroll",
@@ -916,6 +917,27 @@ export const it = {
       AWAY_UNDER: "Ospite under",
       OTHER: "Altro",
     },
+  },
+  certainties: {
+    title: "Certezze",
+    description:
+      "Le giocate più probabili delle partite in arrivo secondo il modello attivo, su 1X2, doppia chance, under/over, gol/no gol e gol di una squadra. Per ogni partita restano solo le giocate più forti: se c'è l'1, la doppia chance 1X non compare; se c'è l'Over 1,5, l'Over 0,5 non compare.",
+    thresholdLabel: "Probabilità minima",
+    atLeast: "da {value}",
+    verifyTitle: "Quante volte sono uscite",
+    verifyDescription:
+      "Le stesse giocate sulle partite già finite degli ultimi {days} giorni, divise per fascia di probabilità: in verde la fascia esce almeno quanto previsto, in giallo o rosso esce meno. È il controllo che dice quanto fidarsi delle percentuali qui sotto.",
+    verifyEmpty:
+      "Ancora nessuna partita finita con previsioni del modello attivo: la verifica si riempie da sola dopo le prossime giornate.",
+    verifyCount: "{wins} uscite su {count}",
+    expected: "previsto {value}",
+    smallSample: "campione piccolo",
+    upcomingTitle: "{count} partite con giocate da {value} in su",
+    upcomingHint:
+      "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
+    fairOdds: "quota equa",
+    empty:
+      "Nessuna giocata sopra questa soglia nelle partite già valutate dal modello: prova una soglia più bassa.",
   },
   bankroll: {
     title: "Bankroll",
