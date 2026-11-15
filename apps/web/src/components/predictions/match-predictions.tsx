@@ -8,7 +8,7 @@ import {
   formatLine,
   formatPercent,
   groupPredictions,
-  PRIMARY_MARKETS,
+  isPrimaryGroup,
   sortSelections,
   type PredictionGroup,
 } from "@/lib/predictions/format";
@@ -91,8 +91,8 @@ export async function MatchPredictions({
   const oneXTwo = rows.find((r) => r.market === "1X2");
   const components = ((oneXTwo?.explanation?.confidence ?? {}) as Components) || {};
   const groups = groupPredictions(rows);
-  const primary = groups.filter((g) => PRIMARY_MARKETS.includes(g.market));
-  const others = groups.filter((g) => !PRIMARY_MARKETS.includes(g.market));
+  const primary = groups.filter(isPrimaryGroup);
+  const others = groups.filter((g) => !isPrimaryGroup(g));
 
   return (
     <Card className="mt-4">

@@ -211,3 +211,25 @@ describe("multipla con valore", () => {
     expect(flatReturn([])).toBeNull();
   });
 });
+
+describe("giocate utili", () => {
+  it("niente linee estreme né gol squadra, al massimo 3 per partita", () => {
+    const picks = selectPicks(
+      [
+        row({ market: "TOTAL_GOALS", line: 0.5, selection: "OVER", probability: 0.95 }),
+        row({ market: "TOTAL_GOALS", line: 4.5, selection: "UNDER", probability: 0.9 }),
+        row({ market: "TEAM_GOALS", line: 0.5, selection: "HOME_OVER", probability: 0.9 }),
+        row({ market: "DOUBLE_CHANCE", selection: "HOME_DRAW", probability: 0.88 }),
+        row({ market: "DOUBLE_CHANCE", selection: "HOME_AWAY", probability: 0.8 }),
+        row({ market: "TOTAL_GOALS", line: 3.5, selection: "UNDER", probability: 0.78 }),
+        row({ market: "BTTS", selection: "NO", probability: 0.76 }),
+      ],
+      0.75,
+    );
+    expect(picks.map((p) => `${p.market}:${p.selection}`)).toEqual([
+      "DOUBLE_CHANCE:HOME_DRAW",
+      "DOUBLE_CHANCE:HOME_AWAY",
+      "TOTAL_GOALS:UNDER",
+    ]);
+  });
+});
