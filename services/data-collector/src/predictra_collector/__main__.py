@@ -1,0 +1,242 @@
+"""Riga di comando.
+
+- ``python -m predictra_collector run [--competitions SA,PL] [--dry-run]``: football-data.org
+- ``python -m predictra_collector odds [--mode daily|prematch] [--competitions SA] [--dry-run]``:
+  quote 1X2 da The Odds API
+- ``python -m predictra_collector api-football-probe``: verifica del piano API-Football
+  (stagioni accessibili); non scrive nulla, al massimo 6 richieste
+- ``python -m predictra_collector api-football-backfill [--competitions SA] [--dry-run]``:
+  storico 2022-2024 da API-Football (M2 fase A3), al massimo 32 richieste; con
+  ``--refresh`` riscarica anche le stagioni già fatte (ADR 0034)
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+from .api_football import ApiFootballClient, ApiFootballError, probe
+from .api_football_backfill import backfill
+from .api_football_details import collect_details
+from .config import ConfigError, Settings, load_settings, parse_competitions
+from .football_data import FootballDataClient
+from .odds_runner import run_odds
+from .runner import run
+from .supabase_store import SupabaseStore
+from .team_matching import TeamMatcher
+from .the_odds_api import OddsApiClient
+
+
+def _store(settings: Settings, dry_run: bool) -> SupabaseStore | None:
+    if dry_run:
+        return None
+    url, key = settings.require_supabase()
+    return SupabaseStore(url, key)
+
+
+def _cmd_run(args: argparse.Namespace, settings: Settings) -> int:
+    client = FootballDataClient(settings.require_football_data())
+    store = _store(settings, args.dry_run)
+    competitions = parse_competitions(args.competitions)
+    summary = run(
+        client, store, competitions, triggered_by=args.triggered_by, secrets=settings.secrets()
+    )
+    mode = "DRY RUN (nessuna scrittura)" if store is None else "scrittura su Supabase"
+    print(f"football-data.org — {mode} — richieste: {client.requests_used}")
+    for r in summary.results:
+        line = (
+            f"  {r.code:<4} {r.status:<9} partite={r.matches} squadre={r.teams} "
+            f"classifica={r.standings} problemi={r.issues}"
+        )
+        if r.error:
+            line += f" errore={r.error}"
+        print(line)
+    return 1 if summary.failed else 0
+
+
+def _cmd_odds(args: argparse.Namespace, settings: Settings) -> int:
+    client = OddsApiClient(settings.require_odds())
+    store = _store(settings, args.dry_run)
+    competitions = parse_competitions(args.competitions)
+    summary = run_odds(
+        client,
+        store,
+        competitions,
+        mode=args.mode,
+        triggered_by=args.triggered_by,
+        secrets=settings.secrets(),
+    )
+    mode = "DRY RUN (nessuna scrittura)" if store is None else "scrittura su Supabase"
+    print(
+        f"The Odds API ({args.mode}) — {mode} — crediti usati: {client.credits_used}"
+        f" — residui: {summary.remaining if summary.remaining is not None else 'n.d.'}"
+    )
+    for r in summary.results:
+        line = f"  {r.code:<4} {r.status:<9} eventi={r.events} bookmaker={r.bookmakers}"
+        if r.matched is not None:
+            line += f" abbinati={r.matched}"
+        if r.unknown_outcomes:
+            line += f" esiti_non_squadra={r.unknown_outcomes}"
+        if r.error:
+            line += f" errore={r.error}"
+        print(line)
+    return 1 if summary.failed else 0
+
+
+def _cmd_api_football_probe(args: argparse.Namespace, settings: Settings) -> int:
+    client = ApiFootballClient(settings.require_api_football())
+    try:
+        report = probe(client)
+    except ApiFootballError as exc:
+        print(f"API-Football — verifica non riuscita: {exc}", file=sys.stderr)
+        return 1
+    print(
+        f"API-Football — piano: {report.plan} — attivo: {report.active} — "
+        f"richieste oggi: {report.requests_today}/{report.limit_day} — "
+        f"usate da questa verifica: {client.requests_used}"
+    )
+    if report.league_id is None:
+        print("  Competizione di prova non trovata")
+        return 1
+    print(f"  {report.league_name} (id {report.league_id})")
+    for s in report.seasons[-8:]:
+        print(
+            f"    stagione {s.year}: corrente={s.current} formazioni={s.lineups} "
+            f"statistiche={s.statistics_fixtures}"
+        )
+    for year, result in report.access.items():
+        outcome = f"{result} partite" if isinstance(result, int) else f"NON accessibile: {result}"
+        print(f"    accesso {year}: {outcome}")
+    return 0
+
+
+def _cmd_api_football_backfill(args: argparse.Namespace, settings: Settings) -> int:
+    client = ApiFootballClient(settings.require_api_football())
+    store = _store(settings, args.dry_run)
+    competitions = parse_competitions(args.competitions)
+    matcher = None
+    if store is None and settings.supabase_url and settings.supabase_secret_key:
+        # Dry run con il database raggiungibile: si legge (solo lettura) l'elenco delle
+        # squadre per mostrare gli abbinamenti prima di scrivere.
+        reader = SupabaseStore(*settings.require_supabase())
+        matcher = TeamMatcher.from_rows(reader.teams())
+    summary = backfill(
+        client,
+        store,
+        competitions,
+        triggered_by=args.triggered_by,
+        secrets=settings.secrets(),
+        matcher=matcher,
+        refresh=args.refresh,
+    )
+    mode = "DRY RUN (nessuna scrittura)" if store is None else "scrittura su Supabase"
+    print(
+        f"API-Football backfill — {mode} — richieste: {summary.requests_used} — "
+        f"residue oggi: {client.day_remaining if client.day_remaining is not None else 'n.d.'}"
+    )
+    if summary.skipped:
+        print(f"  già fatte: {', '.join(summary.skipped)}")
+    for r in summary.results:
+        line = (
+            f"  {r.code:<4} {r.year} {r.status:<9} partite={r.matches} "
+            f"squadre_abbinate={r.teams_matched} non_abbinate={r.teams_unmatched} "
+            f"problemi={r.issues}"
+        )
+        if r.error:
+            line += f" errore={r.error}"
+        print(line)
+        if r.suggested:
+            pairs = ", ".join(f"{a} → {b}" for a, b in sorted(r.suggested.items()))
+            print(f"       abbinamenti suggeriti: {pairs}")
+        if r.without_match:
+            print(f"       senza abbinamento: {', '.join(r.without_match)}")
+    if summary.stopped:
+        print(f"  fermato: {summary.stopped} (si riprende domani da qui)")
+    return 1 if summary.failed else 0
+
+
+def _cmd_api_football_details(args: argparse.Namespace, settings: Settings) -> int:
+    if args.dry_run:
+        print("api-football-details non ha un dry run: ogni partita scaricata viene scritta.")
+        return 2
+    client = ApiFootballClient(settings.require_api_football())
+    store = SupabaseStore(*settings.require_supabase())
+    summary = collect_details(
+        client,
+        store,
+        parse_competitions(args.competitions),
+        triggered_by=args.triggered_by,
+        secrets=settings.secrets(),
+    )
+    print(
+        f"API-Football statistiche e formazioni — richieste: {summary.requests_used} — "
+        f"residue oggi: {client.day_remaining if client.day_remaining is not None else 'n.d.'}"
+    )
+    if summary.complete:
+        print("  tutte le stagioni sono complete")
+    for s in summary.seasons:
+        line = (
+            f"  {s.code:<4} {s.year} {s.status:<9} partite={s.done}/{s.total} "
+            f"scaricate={s.matches} statistiche={s.statistics} formazioni={s.lineups}"
+        )
+        if s.error:
+            line += f" errore={s.error}"
+        print(line)
+    if summary.stopped:
+        print(f"  fermato: {summary.stopped} (si riprende domani da qui)")
+    return 1 if summary.failed else 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="predictra-collector")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    for name, help_text in (
+        ("run", "partite e classifiche da football-data.org"),
+        ("odds", "quote 1X2 da The Odds API"),
+    ):
+        cmd = sub.add_parser(name, help=help_text)
+        cmd.add_argument("--competitions", help="codici separati da virgola (default: v1)")
+        cmd.add_argument("--dry-run", action="store_true", help="non scrive su Supabase")
+        cmd.add_argument(
+            "--triggered-by", choices=["schedule", "manual"], default="manual", help="origine"
+        )
+        if name == "odds":
+            cmd.add_argument("--mode", choices=["daily", "prematch"], default="daily")
+
+    sub.add_parser(
+        "api-football-probe", help="verifica del piano API-Football (stagioni accessibili)"
+    )
+    bf = sub.add_parser("api-football-backfill", help="storico 2022-2024 da API-Football")
+    bf.add_argument("--competitions", help="codici separati da virgola (default: v1)")
+    bf.add_argument("--dry-run", action="store_true", help="non scrive su Supabase")
+    bf.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    bf.add_argument(
+        "--refresh",
+        action="store_true",
+        help="riscarica anche le stagioni già fatte (dopo una correzione, ADR 0034)",
+    )
+    dt = sub.add_parser("api-football-details", help="statistiche e formazioni da API-Football")
+    dt.add_argument("--competitions", help="codici separati da virgola (default: v1)")
+    dt.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
+    dt.add_argument("--dry-run", action="store_true", help="non disponibile per questo lavoro")
+
+    args = parser.parse_args(argv)
+    try:
+        settings = load_settings()
+        handlers = {
+            "run": _cmd_run,
+            "odds": _cmd_odds,
+            "api-football-probe": _cmd_api_football_probe,
+            "api-football-backfill": _cmd_api_football_backfill,
+            "api-football-details": _cmd_api_football_details,
+        }
+        handler = handlers[args.command]
+        return handler(args, settings)
+    except ConfigError as exc:
+        print(f"Configurazione: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

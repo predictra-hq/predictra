@@ -1,0 +1,44 @@
+# =============================================================================
+# PREDICTRA — configurazione Supabase versionata
+# =============================================================================
+# Applicata automaticamente dalla pipeline (`supabase config push`) dopo le
+# migrazioni. La CLI aggiorna SOLO le proprietà dichiarate in questo file e
+# lascia invariate le altre impostazioni del progetto.
+#
+# Le variabili env(...) sono impostate dalla pipeline per ambiente.
+# =============================================================================
+
+project_id = "predictra"
+
+[auth]
+enabled = true
+# URL dell'app (APP_BASE_URL dell'ambiente). Serve come allow-list dei redirect.
+site_url = "env(PREDICTRA_SITE_URL)"
+additional_redirect_urls = ["env(PREDICTRA_REDIRECT_URL)"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+# Nessuna registrazione pubblica: si entra solo da invito generato da un admin.
+enable_signup = false
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 12
+password_requirements = "letters_digits"
+
+[auth.email]
+# Login con email e password.
+enabled = true
+# PREDICTRA non invia email: inviti e reset sono link generati e consegnati a mano.
+enable_confirmations = false
+double_confirm_changes = true
+secure_password_change = false
+# Validità dei link di invito / reset generati (24 ore).
+otp_expiry = 86400
+
+# 2FA con app di autenticazione (TOTP).
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

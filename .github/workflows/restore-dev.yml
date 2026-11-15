@@ -1,0 +1,42 @@
+name: Ripristino di dev
+
+# Il repository cancella da solo il branch di una PR unita (Settings → General →
+# Automatically delete head branches). Per una PR da `dev` a `main` questo cancella
+# `dev`, il branch di integrazione: il 9/11/2026 è successo con la PR #48. Sul piano
+# GitHub Free con repository privato non ci sono regole di protezione dei branch per
+# impedirlo, quindi questo workflow ricrea `dev` allo stesso commit, se manca.
+# Non crea commit: ripristina solo il riferimento. Funziona quando il file è su main.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    name: Ricrea dev se cancellato
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Ripristino
+        run: |
+          # La cancellazione automatica può arrivare qualche secondo dopo il merge.
+          for attempt in 1 2 3 4 5 6; do
+            if gh api "repos/$REPO/branches/dev" --silent 2>/dev/null; then
+              echo "dev presente (tentativo $attempt)"
+            else
+              gh api "repos/$REPO/git/refs" -f ref=refs/heads/dev -f sha="$SHA" --silent
+              echo "::notice title=dev ripristinato::dev ricreato al commit $SHA dopo il merge della PR in main"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "dev non è stato cancellato: nessuna azione"

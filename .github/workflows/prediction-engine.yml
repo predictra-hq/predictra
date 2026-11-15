@@ -1,0 +1,130 @@
+name: Prediction engine
+
+# M4 corsia A — motore di previsione (ADR 0020–0022).
+# - Test e lint del servizio Python a ogni PR o push che lo tocca.
+# - Dall'8/11/2026 le previsioni programmate le esegue l'agente (workflow
+#   "Agent (Python)", job predictions.run, M7 fase A5), alle 03:47 e alle 12:47 UTC.
+# - Qui resta l'avvio manuale (run, tune, diagnose), che funziona solo quando questo
+#   file è su `main` ed esegue il codice del branch scelto.
+# Runbook: docs/operations/prediction-engine.md
+
+on:
+  pull_request:
+    paths:
+      - "services/prediction-engine/**"
+      - ".github/workflows/prediction-engine.yml"
+  push:
+    branches: [dev, main]
+    paths:
+      - "services/prediction-engine/**"
+      - ".github/workflows/prediction-engine.yml"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "run = previsioni; tune = taratura; diagnose = verifica (entrambi in sola lettura)"
+        type: choice
+        options: [run, tune, diagnose]
+        default: run
+      tune_args:
+        description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
+        type: string
+        required: false
+      dry_run:
+        description: "Solo lettura: calcola backtest e previsioni senza scrivere"
+        type: boolean
+        default: false
+      horizon_days:
+        description: "Giorni di partite da prevedere"
+        type: string
+        default: "10"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prediction-engine-${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'run' || github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: services/prediction-engine
+
+jobs:
+  test:
+    name: Python — lint e test
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Dipendenze
+        run: uv sync --locked
+      - name: Formattazione
+        run: uv run ruff format --check .
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest
+
+  run:
+    name: Previsioni (DEV)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Verifica segreti
+        id: secrets
+        working-directory: .
+        run: |
+          missing=""
+          for v in SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning title=Previsioni saltate::Segreti mancanti:$missing"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.secrets.outputs.skip != 'true'
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          # Storia completa: serve per trovare l'ultimo commit che ha toccato il motore.
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v7
+        if: steps.secrets.outputs.skip != 'true'
+
+      - name: Dipendenze
+        if: steps.secrets.outputs.skip != 'true'
+        run: uv sync --locked --no-dev
+
+      - name: Motore
+        if: steps.secrets.outputs.skip != 'true'
+        env:
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+          HORIZON: ${{ inputs.horizon_days || '10' }}
+          TRIGGERED_BY: ${{ github.event_name == 'schedule' && 'schedule' || 'manual' }}
+          TUNE_ARGS: ${{ inputs.tune_args }}
+          COMMAND: ${{ inputs.command || 'run' }}
+        run: |
+          export SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          # La versione dipende dal codice del motore, non da ogni commit del repository:
+          # una versione attivata continua a ricevere previsioni finché il motore non cambia.
+          export CODE_COMMIT="$(git log -1 --format=%H -- .)"
+          if [ "$COMMAND" = "diagnose" ]; then
+            uv run python -m predictra_engine diagnose
+            exit 0
+          fi
+          if [ "$COMMAND" = "tune" ]; then
+            # shellcheck disable=SC2086
+            uv run python -m predictra_engine tune $TUNE_ARGS
+            exit 0
+          fi
+          args=(run --triggered-by "$TRIGGERED_BY" --horizon-days "$HORIZON")
+          if [ -n "$DRY_RUN" ]; then args+=("$DRY_RUN"); fi
+          uv run python -m predictra_engine "${args[@]}"

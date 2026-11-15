@@ -1,0 +1,4 @@
+{
+  "extends": "@predictra/config/tsconfig.library.json",
+  "include": ["src"]
+}
