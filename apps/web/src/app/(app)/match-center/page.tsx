@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import {
-  FreshnessBadge,
-  MatchStatusBadge,
-  ProviderAttribution,
-  QualityBadge,
-} from "@/components/football/badges";
+import { pickLabel } from "@/components/bet-builder/likely";
+import { MatchStatusBadge, ProviderAttribution } from "@/components/football/badges";
 import { FilterForm } from "@/components/ui/filter-form";
 import {
   Alert,
@@ -18,6 +14,8 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { strongestPicks } from "@/lib/certainties/load";
+import type { Pick } from "@/lib/certainties/logic";
 import { formatScore, parseCompetitionCode, parseId, parseMatchday } from "@/lib/football/format";
 import {
   getCurrentSeason,
@@ -27,8 +25,21 @@ import {
   listSeasons,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { formatPercent } from "@/lib/predictions/format";
 
 export const metadata: Metadata = { title: "Partite" };
+
+function StrongestPick({ pick }: { pick: Pick | undefined }) {
+  if (!pick) return <span className="text-subtle">–</span>;
+  return (
+    <span className="whitespace-nowrap">
+      {pickLabel(pick)}{" "}
+      <span className="font-mono font-semibold text-positive-strong">
+        {formatPercent(pick.probability, 0)}
+      </span>
+    </span>
+  );
+}
 
 export default async function MatchCenterPage({ searchParams }: PageProps<"/match-center">) {
   await requireUser();
@@ -63,6 +74,10 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
     season ? listMatches(season.id, matchday) : Promise.resolve([]),
     getSourceHealth(),
   ]);
+  // Giocata più forte (dal 70%) per le partite in programma: stessa logica di Certezze.
+  const strongest = await strongestPicks(matches.map((r) => r.match_id)).catch(
+    () => new Map<number, Pick>(),
+  );
   const matchdays = season?.maxMatchday
     ? Array.from({ length: season.maxMatchday }, (_, i) => i + 1)
     : [];
@@ -137,6 +152,11 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                       <span className="font-mono">{formatScore(r.home_score, r.away_score)}</span>
                       <span className="truncate">{r.away_team_short_name ?? r.away_team_name}</span>
                     </span>
+                    {strongest.has(r.match_id) ? (
+                      <span className="mt-1 block text-xs text-muted">
+                        <StrongestPick pick={strongest.get(r.match_id)} />
+                      </span>
+                    ) : null}
                   </span>
                   <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-muted" />
                 </Link>
@@ -168,10 +188,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                   {m.matchCenter.status}
                 </th>
                 <th scope="col" className="px-4 py-3">
-                  {m.matchCenter.freshness}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.matchCenter.quality}
+                  {m.matchCenter.strongestPick}
                 </th>
               </tr>
             </thead>
@@ -202,10 +219,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                     <MatchStatusBadge status={r.status} />
                   </td>
                   <td className="px-4 py-3">
-                    <FreshnessBadge freshness={r.freshness} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <QualityBadge quality={r.quality} />
+                    <StrongestPick pick={strongest.get(r.match_id)} />
                   </td>
                 </tr>
               ))}

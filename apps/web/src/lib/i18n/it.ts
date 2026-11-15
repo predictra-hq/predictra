@@ -251,6 +251,7 @@ export const it = {
     noData:
       "Nessuna partita disponibile. I dati compaiono dopo la prima raccolta da football-data.org (vedi la pagina Dati).",
     matchTitle: "Dettaglio partita",
+    strongestPick: "Certezza",
     technical: "Dettagli tecnici (provenienza dei dati e controlli di qualità)",
     back: "Torna alle partite",
     season: "Stagione",
