@@ -36,7 +36,7 @@ const ID_CHUNK = 200;
 /** Orizzonte delle previsioni del motore (prossimi 10 giorni) con un margine. */
 const UPCOMING_DAYS = 14;
 
-async function predictionsFor(
+export async function predictionsFor(
   ids: readonly number[],
   what: string,
 ): Promise<ActivePredictionRow[]> {
@@ -64,9 +64,12 @@ async function predictionsFor(
 }
 
 /** Previsioni sopra la soglia minima per le partite non ancora iniziate. */
-export async function upcomingHighProbability(now = new Date()): Promise<ActivePredictionRow[]> {
+export async function upcomingHighProbability(
+  now = new Date(),
+  hours = UPCOMING_DAYS * 24,
+): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();
-  const end = new Date(now.getTime() + UPCOMING_DAYS * 86_400_000).toISOString();
+  const end = new Date(now.getTime() + hours * 3_600_000).toISOString();
   const { data, error } = await supabase
     .from("v_match_center")
     .select("match_id")
