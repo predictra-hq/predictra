@@ -36,12 +36,21 @@ if (!url || !secret) {
 }
 
 /** Pagine di cui salvare uno screenshot (artefatto del run) se SCREENSHOT_DIR è impostata. */
-const SCREENSHOTS = new Set(["/dashboard", "/dashboard (mobile)", "/admin/users"]);
+const SCREENSHOTS = new Set([
+  "/dashboard",
+  "/dashboard (mobile)",
+  "/certezze",
+  "/certezze (mobile)",
+  "/match-center (mobile)",
+  "/match-center/[id] (mobile)",
+  "/admin/users",
+]);
 
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 const PAGES = [
   "/dashboard",
+  "/certezze",
   "/match-center",
   "/data-center",
   "/markets",
@@ -324,6 +333,9 @@ async function main() {
 
     // Larghezza mobile: menu chiuso fuori dalla tabulazione, menu aperto accessibile.
     await page.setViewportSize({ width: 375, height: 812 });
+    await audit(page, "/certezze", "/certezze (mobile)");
+    await audit(page, "/match-center", "/match-center (mobile)");
+    if (match) await audit(page, match, "/match-center/[id] (mobile)");
     await audit(page, "/dashboard", "/dashboard (mobile)");
     await page.click('button[aria-controls="sidebar"]');
     const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
