@@ -65,3 +65,23 @@ export async function loadHomeCertainties(now = new Date()): Promise<Pick[]> {
     .sort((a, b) => b.probability - a.probability)
     .slice(0, HOME_CERTAINTY_MAX);
 }
+
+/** Giocata più forte (dal 70%) di ciascuna partita richiesta, se ce n'è una. */
+export async function strongestPicks(ids: readonly number[]): Promise<Map<number, Pick>> {
+  const out = new Map<number, Pick>();
+  if (ids.length === 0) return out;
+  const wanted = new Set(ids);
+  const data = await loadUpcoming();
+  const picks = selectPicks(
+    data.rows.filter((r) => wanted.has(r.match_id)),
+    STRONGEST_THRESHOLD,
+    data.market,
+  );
+  for (const p of picks) {
+    const cur = out.get(p.matchId);
+    if (!cur || p.probability > cur.probability) out.set(p.matchId, p);
+  }
+  return out;
+}
+
+const STRONGEST_THRESHOLD = 0.7;
