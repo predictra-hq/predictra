@@ -39,6 +39,8 @@ const UPCOMING_DAYS = 14;
 export async function predictionsFor(
   ids: readonly number[],
   what: string,
+  /** `v_pre_kickoff_predictions` per le partite giocate: vale anche dopo un cambio di versione. */
+  relation: "v_active_predictions" | "v_pre_kickoff_predictions" = "v_active_predictions",
 ): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();
   const out: ActivePredictionRow[] = [];
@@ -47,7 +49,7 @@ export async function predictionsFor(
     out.push(
       ...(await pagedPredictions(what, (from, to) =>
         supabase
-          .from("v_active_predictions")
+          .from(relation)
           .select("*")
           .in("match_id", chunk)
           .in("market", [...CERTAINTY_MARKETS])
@@ -115,6 +117,10 @@ export async function recentVerification(now = new Date()): Promise<Verification
     }
     if (page.length < PAGE) break;
   }
-  const rows = await predictionsFor([...results.keys()], "verifica delle certezze");
+  const rows = await predictionsFor(
+    [...results.keys()],
+    "verifica delle certezze",
+    "v_pre_kickoff_predictions",
+  );
   return { rows, results };
 }
