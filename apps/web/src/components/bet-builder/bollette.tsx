@@ -9,7 +9,15 @@ import {
   type Bolletta,
   type BollettaProfile,
 } from "@/lib/bet-builder/bollette";
+import { formatEuro } from "@/components/bankroll/shared";
+import { listBankrolls, listLimits } from "@/lib/bankroll/queries";
 import { formatRound } from "@/lib/bet-builder/format";
+import {
+  bollettaAdvice,
+  bollettaTrackerHref,
+  pickAdviceBankroll,
+  type AdviceBankroll,
+} from "@/lib/bet-builder/register";
 import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
@@ -33,14 +41,20 @@ function BollettaCard({
   bolletta,
   stake,
   now,
+  bankroll,
 }: {
   bolletta: Bolletta;
   stake: number | null;
   now: Date;
+  bankroll: AdviceBankroll | null;
 }) {
   const m = getMessages().betBuilder.bollette;
   const rule = BOLLETTA_RULES[bolletta.profile];
   const old = oddsAreOld(bolletta, now);
+  const advice = bankroll ? bollettaAdvice(bolletta, bankroll) : null;
+  const advised = advice?.kelly ? advice.kelly : null;
+  // Puntata mostrata e passata al Tracker: quella scelta dall'utente, altrimenti la consigliata.
+  const playStake = stake ?? advised;
   return (
     <article className="flex flex-col rounded-lg border border-border bg-surface-2 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -113,11 +127,36 @@ function BollettaCard({
       </p>
       <div className="mt-2">
         <StakeSimulation
-          stake={stake ?? EXAMPLE_STAKE}
+          stake={playStake ?? EXAMPLE_STAKE}
           price={bolletta.price}
           probability={bolletta.probability}
         />
       </div>
+      {bankroll && advice ? (
+        <p className="mt-2 text-xs text-muted" title={m.adviceHint}>
+          {advised !== null
+            ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
+            : fillTemplate(m.adviceNone, { name: bankroll.name })}
+          {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
+        </p>
+      ) : null}
+      <Link
+        href={bollettaTrackerHref(
+          bolletta,
+          {
+            market: m.registerMarket,
+            selection: fillTemplate(m.registerSelection, {
+              profile: m.profiles[bolletta.profile],
+              n: bolletta.picks.length,
+            }),
+          },
+          playStake,
+        )}
+        title={m.registerHint}
+        className="mt-3 inline-flex h-9 items-center justify-center rounded-lg border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-border"
+      >
+        {m.register}
+      </Link>
     </article>
   );
 }
@@ -130,9 +169,12 @@ export function BolletteCard({
   bollette,
   stake = null,
   now,
+  bankroll = null,
 }: {
   bollette: readonly Bolletta[];
   stake?: number | null;
+  /** Bankroll dell'utente su cui calcolare la puntata consigliata, se ne ha uno. */
+  bankroll?: AdviceBankroll | null;
   /** Istante della richiesta: serve a dire se le quote sono da ricontrollare. */
   now: Date;
 }) {
@@ -159,6 +201,7 @@ export function BolletteCard({
                     bolletta={b}
                     stake={stake}
                     now={now}
+                    bankroll={bankroll}
                   />
                 ))}
             </div>
@@ -170,14 +213,38 @@ export function BolletteCard({
   );
 }
 
+/**
+ * Bankroll di riferimento dell'utente (solo i propri dati, tramite RLS). Se la lettura
+ * fallisce le schedine si vedono lo stesso, senza puntata consigliata.
+ */
+async function loadAdviceBankroll(): Promise<AdviceBankroll | null> {
+  try {
+    const [bankrolls, limits] = await Promise.all([listBankrolls(), listLimits()]);
+    const chosen = pickAdviceBankroll(bankrolls);
+    if (!chosen) return null;
+    return {
+      name: chosen.name,
+      available: Number(chosen.available),
+      flatPct: Number(chosen.flat_stake_pct),
+      limits: limits.find((l) => l.bankroll_id === chosen.bankroll_id) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
 export async function SchedineSection({ stake }: { stake: number | null }) {
-  const { rows, prices, consensus } = await loadPicksData();
+  const [{ rows, prices, consensus }, bankroll] = await Promise.all([
+    loadPicksData(),
+    loadAdviceBankroll(),
+  ]);
   return (
     <BolletteCard
       bollette={buildBollette(rows, prices, consensus)}
       stake={stake}
       now={new Date()}
+      bankroll={bankroll}
     />
   );
 }
