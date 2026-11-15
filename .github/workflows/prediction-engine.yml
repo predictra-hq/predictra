@@ -21,9 +21,9 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "run = previsioni; tune = taratura; diagnose = verifica (entrambi in sola lettura)"
+        description: "run = previsioni; tune = taratura; diagnose = verifica; stats = prova tiri e xG (gli ultimi tre in sola lettura)"
         type: choice
-        options: [run, tune, diagnose]
+        options: [run, tune, diagnose, stats]
         default: run
       tune_args:
         description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
@@ -118,6 +118,10 @@ jobs:
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
           if [ "$COMMAND" = "diagnose" ]; then
             uv run python -m predictra_engine diagnose
+            exit 0
+          fi
+          if [ "$COMMAND" = "stats" ]; then
+            uv run python -m predictra_engine stats
             exit 0
           fi
           if [ "$COMMAND" = "tune" ]; then
