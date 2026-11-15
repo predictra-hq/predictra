@@ -926,7 +926,7 @@ export const it = {
   certainties: {
     title: "Certezze",
     description:
-      "Le giocate più probabili delle partite in arrivo, su 1X2, doppia chance, under/over, gol/no gol e gol di una squadra. Per ogni partita restano solo le giocate più forti: se c'è l'1, la doppia chance 1X non compare; se c'è l'Over 1,5, l'Over 0,5 non compare. Quando ci sono quote, la probabilità è la media tra il modello e il mercato senza margine (consenso di tutti i bookmaker): è più precisa del solo modello, soprattutto su under/over.",
+      "Le giocate più probabili delle prossime partite. Quando ci sono quote, la probabilità unisce il modello e il mercato.",
     thresholdLabel: "Probabilità minima",
     atLeast: "da {value}",
     verifyTitle: "Quante volte sono uscite",
@@ -937,19 +937,18 @@ export const it = {
     verifyCount: "{wins} uscite su {count}",
     expected: "previsto {value}",
     smallSample: "campione piccolo",
-    upcomingTitle: "{count} partite con giocate da {value} in su",
-    upcomingHint:
-      "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
+    upcomingTitle: "{count} partite da {value} in su",
     fairOdds: "quota equa",
     split: "modello {model} · mercato {market}",
     multiplesTitle: "Multiple delle certezze",
-    multiplesHint:
-      "Le giocate più forti della soglia scelta, una per partita, dalla più probabile, finché la probabilità di vincere tutta la multipla resta sopra il traguardo. Partite diverse sono trattate come indipendenti.",
-    multipleTitle: "Almeno {target} di vincerla · {legs} partite",
+    multipleTitle: "Multipla del giorno: almeno {target} di vincerla ({legs} partite)",
     multipleProbability: "Probabilità di vincerla: {value}",
     multiplePrice: "Quota italiana combinata {price}",
     multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",
-    register: "Registra tra le giocate fatte",
+    register: "Registra",
+    priceShort: "quota {price}",
+    fairShort: "quota giusta {price}",
+    reliability: "Quanto sono affidabili (verifica sulle partite già giocate)",
     pastTitle: "Multiple delle settimane passate",
     pastHint:
       "Le stesse multiple ricostruite per ogni settimana con le previsioni fatte prima delle partite (stessa soglia), e il loro esito reale.",
@@ -959,7 +958,7 @@ export const it = {
     pastLost: "sett. {week} · {legs} partite · persa",
     matchTitle: "Certezze della partita (da {value})",
     bestPrice: "Quota migliore {price} ({bookmaker})",
-    worth: "conviene: +{value}",
+    worth: "+{value}",
     notWorth: "quota sotto il giusto",
     empty:
       "Nessuna giocata sopra questa soglia nelle partite già valutate dal modello: prova una soglia più bassa.",
