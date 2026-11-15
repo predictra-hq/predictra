@@ -16,6 +16,7 @@ from .data import MatchResult
 from .diagnose import diagnose
 from .models import all_models
 from .pipeline import run
+from .stats import run_stats
 from .store import SupabaseStore
 from .tuning import L2_GRID, XI_GRID, candidates, tune
 
@@ -30,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd.add_argument("--horizon-days", type=int, default=10, help="giorni di partite da prevedere")
     cmd.add_argument("--triggered-by", choices=["schedule", "manual"], default="manual")
     sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
+    sub.add_parser("stats", help="prova tiri e xG nel modello gol (sola lettura)")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -54,6 +56,10 @@ def main(argv: list[str] | None = None) -> int:
         for line in result.lines:
             print(line)
         print(f"ESITO: {result.verdict}")
+        return 0
+    if args.command == "stats":
+        for line in run_stats(store, datetime.now(UTC).replace(microsecond=0)):
+            print(line, flush=True)
         return 0
     if args.command == "tune":
         return _tune(store, args.l2, args.xi)
