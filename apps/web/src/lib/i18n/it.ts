@@ -936,6 +936,9 @@ export const it = {
     upcomingHint:
       "Tra parentesi la quota equa = 1 ÷ probabilità: una quota del bookmaker più bassa non conviene. Le probabilità si aggiornano due volte al giorno (03:47 e 12:47 UTC).",
     fairOdds: "quota equa",
+    bestPrice: "Quota migliore {price} ({bookmaker})",
+    worth: "conviene: +{value}",
+    notWorth: "quota sotto il giusto",
     empty:
       "Nessuna giocata sopra questa soglia nelle partite già valutate dal modello: prova una soglia più bassa.",
   },
