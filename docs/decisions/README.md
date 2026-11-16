@@ -43,3 +43,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0041](0041-retention.md)                           | Conservazione dei dati (retention)                                | Proposta  |
 | [0042](0042-ask-predictra.md)                       | Ask PREDICTRA con un LLM gratuito                                 | Accettata |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |
+| [0052](0052-link-monouso-consumati-al-tocco.md)     | Link monouso consumati solo al tocco di «Continua»                | Proposta  |

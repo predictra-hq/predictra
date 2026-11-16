@@ -26,5 +26,6 @@
 
 - Nessun SQL manuale e nessuna impostazione Auth manuale dopo il setup iniziale.
 - Se un utente perde il link prima di usarlo, l'admin revoca e ricrea l'invito, oppure rigenera il link di reset.
+- Aggiornamento del 16/11/2026: il link si consuma al tocco di «Continua», non all'apertura ([ADR 0052](0052-link-monouso-consumati-al-tocco.md)).
 - Il deploy consuma minuti di GitHub Actions (stimati in 3–5 per push su `dev`).
 - Senza protezione dei branch, la disciplina PR → `dev` → `main` è una regola di team, non un vincolo tecnico.
