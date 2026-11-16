@@ -9,9 +9,11 @@ import {
   ListChecks,
   TrendingUp,
 } from "lucide-react";
+import { computeMetrics, profitCurve } from "@predictra/bankroll";
+import { ProfitCurve } from "@/components/bankroll/profit-curve";
 import { formatEuro } from "@/components/bankroll/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
-import { listBankrolls } from "@/lib/bankroll/queries";
+import { listBankrolls, listBets } from "@/lib/bankroll/queries";
 import { healthTone, overallHealth } from "@/components/agent/status";
 import { FreshnessBadge } from "@/components/football/badges";
 import { getAgentStatus } from "@/lib/agent/queries";
@@ -117,9 +119,16 @@ export async function ActiveModelCard() {
 
 // --- Bankroll ------------------------------------------------------------------------
 
+/** Giorni considerati per andamento e giocate vinte nel riquadro della Home. */
+const BANKROLL_TREND_DAYS = 90;
+
 export async function BankrollCard() {
   const d = getMessages().dashboard;
-  const rows = await listBankrolls().catch(() => null);
+  // Le giocate servono solo al grafico: se la lettura fallisce il riquadro resta.
+  const [rows, bets] = await Promise.all([
+    listBankrolls().catch(() => null),
+    listBets(BANKROLL_TREND_DAYS).catch(() => []),
+  ]);
   if (!rows || rows.length === 0) {
     return (
       <StatCard href="/bankroll" title={d.yourBankroll}>
@@ -131,6 +140,7 @@ export async function BankrollCard() {
     );
   }
   const t = bankrollTotals(rows);
+  const hitRate = computeMetrics(bets).hitRate;
   return (
     <StatCard href="/bankroll" title={d.yourBankroll}>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{formatEuro(t.balance)}</p>
@@ -152,7 +162,15 @@ export async function BankrollCard() {
         >
           {t.roi === null ? "–" : formatPercent(t.roi)}
         </dd>
+        <dt>{fillTemplate(d.hitRateRecent, { days: BANKROLL_TREND_DAYS })}</dt>
+        <dd className="text-right font-mono text-fg">
+          {hitRate === null ? "–" : formatPercent(hitRate, 0)}
+        </dd>
       </dl>
+      <ProfitCurve
+        points={profitCurve(bets)}
+        label={fillTemplate(d.trendRecent, { days: BANKROLL_TREND_DAYS })}
+      />
       {t.count > 1 ? (
         <p className="mt-1 text-xs text-muted">{fillTemplate(d.bankrollsCount, { n: t.count })}</p>
       ) : null}
