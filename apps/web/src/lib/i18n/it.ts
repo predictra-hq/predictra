@@ -1058,6 +1058,9 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
+    autoSettleHint:
+      "Questa giocata si chiude da sola quando le partite finiscono: non devi inserire l'esito.",
+    autoSettled: "Giocate chiuse in automatico dai risultati: {won} vinte, {lost} perse.",
     title: "Giocate fatte",
     description:
       "Registra le tue giocate e misurane i risultati. Reali e simulate sono sempre separate. PREDICTRA non piazza scommesse.",

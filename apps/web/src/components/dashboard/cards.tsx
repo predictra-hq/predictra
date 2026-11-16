@@ -1,3 +1,4 @@
+import { settleOpenBets } from "@/lib/bankroll/settle";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
@@ -124,6 +125,8 @@ const BANKROLL_TREND_DAYS = 90;
 
 export async function BankrollCard() {
   const d = getMessages().dashboard;
+  // Chiude le giocate le cui partite sono finite, così saldo e andamento sono aggiornati.
+  await settleOpenBets();
   // Le giocate servono solo al grafico: se la lettura fallisce il riquadro resta.
   const [rows, bets] = await Promise.all([
     listBankrolls().catch(() => null),

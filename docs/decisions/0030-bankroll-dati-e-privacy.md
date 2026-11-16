@@ -53,3 +53,11 @@ Per ogni bankroll, tutti facoltativi:
 
 - Il Super Admin non vede né gli importi né il numero di giocate degli utenti. Le statistiche aggregate di piattaforma, se servissero, richiederebbero un nuovo ADR con anonimizzazione.
 - Il saldo dipende da ciò che l'utente registra: PREDICTRA non lo verifica con i bookmaker.
+
+## Aggiornamento del 16/11/2026: chiusura automatica delle giocate
+
+Una giocata registrata da «L'ho giocata» o dal «+» delle Certezze conserva le selezioni strutturate (`bets.legs`, migrazione `20261116170000`). All'apertura di Giocate fatte, Bankroll o Home l'app confronta le selezioni con i risultati e chiude la giocata: persa appena una selezione è sbagliata, vinta quando tutte le partite sono finite e giuste. Se una partita è rinviata o annullata la giocata resta aperta e decide l'utente.
+
+- La chiusura gira **con la sessione dell'utente** (RLS, solo proprietario): nessun processo di sistema e nessun amministratore legge le giocate, come prima.
+- Le giocate scritte a mano non hanno selezioni e restano manuali. Una giocata chiusa a mano non viene toccata.
+- Logica pura e testata in `apps/web/src/lib/bankroll/legs.ts`; incasso e saldo restano calcolati dal database.

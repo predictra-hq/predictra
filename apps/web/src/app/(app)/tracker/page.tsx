@@ -30,7 +30,9 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { parseLegs } from "@/lib/bankroll/legs";
 import { betOutcome } from "@/lib/bankroll/outcome";
+import { settleOpenBets } from "@/lib/bankroll/settle";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
 import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
 import {
@@ -43,6 +45,7 @@ import {
 } from "@/lib/bankroll/queries";
 import { usedProbability } from "@/lib/bet-builder/market";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
@@ -78,6 +81,8 @@ function parsePrefill(params: Record<string, string | string[] | undefined>) {
     stake: number("st"),
     line: number("ln"),
     bookmaker: text("bk", 60),
+    // Selezioni strutturate: solo se valide, altrimenti la giocata resta manuale.
+    legs: parseLegs(text("lg", 600)) ? text("lg", 600) : "",
   };
 }
 
@@ -91,6 +96,8 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const prefill = parsePrefill(params);
   const { since, dayAgo, weekAgo } = timeWindows(period);
 
+  // Prima di leggere: chiude le giocate le cui partite sono finite.
+  const settled = await settleOpenBets();
   const [bankrolls, allBets, movements, limits, kellyMatches] = await Promise.all([
     listBankrolls(),
     listBets(),
@@ -135,6 +142,12 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   return (
     <>
       <PageHeader title={t.title} description={t.description} />
+
+      {settled.won + settled.lost > 0 ? (
+        <Alert tone={settled.won > 0 ? "positive" : "neutral"} className="mb-4">
+          {fillTemplate(t.autoSettled, { won: settled.won, lost: settled.lost })}
+        </Alert>
+      ) : null}
 
       <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
         <Field label={t.period} htmlFor="p">
@@ -217,6 +230,12 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
               </span>
             </summary>
             <ActionForm action={addBet} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {prefill.legs ? (
+                <>
+                  <input type="hidden" name="legs" value={prefill.legs} />
+                  <p className="text-xs text-muted sm:col-span-2">{t.autoSettleHint}</p>
+                </>
+              ) : null}
               <Field label={t.bankroll} htmlFor="bet-bankroll">
                 <Select id="bet-bankroll" name="bankrollId" required>
                   {bankrolls.map((x) => (

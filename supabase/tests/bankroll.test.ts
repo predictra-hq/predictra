@@ -230,6 +230,24 @@ describe("bookmaker del bankroll", () => {
   });
 });
 
+describe("selezioni strutturate di una giocata", () => {
+  it("accetta un elenco di selezioni e rifiuta altre forme", async () => {
+    await asUser(db, alice, async (tx) => {
+      const bankroll = await createBankroll(tx);
+      const bet = await addBet(tx, bankroll);
+      await tx.query(`update public.bets set legs = $1::jsonb where id = $2`, [
+        JSON.stringify([{ m: 1, k: "1X2", l: null, s: "HOME" }]),
+        bet,
+      ]);
+      expect(
+        await num(tx, "select jsonb_array_length(legs) v from public.bets where id = $1", [bet]),
+      ).toBe(1);
+      expect(await attempt(tx, `update public.bets set legs = '{"m":1}'::jsonb`)).toBeTruthy();
+      expect(await attempt(tx, `update public.bets set legs = '[]'::jsonb`)).toBeTruthy();
+    });
+  });
+});
+
 describe("incassi e saldo", () => {
   it("incasso calcolato dallo stato", async () => {
     await asUser(db, alice, async (tx) => {

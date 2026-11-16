@@ -20,6 +20,7 @@ import {
   listLimits,
   listMovements,
 } from "@/lib/bankroll/queries";
+import { settleOpenBets } from "@/lib/bankroll/settle";
 import { parseId } from "@/lib/football/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import {
@@ -82,6 +83,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
   const m = getMessages().bankroll;
   const c = getMessages().common;
   const params = await searchParams;
+  await settleOpenBets();
   const [bankrolls, limits, bookmakers] = await Promise.all([
     listBankrolls(),
     listLimits(),

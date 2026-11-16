@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/dal";
+import { parseLegs } from "@/lib/bankroll/legs";
 import { betSchema, settleSchema, toIsoDate } from "@/lib/bankroll/validation";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
@@ -34,11 +35,14 @@ export async function addBet(_prev: ActionState, formData: FormData): Promise<Ac
     bookmaker: formData.get("bookmaker"),
     placedAt: formData.get("placedAt"),
     closingOdds: formData.get("closingOdds"),
+    legs: formData.get("legs"),
   });
   if (!parsed.success) return { ok: false, message: m.invalid };
   const d = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase.from("bets").insert({
+    // Selezioni valide: la giocata si chiuderà da sola a partite finite.
+    legs: parseLegs(d.legs),
     bankroll_id: d.bankrollId,
     description: d.description,
     market: d.market,

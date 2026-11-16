@@ -1,3 +1,4 @@
+import { encodeLegs } from "@/lib/bankroll/legs";
 import { suggestStake, type Limits, type StakeSuggestion } from "@predictra/bankroll";
 import type { Bolletta } from "./bollette";
 
@@ -54,5 +55,7 @@ export function bollettaTrackerHref(
   const bookmakers = new Set(bolletta.picks.map((p) => p.bookmaker));
   if (bookmakers.size === 1) params.set("bk", [...bookmakers][0]!);
   if (stake !== null && stake > 0) params.set("st", stake.toFixed(2));
+  const legs = encodeLegs(bolletta.picks);
+  if (legs) params.set("lg", legs);
   return `/tracker?${params.toString()}#bet-event`;
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { PredictionMarket } from "@predictra/shared-types";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { encodeLegs } from "@/lib/bankroll/legs";
 import { italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import type { Pick } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
@@ -22,6 +23,8 @@ export function trackerHref(p: Pick, price: ItalianPrice | null): string {
     params.set("o", price.price.toFixed(2));
     params.set("bk", price.bookmaker);
   }
+  const legs = encodeLegs([p]);
+  if (legs) params.set("lg", legs);
   return `/tracker?${params.toString()}#bet-event`;
 }
 
