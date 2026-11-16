@@ -207,3 +207,8 @@ Banco di prova, stima su 2024-25 e verifica su 2025-26 (1.751 partite). Combinaz
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
 - Squadre senza partite nella competizione (per esempio all'inizio della Champions League) hanno forza media.
 - Elo (K = 20, vantaggio casalingo 60) non è ancora tarato.
+
+### Controllo del 16/11/2026
+
+- `market`: ancora solo 19 partite finite con quote e previsione. LogLoss modello 0,8136, mercato 0,8072, combinata al 50% 0,8063, al 70% 0,8057: differenze sotto il rumore, il peso resta 0,5.
+- `stats`: tiri in porta e xG solo su 168 partite (una competizione). Sulle partite con statistiche Dixon-Coles (0,9638) resta meglio di Poisson corretto con gli xG (0,9653): nessun cambio. Da ripetere quando le statistiche coprono più campionati.
