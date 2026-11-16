@@ -85,6 +85,7 @@ export const betSchema = z.object({
   bookmaker: optionalText(60),
   placedAt: optionalText(30),
   closingOdds: z.preprocess(parseDecimal, z.number().gt(1).max(10000).optional()),
+  legs: optionalText(600),
 });
 
 export const settleSchema = z

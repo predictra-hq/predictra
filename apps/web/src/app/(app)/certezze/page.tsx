@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/primitives";
 import { combinedItalianPrice, italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { requireUser } from "@/lib/auth/dal";
+import { encodeLegs } from "@/lib/bankroll/legs";
 import { userBookmaker } from "@/lib/bankroll/queries";
 import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
 import {
@@ -52,6 +53,8 @@ function multipleTrackerHref(picks: readonly Pick[], price: number | null): stri
     sel: `${picks.length} selezioni`,
   });
   if (price !== null) params.set("o", price.toFixed(2));
+  const legs = encodeLegs(picks);
+  if (legs) params.set("lg", legs);
   return `/tracker?${params.toString()}#bet-event`;
 }
 
