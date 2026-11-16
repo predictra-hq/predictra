@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
-import { StakeSimulation } from "@/components/bet-builder/shared";
+import { StakeBox } from "@/components/bet-builder/stake-box";
+import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
   buildBollette,
@@ -22,8 +23,10 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
 const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> = {
+  DOUBLE: "positive",
   SOLID: "positive",
   BALANCED: "neutral",
+  LONG: "neutral",
   HIGH: "warning",
 };
 
@@ -117,13 +120,6 @@ function BollettaCard({
           at: formatDateTime(bolletta.oddsObservedAt),
         })}
       </p>
-      <div className="mt-2">
-        <StakeSimulation
-          stake={playStake ?? EXAMPLE_STAKE}
-          price={bolletta.price}
-          probability={bolletta.probability}
-        />
-      </div>
       {bankroll && advice ? (
         <p className="mt-2 text-xs text-muted" title={m.adviceHint}>
           {advised !== null
@@ -132,8 +128,10 @@ function BollettaCard({
           {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
         </p>
       ) : null}
-      <Link
-        href={bollettaTrackerHref(
+      <StakeBox
+        defaultStake={Math.max(1, Math.floor(playStake ?? EXAMPLE_STAKE))}
+        price={bolletta.price}
+        registerHref={bollettaTrackerHref(
           bolletta,
           {
             market: m.registerMarket,
@@ -142,13 +140,10 @@ function BollettaCard({
               n: bolletta.picks.length,
             }),
           },
-          playStake,
+          null,
         )}
-        title={m.registerHint}
-        className="mt-3 inline-flex h-9 items-center justify-center rounded-lg border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-border"
-      >
-        {m.register}
-      </Link>
+        labels={stakeBoxLabels()}
+      />
     </article>
   );
 }

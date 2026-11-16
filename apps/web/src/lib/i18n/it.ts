@@ -594,7 +594,13 @@ export const it = {
     bollette: {
       title: "Schedine consigliate",
       description: "Multiple pronte per il prossimo turno, con quote reali di bookmaker italiani.",
-      profiles: { SOLID: "Solida", BALANCED: "Equilibrata", HIGH: "Alta quota" },
+      profiles: {
+        DOUBLE: "Doppia sicura",
+        SOLID: "Solida",
+        BALANCED: "Equilibrata",
+        LONG: "Lunga",
+        HIGH: "Alta quota",
+      },
       profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
       register: "L'ho giocata",
       registerHint:
@@ -720,6 +726,10 @@ export const it = {
     stake: "Quanto vuoi giocare (€)",
     stakePlaceholder: "4",
     emptyFiltered: "Nessuna proposta con questi filtri. Prova un altro turno o un'altra categoria.",
+    stakeBox: {
+      stake: "Puntata",
+      win: "Se vince incassi {payout} (+{profit})",
+    },
     stakeTitle: "Se giochi {stake}",
     stakeWin: "Vinci {payout} (guadagno {profit})",
     stakeWinProbability: "probabilità {p}",
@@ -944,6 +954,8 @@ export const it = {
     description: "Le giocate più probabili delle prossime partite.",
     safeTitle: "Multipla sicura · {legs} partite",
     valueTitle: "Multipla con valore · {legs} partite",
+    targetTitle: "Almeno {target} di vincerla · {legs} partite",
+    totalOdds: "Quota totale",
     multipleWin: "Probabilità di vincerla",
     multiplePrice: "Quota {price}",
     matchesTitle: "Partite ({count})",
