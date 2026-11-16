@@ -1058,6 +1058,14 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
+    howAmIDoing: "Come sto andando",
+    byMonth: "Per mese",
+    byMarket: "Per tipo di giocata",
+    bySite: "Per sito",
+    notSet: "Non indicato",
+    breakdownWins: "{wins} vinte su {bets}",
+    bestBet: "La giocata migliore",
+    worstBet: "La giocata peggiore",
     autoSettleHint:
       "Questa giocata si chiude da sola quando le partite finiscono: non devi inserire l'esito.",
     autoSettled: "Giocate chiuse in automatico dai risultati: {won} vinte, {lost} perse.",

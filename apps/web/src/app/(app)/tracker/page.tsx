@@ -13,6 +13,7 @@ import {
   BET_STATUSES,
   DEFAULT_BET_BUILDER_RULES,
   type BankrollKind,
+  type BetRow,
 } from "@predictra/shared-types";
 import { ProfitCurve } from "@/components/bankroll/profit-curve";
 import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
@@ -30,6 +31,7 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { byKey, byMonth, extremes, type BreakdownRow } from "@/lib/bankroll/breakdown";
 import { parseLegs } from "@/lib/bankroll/legs";
 import { betOutcome } from "@/lib/bankroll/outcome";
 import { settleOpenBets } from "@/lib/bankroll/settle";
@@ -61,6 +63,80 @@ const OUTCOME_STRIPE = {
 } as const;
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
+
+/** Tabellina di un raggruppamento: voce, giocate vinte su chiuse, profitto e resa. */
+function BreakdownList({ title, rows }: { title: string; rows: readonly BreakdownRow[] }) {
+  const t = getMessages().tracker;
+  if (rows.length === 0) return null;
+  return (
+    <div className="mt-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-subtle">{title}</h4>
+      <ul className="mt-1 divide-y divide-border">
+        {rows.slice(0, 8).map((r) => (
+          <li key={r.key} className="flex items-center justify-between gap-3 py-2 text-sm">
+            <span className="min-w-0">
+              <span className="block truncate">{r.key}</span>
+              <span className="block text-xs text-muted">
+                {fillTemplate(t.breakdownWins, { wins: r.wins, bets: r.bets })}
+                {r.yield !== null ? ` · ${t.yield} ${formatPercent(r.yield, 0)}` : ""}
+              </span>
+            </span>
+            <span className="shrink-0 font-mono font-semibold">
+              <SignedEuro value={r.profit} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** "Come sto andando": per mese, per tipo di giocata, per sito, più la migliore e la peggiore. */
+function HowAmIDoing({ bets }: { bets: readonly BetRow[] }) {
+  const t = getMessages().tracker;
+  const months = byMonth(bets).map((r) => ({ ...r, key: formatMonth(r.key) }));
+  if (months.length === 0) return null;
+  const x = extremes(bets);
+  return (
+    <details className="mt-4 border-t border-border pt-3">
+      <summary className="cursor-pointer text-sm font-medium hover:text-positive-strong">
+        {t.howAmIDoing}
+      </summary>
+      <BreakdownList title={t.byMonth} rows={months} />
+      <BreakdownList title={t.byMarket} rows={byKey(bets, (b) => b.market, t.notSet)} />
+      <BreakdownList title={t.bySite} rows={byKey(bets, (b) => b.bookmaker, t.notSet)} />
+      {x && x.best !== x.worst ? (
+        <dl className="mt-4 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          {(
+            [
+              [t.bestBet, x.best],
+              [t.worstBet, x.worst],
+            ] as const
+          ).map(([label, bet]) => (
+            <div key={label} className="rounded-xl bg-surface-2 px-3 py-2">
+              <dt className="text-xs text-muted">{label}</dt>
+              <dd className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate">{bet.description ?? bet.market}</span>
+                <span className="shrink-0 font-mono font-semibold">
+                  <SignedEuro value={bet.profit ?? 0} />
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </details>
+  );
+}
+
+/** "2026-11" → "novembre 2026". */
+function formatMonth(key: string): string {
+  const [year, month] = key.split("-").map(Number);
+  if (!year || !month) return key;
+  return new Intl.DateTimeFormat("it-IT", { month: "long", year: "numeric" }).format(
+    new Date(Date.UTC(year, month - 1, 15)),
+  );
+}
 
 /** Valori precompilati dai link "Registra" delle Certezze e "L'ho giocata" delle schedine (`/tracker?add=1&d=…`). */
 function parsePrefill(params: Record<string, string | string[] | undefined>) {
@@ -167,7 +243,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       <h2 className="mb-3 text-lg font-semibold">{t.metrics}</h2>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {BANKROLL_KINDS.map((kind) => {
-          const { metrics, clv, curve } = metricsFor(kind);
+          const { metrics, clv, curve, bets: kindBets } = metricsFor(kind);
           return (
             <Card key={kind}>
               <div className="flex items-center justify-between">
@@ -204,6 +280,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 <p className="mt-2 text-xs text-muted">{t.metricsHelp}</p>
               </details>
               <ProfitCurve points={curve} label={b.kinds[kind]} />
+              <HowAmIDoing bets={kindBets} />
             </Card>
           );
         })}
