@@ -270,6 +270,7 @@ textarea {
     font-size: 0.65rem;
     letter-spacing: 0.02em;
   }
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):first-child,
   .stack-sm table.compact-sm:not(.hidden) td[colspan] {
     white-space: normal;
   }

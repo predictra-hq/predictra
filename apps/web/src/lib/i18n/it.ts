@@ -568,7 +568,7 @@ export const it = {
     noData: "Nessuna competizione caricata (vedi la pagina Dati).",
     overviewTitle: "Confronto tra competizioni",
     overviewDescription:
-      "Calcolato da PREDICTRA sulle partite concluse della stagione più recente (vista v_league_season_stats).",
+      "Calcolato da PREDICTRA sulle partite concluse della stagione più recente.",
     season: "Stagione",
     matches: "Partite",
     avgGoals: "Gol/partita",

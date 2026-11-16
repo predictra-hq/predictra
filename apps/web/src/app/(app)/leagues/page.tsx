@@ -89,7 +89,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
       <PageHeader title={m.title} description={m.description} />
 
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
-      <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>
+      <p className="mb-3 hidden text-sm text-muted sm:block">{m.overviewDescription}</p>
       <Card scrollLabel={m.overviewTitle} className="mb-8 p-0">
         <table className="compact-sm w-full text-left text-sm sm:min-w-[1040px]">
           <caption className="sr-only">{m.overviewTitle}</caption>
@@ -194,7 +194,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
 
       <h2 className="mb-1 mt-8 text-lg font-semibold">{m.standingsTitle}</h2>
       {firstStanding ? (
-        <p className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted sm:text-sm">
           {fillTemplate(m.standingsSource, {
             provider: footballSource?.name ?? firstStanding.provider,
             observedAt: formatDateTime(firstStanding.observed_at),
@@ -212,7 +212,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
               scrollLabel={`${m.standingsTitle} ${competition.name} ${g.title ?? ""}`.trim()}
               className="p-0"
             >
-              {g.title ? (
+              {g.title && standingGroups.length > 1 ? (
                 <h3 className="px-4 pt-4 text-sm font-semibold">
                   {m.group}: {g.title}
                 </h3>
