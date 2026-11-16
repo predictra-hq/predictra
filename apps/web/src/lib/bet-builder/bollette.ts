@@ -37,7 +37,7 @@ import {
  * - se le selezioni valide sono meno di `MIN_LEGS`, quel profilo non viene proposto.
  */
 
-export const BOLLETTA_PROFILES = ["SOLID", "BALANCED", "HIGH"] as const;
+export const BOLLETTA_PROFILES = ["DOUBLE", "SOLID", "BALANCED", "LONG", "HIGH"] as const;
 export type BollettaProfile = (typeof BOLLETTA_PROFILES)[number];
 
 export interface BollettaRule {
@@ -50,8 +50,10 @@ export interface BollettaRule {
 }
 
 export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
+  DOUBLE: { minProbability: 0.72, minPrice: 1.2, legs: 2 },
   SOLID: { minProbability: 0.65, minPrice: 1.25, legs: 3 },
   BALANCED: { minProbability: 0.55, minPrice: 1.45, legs: 4 },
+  LONG: { minProbability: 0.55, minPrice: 1.3, legs: 6 },
   HIGH: { minProbability: 0.42, minPrice: 1.8, legs: 4 },
 };
 

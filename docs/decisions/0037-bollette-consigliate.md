@@ -40,3 +40,10 @@ Richiesta del proprietario: "quote sicure ma con alto margine, non solo quelle b
 - In pagina compaiono il valore di ogni selezione e il valore atteso della schedina.
 - **Correzione:** Supabase restituisce al massimo 1.000 righe per richiesta, e le previsioni dei 10 giorni sono circa 35 righe a partita. Prima "Le più probabili" e le schedine vedevano solo una parte delle partite (28 su 57 su DEV il 14/11/2026). Ora le letture sono a pagine (`selectAll` in `queries.ts`), anche per le quote del costruttore manuale.
 - Test: `apps/web/src/lib/bet-builder/bollette.test.ts`.
+
+## Aggiornamento del 16/11/2026: più schedine e puntata modificabile
+
+Richiesta del proprietario: più multiple e la possibilità di cambiare la puntata.
+
+- Due profili in più per turno: **Doppia sicura** (2 selezioni, probabilità ≥ 72%, quota ≥ 1,20) e **Lunga** (fino a 6 selezioni, probabilità ≥ 55%, quota ≥ 1,30). Restano le stesse regole di valore e di quote reali italiane.
+- Ogni schedina ha una puntata modificabile (euro interi): parte da quella consigliata (euro interi, minimo 2 €, ADR 0031) o da 10 € senza bankroll, ricalcola la vincita e "L'ho giocata" apre le Giocate fatte con l'importo scelto.

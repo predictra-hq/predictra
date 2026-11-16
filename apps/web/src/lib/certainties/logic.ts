@@ -434,3 +434,38 @@ export function flatReturn(multiples: readonly { won: boolean; price: number }[]
   const payout = multiples.reduce((sum, m) => sum + (m.won ? m.price : 0), 0);
   return payout / multiples.length - 1;
 }
+
+/** Traguardi delle multiple mostrate: dalla più sicura (poche partite) alla più ricca. */
+export const MULTIPLE_TARGETS = [0.75, 0.65, 0.55, 0.45] as const;
+
+export type CertaintyMultipleCard =
+  | { key: string; kind: "target"; target: number; multiple: CertaintyMultiple }
+  | { key: string; kind: "value"; target: null; multiple: ValueMultiple };
+
+/**
+ * Le multiple della pagina Certezze: una per traguardo (senza doppioni: due traguardi
+ * possono dare la stessa multipla) e quella con valore, se c'è.
+ */
+export function certaintyMultiples(
+  picks: readonly Pick[],
+  priceFor: PriceLookup,
+): CertaintyMultipleCard[] {
+  const out: CertaintyMultipleCard[] = [];
+  const seen = new Set<string>();
+  const signature = (m: CertaintyMultiple) =>
+    m.picks
+      .map((p) => `${p.matchId}|${p.market}|${p.line ?? ""}|${p.selection}`)
+      .sort()
+      .join(",");
+  for (const target of MULTIPLE_TARGETS) {
+    const multiple = buildMultiple(picks, target);
+    if (!multiple || seen.has(signature(multiple))) continue;
+    seen.add(signature(multiple));
+    out.push({ key: `t${target}`, kind: "target", target, multiple });
+  }
+  const value = buildValueMultiple(picks, priceFor);
+  if (value && !seen.has(signature(value))) {
+    out.push({ key: "value", kind: "value", target: null, multiple: value });
+  }
+  return out;
+}

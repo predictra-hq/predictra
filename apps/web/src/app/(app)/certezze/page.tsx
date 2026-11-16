@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { StakeBox } from "@/components/bet-builder/stake-box";
+import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { PickRow } from "@/components/certainties/pick-chip";
 import {
   Alert,
@@ -16,12 +18,10 @@ import { requireUser } from "@/lib/auth/dal";
 import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
 import {
   bandStats,
-  buildMultiple,
-  buildValueMultiple,
+  certaintyMultiples,
   DEFAULT_THRESHOLD,
   flatReturn,
   groupByMatch,
-  MULTIPLE_TARGET,
   pastValueMultiples,
   selectPicks,
   type BandStat,
@@ -38,6 +38,23 @@ export const metadata: Metadata = { title: "Certezze" };
 const MIN_SAMPLE = 30;
 
 /** Multipla: elenco delle partite e, in fondo, probabilità e quota. */
+/** Link alle Giocate fatte con la multipla già compilata (partite, quota totale). */
+function multipleTrackerHref(picks: readonly Pick[], price: number | null): string {
+  const m = getMessages().betBuilder.bollette;
+  const params = new URLSearchParams({
+    add: "1",
+    d: picks
+      .map((p) => `${p.home} – ${p.away}`)
+      .join("; ")
+      .slice(0, 200),
+    mk: m.registerMarket,
+    sel: `${picks.length} selezioni`,
+  });
+  if (price !== null) params.set("o", price.toFixed(2));
+  return `/tracker?${params.toString()}#bet-event`;
+}
+
+/** Multipla: partite con quota singola, probabilità, quota totale e puntata modificabile. */
 function MultipleCard({
   title,
   picks,
@@ -52,32 +69,52 @@ function MultipleCard({
   const c = getMessages().certainties;
   const price = combinedItalianPrice(prices, picks);
   return (
-    <Card>
+    <Card className="flex h-full flex-col">
       <CardTitle>{title}</CardTitle>
-      <ul className="mt-3 divide-y divide-border">
-        {picks.map((p) => (
-          <li key={p.matchId} className="flex items-center justify-between gap-3 py-2 text-sm">
-            <span className="min-w-0">
-              <Link href={`/match-center/${p.matchId}`} className="block truncate hover:underline">
-                {p.home} – {p.away}
-              </Link>
-              <span className="block text-xs text-muted">{pickLabel(p)}</span>
-            </span>
-            <span className="font-mono">{formatPercent(p.probability, 0)}</span>
-          </li>
-        ))}
+      <ul className="mt-3 flex-1 divide-y divide-border">
+        {picks.map((p) => {
+          const leg = italianPriceFor(prices, p);
+          return (
+            <li key={p.matchId} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <span className="min-w-0">
+                <Link
+                  href={`/match-center/${p.matchId}`}
+                  className="block truncate hover:underline"
+                >
+                  {p.home} – {p.away}
+                </Link>
+                <span className="block text-xs text-muted">{pickLabel(p)}</span>
+              </span>
+              <span className="shrink-0 text-right font-mono">
+                <span className="block">{formatPercent(p.probability, 0)}</span>
+                {leg ? (
+                  <span className="block text-xs text-muted">{formatOdds(leg.price)}</span>
+                ) : null}
+              </span>
+            </li>
+          );
+        })}
       </ul>
-      <p className="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-3">
-        <span className="text-sm text-muted">{c.multipleWin}</span>
-        <span className="font-mono text-lg font-semibold text-positive-strong">
-          {formatPercent(probability, 0)}
-        </span>
-      </p>
-      {price !== null ? (
-        <p className="text-sm text-muted">
-          {fillTemplate(c.multiplePrice, { price: formatOdds(price) })}
-        </p>
-      ) : null}
+      <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
+        <div>
+          <dt className="text-xs text-muted">{c.multipleWin}</dt>
+          <dd className="font-mono text-lg font-semibold text-positive-strong">
+            {formatPercent(probability, 0)}
+          </dd>
+        </div>
+        <div className="text-right">
+          <dt className="text-xs text-muted">{c.totalOdds}</dt>
+          <dd className="font-mono text-lg font-semibold">
+            {price !== null ? formatOdds(price) : "–"}
+          </dd>
+        </div>
+      </dl>
+      <StakeBox
+        defaultStake={10}
+        price={price}
+        registerHref={multipleTrackerHref(picks, price)}
+        labels={stakeBoxLabels()}
+      />
     </Card>
   );
 }
@@ -144,29 +181,31 @@ async function CertaintiesContent() {
   const matches = groupByMatch(picks);
   const prices = upcoming.prices;
   const priceFor = (p: Pick) => italianPriceFor(prices, p)?.price ?? null;
-  const safe = buildMultiple(picks, MULTIPLE_TARGET);
-  const value = buildValueMultiple(picks, priceFor);
+  // Multiple giocabili: se ci sono almeno due giocate con quota italiana si usano solo quelle.
+  const priced = picks.filter((p) => priceFor(p) !== null);
+  const pool = priced.length >= 2 ? priced : picks;
+  const multiples = certaintyMultiples(pool, priceFor);
 
   return (
     <>
-      {safe || value ? (
-        <div className="mb-6 grid gap-4 lg:grid-cols-2">
-          {safe ? (
+      {multiples.length > 0 ? (
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {multiples.map((x) => (
             <MultipleCard
-              title={fillTemplate(c.safeTitle, { legs: String(safe.picks.length) })}
-              picks={safe.picks}
-              probability={safe.probability}
+              key={x.key}
+              title={
+                x.kind === "value"
+                  ? fillTemplate(c.valueTitle, { legs: String(x.multiple.picks.length) })
+                  : fillTemplate(c.targetTitle, {
+                      target: formatPercent(x.target, 0),
+                      legs: String(x.multiple.picks.length),
+                    })
+              }
+              picks={x.multiple.picks}
+              probability={x.multiple.probability}
               prices={prices}
             />
-          ) : null}
-          {value ? (
-            <MultipleCard
-              title={fillTemplate(c.valueTitle, { legs: String(value.picks.length) })}
-              picks={value.picks}
-              probability={value.probability}
-              prices={prices}
-            />
-          ) : null}
+          ))}
         </div>
       ) : null}
 

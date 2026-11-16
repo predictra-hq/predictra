@@ -3,6 +3,7 @@ import type { ActivePredictionRow } from "@predictra/shared-types";
 import {
   bandStats,
   buildMultiple,
+  certaintyMultiples,
   buildValueMultiple,
   flatReturn,
   combinedProbability,
@@ -231,5 +232,19 @@ describe("giocate utili", () => {
       "DOUBLE_CHANCE:HOME_AWAY",
       "TOTAL_GOALS:UNDER",
     ]);
+  });
+});
+
+describe("multiple delle certezze", () => {
+  const pick = (matchId: number, probability: number) =>
+    selectPicks([row({ match_id: matchId, probability })], 0)[0]!;
+
+  it("una per traguardo, senza doppioni, più partite quando il traguardo scende", () => {
+    const picks = [0.95, 0.92, 0.9, 0.88, 0.85, 0.82].map((p, i) => pick(i + 1, p));
+    const cards = certaintyMultiples(picks, () => null);
+    const legs = cards.map((c) => c.multiple.picks.length);
+    expect(cards.every((c) => c.kind === "target")).toBe(true);
+    expect(legs).toEqual([...legs].sort((a, b) => a - b));
+    expect(new Set(cards.map((c) => c.key)).size).toBe(cards.length);
   });
 });
