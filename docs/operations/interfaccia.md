@@ -1,6 +1,6 @@
 # Interfaccia: navigazione, app sul telefono, tema e fluidità (M8, corsia B)
 
-Cosa c'è nell'interfaccia oltre alle singole pagine, dove sta nel codice e cosa resta da verificare. **Aggiornato:** 16/11/2026.
+Cosa c'è nell'interfaccia oltre alle singole pagine, dove sta nel codice e cosa resta da verificare. **Aggiornato:** 16/11/2026 (pagina Profilo e rifinitura da telefono).
 
 Nessuna di queste funzioni modifica il database: le scelte dell'utente descritte qui restano in cookie del browser.
 
@@ -25,8 +25,10 @@ Le sezioni marcate **(PR #97)**, **(PR #98)** e **(PR #99)** descrivono codice n
 ## Navigazione
 
 - **Menu laterale** (`components/shell/sidebar.tsx`, voci in `components/shell/nav-config.ts`): gruppi `MAIN_NAV_GROUPS` per ciò che si vuole fare; il gruppo «Dietro le quinte» è richiudibile e resta aperto quando si è su una sua pagina. Gli indirizzi delle pagine non sono cambiati.
-- **Impostazioni:** una sola voce nel menu; Sicurezza e Preferenze sono due schede (`components/shell/settings-tabs.tsx`).
-- **Barra in basso sul telefono** (`components/shell/bottom-nav.tsx`, voci in `BOTTOM_NAV`): Home, Partite, Certezze, Schedine, Giocate fatte. Compare sotto `lg`; il menu a scomparsa resta per le altre pagine. Il contenuto ha margine in basso (`pb-24`) per non finire sotto la barra.
+- **Profilo** (`app/(app)/settings/page.tsx`): una sola voce nel menu. Mostra chi sei e porta a Bankroll, Giocate fatte, Sicurezza, Preferenze, Campionati, Chiedi a PREDICTRA, Amministrazione (secondo i permessi) e all'uscita. Sicurezza e Preferenze restano due schede (`components/shell/settings-tabs.tsx`) con il ritorno al Profilo. Le icone delle voci stanno in `components/shell/nav-icons.ts`, usabile anche dalle pagine lato server.
+- **Barra in basso sul telefono** (`components/shell/bottom-nav.tsx`, voci in `BOTTOM_NAV`): Home, Partite, Certezze, Schedine, Profilo. Compare sotto `lg`; il menu a scomparsa resta per le altre pagine. Con `viewportFit: "cover"` la barra e l'intestazione rispettano le zone dei gesti di iPhone (`env(safe-area-inset-*)`), e il contenuto ha un margine in basso pari alla barra più quella zona.
+- **Schede interne** (Schedine, Profilo, Amministrazione): classe `tab-strip` in `globals.css`. Sul telefono stanno su una riga che scorre di lato.
+- **Telefono, regole generali** (16/11/2026): campi a 16 px sotto i 640 px (altrimenti iPhone ingrandisce la pagina quando si scrive); descrizione sotto il titolo solo da 640 px in su; griglie sempre con `grid-cols-1` di base; avvertenze in piccolo a fondo pagina invece che in riquadri in cima.
 - Chi aggiunge una pagina la inserisce nel gruppo giusto di `MAIN_NAV_GROUPS`; in `BOTTOM_NAV` solo se è una pagina di tutti i giorni (cinque voci sono il massimo leggibile).
 
 ## App sul telefono
