@@ -4,7 +4,6 @@ import {
   averageClv,
   checkLimits,
   computeMetrics,
-  flatStake,
   lossSince,
   profitCurve,
   suggestStake,
@@ -307,7 +306,13 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                     <p className="mt-1 text-muted">
                       {t.flatSuggestion}:{" "}
                       <span className="font-mono text-fg">
-                        {formatEuro(flatStake(Number(x.available), Number(x.flat_stake_pct)))}
+                        {formatEuro(
+                          suggestStake({
+                            available: Number(x.available),
+                            flatPct: Number(x.flat_stake_pct),
+                            limits: lim,
+                          }).flat,
+                        )}
                       </span>
                     </p>
                     {reached.length > 0 ? (

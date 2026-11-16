@@ -25,3 +25,7 @@ Esempio documentato: `p = 0,55`, `o = 2,00`, `B = 1.000 €`. Allora `f* = (1,10
 
 - Il tetto del 2% domina spesso: è voluto, data l'incertezza delle probabilità (Confidence Score, ADR 0022).
 - Frazione e tetto si potranno rivedere con lo storico reale delle giocate, con un nuovo ADR.
+
+## Aggiornamento del 16/11/2026: puntate giocabili
+
+Richiesta del proprietario: niente puntate consigliate da 0,97 €. I suggerimenti (`suggestStake`) sono ora **euro interi per difetto, con un minimo di 2 €** (giocata minima abituale dei bookmaker italiani): se il calcolo dà qualcosa di positivo ma meno di 2 €, si consigliano 2 €; se il disponibile o il limite personale sono sotto i 2 €, nessun suggerimento. Le funzioni di calcolo (`flatStake`, `kellyStake`) restano esatte al centesimo.
