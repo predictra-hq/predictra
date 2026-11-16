@@ -224,3 +224,7 @@ Banco di prova, stima su 2024-25 (1.732 partite) e verifica su 2025-26 (1.751). 
 | Riposo corto (≤ 3 giorni) casa, ospite | 0,9826         | 0,9955            |
 
 Migliora la stagione di stima e peggiora quella mai vista: è adattamento. **Non adottato.** Da riprovare solo con il calendario completo di coppe nazionali ed europee.
+
+### Entrambe segnano: taratura adottata (16/11/2026, ADR 0053)
+
+La prova del 15/11 aveva mostrato che su «entrambe segnano» il modello è troppo sicuro, senza adottare nulla. Ripetuta nei due versi (stima su una stagione, verifica sull'altra) e campionato per campionato, il guadagno si ripete sempre: Log Loss da 0,6870 a 0,6844 sul 2024-25 e da 0,6897 a 0,6870 sul 2025-26. **Adottata** la taratura `σ(0,6 · logit p + 0,05)` solo per questo mercato.
