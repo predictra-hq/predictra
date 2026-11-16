@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   // Cache Components disattivato: app privata e interamente dinamica per utente
   // (ADR 0006). Si rivaluta quando esisteranno dati condivisi cacheabili (M2+).
   poweredByHeader: false,
+  // Versione dell'app fissata alla build: serve all'avviso di aggiornamento (src/lib/version.ts).
+  env: { APP_VERSION: process.env.GITHUB_SHA ?? "local" },
   transpilePackages: ["@predictra/quant", "@predictra/shared-types"],
   turbopack: {
     rules: {
