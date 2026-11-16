@@ -123,6 +123,8 @@ I workflow ad avvio manuale compaiono in _Actions_ solo se il file è sul branch
 
 Se un invito scade (24 h) senza essere usato: _Revoca_ e poi _Crea invito_ di nuovo.
 
+Chi riceve il link lo apre e preme **Continua**: il link vale una sola volta e si consuma a quel tocco, non all'apertura (così l'anteprima della chat non lo usa al posto suo). La revoca rimuove anche l'utente che ha aperto il link senza completare l'attivazione, quindi si può invitare di nuovo la stessa email.
+
 ### Usare PREDICTRA come app sul telefono
 
 Il sito si può aggiungere alla schermata Home e aprire a schermo intero; funziona solo online.

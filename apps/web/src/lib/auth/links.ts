@@ -7,7 +7,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * vengono generati qui (Auth Admin API `generateLink`, che non invia nulla) e
  * consegnati a mano dall'amministratore con un canale esterno.
  *
- * Il link punta a /auth/confirm, che verifica il token lato server.
+ * Il link punta a /auth/confirm, che verifica il token lato server solo quando il
+ * destinatario preme «Continua» (aprire l'indirizzo non lo consuma).
  * Il link NON viene salvato: va trattato come una password temporanea.
  * Scade secondo `auth.email.otp_expiry` (supabase/config.toml).
  */

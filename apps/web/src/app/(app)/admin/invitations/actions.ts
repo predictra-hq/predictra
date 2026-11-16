@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth/dal";
 import { generateAuthLink } from "@/lib/auth/links";
+import { removeNeverActivatedUser } from "@/lib/auth/orphans";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -31,6 +32,16 @@ export async function createInvitation(
   // 2. Solo dopo, generazione del link (nessuna email: lo consegna l'amministratore).
   const admin = createAdminClient();
   try {
+    // Un utente rimasto a metà da un invito precedente (link aperto, account mai attivato)
+    // impedirebbe di generare il nuovo link: si rimuove prima. La RPC ha già escluso che
+    // l'email appartenga a un account con un ruolo.
+    const { data: leftover } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", email.data)
+      .maybeSingle();
+    if (typeof leftover?.id === "string") await removeNeverActivatedUser(admin, leftover.id);
+
     const link = await generateAuthLink("invite", email.data);
     await admin
       .from("invitations")
@@ -64,13 +75,10 @@ export async function revokeInvitation(
   });
   if (error) return { ok: false, message: toUserMessage(error) };
 
-  // Invalida il link: elimina l'utente auth creato dall'invito, se non ha mai effettuato l'accesso.
+  // Invalida il link: elimina l'utente auth creato dall'invito, se non ha mai completato
+  // l'attivazione (anche se il link è già stato aperto).
   if (typeof authUserId === "string") {
-    const admin = createAdminClient();
-    const { data } = await admin.auth.admin.getUserById(authUserId);
-    if (data.user && !data.user.last_sign_in_at) {
-      await admin.auth.admin.deleteUser(authUserId);
-    }
+    await removeNeverActivatedUser(createAdminClient(), authUserId);
   }
 
   revalidatePath("/admin/invitations");
