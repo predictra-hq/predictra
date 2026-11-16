@@ -64,6 +64,16 @@ describe("revisione di sicurezza del database", () => {
     ).toEqual([]);
   });
 
+  it("le policy di lettura controllano l'utente attivo una volta per istruzione, non per riga", async () => {
+    // `using (app_private.is_active_user())` viene valutata a ogni riga: con le quote
+    // portava le pagine in timeout. Va scritta `using ((select app_private.is_active_user()))`.
+    const { rows } = await db.query<{ policyname: string }>(
+      `select policyname from pg_policies
+       where schemaname = 'public' and qual = 'app_private.is_active_user()'`,
+    );
+    expect(rows.map((r) => r.policyname)).toEqual([]);
+  });
+
   it("tutte le viste di public applicano la RLS di chi le interroga (security_invoker)", async () => {
     expect(
       await names(`select c.relname as name from pg_class c
