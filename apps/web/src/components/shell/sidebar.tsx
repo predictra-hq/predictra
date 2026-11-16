@@ -226,7 +226,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
       <aside
         id="sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface transition-[transform,visibility] lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface pt-[env(safe-area-inset-top)] transition-[transform,visibility] lg:translate-x-0",
           open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
@@ -262,7 +262,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
           </div>
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
           <p className="truncate text-sm font-medium" title={userLabel}>
             {userLabel}
           </p>

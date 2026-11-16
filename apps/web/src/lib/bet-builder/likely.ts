@@ -91,15 +91,24 @@ export interface LatestOddsRow {
   italian?: boolean;
 }
 
-/** Migliore quota italiana per (partita, mercato, esito), tra le righe già filtrate. */
-export function bestItalianPrices(rows: readonly LatestOddsRow[]): Map<string, ItalianPrice> {
+/**
+ * Quota italiana per (partita, mercato, esito), tra le righe già filtrate: quella del
+ * bookmaker dell'utente (`preferred`, il sito del suo bankroll) quando c'è, altrimenti la
+ * migliore tra i bookmaker italiani.
+ */
+export function bestItalianPrices(
+  rows: readonly LatestOddsRow[],
+  preferred: string | null = null,
+): Map<string, ItalianPrice> {
   const best = new Map<string, ItalianPrice>();
   for (const r of rows) {
     if (r.match_id === null || r.italian === false) continue;
     const key = `${r.match_id}|${r.market}|${r.selection}`;
     const price = Number(r.price);
     const cur = best.get(key);
-    if (!cur || price > cur.price) {
+    const mine = preferred !== null && r.bookmaker === preferred;
+    const curMine = preferred !== null && cur?.bookmaker === preferred;
+    if (!cur || (mine && !curMine) || (mine === curMine && price > cur.price)) {
       best.set(key, { price, bookmaker: r.bookmaker, observedAt: r.observed_at });
     }
   }

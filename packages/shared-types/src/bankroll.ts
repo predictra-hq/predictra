@@ -54,6 +54,10 @@ export interface BankrollSummaryRow {
   open_bets: number;
   settled_bets: number;
   settled_stakes: Numeric;
+  /** Bookmaker raccolto da PREDICTRA su cui si gioca questo bankroll, se indicato. */
+  bookmaker_code: string | null;
+  /** Nome del sito di scommesse (anche se PREDICTRA non ne raccoglie le quote). */
+  bookmaker_name: string | null;
 }
 
 /** Riga di `public.v_bets`. */

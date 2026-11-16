@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import type {
   BankrollSummaryRow,
   BetRow,
@@ -21,6 +22,39 @@ export class BankrollUnavailable extends Error {
     super(`Lettura non riuscita: ${what}`, { cause });
   }
 }
+
+/** Bookmaker italiani di cui PREDICTRA raccoglie le quote: quelli collegabili a un bankroll. */
+export async function listItalianBookmakers(): Promise<{ code: string; title: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookmakers")
+    .select("code, title")
+    .eq("italian_market", true)
+    .order("title");
+  if (error) throw new BankrollUnavailable("bookmaker", error);
+  return (data ?? []).map((b) => ({ code: String(b.code), title: String(b.title) }));
+}
+
+/**
+ * Il sito del bankroll di riferimento (il primo reale, altrimenti il primo): `tracked` è
+ * il nome del bookmaker se PREDICTRA ne raccoglie le quote, `name` il nome scelto
+ * dall'utente. Letto una volta per richiesta; senza bankroll o in caso d'errore è null.
+ */
+export const userBookmaker = cache(
+  async (): Promise<{ name: string; tracked: string | null } | null> => {
+    try {
+      const bankrolls = await listBankrolls();
+      const chosen = bankrolls.find((b) => b.kind === "REAL") ?? bankrolls[0];
+      if (!chosen?.bookmaker_name) return null;
+      return {
+        name: chosen.bookmaker_name,
+        tracked: chosen.bookmaker_code ? chosen.bookmaker_name : null,
+      };
+    } catch {
+      return null;
+    }
+  },
+);
 
 export interface MovementRow {
   id: number;

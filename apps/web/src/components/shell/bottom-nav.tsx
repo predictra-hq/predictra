@@ -44,7 +44,7 @@ export function BottomNav({ messages }: { messages: Messages }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-[3.75rem] flex-col items-center justify-center px-1 text-[11px] transition-colors",
+                  "flex h-16 flex-col items-center justify-center px-0.5 text-[0.8125rem] leading-tight transition-colors",
                   active ? "font-semibold text-positive-strong" : "text-muted hover:text-fg",
                 )}
               >
@@ -52,11 +52,11 @@ export function BottomNav({ messages }: { messages: Messages }) {
                   {Icon ? (
                     <span
                       className={cn(
-                        "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+                        "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
                         active && "bg-positive-soft",
                       )}
                     >
-                      <Icon size={20} aria-hidden="true" />
+                      <Icon size={22} aria-hidden="true" />
                     </span>
                   ) : null}
                   <span className="max-w-full truncate">{messages.nav[item.key]}</span>

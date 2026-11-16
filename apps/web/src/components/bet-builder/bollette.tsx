@@ -10,7 +10,7 @@ import {
   type BollettaProfile,
 } from "@/lib/bet-builder/bollette";
 import { formatEuro } from "@/components/bankroll/shared";
-import { listBankrolls, listLimits } from "@/lib/bankroll/queries";
+import { listBankrolls, listLimits, userBookmaker } from "@/lib/bankroll/queries";
 import { formatRound } from "@/lib/bet-builder/format";
 import {
   bollettaAdvice,
@@ -44,11 +44,13 @@ function BollettaCard({
   stake,
   now,
   bankroll,
+  site,
 }: {
   bolletta: Bolletta;
   stake: number | null;
   now: Date;
   bankroll: AdviceBankroll | null;
+  site: string | null;
 }) {
   const m = getMessages().betBuilder.bollette;
   const old = oddsAreOld(bolletta, now);
@@ -124,6 +126,7 @@ function BollettaCard({
       <StakeBox
         defaultStake={Math.max(1, Math.floor(playStake ?? EXAMPLE_STAKE))}
         price={bolletta.price}
+        site={site}
         registerHref={bollettaTrackerHref(
           bolletta,
           {
@@ -150,8 +153,11 @@ export function BolletteCard({
   stake = null,
   now,
   bankroll = null,
+  site = null,
 }: {
   bollette: readonly Bolletta[];
+  /** Sito del bankroll di riferimento, se indicato. */
+  site?: string | null;
   stake?: number | null;
   /** Bankroll dell'utente su cui calcolare la puntata consigliata, se ne ha uno. */
   bankroll?: AdviceBankroll | null;
@@ -182,6 +188,7 @@ export function BolletteCard({
                     stake={stake}
                     now={now}
                     bankroll={bankroll}
+                    site={site}
                   />
                 ))}
             </div>
@@ -215,9 +222,10 @@ async function loadAdviceBankroll(): Promise<AdviceBankroll | null> {
 
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
 export async function SchedineSection({ stake }: { stake: number | null }) {
-  const [{ rows, prices, consensus }, bankroll] = await Promise.all([
+  const [{ rows, prices, consensus }, bankroll, site] = await Promise.all([
     loadPicksData(),
     loadAdviceBankroll(),
+    userBookmaker(),
   ]);
   return (
     <BolletteCard
@@ -225,6 +233,7 @@ export async function SchedineSection({ stake }: { stake: number | null }) {
       stake={stake}
       now={new Date()}
       bankroll={bankroll}
+      site={site?.name ?? null}
     />
   );
 }

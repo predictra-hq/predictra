@@ -197,6 +197,39 @@ describe("isolamento", () => {
   });
 });
 
+describe("bookmaker del bankroll", () => {
+  it("si collega a un bookmaker raccolto o a un nome libero, e resta nel riepilogo", async () => {
+    await db.exec(
+      `insert into public.bookmakers (code, title, region, italian_market, provider)
+       values ('demo_it', 'DEMO Bookmaker (IT)', 'eu', true, 'the-odds-api') on conflict do nothing;`,
+    );
+    await asUser(db, alice, async (tx) => {
+      const id = await createBankroll(tx);
+      await tx.query(
+        "update public.bankrolls set bookmaker_code = 'demo_it', bookmaker_name = 'DEMO Bookmaker (IT)' where id = $1",
+        [id],
+      );
+      const row = await one<{ bookmaker_code: string; bookmaker_name: string }>(
+        tx,
+        "select bookmaker_code, bookmaker_name from public.v_bankroll_summary where bankroll_id = $1",
+        [id],
+      );
+      expect(row).toEqual({ bookmaker_code: "demo_it", bookmaker_name: "DEMO Bookmaker (IT)" });
+      // Un codice che non esiste tra i bookmaker raccolti è rifiutato.
+      const bad = await attempt(tx, "update public.bankrolls set bookmaker_code = 'inventato'");
+      expect(bad).toBeTruthy();
+      // Un sito non raccolto si indica solo con il nome.
+      await tx.query(
+        "update public.bankrolls set bookmaker_code = null, bookmaker_name = 'DEMO sito' where id = $1",
+        [id],
+      );
+    });
+    await asUser(db, bob, async (tx) => {
+      expect(await num(tx, "select count(*) v from public.v_bankroll_summary")).toBe(0);
+    });
+  });
+});
+
 describe("incassi e saldo", () => {
   it("incasso calcolato dallo stato", async () => {
     await asUser(db, alice, async (tx) => {

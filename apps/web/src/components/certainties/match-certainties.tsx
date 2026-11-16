@@ -1,3 +1,4 @@
+import { userBookmaker } from "@/lib/bankroll/queries";
 import { PickRow } from "@/components/certainties/pick-chip";
 import { Card, CardTitle } from "@/components/ui/primitives";
 import { marketConsensus } from "@/lib/bet-builder/bollette";
@@ -27,7 +28,7 @@ export async function MatchCertainties({ matchId, status }: { matchId: number; s
     (a, b) => b.probability - a.probability,
   );
   if (picks.length === 0) return null;
-  const prices = bestItalianPrices(odds);
+  const prices = bestItalianPrices(odds, (await userBookmaker())?.tracked ?? null);
   return (
     <Card className="mb-4">
       <CardTitle>{c.matchTitle}</CardTitle>

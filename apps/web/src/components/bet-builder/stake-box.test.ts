@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeStake, withStake } from "./stake-box";
+import { normalizeOdds, normalizeStake, withPlay, withStake } from "./stake-box";
 
 describe("puntata modificabile", () => {
   it("euro interi, con un valore di riserva se il campo non è valido", () => {
@@ -14,5 +14,18 @@ describe("puntata modificabile", () => {
       "/tracker?add=1&o=2.10&st=10#bet-event",
     );
     expect(withStake("/tracker", 5)).toBe("/tracker?st=5");
+  });
+
+  it("quota corretta a mano e sito del bankroll sostituiscono quelli proposti", () => {
+    expect(normalizeOdds("2,35", 2)).toBe(2.35);
+    expect(normalizeOdds("1", 2)).toBe(2);
+    expect(normalizeOdds("abc", null)).toBeNull();
+    expect(
+      withPlay("/tracker?add=1&o=2.10&bk=Altro#bet-event", {
+        stake: 10,
+        odds: 2.35,
+        site: "DEMO sito",
+      }),
+    ).toBe("/tracker?add=1&o=2.35&bk=DEMO+sito&st=10#bet-event");
   });
 });

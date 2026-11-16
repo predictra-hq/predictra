@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/primitives";
 import { combinedItalianPrice, italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { requireUser } from "@/lib/auth/dal";
+import { userBookmaker } from "@/lib/bankroll/queries";
 import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
 import {
   bandStats,
@@ -60,8 +61,10 @@ function MultipleCard({
   picks,
   probability,
   prices,
+  site,
 }: {
   title: string;
+  site: string | null;
   picks: readonly Pick[];
   probability: number;
   prices: ReadonlyMap<string, ItalianPrice>;
@@ -112,6 +115,7 @@ function MultipleCard({
       <StakeBox
         defaultStake={10}
         price={price}
+        site={site}
         registerHref={multipleTrackerHref(picks, price)}
         labels={stakeBoxLabels()}
       />
@@ -176,7 +180,7 @@ function Reliability({
 /** Multiple e partite: la parte principale, caricata appena possibile. */
 async function CertaintiesContent() {
   const c = getMessages().certainties;
-  const upcoming = await loadUpcoming();
+  const [upcoming, site] = await Promise.all([loadUpcoming(), userBookmaker()]);
   const picks = selectPicks(upcoming.rows, DEFAULT_THRESHOLD, upcoming.market);
   const matches = groupByMatch(picks);
   const prices = upcoming.prices;
@@ -204,6 +208,7 @@ async function CertaintiesContent() {
               picks={x.multiple.picks}
               probability={x.multiple.probability}
               prices={prices}
+              site={site?.name ?? null}
             />
           ))}
         </div>
