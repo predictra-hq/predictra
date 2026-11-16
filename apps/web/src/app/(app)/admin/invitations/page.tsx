@@ -14,6 +14,7 @@ import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { createInvitation, revokeInvitation } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Inviti" };
 
@@ -49,6 +50,7 @@ export default async function InvitationsPage() {
 
   return (
     <>
+      <SectionTabs section="people" current="/admin/invitations" />
       <PageHeader title={m.admin.invitationsTitle} description={m.admin.invitationsDescription} />
 
       <Card className="mb-6">

@@ -18,6 +18,7 @@ import {
   listTeamSeasonStats,
 } from "@/lib/odds/queries";
 import { formPoints, parseForm, perMatch, rate, sortTeamStats } from "@/lib/odds/stats";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Statistiche" };
 
@@ -55,6 +56,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
   if (competitions.length === 0) {
     return (
       <>
+        <SectionTabs section="football" current="/statistics" />
         <PageHeader title={m.title} description={m.description} />
         <EmptyState>{m.noData}</EmptyState>
       </>
@@ -76,6 +78,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
 
   return (
     <>
+      <SectionTabs section="football" current="/statistics" />
       <PageHeader title={m.title} description={m.description} />
 
       <CompetitionFilter
