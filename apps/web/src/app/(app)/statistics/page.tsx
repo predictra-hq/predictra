@@ -118,7 +118,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noStats}</p>
         ) : (
-          <table className="w-full min-w-[1180px] text-left text-sm">
+          <table className="compact-sm w-full text-left text-sm sm:min-w-[1180px]">
             <caption className="sr-only">
               {competition.name} {competition.seasonLabel ?? ""}
             </caption>

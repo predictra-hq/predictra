@@ -212,33 +212,55 @@ textarea {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .stack-sm table:not(.hidden, .compact-sm) tbody,
-  .stack-sm table:not(.hidden, .compact-sm) tr {
+  .stack-sm table:not(.hidden, .compact-sm) tbody {
     display: block;
   }
+  /* Ogni riga è una scheda a due colonne: etichetta piccola sopra, valore sotto. */
+  .stack-sm table:not(.hidden, .compact-sm) tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 1rem;
+  }
   .stack-sm table:not(.hidden, .compact-sm) tbody tr {
-    padding: 0.625rem 1rem;
+    padding: 0.75rem 1rem;
   }
   .stack-sm table:not(.hidden, .compact-sm) tbody td,
   .stack-sm table:not(.hidden, .compact-sm) tbody th {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.2rem 0;
-    text-align: right;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+  /* Celle che occupano tutta la riga: quelle su più colonne e quelle marcate `sm-wide`. */
+  .stack-sm table:not(.hidden, .compact-sm) tbody :is(td, th):is([colspan], .sm-wide) {
+    grid-column: 1 / -1;
   }
   .stack-sm table:not(.hidden, .compact-sm) tbody td[data-label]::before,
   .stack-sm table:not(.hidden, .compact-sm) tbody th[data-label]::before {
     content: attr(data-label);
-    flex-shrink: 0;
-    max-width: 50%;
     color: var(--color-muted);
-    font-size: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
     font-weight: 400;
-    text-align: left;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  /* Elenchi lunghi (`limit-sm`): sul telefono solo le prime righe, il resto da computer. */
+  .stack-sm table.limit-sm:not(.hidden) tbody tr:nth-child(n + 9) {
+    display: none;
+  }
+  .stack-sm table.limit-sm:not(.hidden):has(tbody tr:nth-child(9))::after {
+    content: attr(data-more);
+    display: block;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-subtle);
+    font-size: 0.75rem;
   }
   .stack-sm table:not(.hidden) .sm-secondary {
     display: none;

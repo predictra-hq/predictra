@@ -106,7 +106,7 @@ export default async function DataCenterPage() {
         {coverage.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noCoverage}</p>
         ) : (
-          <table className="w-full min-w-[560px] text-left text-sm">
+          <table className="compact-sm w-full text-left text-sm sm:min-w-[560px]">
             <caption className="sr-only">{d.coverage}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -136,7 +136,10 @@ export default async function DataCenterPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noRuns}</p>
         ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[760px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{d.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -180,7 +183,10 @@ export default async function DataCenterPage() {
         {issues.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noOpenIssues}</p>
         ) : (
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[640px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{d.issues}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
