@@ -72,6 +72,8 @@ export function MatchDetailsCard({
   const m = getMessages().matchCenter;
   const rows = statRows(details.statistics, home.id, away.id);
   const hasLineups = details.lineups.length > 0 || details.players.length > 0;
+  // Senza statistiche né formazioni il riquadro non compare: niente spiegazioni tecniche.
+  if (rows.length === 0 && !hasLineups) return null;
 
   return (
     <Card className="mt-4">
