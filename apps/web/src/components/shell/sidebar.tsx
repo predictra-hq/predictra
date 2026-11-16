@@ -234,13 +234,12 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <Link
-          href="/dashboard"
-          aria-label={`${messages.app.name} · ${messages.nav.dashboard}`}
-          className="flex items-center gap-2.5 font-bold tracking-[0.2em]"
-        >
+        <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
           {messages.app.name}
-          <span className="-ml-2 text-positive">.</span>
+          <span className="-ml-2 text-positive" aria-hidden="true">
+            .
+          </span>
+          <span className="sr-only"> · {messages.nav.dashboard}</span>
           <Logo className="size-7 shrink-0" />
         </Link>
       </div>
@@ -252,16 +251,15 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
           open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
-        <Link
-          href="/dashboard"
-          aria-label={`${messages.app.name} · ${messages.nav.dashboard}`}
-          className="hidden h-16 items-center gap-3 px-5 lg:flex"
-        >
+        <Link href="/dashboard" className="hidden h-16 items-center gap-3 px-5 lg:flex">
           <Logo className="size-8 shrink-0" />
           <div>
             <p className="font-bold tracking-[0.2em]">
               {messages.app.name}
-              <span className="text-positive">.</span>
+              <span className="text-positive" aria-hidden="true">
+                .
+              </span>
+              <span className="sr-only"> · {messages.nav.dashboard}</span>
             </p>
             <p className="text-[10px] uppercase tracking-widest text-subtle">
               {messages.app.tagline}
