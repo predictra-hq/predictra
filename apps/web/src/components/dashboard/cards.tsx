@@ -19,7 +19,9 @@ import { healthTone, overallHealth } from "@/components/agent/status";
 import { FreshnessBadge } from "@/components/football/badges";
 import { getAgentStatus } from "@/lib/agent/queries";
 import { pickLabel } from "@/components/bet-builder/likely";
-import { buildBollette } from "@/lib/bet-builder/bollette";
+import { cookies } from "next/headers";
+import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
+import { buildBollette, oddsAreOld } from "@/lib/bet-builder/bollette";
 import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -519,6 +521,106 @@ export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) 
         </p>
       ) : null}
     </StatCard>
+  );
+}
+
+// --- Avvisi --------------------------------------------------------------------------
+
+/**
+ * "Da non perdere": ciò che richiede attenzione adesso. Giocate sopra la soglia scelta
+ * nelle Preferenze che iniziano entro 36 ore, schedine con valore del prossimo turno,
+ * giocate appena chiuse dai risultati e giocate ancora aperte. Senza nulla da dire il
+ * riquadro non compare.
+ */
+export async function AlertsCard() {
+  const d = getMessages().dashboard;
+  const s = getMessages().betBuilder.bollette;
+  const threshold = parseAlertThreshold((await cookies()).get(ALERT_COOKIE)?.value);
+  const now = new Date();
+  const [picks, bollette, settled, bankrolls] = await Promise.all([
+    loadHomeCertainties().catch(() => []),
+    loadBollette().catch(() => []),
+    settleOpenBets(),
+    listBankrolls().catch(() => []),
+  ]);
+  const soon = soonPicks(picks, now, threshold).slice(0, 4);
+  const soonEnd = now.getTime() + 48 * 3_600_000;
+  const valuable = bollette
+    .filter(
+      (b) =>
+        b.expectedValue >= 0 &&
+        b.picks.some((p) => new Date(p.kickoffAt).getTime() <= soonEnd) &&
+        !oddsAreOld(b, now),
+    )
+    .sort((a, b) => b.probability - a.probability)[0];
+  const openBets = bankrolls.reduce((sum, b) => sum + Number(b.open_bets), 0);
+  const closed = settled.won + settled.lost;
+  if (soon.length === 0 && !valuable && openBets === 0 && closed === 0) return null;
+
+  const row = "flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm";
+  return (
+    <Card className="mb-4 border-positive/30">
+      <Kicker>{d.alertsTitle}</Kicker>
+      <ul className="mt-2 flex flex-col gap-2">
+        {closed > 0 ? (
+          <li>
+            <Link href="/tracker" className={cn(row, "hover:bg-border")}>
+              {fillTemplate(d.alertsSettled, { won: settled.won, lost: settled.lost })}
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+            </Link>
+          </li>
+        ) : null}
+        {soon.length > 0 ? (
+          <li>
+            <p className="mb-1 text-xs text-muted">
+              {fillTemplate(d.alertsSoon, { n: threshold })}
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {soon.map((p) => (
+                <li key={p.matchId}>
+                  <Link href={`/match-center/${p.matchId}`} className={cn(row, "hover:bg-border")}>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">
+                        {p.home} – {p.away}
+                      </span>
+                      <span className="block truncate text-xs text-muted">
+                        {formatDateTime(p.kickoffAt)} · {pickLabel(p)}
+                      </span>
+                    </span>
+                    <span className="font-mono text-base font-semibold text-positive-strong">
+                      {formatPercent(p.probability, 0)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ) : null}
+        {valuable ? (
+          <li>
+            <Link href="/bet-builder" className={cn(row, "hover:bg-border")}>
+              <span className="min-w-0 truncate">
+                {fillTemplate(d.alertsSchedina, { profile: s.profiles[valuable.profile] })}
+              </span>
+              <span className="shrink-0 font-mono">
+                <span className="font-semibold text-positive-strong">
+                  {formatOdds(valuable.price)}
+                </span>{" "}
+                <span className="text-xs text-muted">{formatPercent(valuable.probability, 0)}</span>
+              </span>
+            </Link>
+          </li>
+        ) : null}
+        {openBets > 0 ? (
+          <li>
+            <Link href="/tracker" className={cn(row, "hover:bg-border")}>
+              {fillTemplate(d.alertsOpenBets, { n: openBets })}
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+            </Link>
+          </li>
+        ) : null}
+      </ul>
+    </Card>
   );
 }
 

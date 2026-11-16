@@ -81,13 +81,19 @@ export const HOME_CERTAINTY_THRESHOLD = 0.8;
 const HOME_CERTAINTY_HOURS = 7 * 24;
 
 /** Tutte le giocate dall'80% delle prossimi 7 giorni, dalla più probabile. */
-export async function loadHomeCertainties(now = new Date()): Promise<Pick[]> {
+export function loadHomeCertainties(): Promise<Pick[]> {
+  return homeCertainties();
+}
+
+/** Lette una volta per richiesta: le usano il riquadro Certezze, gli avvisi e Ask. */
+const homeCertainties = cache(async (): Promise<Pick[]> => {
+  const now = new Date();
   const rows = await upcomingHighProbability(now, HOME_CERTAINTY_HOURS);
   const odds = await oddsFor(matchIds(rows));
   return selectPicks(rows, HOME_CERTAINTY_THRESHOLD, marketLookup(marketConsensus(odds))).sort(
     (a, b) => b.probability - a.probability,
   );
-}
+});
 
 const STRONGEST_THRESHOLD = 0.7;
 

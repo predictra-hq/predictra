@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { hasPermission } from "@predictra/shared-types";
 import { NotificationsCard } from "@/components/agent/notifications-card";
 import {
+  AlertsCard,
   BankrollCard,
   CertaintiesCard,
   SchedineCard,
@@ -40,6 +41,11 @@ export default async function DashboardPage() {
           </span>
         </Alert>
       ) : null}
+
+      {/* Ciò che richiede attenzione adesso; senza nulla da dire non compare. */}
+      <Suspense fallback={null}>
+        <AlertsCard />
+      </Suspense>
 
       {/* Tre riquadri di sintesi: ognuno porta alla sua sezione e si carica da solo. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

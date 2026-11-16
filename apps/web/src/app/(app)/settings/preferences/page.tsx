@@ -8,7 +8,9 @@ import { getMessages } from "@/lib/i18n";
 import { parseTheme, THEME_COOKIE, THEMES } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
-import { savePreferences, setTheme } from "./actions";
+import { ALERT_COOKIE, ALERT_THRESHOLDS, parseAlertThreshold } from "@/lib/alerts";
+import { fillTemplate } from "@/lib/odds/format";
+import { savePreferences, setAlertThreshold, setTheme } from "./actions";
 
 export const metadata: Metadata = { title: "Preferenze" };
 
@@ -22,6 +24,7 @@ export default async function PreferencesPage() {
     .eq("user_id", user.id)
     .maybeSingle();
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const alertThreshold = parseAlertThreshold((await cookies()).get(ALERT_COOKIE)?.value);
   const timezones = Intl.supportedValuesOf("timeZone");
 
   return (
@@ -47,6 +50,29 @@ export default async function PreferencesPage() {
               )}
             >
               {m.preferences.themes[t]}
+            </button>
+          ))}
+        </form>
+      </Card>
+      <Card className="mb-4 max-w-lg">
+        <CardTitle>{m.preferences.alerts}</CardTitle>
+        <p className="mb-3 mt-1 text-sm text-muted">{m.preferences.alertsHint}</p>
+        <form action={setAlertThreshold} className="flex flex-wrap gap-2">
+          {ALERT_THRESHOLDS.map((t) => (
+            <button
+              key={t}
+              type="submit"
+              name="threshold"
+              value={t}
+              aria-pressed={alertThreshold === t}
+              className={cn(
+                "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",
+                alertThreshold === t
+                  ? "border-positive/40 bg-positive-soft text-positive-strong"
+                  : "border-border text-muted hover:text-fg",
+              )}
+            >
+              {fillTemplate(m.preferences.alertsFrom, { n: t })}
             </button>
           ))}
         </form>
