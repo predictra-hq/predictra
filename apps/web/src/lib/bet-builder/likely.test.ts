@@ -157,3 +157,35 @@ describe("le più probabili (valori DEMO)", () => {
     expect(combinedItalianPrice(prices, [a, c])).toBeNull();
   });
 });
+
+describe("quote del sito dell'utente e confronto", () => {
+  const row = (bookmaker: string, price: number) => ({
+    match_id: 1,
+    bookmaker,
+    market: "h2h",
+    selection: "HOME",
+    price,
+    observed_at: "2026-11-19T10:00:00Z",
+  });
+
+  it("senza sito: la migliore quota italiana", () => {
+    const prices = bestItalianPrices([row("DEMO A", 1.8), row("DEMO B", 1.95)]);
+    expect(prices.get("1|h2h|HOME")).toMatchObject({ price: 1.95, bookmaker: "DEMO B" });
+  });
+
+  it("con il sito: la sua quota, e dove si trova di meglio", () => {
+    const prices = bestItalianPrices([row("DEMO A", 1.8), row("DEMO B", 1.95)], "DEMO A");
+    expect(prices.get("1|h2h|HOME")).toMatchObject({
+      price: 1.8,
+      bookmaker: "DEMO A",
+      better: { price: 1.95, bookmaker: "DEMO B" },
+    });
+  });
+
+  it("il sito ha già la quota più alta, o non ha quote per quella giocata", () => {
+    const top = bestItalianPrices([row("DEMO A", 2), row("DEMO B", 1.95)], "DEMO A");
+    expect(top.get("1|h2h|HOME")!.better).toBeUndefined();
+    const missing = bestItalianPrices([row("DEMO B", 1.95)], "DEMO A");
+    expect(missing.get("1|h2h|HOME")).toMatchObject({ price: 1.95, bookmaker: "DEMO B" });
+  });
+});

@@ -56,6 +56,14 @@ export function PickRow({
             ) : null}
           </span>
         ) : null}
+        {price?.better ? (
+          <span className="block text-xs text-warning">
+            {fillTemplate(c.betterElsewhere, {
+              price: formatOdds(price.better.price),
+              bookmaker: price.better.bookmaker,
+            })}
+          </span>
+        ) : null}
       </span>
       <span className="font-mono text-base font-semibold">{formatPercent(p.probability, 0)}</span>
       <Link

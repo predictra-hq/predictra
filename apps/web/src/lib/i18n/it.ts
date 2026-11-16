@@ -635,6 +635,7 @@ export const it = {
       valueHint: "Quanto paga la quota rispetto al rischio: positivo vuol dire che conviene.",
       round: "Turno {round}",
       oddsRead: "Quote lette il {at}",
+      betterElsewhere: "Altrove paga di più: {price} su {bookmaker}",
       oddsOld: "Quote del {at}: ricontrollale prima di giocare.",
       empty: "Le schedine compaiono 1–2 giorni prima delle partite, quando arrivano le quote.",
       note: "Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
@@ -970,6 +971,7 @@ export const it = {
   certainties: {
     title: "Certezze",
     description: "Le giocate più probabili delle prossime partite.",
+    betterElsewhere: "Altrove paga di più: {price} su {bookmaker}",
     safeTitle: "Multipla sicura · {legs} partite",
     valueTitle: "Multipla con valore · {legs} partite",
     targetTitle: "Almeno {target} di vincerla · {legs} partite",
