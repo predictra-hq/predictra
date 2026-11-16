@@ -112,6 +112,11 @@ export const it = {
     welcome: "Bentornato",
     mfaWarning: "Proteggi il tuo account con il codice di verifica (2FA).",
     mfaWarningAction: "Attiva",
+    alertsTitle: "Da non perdere",
+    alertsSoon: "Iniziano a breve, dal {n}% in su",
+    alertsSchedina: "Schedina con valore: {profile}",
+    alertsOpenBets: "Hai {n} giocate aperte",
+    alertsSettled: "Giocate chiuse dai risultati: {won} vinte, {lost} perse",
     certaintiesTitle: "Certezze",
     certaintiesCount: "giocate dall'80% nei prossimi 7 giorni",
     certaintiesEmpty: "Nessuna giocata abbastanza sicura nei prossimi 7 giorni.",
@@ -207,6 +212,10 @@ export const it = {
     theme: "Tema",
     themeHint: "Vale per questo browser e si applica subito.",
     themes: { dark: "Scuro", light: "Chiaro" },
+    alerts: "Avvisi in Home",
+    alertsHint:
+      "In Home vedi le giocate che iniziano a breve sopra questa probabilità. Vale per questo browser.",
+    alertsFrom: "Dal {n}%",
   },
   admin: {
     invitationsTitle: "Inviti",
