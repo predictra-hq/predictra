@@ -344,21 +344,30 @@ export async function listLatestOdds(matchIds: readonly number[]): Promise<Lates
   const italian = new Set(
     (books.data ?? []).filter((b) => b.italian_market).map((b) => String(b.code)),
   );
-  const rows = await selectAll<LatestOddsRow>(
+  // Funzione veloce per partita (migrazione 20261116100000): la vista v_latest_odds
+  // filtrata per partita scorre tutto lo storico e va in timeout.
+  const all = await selectAll<LatestOddsRow & { quality: string }>(
     (from, to) =>
       supabase
-        .from("v_latest_odds")
-        .select("match_id, bookmaker, market, selection, price, observed_at")
-        .in("match_id", matchIds as number[])
-        .or("market.eq.h2h,market.eq.double_chance,market.like.totals_*")
-        .eq("quality", "OK")
-        .order("match_id")
-        .order("bookmaker")
-        .order("market")
-        .order("selection")
-        .range(from, to),
+        .rpc("latest_odds_for_matches", { p_match_ids: matchIds as number[] })
+        .select("match_id, bookmaker, market, selection, price, observed_at, quality")
+        .range(from, to) as unknown as PromiseLike<{ data: unknown[] | null; error: unknown }>,
     "quote",
   );
+  const rows = all
+    .filter(
+      (r) =>
+        r.quality === "OK" &&
+        (r.market === "h2h" || r.market === "double_chance" || r.market.startsWith("totals_")),
+    )
+    .map((r) => ({
+      match_id: r.match_id,
+      bookmaker: r.bookmaker,
+      market: r.market,
+      selection: r.selection,
+      price: r.price,
+      observed_at: r.observed_at,
+    }));
   // Nome leggibile del bookmaker (es. "Unibet (IT)") al posto del codice.
   return rows.map((r) => ({
     ...r,
@@ -444,6 +453,6 @@ export const loadPicksData = cache(async () => {
   const rows = await listLikelyRows(new Date());
   const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
   // Circa 200 righe di quote per partita: gruppi da 5, in parallelo.
-  const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk));
+  const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk), 4);
   return { rows, prices: bestItalianPrices(odds), consensus: marketConsensus(odds) };
 });

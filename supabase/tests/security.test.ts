@@ -33,6 +33,8 @@ const AUTHENTICATED_FUNCTIONS = [
   "public.ask_record",
   "public.authorize_password_reset",
   "public.create_invitation",
+  // sola lettura, SECURITY INVOKER: rispetta la RLS di chi chiama (quote per partita)
+  "public.latest_odds_for_matches",
   "public.retry_dead_agent_job",
   "public.revoke_invitation",
   "public.set_account_status",
