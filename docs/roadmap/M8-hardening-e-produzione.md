@@ -57,11 +57,12 @@ Tutte le milestone precedenti su `dev`, salvo backup e restore che si possono fa
 
 **File di proprietà:** componenti in `apps/web/src/components/ui/**` e correzioni di accessibilità nelle pagine (una PR per area, avvisando chi le ha scritte), `docs/operations/runbook.md` (nuovo).
 
-| Fase | Contenuto                                                                                                         |
-| ---- | ----------------------------------------------------------------------------------------------------------------- |
-| B1   | Audit di accessibilità (contrasto, tastiera, screen reader) e correzioni                                          |
-| B2   | Runbook: deploy, rollback, rinnovo dei token, provider non raggiungibile, minuti GitHub Actions esauriti, restore |
-| B3   | Verifica finale della checklist di produzione                                                                     |
+| Fase | Contenuto                                                                                                                                                                                                  |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1   | Audit di accessibilità (contrasto, tastiera, screen reader) e correzioni                                                                                                                                   |
+| B2   | Runbook: deploy, rollback, rinnovo dei token, provider non raggiungibile, minuti GitHub Actions esauriti, restore                                                                                          |
+| B3   | Verifica finale della checklist di produzione                                                                                                                                                              |
+| B4   | Rifinitura dell'interfaccia: menu a gruppi, app installabile e barra in basso sul telefono, tema chiaro, schedina → giocata, fluidità. Stato e verifiche in [interfaccia.md](../operations/interfaccia.md) |
 
 ## Chiusura di M8
 
