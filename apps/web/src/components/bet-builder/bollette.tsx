@@ -2,7 +2,7 @@ import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
-import { Badge, Card, CardTitle } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import {
   buildBollette,
   oddsAreOld,
@@ -57,59 +57,52 @@ function BollettaCard({
   // Puntata mostrata e passata al Tracker: quella scelta dall'utente, altrimenti la consigliata.
   const playStake = stake ?? advised;
   return (
-    <article className="flex flex-col rounded-lg border border-border bg-surface-2 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h4 className="font-semibold">{m.profiles[bolletta.profile]}</h4>
+    <article className="flex flex-col rounded-[var(--radius-card)] border border-border bg-surface p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-base font-semibold">{m.profiles[bolletta.profile]}</h4>
         <Badge tone={PROFILE_TONE[bolletta.profile]}>
           {fillTemplate(m.legs, { n: bolletta.picks.length })}
         </Badge>
       </div>
 
-      <dl className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-lg border border-border bg-surface px-3 py-2">
+      <dl className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-surface-2 px-3 py-2">
           <dt className="text-xs text-muted">{m.totalOdds}</dt>
-          <dd className="font-mono text-lg font-semibold text-positive-strong">
+          <dd className="font-mono text-2xl font-semibold text-positive-strong">
             {formatOdds(bolletta.price)}
           </dd>
         </div>
-        <div className="rounded-lg border border-border bg-surface px-3 py-2">
+        <div className="rounded-xl bg-surface-2 px-3 py-2">
           <dt className="text-xs text-muted">{m.winProbability}</dt>
-          <dd className="font-mono text-lg font-semibold">{formatPercent(bolletta.probability)}</dd>
-        </div>
-        <div className="rounded-lg border border-border bg-surface px-3 py-2">
-          <dt className="text-xs text-muted" title={m.valueHint}>
-            {m.value}
-          </dt>
-          <dd
-            className={`font-mono text-lg font-semibold ${
-              bolletta.expectedValue >= 0 ? "text-positive-strong" : "text-muted"
-            }`}
-          >
-            {formatSignedPercent(bolletta.expectedValue)}
+          <dd className="font-mono text-2xl font-semibold">
+            {formatPercent(bolletta.probability, 0)}
           </dd>
         </div>
       </dl>
+      {bolletta.expectedValue >= 0 ? (
+        <p className="mt-2 text-xs text-positive-strong" title={m.valueHint}>
+          {m.value} {formatSignedPercent(bolletta.expectedValue)}
+        </p>
+      ) : null}
 
-      <ol className="mt-3 flex-1 text-sm">
+      <ol className="mt-2 flex-1 divide-y divide-border text-sm">
         {bolletta.picks.map((p) => (
-          <li
-            key={p.matchId}
-            className="flex items-baseline justify-between gap-3 border-b border-border py-2 last:border-0"
-          >
+          <li key={p.matchId} className="flex items-center justify-between gap-3 py-2.5">
             <span className="min-w-0">
-              <Link href={`/match-center/${p.matchId}`} className="font-medium hover:underline">
+              <Link
+                href={`/match-center/${p.matchId}`}
+                className="block truncate font-medium hover:underline"
+              >
                 {p.home} – {p.away}
               </Link>
-              <span className="block">{pickLabel(p)}</span>
-              <span className="block text-xs text-muted">
+              <span className="block text-positive-strong">{pickLabel(p)}</span>
+              <span className="block truncate text-xs text-muted">
                 {formatDateTime(p.kickoffAt)} · {p.bookmaker}
               </span>
             </span>
             <span className="shrink-0 text-right font-mono">
               <span className="block text-base font-semibold">{formatOdds(p.price)}</span>
-              <span className="block text-xs text-muted">
-                {formatPercent(p.probability, 0)} · {m.valueShort} {formatSignedPercent(p.edge)}
-              </span>
+              <span className="block text-xs text-muted">{formatPercent(p.probability, 0)}</span>
             </span>
           </li>
         ))}
@@ -168,15 +161,15 @@ export function BolletteCard({
   const m = getMessages().betBuilder.bollette;
   const rounds = [...new Set(bollette.map((b) => b.round))].sort();
   return (
-    <Card className="mb-6">
-      <CardTitle>{m.title}</CardTitle>
-      <p className="mt-1 text-sm text-muted">{m.description}</p>
+    <section className="mb-8">
+      <h2 className="text-lg font-semibold">{m.title}</h2>
+      <p className="mt-1 hidden text-sm text-muted sm:block">{m.description}</p>
       {bollette.length === 0 ? (
         <p className="mt-3 text-sm text-muted">{m.empty}</p>
       ) : (
         rounds.map((round) => (
           <section key={round}>
-            <h3 className="mb-2 mt-4 text-sm font-semibold">
+            <h3 className="mb-2 mt-3 text-sm text-muted">
               {fillTemplate(m.round, { round: formatRound(round) })}
             </h3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
@@ -195,8 +188,8 @@ export function BolletteCard({
           </section>
         ))
       )}
-      <p className="mt-4 text-xs text-muted">{m.note}</p>
-    </Card>
+      <p className="mt-3 text-xs text-subtle">{m.note}</p>
+    </section>
   );
 }
 

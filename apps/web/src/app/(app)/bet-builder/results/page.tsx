@@ -68,7 +68,6 @@ export default async function BetBuilderResultsPage() {
   return (
     <>
       <PageHeader title={r.title} description={r.description} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="results" />
 
       {settled.length === 0 ? (
@@ -165,6 +164,7 @@ export default async function BetBuilderResultsPage() {
           )}
         </>
       )}
+      <BetBuilderDisclaimer />
     </>
   );
 }

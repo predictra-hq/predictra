@@ -59,7 +59,7 @@ export function PickRow({
         href={trackerHref(p, price)}
         aria-label={`${c.register}: ${p.home} – ${p.away}, ${pickLabel(p)}`}
         title={c.register}
-        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
+        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-muted hover:text-fg active:bg-border"
       >
         <Plus size={16} aria-hidden="true" />
       </Link>

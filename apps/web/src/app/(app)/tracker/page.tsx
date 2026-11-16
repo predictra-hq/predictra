@@ -342,8 +342,11 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       )}
 
       {bankrolls.length > 0 ? (
-        <Card className="mt-4">
-          <CardTitle>{k.title}</CardTitle>
+        <details
+          open={kellyAsked}
+          className="mt-4 rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5"
+        >
+          <summary className="cursor-pointer text-base font-semibold">{k.title}</summary>
           <details className="mt-1 text-sm text-muted">
             <summary className="cursor-pointer text-xs hover:text-fg">{k.howItWorks}</summary>
             <p className="mt-1">{k.description}</p>
@@ -448,7 +451,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
               </ul>
             </div>
           ) : null}
-        </Card>
+        </details>
       ) : null}
 
       <div className="mb-3 mt-8 flex flex-wrap items-center justify-between gap-3">

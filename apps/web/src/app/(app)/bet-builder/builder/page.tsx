@@ -39,7 +39,6 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
   return (
     <>
       <PageHeader title={m.builderTitle} description={m.builderDescription} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="builder" />
 
       {options.length === 0 ? (
@@ -132,6 +131,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
           </div>
         </div>
       )}
+      <BetBuilderDisclaimer />
     </>
   );
 }

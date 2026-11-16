@@ -230,10 +230,12 @@ export function EmptyState({ className, children }: { className?: string; childr
 export function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
     <header className="mb-4 sm:mb-6 sm:border-b sm:border-border sm:pb-5">
-      <h1 className="text-[1.375rem] font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
+      <h1 className="break-words text-[1.375rem] font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
         {title}
       </h1>
-      {description ? <p className="mt-1 max-w-3xl text-sm text-muted">{description}</p> : null}
+      {description ? (
+        <p className="mt-1 hidden max-w-3xl text-sm text-muted sm:block">{description}</p>
+      ) : null}
     </header>
   );
 }
