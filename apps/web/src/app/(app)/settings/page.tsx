@@ -96,13 +96,6 @@ export default async function ProfilePage() {
       </div>
 
       <Group
-        title={p.money}
-        rows={[
-          { key: "bankroll", href: "/bankroll", hint: p.bankrollHint },
-          { key: "tracker", href: "/tracker", hint: p.trackerHint },
-        ]}
-      />
-      <Group
         title={p.account}
         rows={[
           {
@@ -114,13 +107,6 @@ export default async function ProfilePage() {
               : { text: p.mfaOff, tone: "warning" },
           },
           { key: "preferences", href: "/settings/preferences", hint: p.preferencesHint },
-        ]}
-      />
-      <Group
-        title={p.more}
-        rows={[
-          { key: "leagueIntelligence", href: "/leagues", hint: p.leaguesHint },
-          { key: "askPredictra", href: "/ask", hint: p.askHint },
         ]}
       />
       {admin.length > 0 ? (

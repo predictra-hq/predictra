@@ -1,6 +1,7 @@
 import { hasPermission, highestRole } from "@predictra/shared-types";
 import { ADMIN_NAV, MAIN_NAV_GROUPS, SETTINGS_NAV } from "@/components/shell/nav-config";
 import { BottomNav } from "@/components/shell/bottom-nav";
+import { SectionNav } from "@/components/shell/section-nav";
 import { Sidebar } from "@/components/shell/sidebar";
 import { UpdateNotice } from "@/components/shell/update-notice";
 import { requireUser } from "@/lib/auth/dal";
@@ -34,7 +35,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         id="content"
         className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:ml-64 lg:py-10"
       >
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto max-w-6xl">
+          <SectionNav messages={m} />
+          {children}
+        </div>
       </main>
       <BottomNav messages={m} />
       <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />

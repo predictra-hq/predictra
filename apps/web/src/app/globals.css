@@ -319,3 +319,27 @@ textarea {
     display: none;
   }
 }
+
+/* Schede di sezione: solo sul telefono e sul tablet, dove non c'è il menu laterale. */
+@media (min-width: 1024px) {
+  .tab-strip.tab-strip-mobile {
+    display: none;
+  }
+}
+
+/*
+ * iPhone: i campi data hanno una larghezza minima propria e uscivano dalla card. Così
+ * stanno nella colonna come gli altri campi.
+ */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input::-webkit-date-and-time-value {
+  text-align: left;
+}

@@ -51,11 +51,14 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                 key={o.matchId}
                 className="rounded-[var(--radius-card)] border border-border bg-surface p-3"
               >
-                <legend className="px-1 text-sm font-medium">
-                  {o.homeTeam} – {o.awayTeam}{" "}
-                  <span className="font-normal text-muted">· {formatDateTime(o.kickoffAt)}</span>
+                {/* `float` porta il titolo dentro il riquadro invece che a cavallo del bordo. */}
+                <legend className="float-left mb-2 w-full text-sm font-semibold">
+                  {o.homeTeam} – {o.awayTeam}
+                  <span className="block text-xs font-normal text-muted">
+                    {formatDateTime(o.kickoffAt)}
+                  </span>
                 </legend>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="clear-both grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {o.outcomes.map((x) => {
                     const key = `${x.matchId}:${x.selection}`;
                     return (
