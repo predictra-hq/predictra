@@ -274,3 +274,47 @@ textarea {
     white-space: normal;
   }
 }
+
+/*
+ * Schede interne (Schedine, Profilo, Amministrazione): pillole su una riga. Sul telefono
+ * la riga scorre di lato da bordo a bordo invece di andare a capo, come in un'app.
+ */
+.tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tab-strip > a {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  padding: 0.25rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.tab-strip > a:hover {
+  color: var(--color-fg);
+}
+.tab-strip > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--color-positive) 40%, transparent);
+  background: var(--color-positive-soft);
+  color: var(--color-positive-strong);
+  font-weight: 500;
+}
+@media (max-width: 639.98px) {
+  .tab-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    scrollbar-width: none;
+  }
+  .tab-strip::-webkit-scrollbar {
+    display: none;
+  }
+}

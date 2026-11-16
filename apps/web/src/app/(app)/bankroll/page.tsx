@@ -84,9 +84,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
       {selected ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
-            <CardTitle>
-              {m.movements} · {selected.name}
-            </CardTitle>
+            <CardTitle>{m.movements}</CardTitle>
             <ActionForm action={addMovement} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
               <Field label={m.movementKind} htmlFor="mv-kind">
@@ -161,10 +159,8 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
           </Card>
 
           <div className="flex flex-col gap-4">
-            <Card>
-              <CardTitle>
-                {m.limits} · {selected.name}
-              </CardTitle>
+            <details className="rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5">
+              <summary className="cursor-pointer text-base font-semibold">{m.limits}</summary>
               <p className="mt-1 text-xs text-muted">{m.limitsHint}</p>
               <ActionForm
                 action={saveLimits}
@@ -207,7 +203,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
                   {m.saveLimits}
                 </SubmitButton>
               </ActionForm>
-            </Card>
+            </details>
 
             {/* Azione irreversibile: chiusa finché non la si apre. */}
             <details className="rounded-[var(--radius-card)] border border-border bg-surface p-5">

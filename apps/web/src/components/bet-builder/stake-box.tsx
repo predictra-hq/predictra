@@ -47,10 +47,12 @@ export function StakeBox({
   const stake = normalizeStake(raw, defaultStake);
   const payout = price ? stake * price : null;
   return (
-    <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-border pt-3">
-      <label htmlFor={id} className="flex flex-col gap-1 text-xs text-muted">
-        {labels.stake}
-        <span className="flex items-center gap-1">
+    <div className="mt-3 border-t border-border pt-3">
+      <div className="flex items-center gap-3">
+        <label htmlFor={id} className="text-sm text-muted">
+          {labels.stake}
+        </label>
+        <span className="flex items-center gap-1.5">
           <input
             id={id}
             type="number"
@@ -59,27 +61,25 @@ export function StakeBox({
             step={1}
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
-            className="h-9 w-20 rounded-lg border border-border-strong bg-surface px-2 text-right font-mono text-sm text-fg"
+            className="h-11 w-20 rounded-xl border border-input bg-bg px-2 text-center font-mono text-base font-semibold text-fg focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30"
           />
-          <span className="text-sm text-fg">€</span>
+          <span className="text-sm text-muted">€</span>
         </span>
-      </label>
+        <Link
+          href={withStake(registerHref, stake)}
+          title={labels.registerHint}
+          className="ml-auto inline-flex h-11 items-center justify-center rounded-xl bg-positive px-4 text-sm font-semibold text-on-positive transition-colors hover:bg-positive-strong active:translate-y-px"
+        >
+          {labels.register}
+        </Link>
+      </div>
       {payout !== null ? (
-        <p className="min-w-0 flex-1 text-sm text-positive-strong">
+        <p className="mt-2 text-sm text-positive-strong">
           {labels.win
             .replace("{payout}", euro.format(payout))
             .replace("{profit}", euro.format(payout - stake))}
         </p>
-      ) : (
-        <span className="flex-1" />
-      )}
-      <Link
-        href={withStake(registerHref, stake)}
-        title={labels.registerHint}
-        className="inline-flex h-9 items-center justify-center rounded-lg border border-border-strong bg-surface px-3 text-sm font-medium hover:bg-border"
-      >
-        {labels.register}
-      </Link>
+      ) : null}
     </div>
   );
 }

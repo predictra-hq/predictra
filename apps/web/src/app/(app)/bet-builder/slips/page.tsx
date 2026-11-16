@@ -20,7 +20,6 @@ export default async function SlipsPage() {
   return (
     <>
       <PageHeader title={m.slipsTitle} description={m.slipsDescription} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="slips" />
 
       {views.length === 0 ? (
@@ -60,6 +59,7 @@ export default async function SlipsPage() {
           })}
         </ul>
       )}
+      <BetBuilderDisclaimer />
     </>
   );
 }

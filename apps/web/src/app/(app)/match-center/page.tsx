@@ -5,15 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { MatchStatusBadge, ProviderAttribution } from "@/components/football/badges";
 import { FilterForm } from "@/components/ui/filter-form";
-import {
-  Alert,
-  Button,
-  Card,
-  EmptyState,
-  Field,
-  PageHeader,
-  Select,
-} from "@/components/ui/primitives";
+import { Button, Card, EmptyState, Field, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { strongestPicks } from "@/lib/certainties/load";
 import type { Pick } from "@/lib/certainties/logic";
@@ -111,19 +103,21 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
       <FilterForm
         resets={{ c: ["s", "g"], s: ["g"] }}
-        className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_9rem_10rem_auto] sm:items-end"
+        className="mb-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_9rem_10rem_auto]"
       >
-        <Field label={m.matchCenter.competition} htmlFor="c">
-          <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
-            {competitions.map((c) =>
-              c.code ? (
-                <option key={c.id} value={c.code}>
-                  {c.name}
-                </option>
-              ) : null,
-            )}
-          </Select>
-        </Field>
+        <div className="col-span-2 sm:col-span-1">
+          <Field label={m.matchCenter.competition} htmlFor="c">
+            <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
+              {competitions.map((c) =>
+                c.code ? (
+                  <option key={c.id} value={c.code}>
+                    {c.name}
+                  </option>
+                ) : null,
+              )}
+            </Select>
+          </Field>
+        </div>
         <Field label={m.matchCenter.season} htmlFor="s">
           <Select id="s" name="s" defaultValue={season ? String(season.id) : undefined}>
             {seasons.map((x) => (
@@ -145,7 +139,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
             ))}
           </Select>
         </Field>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="col-span-2 sm:col-span-1">
           {m.matchCenter.show}
         </Button>
       </FilterForm>
@@ -155,8 +149,6 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
           isFavorite={competition.code === favorite}
         />
       ) : null}
-
-      <Alert className="mb-4">{m.matchCenter.delayedNote}</Alert>
 
       <Card scrollLabel={`${competition.name} ${season?.label ?? ""}`.trim()} className="p-0">
         {matches.length === 0 ? (
@@ -172,17 +164,23 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                   className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-2 text-xs text-muted">
+                    <span className="flex items-center gap-2 text-xs text-muted">
                       {formatDateTime(r.kickoff_at)}
-                      <MatchStatusBadge status={r.status} />
+                      {r.status === "SCHEDULED" ? null : <MatchStatusBadge status={r.status} />}
                     </span>
-                    <span className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
-                      <span className="truncate text-right">
-                        {r.home_team_short_name ?? r.home_team_name}
+                    {(
+                      [
+                        [r.home_team_short_name ?? r.home_team_name, r.home_score],
+                        [r.away_team_short_name ?? r.away_team_name, r.away_score],
+                      ] as const
+                    ).map(([name, score], i) => (
+                      <span key={i} className="mt-0.5 flex items-center justify-between gap-3">
+                        <span className="truncate font-medium">{name}</span>
+                        {score !== null && score !== undefined ? (
+                          <span className="font-mono font-semibold">{score}</span>
+                        ) : null}
                       </span>
-                      <span className="font-mono">{formatScore(r.home_score, r.away_score)}</span>
-                      <span className="truncate">{r.away_team_short_name ?? r.away_team_name}</span>
-                    </span>
+                    ))}
                     <Suspense fallback={null}>
                       <StrongestLine idsKey={idsKey} matchId={r.match_id} />
                     </Suspense>
@@ -259,6 +257,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
         )}
       </Card>
 
+      <p className="mt-4 text-xs text-subtle">{m.matchCenter.delayedNote}</p>
       <ProviderAttribution texts={sources.map((s) => s.attribution)} />
     </>
   );

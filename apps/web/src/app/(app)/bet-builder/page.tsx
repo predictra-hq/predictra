@@ -145,7 +145,6 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
       <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
@@ -266,6 +265,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
           <LikelySection stake={stake} />
         </Suspense>
       </details>
+      <BetBuilderDisclaimer />
     </>
   );
 }

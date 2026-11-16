@@ -1,7 +1,7 @@
 import type { BetProposalCategory } from "@predictra/shared-types";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Alert, Badge } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { formatEuro } from "@/components/bankroll/shared";
 import { confidenceLabel, stakeOutcome } from "@/lib/bet-builder/format";
 import { getMessages } from "@/lib/i18n";
@@ -27,11 +27,7 @@ export function CategoryBadge({ category }: { category: BetProposalCategory }) {
 
 /** Disclaimer sempre visibile (piano M5, corsia B). */
 export function BetBuilderDisclaimer() {
-  return (
-    <Alert tone="warning" className="mb-4">
-      {getMessages().betBuilder.disclaimer}
-    </Alert>
-  );
+  return <p className="mt-8 text-xs text-subtle">{getMessages().betBuilder.disclaimer}</p>;
 }
 
 export function BetBuilderNav({
@@ -47,18 +43,9 @@ export function BetBuilderNav({
     { key: "results", href: "/bet-builder/results", label: m.navResults },
   ] as const;
   return (
-    <nav aria-label={m.title} className="mb-4 flex flex-wrap gap-2">
+    <nav aria-label={m.title} className="tab-strip">
       {items.map((i) => (
-        <Link
-          key={i.key}
-          href={i.href}
-          aria-current={i.key === current ? "page" : undefined}
-          className={`rounded-lg border px-3 py-1.5 text-sm ${
-            i.key === current
-              ? "border-positive/40 bg-positive-soft text-positive-strong"
-              : "border-border text-muted hover:text-fg"
-          }`}
-        >
+        <Link key={i.key} href={i.href} aria-current={i.key === current ? "page" : undefined}>
           {i.label}
         </Link>
       ))}

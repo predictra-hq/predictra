@@ -28,7 +28,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <PageHeader title={`${d.welcome}, ${user.displayName ?? user.email}`} />
+      <PageHeader title={`${d.welcome}, ${user.displayName ?? user.email.split("@")[0]}`} />
 
       {!user.hasMfa ? (
         <Alert tone="warning" className="mb-6">

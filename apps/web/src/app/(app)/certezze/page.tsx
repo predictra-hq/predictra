@@ -75,7 +75,7 @@ function MultipleCard({
         {picks.map((p) => {
           const leg = italianPriceFor(prices, p);
           return (
-            <li key={p.matchId} className="flex items-center justify-between gap-3 py-2 text-sm">
+            <li key={p.matchId} className="flex items-center justify-between gap-3 py-2.5 text-sm">
               <span className="min-w-0">
                 <Link
                   href={`/match-center/${p.matchId}`}
@@ -83,7 +83,7 @@ function MultipleCard({
                 >
                   {p.home} – {p.away}
                 </Link>
-                <span className="block text-xs text-muted">{pickLabel(p)}</span>
+                <span className="block text-xs text-positive-strong">{pickLabel(p)}</span>
               </span>
               <span className="shrink-0 text-right font-mono">
                 <span className="block">{formatPercent(p.probability, 0)}</span>
@@ -95,16 +95,16 @@ function MultipleCard({
           );
         })}
       </ul>
-      <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-border pt-3 text-sm">
-        <div>
+      <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-xl bg-surface-2 px-3 py-2">
           <dt className="text-xs text-muted">{c.multipleWin}</dt>
-          <dd className="font-mono text-lg font-semibold text-positive-strong">
+          <dd className="font-mono text-2xl font-semibold text-positive-strong">
             {formatPercent(probability, 0)}
           </dd>
         </div>
-        <div className="text-right">
+        <div className="rounded-xl bg-surface-2 px-3 py-2">
           <dt className="text-xs text-muted">{c.totalOdds}</dt>
-          <dd className="font-mono text-lg font-semibold">
+          <dd className="font-mono text-2xl font-semibold">
             {price !== null ? formatOdds(price) : "–"}
           </dd>
         </div>

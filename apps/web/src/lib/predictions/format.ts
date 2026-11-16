@@ -85,9 +85,32 @@ export function formatLine(line: number | null, market: PredictionMarket): strin
   return `${line > 0 ? "+" : "−"}${abs}`;
 }
 
-/** Ordina le selezioni del risultato esatto per probabilità decrescente (OTHER in fondo). */
+/** Ordine naturale di lettura: 1, X, 2 e Over prima di Under. */
+const SELECTION_ORDER = [
+  "HOME",
+  "DRAW",
+  "AWAY",
+  "HOME_DRAW",
+  "HOME_AWAY",
+  "DRAW_AWAY",
+  "OVER",
+  "UNDER",
+  "YES",
+  "NO",
+];
+
+/**
+ * Ordina le selezioni: 1-X-2 e simili nell'ordine in cui si leggono su una schedina,
+ * il risultato esatto per probabilità decrescente (OTHER in fondo).
+ */
 export function sortSelections(group: PredictionGroup): ActivePredictionRow[] {
-  if (group.market !== "CORRECT_SCORE") return group.rows;
+  if (group.market !== "CORRECT_SCORE") {
+    const rank = (sel: string) => {
+      const i = SELECTION_ORDER.indexOf(sel);
+      return i === -1 ? SELECTION_ORDER.length : i;
+    };
+    return [...group.rows].sort((a, b) => rank(a.selection) - rank(b.selection));
+  }
   return [...group.rows].sort((a, b) =>
     a.selection === "OTHER"
       ? 1

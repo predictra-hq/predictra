@@ -7,25 +7,13 @@ import { SETTINGS_TABS } from "./nav-config";
 export function SettingsTabs({ current }: { current: (typeof SETTINGS_TABS)[number]["key"] }) {
   const nav = getMessages().nav;
   return (
-    <nav aria-label={nav.settings} className="mb-4 flex flex-wrap items-center gap-2">
-      <Link
-        href="/settings"
-        className="-ml-1 mr-1 inline-flex items-center gap-0.5 rounded-lg py-1.5 pr-2 text-sm text-muted hover:text-fg"
-      >
+    <nav aria-label={nav.settings} className="tab-strip">
+      <Link href="/settings">
         <ChevronLeft size={16} aria-hidden="true" />
         {nav.profile}
       </Link>
       {SETTINGS_TABS.map((tab) => (
-        <Link
-          key={tab.key}
-          href={tab.href}
-          aria-current={tab.key === current ? "page" : undefined}
-          className={`rounded-lg border px-3 py-1.5 text-sm ${
-            tab.key === current
-              ? "border-positive/40 bg-positive-soft text-positive-strong"
-              : "border-border text-muted hover:text-fg"
-          }`}
-        >
+        <Link key={tab.key} href={tab.href} aria-current={tab.key === current ? "page" : undefined}>
           {nav[tab.key]}
         </Link>
       ))}

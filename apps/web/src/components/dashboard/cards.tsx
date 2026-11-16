@@ -538,9 +538,14 @@ export async function CertaintiesCard() {
           <p className="mt-2 text-2xl font-semibold tabular-nums">{picks.length}</p>
           <p className="text-xs text-muted">{d.certaintiesCount}</p>
           {best ? (
-            <p className="mt-2 truncate text-sm">
-              {best.home} – {best.away} · {pickLabel(best)}{" "}
-              <span className="font-mono font-semibold text-positive-strong">
+            <p className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">
+                  {best.home} – {best.away}
+                </span>
+                <span className="block truncate text-xs text-muted">{pickLabel(best)}</span>
+              </span>
+              <span className="font-mono text-base font-semibold text-positive-strong">
                 {formatPercent(best.probability, 0)}
               </span>
             </p>
