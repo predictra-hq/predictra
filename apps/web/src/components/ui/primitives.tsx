@@ -116,7 +116,7 @@ export function Card({
     <div
       {...(scrollLabel ? { role: "region", "aria-label": scrollLabel, tabIndex: 0 } : {})}
       className={cn(
-        "rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_2px_rgb(0_0_0/0.4)]",
+        "rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.04),0_1px_2px_rgb(0_0_0/0.4)]",
         scrollLabel && "stack-sm overflow-x-auto",
         className,
       )}
@@ -229,8 +229,10 @@ export function EmptyState({ className, children }: { className?: string; childr
 
 export function PageHeader({ title, description }: { title: string; description?: string }) {
   return (
-    <header className="mb-6 border-b border-border pb-5">
-      <h1 className="text-2xl font-semibold tracking-tight sm:text-[1.7rem]">{title}</h1>
+    <header className="mb-4 sm:mb-6 sm:border-b sm:border-border sm:pb-5">
+      <h1 className="text-[1.375rem] font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
+        {title}
+      </h1>
       {description ? <p className="mt-1 max-w-3xl text-sm text-muted">{description}</p> : null}
     </header>
   );

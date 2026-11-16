@@ -20,7 +20,8 @@ export const metadata: Metadata = {
 
 export async function generateViewport(): Promise<Viewport> {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
-  return { themeColor: THEME_COLOR[theme], colorScheme: theme };
+  // `cover`: su iPhone l'app arriva ai bordi e le barre rispettano la zona dei gesti (env(safe-area-inset-*)).
+  return { themeColor: THEME_COLOR[theme], colorScheme: theme, viewportFit: "cover" };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

@@ -67,7 +67,7 @@ export const BOTTOM_NAV: readonly NavItem[] = [
   { key: "matchCenter", href: "/match-center" },
   { key: "certainties", href: "/certezze" },
   { key: "betBuilder", href: "/bet-builder" },
-  { key: "tracker", href: "/tracker" },
+  { key: "profile", href: "/settings", alsoMatch: ["/bankroll", "/tracker"] },
 ];
 
 /** Schede interne delle sezioni di amministrazione: pagine che parlano della stessa cosa. */
@@ -115,10 +115,8 @@ export const ADMIN_NAV: readonly NavItem[] = [
   },
 ];
 
-/** Una sola voce: Sicurezza e Preferenze sono due schede della stessa sezione. */
-export const SETTINGS_NAV: readonly NavItem[] = [
-  { key: "settings", href: "/settings/security", match: "/settings" },
-];
+/** Una sola voce: il Profilo porta a Sicurezza e Preferenze. */
+export const SETTINGS_NAV: readonly NavItem[] = [{ key: "profile", href: "/settings" }];
 
 /** Schede della sezione Impostazioni. */
 export const SETTINGS_TABS = [

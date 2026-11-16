@@ -30,7 +30,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         userLabel={user.displayName ?? user.email}
         roleLabel={role ? m.roles[role] : ""}
       />
-      <main id="content" className="px-4 pb-24 pt-6 sm:px-8 lg:ml-64 lg:py-10">
+      <main
+        id="content"
+        className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:ml-64 lg:py-10"
+      >
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
       <BottomNav messages={m} />

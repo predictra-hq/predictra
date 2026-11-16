@@ -32,7 +32,7 @@ export function BottomNav({ messages }: { messages: Messages }) {
   return (
     <nav
       aria-label={messages.nav.quickNav}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-bg pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface pb-[max(env(safe-area-inset-bottom),0.375rem)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] lg:hidden"
     >
       <ul className="mx-auto flex max-w-lg">
         {BOTTOM_NAV.map((item) => {
@@ -44,12 +44,21 @@ export function BottomNav({ messages }: { messages: Messages }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-14 flex-col items-center justify-center px-1 text-[11px] transition-colors active:bg-surface-2",
-                  active ? "font-medium text-positive-strong" : "text-muted hover:text-fg",
+                  "flex h-[3.75rem] flex-col items-center justify-center px-1 text-[11px] transition-colors",
+                  active ? "font-semibold text-positive-strong" : "text-muted hover:text-fg",
                 )}
               >
                 <TabContent>
-                  {Icon ? <Icon size={20} aria-hidden="true" /> : null}
+                  {Icon ? (
+                    <span
+                      className={cn(
+                        "flex h-7 w-12 items-center justify-center rounded-full transition-colors",
+                        active && "bg-positive-soft",
+                      )}
+                    >
+                      <Icon size={20} aria-hidden="true" />
+                    </span>
+                  ) : null}
                   <span className="max-w-full truncate">{messages.nav[item.key]}</span>
                 </TabContent>
               </Link>

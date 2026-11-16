@@ -3,62 +3,14 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import {
-  BarChart3,
-  Bot,
-  CalendarDays,
-  ChevronDown,
-  Cpu,
-  Database,
-  Layers,
-  LayoutDashboard,
-  LineChart,
-  ListChecks,
-  LogOut,
-  Mail,
-  Menu,
-  RefreshCw,
-  MessageCircleQuestion,
-  ScrollText,
-  Settings2,
-  ShieldCheck,
-  Tags,
-  TrendingUp,
-  Trophy,
-  Users,
-  Wallet,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
+import { NAV_ICONS } from "./nav-icons";
 
-/** Un'icona per voce: il menu si riconosce a colpo d'occhio, non solo leggendo. */
-export const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
-  dashboard: LayoutDashboard,
-  matchCenter: CalendarDays,
-  statisticsCenter: BarChart3,
-  betBuilder: Layers,
-  certainties: ShieldCheck,
-  marketIntelligence: TrendingUp,
-  leagueIntelligence: Trophy,
-  bankroll: Wallet,
-  tracker: ListChecks,
-  modelIntelligence: LineChart,
-  dataCenter: Database,
-  askPredictra: MessageCircleQuestion,
-  users: Users,
-  invitations: Mail,
-  audit: ScrollText,
-  teamAliases: Tags,
-  agent: Bot,
-  adminSystem: Cpu,
-  adminPeople: Users,
-  adminFootball: TrendingUp,
-  settings: Settings2,
-};
+export { NAV_ICONS };
 
 interface SidebarProps {
   messages: Messages;
@@ -249,7 +201,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
   return (
     <>
       {/* Telefono: menu a sinistra, logo a destra. */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg px-4 lg:hidden">
+      <div className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-border bg-bg px-4 pt-[env(safe-area-inset-top)] lg:hidden">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
