@@ -189,6 +189,46 @@ body {
   }
 }
 
+/*
+ * Tabelle compatte (`compact-sm`, es. classifiche): sul telefono restano tabelle vere,
+ * senza larghezza minima, e nascondono le colonne secondarie (`sm-secondary`, anche
+ * nell'intestazione). Venti squadre in venti righe, non venti schede.
+ */
+@media (max-width: 639.98px) {
+  .stack-sm table.compact-sm:not(.hidden) {
+    display: table;
+    min-width: 0;
+  }
+  .stack-sm table.compact-sm:not(.hidden) thead {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+  .stack-sm table.compact-sm:not(.hidden) tbody {
+    display: table-row-group;
+  }
+  .stack-sm table.compact-sm:not(.hidden) tr,
+  .stack-sm table.compact-sm:not(.hidden) tbody tr {
+    display: table-row;
+    padding: 0;
+  }
+  .stack-sm table.compact-sm:not(.hidden) tbody td,
+  .stack-sm table.compact-sm:not(.hidden) tbody th {
+    display: table-cell;
+    padding: 0.5rem 0.5rem;
+    white-space: nowrap;
+  }
+  .stack-sm table.compact-sm:not(.hidden) tbody td[data-label]::before,
+  .stack-sm table.compact-sm:not(.hidden) tbody th[data-label]::before {
+    content: none;
+  }
+  .stack-sm table.compact-sm:not(.hidden) .sm-secondary {
+    display: none;
+  }
+}
+
 /* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
 @media (max-width: 639.98px) {
   .stack-sm table:not(.hidden) tbody td.sm-secondary,

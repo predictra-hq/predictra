@@ -880,7 +880,8 @@ export const it = {
     },
   },
   predictions: {
-    title: "Previsioni PREDICTRA",
+    title: "Previsioni",
+    reliabilityBadge: "affidabilità {band}",
     noPredictions:
       "Nessuna previsione disponibile per questa partita: nessun modello attivo, oppure il motore non l'ha ancora valutata.",
     emptyReasons: {
@@ -894,7 +895,7 @@ export const it = {
     disclaimer:
       "Probabilità stimate da un modello quantitativo sui risultati storici: sono stime incerte, non garanzie.",
     modelVersion: "Modello",
-    asOf: "Dati fino al",
+    asOf: "Aggiornate il",
     confidence: "Confidence Score",
     confidenceBand: {
       LOW: "bassa",
@@ -943,49 +944,24 @@ export const it = {
   },
   certainties: {
     title: "Certezze",
-    description:
-      "Le giocate più probabili delle prossime partite. Quando ci sono quote, la probabilità unisce il modello e il mercato.",
-    thresholdLabel: "Probabilità minima",
-    atLeast: "da {value}",
-    verifyTitle: "Quante volte sono uscite",
-    verifyDescription:
-      "Le stesse giocate sulle partite già finite degli ultimi {days} giorni, divise per fascia di probabilità: in verde la fascia esce almeno quanto previsto, in giallo o rosso esce meno. È il controllo che dice quanto fidarsi delle percentuali qui sotto.",
-    verifyEmpty:
-      "Ancora nessuna partita finita con previsioni del modello attivo: la verifica si riempie da sola dopo le prossime giornate.",
-    verifyCount: "{wins} uscite su {count}",
-    expected: "previsto {value}",
-    smallSample: "campione piccolo",
-    upcomingTitle: "{count} partite da {value} in su",
-    fairOdds: "quota equa",
-    split: "modello {model} · mercato {market}",
-    multiplesTitle: "Multiple delle certezze",
-    multipleTitle: "Più sicura: almeno {target} di vincerla ({legs} partite)",
-    valueTitle: "Con valore: quote sopra il giusto ({legs} partite)",
-    valueTitleEmpty: "Con valore",
-    valueEmpty:
-      "Oggi non ci sono almeno due giocate di questa soglia con una quota italiana sopra il giusto: meglio non forzare. Prova una soglia più bassa.",
-    pastValueSummary:
-      "Multiple con valore, con le quote raccolte prima delle partite: {wins} vinte su {count}, rendimento a puntata fissa {roi}.",
-    multipleProbability: "Probabilità di vincerla: {value}",
-    multiplePrice: "Quota italiana combinata {price}",
-    multipleNoPrice: "Quota italiana non disponibile per tutte le giocate.",
-    register: "Registra",
+    description: "Le giocate più probabili delle prossime partite.",
+    safeTitle: "Multipla sicura · {legs} partite",
+    valueTitle: "Multipla con valore · {legs} partite",
+    multipleWin: "Probabilità di vincerla",
+    multiplePrice: "Quota {price}",
+    matchesTitle: "Partite ({count})",
+    matchTitle: "Le giocate più probabili",
     priceShort: "quota {price}",
-    fairShort: "quota giusta {price}",
-    reliability: "Quanto sono affidabili (verifica sulle partite già giocate)",
-    pastTitle: "Multiple delle settimane passate",
-    pastHint:
-      "Le stesse multiple ricostruite per ogni settimana con le previsioni fatte prima delle partite (stessa soglia), e il loro esito reale.",
-    pastSummary:
-      "Almeno {target}: {wins} uscite su {count} ({observed}; prevista in media {predicted})",
-    pastWon: "sett. {week} · {legs} partite · uscita",
-    pastLost: "sett. {week} · {legs} partite · persa",
-    matchTitle: "Certezze della partita (da {value})",
-    bestPrice: "Quota migliore {price} ({bookmaker})",
     worth: "+{value}",
-    notWorth: "quota sotto il giusto",
-    empty:
-      "Nessuna giocata sopra questa soglia nelle partite già valutate dal modello: prova una soglia più bassa.",
+    register: "Registra tra le giocate fatte",
+    reliability: "Quanto sono affidabili",
+    bandLabel: "Giocate da {from}",
+    bandResult: "uscite {observed} ({wins} su {count})",
+    bandFew: "{wins} su {count}, ancora poche",
+    verifyEmpty: "Ancora nessuna partita giocata da controllare.",
+    pastValueSummary:
+      "Multiple con valore delle settimane passate: {wins} vinte su {count}, guadagno {roi}.",
+    empty: "Nessuna giocata abbastanza sicura per ora.",
   },
   bankroll: {
     title: "Bankroll",

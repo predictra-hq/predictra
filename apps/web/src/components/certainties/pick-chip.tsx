@@ -1,12 +1,12 @@
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import type { PredictionMarket } from "@predictra/shared-types";
 import { pickLabel } from "@/components/bet-builder/likely";
-import { Badge } from "@/components/ui/primitives";
 import { italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import type { Pick } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
-import { formatFairOdds, formatPercent } from "@/lib/predictions/format";
+import { formatPercent } from "@/lib/predictions/format";
 
 /** Link al modulo "Aggiungi giocata" del Tracker, già compilato con questa giocata. */
 export function trackerHref(p: Pick, price: ItalianPrice | null): string {
@@ -25,8 +25,11 @@ export function trackerHref(p: Pick, price: ItalianPrice | null): string {
   return `/tracker?${params.toString()}#bet-event`;
 }
 
-/** Una giocata delle Certezze: probabilità, quota equa, modello/mercato e quota italiana. */
-export function PickChip({
+/**
+ * Una giocata su una riga: nome e quota a sinistra, probabilità a destra, "+" per
+ * registrarla tra le giocate fatte.
+ */
+export function PickRow({
   pick: p,
   prices,
 }: {
@@ -36,39 +39,29 @@ export function PickChip({
   const c = getMessages().certainties;
   const price = italianPriceFor(prices, p);
   const value = price ? p.probability * price.price - 1 : null;
-  // Dettaglio modello/mercato solo al passaggio del mouse: la riga resta corta.
-  const detail =
-    p.marketProbability !== null
-      ? fillTemplate(c.split, {
-          model: formatPercent(p.modelProbability),
-          market: formatPercent(p.marketProbability),
-        })
-      : undefined;
   return (
-    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-border px-3 py-1.5 text-sm">
-      <span>{pickLabel(p)}</span>
-      <span className="font-semibold" title={detail}>
-        {formatPercent(p.probability, 0)}
+    <li className="flex items-center gap-3 py-2">
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm">{pickLabel(p)}</span>
+        {price ? (
+          <span className="block text-xs text-muted" title={price.bookmaker}>
+            {fillTemplate(c.priceShort, { price: formatOdds(price.price) })}
+            {value !== null && value >= 0 ? (
+              <span className="ml-1.5 font-medium text-positive-strong">
+                {fillTemplate(c.worth, { value: formatPercent(value, 0) })}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
       </span>
-      {price && value !== null ? (
-        <span className="text-xs text-muted" title={price.bookmaker}>
-          {fillTemplate(c.priceShort, { price: formatOdds(price.price) })}
-          {value >= 0 ? (
-            <Badge tone="positive" className="ml-1">
-              {fillTemplate(c.worth, { value: formatPercent(value, 0) })}
-            </Badge>
-          ) : null}
-        </span>
-      ) : (
-        <span className="text-xs text-muted">
-          {fillTemplate(c.fairShort, { price: formatFairOdds(p.probability) })}
-        </span>
-      )}
+      <span className="font-mono text-base font-semibold">{formatPercent(p.probability, 0)}</span>
       <Link
         href={trackerHref(p, price)}
-        className="text-xs text-muted underline underline-offset-2 hover:text-fg"
+        aria-label={`${c.register}: ${p.home} – ${p.away}, ${pickLabel(p)}`}
+        title={c.register}
+        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
       >
-        {c.register}
+        <Plus size={16} aria-hidden="true" />
       </Link>
     </li>
   );

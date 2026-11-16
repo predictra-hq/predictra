@@ -218,22 +218,23 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
 
   return (
     <>
+      {/* Telefono: menu a sinistra, logo a destra. */}
       <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
-        <span className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
-          <Logo className="size-7 shrink-0" />
-          {messages.app.name}
-          <span className="text-positive">.</span>
-        </span>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="sidebar"
           aria-label={open ? messages.nav.closeMenu : messages.nav.openMenu}
-          className="cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg"
+          className="-ml-2 cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg"
         >
-          {open ? <X size={20} /> : <Menu size={20} />}
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
+        <span className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
+          {messages.app.name}
+          <span className="-ml-2 text-positive">.</span>
+          <Logo className="size-7 shrink-0" />
+        </span>
       </div>
 
       <aside
