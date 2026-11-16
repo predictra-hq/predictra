@@ -127,20 +127,20 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                 <Th>#</Th>
                 <Th className="sticky left-0 z-10 bg-surface">{m.team}</Th>
                 <Th className="text-right">{m.played}</Th>
-                <Th className="text-right">{m.won}</Th>
-                <Th className="text-right">{m.drawn}</Th>
-                <Th className="text-right">{m.lost}</Th>
-                <Th className="text-right">{m.goalsFor}</Th>
-                <Th className="text-right">{m.goalsAgainst}</Th>
+                <Th className="sm-secondary text-right">{m.won}</Th>
+                <Th className="sm-secondary text-right">{m.drawn}</Th>
+                <Th className="sm-secondary text-right">{m.lost}</Th>
+                <Th className="sm-secondary text-right">{m.goalsFor}</Th>
+                <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
                 <Th className="text-right">{m.goalDifference}</Th>
                 <Th className="text-right">{m.points}</Th>
-                <Th className="text-right">{m.goalsPerMatch}</Th>
-                <Th className="text-right">{m.concededPerMatch}</Th>
-                <Th>{m.home}</Th>
-                <Th>{m.away}</Th>
-                <Th className="text-right">{m.cleanSheets}</Th>
-                <Th className="text-right">{m.bothScored}</Th>
-                <Th className="text-right">{m.over25}</Th>
+                <Th className="sm-secondary text-right">{m.goalsPerMatch}</Th>
+                <Th className="sm-secondary text-right">{m.concededPerMatch}</Th>
+                <Th className="sm-secondary">{m.home}</Th>
+                <Th className="sm-secondary">{m.away}</Th>
+                <Th className="sm-secondary text-right">{m.cleanSheets}</Th>
+                <Th className="sm-secondary text-right">{m.bothScored}</Th>
+                <Th className="sm-secondary text-right">{m.over25}</Th>
                 <Th title={m.formHint}>{m.form}</Th>
               </tr>
             </thead>
