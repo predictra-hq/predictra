@@ -288,7 +288,7 @@ export const it = {
     observedAt: "Osservato il",
     eventTime: "Aggiornato dalla fonte il",
     detailsTitle: "Statistiche e formazioni",
-    detailsSource: "Fonte: API-Football (storico 2022–2024, scaricato un po' alla volta).",
+    detailsSource: "Fonte: API-Football.",
     noDetails:
       "Statistiche e formazioni non ancora disponibili per questa partita. Le scarica l'agente da API-Football, circa 44 partite al giorno, a partire dalle stagioni 2022–2024.",
     statistics: "Statistiche",
@@ -885,8 +885,7 @@ export const it = {
       NOT_YET_EVALUATED:
         "Il motore non ha ancora valutato questa partita: prevede le partite dei prossimi 10 giorni, due volte al giorno (03:47 e 12:47 UTC).",
     },
-    disclaimer:
-      "Probabilità stimate da un modello quantitativo sui risultati storici: sono stime incerte, non garanzie.",
+    disclaimer: "Sono stime, non garanzie.",
     modelVersion: "Modello",
     asOf: "Aggiornate il",
     confidence: "Confidence Score",
