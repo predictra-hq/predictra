@@ -17,6 +17,14 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
   - Alla fine cancella sempre l'account. Lo script è `apps/web/scripts/verify-accessibility.mjs`, il riepilogo per pagina compare nel run.
   - Si può avviare anche da un branch di lavoro, prima del merge. Dura circa 5 minuti e non va lanciato a ogni PR, per il budget di minuti di GitHub Actions.
 
+## Esito del 16/11/2026
+
+**53 controlli su 53 superati** ([run](https://github.com/predictra-hq/predictra/actions/runs/43871659347)): tutte le pagine sono verificate anche da telefono (375 px). Su telefono il controllo segnala anche ogni elemento che esce dallo schermo e farebbe scorrere la pagina di lato. Non conta le tabelle larghe che scorrono dentro la loro card. Corretti i difetti trovati dopo le segnalazioni del proprietario:
+
+- le griglie senza colonna base si allargavano quanto il testo più lungo (card della Home fuori schermo): ora hanno sempre `grid-cols-1`;
+- le tabelle compatte (Campionati) uscivano dallo schermo e allineavano i nomi a destra: ora sono larghe quanto lo schermo, nascondono le colonne secondarie e, se serve, scorrono dentro la card;
+- come rete di sicurezza, l'app taglia ciò che sborda in orizzontale invece di far scorrere la pagina.
+
 ## Esito del 15/11/2026
 
 **33 controlli su 33 superati** ([run 25](https://github.com/predictra-hq/predictra/actions/runs/43720105371)): aggiunte la pagina Certezze e le versioni da telefono (375 px) di Certezze, Partite e dettaglio partita, con screenshot nell'artefatto del run (3 giorni).
