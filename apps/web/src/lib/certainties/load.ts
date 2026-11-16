@@ -25,7 +25,7 @@ const matchIds = (rows: readonly ActivePredictionRow[]) => [
 /** Ultime quote a gruppi di partite, per tenere corto l'indirizzo della richiesta. */
 async function oddsFor(ids: readonly number[]) {
   // Circa 200 righe di quote per partita: gruppi da 5 stanno in una pagina, 8 in parallelo.
-  return inChunks(ids, 5, (chunk) => listLatestOdds(chunk));
+  return inChunks(ids, 5, (chunk) => listLatestOdds(chunk), 4);
 }
 
 export function marketLookup(consensus: ReadonlyMap<string, number>): MarketLookup {
