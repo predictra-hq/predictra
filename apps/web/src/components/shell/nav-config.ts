@@ -26,19 +26,32 @@ export interface NavGroup {
  * Gli indirizzi delle pagine non cambiano: cambiano solo ordine, gruppi e nomi nel menu.
  */
 export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
+  { id: "home", items: [{ key: "dashboard", href: "/dashboard" }] },
   {
-    id: "main",
+    id: "bets",
+    label: "groupBets",
     items: [
-      { key: "dashboard", href: "/dashboard" },
       { key: "certainties", href: "/certezze" },
       { key: "betBuilder", href: "/bet-builder" },
-      { key: "matchCenter", href: "/match-center" },
-      { key: "leagueIntelligence", href: "/leagues" },
-      { key: "bankroll", href: "/bankroll" },
-      { key: "tracker", href: "/tracker" },
-      { key: "askPredictra", href: "/ask" },
     ],
   },
+  {
+    id: "football",
+    label: "groupFootball",
+    items: [
+      { key: "matchCenter", href: "/match-center" },
+      { key: "leagueIntelligence", href: "/leagues" },
+    ],
+  },
+  {
+    id: "money",
+    label: "groupMoney",
+    items: [
+      { key: "bankroll", href: "/bankroll" },
+      { key: "tracker", href: "/tracker" },
+    ],
+  },
+  { id: "ask", items: [{ key: "askPredictra", href: "/ask" }] },
 ];
 
 /** Barra in basso sul telefono: le pagine di tutti i giorni. */

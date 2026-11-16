@@ -17,7 +17,7 @@ import { FreshnessBadge } from "@/components/football/badges";
 import { getAgentStatus } from "@/lib/agent/queries";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { buildBollette } from "@/lib/bet-builder/bollette";
-import { HOME_CERTAINTY_THRESHOLD, loadHomeCertainties } from "@/lib/certainties/load";
+import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
 import { getSourceHealth } from "@/lib/football/queries";
 import {
@@ -507,38 +507,27 @@ export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) 
 export async function CertaintiesCard() {
   const d = getMessages().dashboard;
   const picks = await loadHomeCertainties().catch(() => null);
+  const best = picks?.[0];
 
   return (
-    <StatCard
-      href={`/certezze?soglia=${HOME_CERTAINTY_THRESHOLD * 100}`}
-      title={d.certaintiesTitle}
-    >
+    <StatCard href="/certezze" title={d.certaintiesTitle}>
       {picks === null ? (
         <p className="mt-2 text-sm text-muted">{d.noData}</p>
       ) : picks.length === 0 ? (
         <p className="mt-2 text-sm text-muted">{d.certaintiesEmpty}</p>
       ) : (
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {picks.map((p) => (
-            <li
-              key={`${p.matchId}|${p.market}|${p.line ?? ""}|${p.selection}`}
-              className="flex items-baseline justify-between gap-3 text-sm"
-            >
-              <span className="min-w-0">
-                <span className="font-medium">
-                  {p.home} – {p.away}
-                </span>{" "}
-                <span className="text-muted">· {pickLabel(p)}</span>{" "}
-                <span className="whitespace-nowrap text-xs text-subtle">
-                  {formatDateTime(p.kickoffAt)}
-                </span>
-              </span>
+        <>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{picks.length}</p>
+          <p className="text-xs text-muted">{d.certaintiesCount}</p>
+          {best ? (
+            <p className="mt-2 truncate text-sm">
+              {best.home} – {best.away} · {pickLabel(best)}{" "}
               <span className="font-mono font-semibold text-positive-strong">
-                {formatPercent(p.probability, 0)}
+                {formatPercent(best.probability, 0)}
               </span>
-            </li>
-          ))}
-        </ul>
+            </p>
+          ) : null}
+        </>
       )}
     </StatCard>
   );

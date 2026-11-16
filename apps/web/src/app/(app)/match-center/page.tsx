@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cache, Suspense } from "react";
 import { ChevronRight } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { MatchStatusBadge, ProviderAttribution } from "@/components/football/badges";
@@ -27,9 +28,30 @@ import {
   listSeasons,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 
 export const metadata: Metadata = { title: "Partite" };
+
+/** Una sola lettura per tutte le righe della pagina (React `cache` per richiesta). */
+const strongestFor = cache((idsKey: string) =>
+  strongestPicks(idsKey ? idsKey.split(",").map(Number) : []).catch(() => new Map<number, Pick>()),
+);
+
+async function StrongestCell({ idsKey, matchId }: { idsKey: string; matchId: number }) {
+  const map = await strongestFor(idsKey);
+  return <StrongestPick pick={map.get(matchId)} />;
+}
+
+async function StrongestLine({ idsKey, matchId }: { idsKey: string; matchId: number }) {
+  const pick = (await strongestFor(idsKey)).get(matchId);
+  if (!pick) return null;
+  return (
+    <span className="mt-1 block text-xs text-muted">
+      <StrongestPick pick={pick} />
+    </span>
+  );
+}
 
 function StrongestPick({ pick }: { pick: Pick | undefined }) {
   if (!pick) return <span className="text-subtle">–</span>;
@@ -77,10 +99,8 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
     season ? listMatches(season.id, matchday) : Promise.resolve([]),
     getSourceHealth(),
   ]);
-  // Giocata più forte (dal 70%) per le partite in programma: stessa logica di Certezze.
-  const strongest = await strongestPicks(matches.map((r) => r.match_id)).catch(
-    () => new Map<number, Pick>(),
-  );
+  // Giocata più forte (dal 70%): caricata a parte, la tabella compare subito.
+  const idsKey = matches.map((r) => r.match_id).join(",");
   const matchdays = season?.maxMatchday
     ? Array.from({ length: season.maxMatchday }, (_, i) => i + 1)
     : [];
@@ -118,7 +138,9 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
             <option value="all">{m.matchCenter.allMatchdays}</option>
             {matchdays.map((d) => (
               <option key={d} value={d}>
-                {d}
+                {isLatest && d === season?.currentMatchday
+                  ? fillTemplate(m.matchCenter.currentMatchday, { n: d })
+                  : d}
               </option>
             ))}
           </Select>
@@ -161,11 +183,9 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                       <span className="font-mono">{formatScore(r.home_score, r.away_score)}</span>
                       <span className="truncate">{r.away_team_short_name ?? r.away_team_name}</span>
                     </span>
-                    {strongest.has(r.match_id) ? (
-                      <span className="mt-1 block text-xs text-muted">
-                        <StrongestPick pick={strongest.get(r.match_id)} />
-                      </span>
-                    ) : null}
+                    <Suspense fallback={null}>
+                      <StrongestLine idsKey={idsKey} matchId={r.match_id} />
+                    </Suspense>
                   </span>
                   <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-muted" />
                 </Link>
@@ -228,7 +248,9 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                     <MatchStatusBadge status={r.status} />
                   </td>
                   <td className="px-4 py-3">
-                    <StrongestPick pick={strongest.get(r.match_id)} />
+                    <Suspense fallback={<span className="text-subtle">…</span>}>
+                      <StrongestCell idsKey={idsKey} matchId={r.match_id} />
+                    </Suspense>
                   </td>
                 </tr>
               ))}

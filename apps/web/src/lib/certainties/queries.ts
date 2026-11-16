@@ -12,7 +12,7 @@ import { BANDS, CERTAINTY_MARKETS } from "./logic";
 const PAGE = 1000;
 const MAX_ROWS = 20_000;
 /** Finestra della verifica sulle partite già giocate. */
-export const VERIFY_DAYS = 120;
+export const VERIFY_DAYS = 60;
 
 const MIN_PROBABILITY = BANDS[0]![0];
 

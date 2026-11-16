@@ -41,16 +41,16 @@ export default async function DashboardPage() {
         </Alert>
       ) : null}
 
-      <Suspense fallback={<CardSkeleton />}>
-        <CertaintiesCard />
-      </Suspense>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      {/* Tre riquadri di sintesi: ognuno porta alla sua sezione e si carica da solo. */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
-          <BankrollCard />
+          <CertaintiesCard />
         </Suspense>
         <Suspense fallback={<CardSkeleton />}>
           <SchedineCard />
+        </Suspense>
+        <Suspense fallback={<CardSkeleton />}>
+          <BankrollCard />
         </Suspense>
       </div>
 

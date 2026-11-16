@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { PickRow } from "@/components/certainties/pick-chip";
-import { Alert, Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
+import {
+  Alert,
+  Card,
+  CardSkeleton,
+  CardTitle,
+  EmptyState,
+  PageHeader,
+} from "@/components/ui/primitives";
 import { combinedItalianPrice, italianPriceFor, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { requireUser } from "@/lib/auth/dal";
 import { loadUpcoming, loadVerification } from "@/lib/certainties/load";
@@ -128,42 +136,19 @@ function Reliability({
   );
 }
 
-export default async function CertaintiesPage() {
-  await requireUser();
-  const m = getMessages();
-  const c = m.certainties;
-
-  if (!(await hasActiveModel())) {
-    return (
-      <>
-        <PageHeader title={c.title} description={c.description} />
-        <Alert>{m.predictions.emptyReasons.NO_ACTIVE_MODEL}</Alert>
-      </>
-    );
-  }
-
-  const threshold = DEFAULT_THRESHOLD;
-  const [upcoming, verification] = await Promise.all([loadUpcoming(), loadVerification()]);
-  const picks = selectPicks(upcoming.rows, threshold, upcoming.market);
+/** Multiple e partite: la parte principale, caricata appena possibile. */
+async function CertaintiesContent() {
+  const c = getMessages().certainties;
+  const upcoming = await loadUpcoming();
+  const picks = selectPicks(upcoming.rows, DEFAULT_THRESHOLD, upcoming.market);
   const matches = groupByMatch(picks);
   const prices = upcoming.prices;
   const priceFor = (p: Pick) => italianPriceFor(prices, p)?.price ?? null;
   const safe = buildMultiple(picks, MULTIPLE_TARGET);
   const value = buildValueMultiple(picks, priceFor);
 
-  const stats = bandStats(verification.rows, verification.results, verification.market);
-  const pastValue = pastValueMultiples(
-    verification.rows,
-    verification.results,
-    threshold,
-    (p) => italianPriceFor(verification.prices, p)?.price ?? null,
-    verification.market,
-  );
-
   return (
     <>
-      <PageHeader title={c.title} description={c.description} />
-
       {safe || value ? (
         <div className="mb-6 grid gap-4 lg:grid-cols-2">
           {safe ? (
@@ -216,14 +201,63 @@ export default async function CertaintiesPage() {
           ))}
         </ul>
       )}
+    </>
+  );
+}
 
+/** Verifica sulle partite già giocate: la lettura più pesante, caricata per ultima. */
+async function ReliabilitySection() {
+  const verification = await loadVerification();
+  const stats = bandStats(verification.rows, verification.results, verification.market);
+  const pastValue = pastValueMultiples(
+    verification.rows,
+    verification.results,
+    DEFAULT_THRESHOLD,
+    (p) => italianPriceFor(verification.prices, p)?.price ?? null,
+    verification.market,
+  );
+  return (
+    <Reliability
+      stats={stats}
+      wins={pastValue.filter((x) => x.won).length}
+      count={pastValue.length}
+      roi={flatReturn(pastValue)}
+    />
+  );
+}
+
+export default async function CertaintiesPage() {
+  await requireUser();
+  const m = getMessages();
+  const c = m.certainties;
+
+  if (!(await hasActiveModel())) {
+    return (
+      <>
+        <PageHeader title={c.title} description={c.description} />
+        <Alert>{m.predictions.emptyReasons.NO_ACTIVE_MODEL}</Alert>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <PageHeader title={c.title} description={c.description} />
+      <Suspense
+        fallback={
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        }
+      >
+        <CertaintiesContent />
+      </Suspense>
       <div className="mt-6">
-        <Reliability
-          stats={stats}
-          wins={pastValue.filter((x) => x.won).length}
-          count={pastValue.length}
-          roi={flatReturn(pastValue)}
-        />
+        <Suspense fallback={null}>
+          <ReliabilitySection />
+        </Suspense>
       </div>
     </>
   );
