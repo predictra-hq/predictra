@@ -15,6 +15,7 @@ import { cache } from "react";
 import { marketConsensus } from "./bollette";
 import { bestItalianPrices, LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
 import { matchMarkets, type Outcome, usedProbability } from "./market";
+import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
 import type { MatchScore, PastProposal, ResultLeg } from "./results";
@@ -171,10 +172,10 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
     if (matchIds.length === 0) return [];
     query = query.in("match_id", matchIds);
   } else {
-    query = query
-      .eq("match_status", "SCHEDULED")
-      .gt("kickoff_at", now.toISOString())
-      .lt("kickoff_at", end.toISOString());
+    // Per partita, non per data: la vista usa l'indice (vedi upcomingMatchIds).
+    const ids = await upcomingMatchIds(now, end);
+    if (ids.length === 0) return [];
+    query = query.in("match_id", ids.slice(0, 300));
   }
   const { data, error } = await query;
   if (error) throw new BetBuilderDataUnavailable("previsioni", error);
@@ -299,25 +300,32 @@ export async function listSlips(): Promise<SlipWithSelections[]> {
 export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
   const supabase = await createClient();
   const end = new Date(now.getTime() + MANUAL_HORIZON_DAYS * 86_400_000);
-  // Circa 35 righe per partita: oltre le 1.000 righe servono più pagine.
-  return selectAll<LikelyRow>(
-    (from, to) =>
-      supabase
-        .from("v_active_predictions")
-        .select(
-          "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
-        )
-        .in("market", Object.keys(LIKELY_MARKETS))
-        .eq("match_status", "SCHEDULED")
-        .gt("kickoff_at", now.toISOString())
-        .lt("kickoff_at", end.toISOString())
-        .order("match_id")
-        .order("market")
-        .order("line", { nullsFirst: true })
-        .order("selection")
-        .range(from, to),
-    "previsioni",
-  );
+  // Prima le partite in programma, poi le previsioni per partita (vedi upcomingMatchIds).
+  const ids = await upcomingMatchIds(now, end);
+  const rows: LikelyRow[] = [];
+  for (let i = 0; i < ids.length; i += 200) {
+    const chunk = ids.slice(i, i + 200);
+    // Circa 35 righe per partita: oltre le 1.000 righe servono più pagine.
+    rows.push(
+      ...(await selectAll<LikelyRow>(
+        (from, to) =>
+          supabase
+            .from("v_active_predictions")
+            .select(
+              "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+            )
+            .in("match_id", chunk)
+            .in("market", Object.keys(LIKELY_MARKETS))
+            .order("match_id")
+            .order("market")
+            .order("line", { nullsFirst: true })
+            .order("selection")
+            .range(from, to),
+        "previsioni",
+      )),
+    );
+  }
+  return rows;
 }
 
 /**

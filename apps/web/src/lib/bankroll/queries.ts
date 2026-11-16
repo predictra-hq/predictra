@@ -6,6 +6,7 @@ import type {
   MovementKind,
   PersonalLimitsRow,
 } from "@predictra/shared-types";
+import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
 import { matchMarkets } from "@/lib/bet-builder/market";
 import { groupKellyMatches, type KellyMatch } from "./kelly";
@@ -83,12 +84,14 @@ export async function listBets(sinceDays?: number): Promise<BetRow[]> {
  */
 export async function listKellyMatches(now: Date = new Date()): Promise<KellyMatch[]> {
   const supabase = await createClient();
+  // Per partita, non per data: la vista usa l'indice (vedi upcomingMatchIds).
+  const ids = (await upcomingMatchIds(now)).slice(0, 200);
+  if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("v_active_predictions")
     .select("match_id, kickoff_at, home_team_name, away_team_name, selection, probability")
     .eq("market", "1X2")
-    .eq("match_status", "SCHEDULED")
-    .gte("kickoff_at", now.toISOString())
+    .in("match_id", ids)
     .order("kickoff_at")
     .limit(600);
   if (error) throw new BankrollUnavailable("previsioni del modello", error);

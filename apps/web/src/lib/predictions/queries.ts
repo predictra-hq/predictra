@@ -77,3 +77,21 @@ export async function getMatchPredictions(matchId: number): Promise<ActivePredic
   if (error) throw new PredictionsUnavailable("previsioni", error);
   return (data ?? []) as ActivePredictionRow[];
 }
+
+/**
+ * ID delle partite in programma tra `now` e `end` (lettura leggera di `v_match_center`).
+ * Le letture di `v_active_predictions` vanno fatte per `match_id`: è la chiave del
+ * DISTINCT ON della vista e usa l'indice; filtrarla per data scorre tutto lo storico.
+ */
+export async function upcomingMatchIds(now: Date, end?: Date): Promise<number[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("v_match_center")
+    .select("match_id")
+    .eq("status", "SCHEDULED")
+    .gt("kickoff_at", now.toISOString());
+  if (end) query = query.lt("kickoff_at", end.toISOString());
+  const { data, error } = await query.order("kickoff_at").limit(1000);
+  if (error) throw new PredictionsUnavailable("partite in programma", error);
+  return (data ?? []).map((r) => Number(r.match_id));
+}
