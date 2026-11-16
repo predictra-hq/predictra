@@ -215,7 +215,10 @@ export default async function ModelsPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noRuns}</p>
         ) : (
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[640px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{mi.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>

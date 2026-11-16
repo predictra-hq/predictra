@@ -64,7 +64,7 @@ function Td({ children, className }: { children: ReactNode; className?: string }
 function Table({ label, head, children }: { label: string; head: ReactNode; children: ReactNode }) {
   return (
     <ScrollRegion label={label} className="mt-3">
-      <table className="w-full text-sm">
+      <table className="limit-sm w-full text-sm" data-more={getMessages().common.moreOnDesktop}>
         <caption className="sr-only">{label}</caption>
         <thead className="text-xs uppercase tracking-wide text-muted">
           <tr className="border-b border-border">{head}</tr>

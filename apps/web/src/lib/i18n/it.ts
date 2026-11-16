@@ -11,6 +11,8 @@ export const it = {
       "Le previsioni sono stime soggette a incertezza. PREDICTRA è uno strumento informativo: non piazza scommesse e non garantisce vincite.",
   },
   common: {
+    moreOnDesktop:
+      "Sul telefono vedi le prime 8 righe: l'elenco completo è su uno schermo più grande.",
     email: "Email",
     password: "Password",
     confirmPassword: "Conferma password",
