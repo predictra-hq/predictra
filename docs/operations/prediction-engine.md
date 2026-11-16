@@ -228,3 +228,7 @@ Migliora la stagione di stima e peggiora quella mai vista: è adattamento. **Non
 ### Entrambe segnano: taratura adottata (16/11/2026, ADR 0053)
 
 La prova del 15/11 aveva mostrato che su «entrambe segnano» il modello è troppo sicuro, senza adottare nulla. Ripetuta nei due versi (stima su una stagione, verifica sull'altra) e campionato per campionato, il guadagno si ripete sempre: Log Loss da 0,6870 a 0,6844 sul 2024-25 e da 0,6897 a 0,6870 sul 2025-26. **Adottata** la taratura `σ(0,6 · logit p + 0,05)` solo per questo mercato.
+
+### Under/over 1,5: taratura adottata (16/11/2026, ADR 0053)
+
+Stesso metodo dell'«entrambe segnano», linea per linea: solo sulla linea 1,5 il guadagno si ripete nei due versi (0,5396 → 0,5375 e 0,5234 → 0,5215) e in tutti i campionati. **Adottata** `σ(0,7 · logit p + 0,4)` per l'over 1,5. Linee 2,5 e 3,5: guadagno in un verso solo, **non adottate**.

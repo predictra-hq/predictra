@@ -31,3 +31,15 @@ Log Loss del mercato BTTS, più basso è meglio:
 - Solo BTTS cambia. 1X2, doppia chance e under/over restano quelli della matrice: le stesse prove su quei mercati non danno guadagni che si ripetono ([prediction-engine.md](../operations/prediction-engine.md)).
 - `markets.py` fa parte del codice del modello: nasce una versione nuova, che diventa attiva da sola se nel backtest batte il riferimento (ADR 0023).
 - Limite: il mercato resta difficile. Anche tarato, il modello batte di poco una probabilità costante.
+
+## Aggiornamento del 16/11/2026: anche l'under/over 1,5
+
+Lo stesso controllo, ripetuto linea per linea sui gol totali (stima su una stagione, verifica sull'altra, nei due versi), dà un guadagno che si ripete solo sulla linea 1,5:
+
+| Linea | 2024-25 → 2025-26 | 2025-26 → 2024-25 | Esito                        |
+| ----- | ----------------- | ----------------- | ---------------------------- |
+| 1,5   | 0,5396 → 0,5375   | 0,5234 → 0,5215   | **adottata**                 |
+| 2,5   | 0,6853 → 0,6829   | 0,6732 → 0,6734   | non adottata (un verso solo) |
+| 3,5   | 0,5983 → 0,5979   | 0,6045 → 0,6058   | non adottata                 |
+
+Per l'over 1,5 si usa `σ(0,7 · logit p + 0,4)`; l'under è il complemento. Il guadagno c'è in tutti e cinque i campionati e non cambia con pendenze tra 0,65 e 0,8. L'effetto più utile è nella fascia alta, quella delle Certezze: dove la matrice dava l'over 1,5 tra l'85 e il 90% (media 87,0%) è uscito nell'83,1% dei casi; tarata, la previsione media scende all'85,0%. L'over 1,5 tarato non scende mai sotto l'over 2,5 della matrice, così le linee restano coerenti.

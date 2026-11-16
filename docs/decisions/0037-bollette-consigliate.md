@@ -47,3 +47,7 @@ Richiesta del proprietario: più multiple e la possibilità di cambiare la punta
 
 - Due profili in più per turno: **Doppia sicura** (2 selezioni, probabilità ≥ 72%, quota ≥ 1,20) e **Lunga** (fino a 6 selezioni, probabilità ≥ 55%, quota ≥ 1,30). Restano le stesse regole di valore e di quote reali italiane.
 - Ogni schedina ha una puntata modificabile (euro interi): parte da quella consigliata (euro interi, minimo 2 €, ADR 0031) o da 10 € senza bankroll, ricalcola la vincita e "L'ho giocata" apre le Giocate fatte con l'importo scelto.
+
+## Aggiornamento del 16/11/2026: nessuna schedina che in media fa perdere
+
+Ogni selezione poteva avere un valore fino a −3%: una schedina «sicura» fatta di selezioni appena sotto il giusto usciva con valore complessivo negativo, e la pagina stessa diceva «meglio non giocarla». Ora il valore dell'intera schedina non scende sotto zero (`MIN_SLIP_VALUE`): si parte dalle selezioni più convenienti e una selezione che porterebbe il totale sotto zero non entra. Se non restano almeno due selezioni, quel profilo non viene proposto. Conseguenza: nei turni con quote basse possono uscire meno schedine.
