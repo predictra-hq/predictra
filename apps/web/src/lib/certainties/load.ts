@@ -72,9 +72,9 @@ export const loadVerification = cache(async (): Promise<VerificationData> => {
 
 /** Soglia, orizzonte e numero di giocate del riquadro in Home. */
 export const HOME_CERTAINTY_THRESHOLD = 0.8;
-const HOME_CERTAINTY_HOURS = 72;
+const HOME_CERTAINTY_HOURS = 7 * 24;
 
-/** Tutte le giocate dall'80% delle prossime 72 ore, dalla più probabile. */
+/** Tutte le giocate dall'80% delle prossimi 7 giorni, dalla più probabile. */
 export async function loadHomeCertainties(now = new Date()): Promise<Pick[]> {
   const rows = await upcomingHighProbability(now, HOME_CERTAINTY_HOURS);
   const odds = await oddsFor(matchIds(rows));
