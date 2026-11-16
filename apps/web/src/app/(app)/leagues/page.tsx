@@ -97,7 +97,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
             <tr>
               <Th>{m.competition}</Th>
               <Th className="sm-secondary">{m.season}</Th>
-              <Th className="text-right">{m.matches}</Th>
+              <Th className="sm-secondary text-right">{m.matches}</Th>
               <Th className="text-right">{m.avgGoals}</Th>
               <Th className="sm-secondary text-right">{m.avgHome}</Th>
               <Th className="sm-secondary text-right">{m.avgAway}</Th>
@@ -127,7 +127,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                   <td className="sm-secondary px-3 py-2 text-muted">{c.seasonLabel ?? "—"}</td>
                   {s ? (
                     <>
-                      <td className="px-3 py-2 text-right font-mono">{s.matches}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{s.matches}</td>
                       <td className="px-3 py-2 text-right font-mono">
                         {formatDecimal(Number(s.avg_goals))}
                       </td>

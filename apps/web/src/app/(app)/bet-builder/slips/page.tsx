@@ -26,7 +26,7 @@ export default async function SlipsPage() {
       {views.length === 0 ? (
         <EmptyState>{m.slipsEmpty}</EmptyState>
       ) : (
-        <ul className="grid gap-3 lg:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {views.map(({ slip, selections }) => {
             const evaluation = evaluateSelections(selections, now);
             return (

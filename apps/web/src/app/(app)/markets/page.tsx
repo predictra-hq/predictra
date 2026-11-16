@@ -105,7 +105,7 @@ function EventCard({ group, best }: { group: OddsEventGroup; best: BestOddsH2hRo
         <section aria-label={m.bestOdds}>
           <h3 className="mb-2 text-sm font-semibold">{m.bestOdds}</h3>
           {best ? (
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <BestOdd
                 label={m.home}
                 price={best.best_home_price}

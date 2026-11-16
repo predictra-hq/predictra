@@ -114,7 +114,7 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
           {m.matchCenter.technical}
           {issues.length > 0 ? ` · ${issues.length} ${m.matchCenter.openIssues.toLowerCase()}` : ""}
         </summary>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card className="h-full">
             <CardTitle>{m.matchCenter.provenance}</CardTitle>
             <dl className="mt-4">

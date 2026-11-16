@@ -45,7 +45,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
       {options.length === 0 ? (
         <EmptyState>{m.builderEmpty}</EmptyState>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
           <FilterForm className="flex flex-col gap-3">
             {options.map((o) => (
               <fieldset
@@ -56,7 +56,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                   {o.homeTeam} – {o.awayTeam}{" "}
                   <span className="font-normal text-muted">· {formatDateTime(o.kickoffAt)}</span>
                 </legend>
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                   {o.outcomes.map((x) => {
                     const key = `${x.matchId}:${x.selection}`;
                     return (

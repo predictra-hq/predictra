@@ -42,7 +42,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
       {bankrolls.length === 0 ? (
         <EmptyState className="mb-6">{m.none}</EmptyState>
       ) : (
-        <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {bankrolls.map((b) => (
             <Card
               key={b.bankroll_id}
@@ -82,12 +82,12 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
       )}
 
       {selected ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
             <CardTitle>
               {m.movements} · {selected.name}
             </CardTitle>
-            <ActionForm action={addMovement} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ActionForm action={addMovement} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
               <Field label={m.movementKind} htmlFor="mv-kind">
                 <Select id="mv-kind" name="kind" defaultValue="DEPOSIT">
@@ -166,7 +166,10 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
                 {m.limits} · {selected.name}
               </CardTitle>
               <p className="mt-1 text-xs text-muted">{m.limitsHint}</p>
-              <ActionForm action={saveLimits} className="mt-4 grid gap-3 sm:grid-cols-2">
+              <ActionForm
+                action={saveLimits}
+                className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
+              >
                 <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
                 <Field label={m.maxStake} htmlFor="lim-stake">
                   <Input
@@ -232,7 +235,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
         <summary className="cursor-pointer">
           <CardTitle className="inline">{m.create}</CardTitle>
         </summary>
-        <ActionForm action={createBankroll} className="mt-4 grid gap-3 sm:grid-cols-3">
+        <ActionForm action={createBankroll} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label={m.name} htmlFor="br-name">
             <Input id="br-name" name="name" maxLength={60} required />
           </Field>

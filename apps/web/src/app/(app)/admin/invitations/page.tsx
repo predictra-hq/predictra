@@ -57,7 +57,7 @@ export default async function InvitationsPage() {
         <CardTitle>{m.admin.invite}</CardTitle>
         <ActionForm
           action={createInvitation}
-          className="mt-4 grid gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end"
+          className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end"
         >
           <Field label={m.common.email} htmlFor="email">
             <Input id="email" name="email" type="email" autoComplete="off" required />

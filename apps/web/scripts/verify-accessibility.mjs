@@ -9,7 +9,8 @@
  * 2. Con Chromium (Playwright) accede all'app indicata da APP_URL come farebbe una
  *    persona: login, codice 2FA, poi ogni pagina, anche in larghezza mobile.
  * 3. Su ogni pagina esegue axe (WCAG 2.1 A e AA) e un controllo da tastiera: il primo
- *    Tab raggiunge il link "Vai al contenuto".
+ *    Tab raggiunge il link "Vai al contenuto". In larghezza telefono (375 px) controlla
+ *    anche che nessun elemento esca dallo schermo (pagina che scorre di lato).
  * 4. Su ogni pagina raccoglie anche gli errori di funzionamento: eccezioni JavaScript,
  *    errori nella console del browser (es. violazioni della CSP) e risposte HTTP 4xx/5xx
  *    dell'app (pagina, dati, Server Action).
@@ -43,6 +44,8 @@ const SCREENSHOTS = new Set([
   "/certezze (mobile)",
   "/match-center (mobile)",
   "/match-center/[id] (mobile)",
+  "/leagues (mobile)",
+  "/bet-builder (mobile)",
   "/admin/users",
 ]);
 
@@ -265,7 +268,8 @@ async function audit(page, path, label = path) {
     );
   }
 
-  const errors = [...new Set(runtime)];
+  const overflow = await horizontalOverflow(page);
+  const errors = [...new Set([...runtime, ...overflow])];
   results.push({ label, status, landed, violations, skipLink, errors });
   const marker =
     violations.length === 0 && skipLink !== false && status < 400 && errors.length === 0
@@ -278,6 +282,48 @@ async function audit(page, path, label = path) {
   }
   if (skipLink === false) console.log("   - il primo Tab non raggiunge «Vai al contenuto»");
   for (const e of errors) console.log(`   - ${e}`);
+}
+
+/**
+ * Telefono: elementi che escono dallo schermo a destra o a sinistra (la pagina scorrerebbe
+ * di lato). Non contano quelli dentro un contenitore che scorre o taglia da sé e sta nello
+ * schermo (tabelle larghe), né quelli invisibili (menu chiuso, testo per screen reader).
+ * Si segnala solo l'elemento più esterno di ogni gruppo.
+ */
+async function horizontalOverflow(page) {
+  const vw = page.viewportSize()?.width ?? 1280;
+  if (vw >= 640) return [];
+  return page.evaluate((vw) => {
+    const out = [];
+    const roots = [...document.querySelectorAll("main, .sticky.top-0, nav.fixed")];
+    const exceeds = (r) => r.right > vw + 1 || r.left < -1;
+    const contained = (el) => {
+      for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+        if (a.matches(".min-h-screen")) break;
+        const ox = getComputedStyle(a).overflowX;
+        if (ox !== "visible" && !exceeds(a.getBoundingClientRect())) return true;
+      }
+      return false;
+    };
+    for (const root of roots) {
+      for (const el of root.querySelectorAll("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width <= 1 || r.height <= 1 || !exceeds(r)) continue;
+        const st = getComputedStyle(el);
+        if (st.visibility === "hidden" || st.display === "none") continue;
+        if (contained(el)) continue;
+        const parent = el.parentElement;
+        if (parent && exceeds(parent.getBoundingClientRect()) && !contained(parent)) continue;
+        const cls = (el.getAttribute("class") ?? "").slice(0, 80);
+        const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 50);
+        out.push(
+          `fuori schermo (${Math.round(r.left)}–${Math.round(r.right)} px su ${vw}): <${el.tagName.toLowerCase()} class="${cls}"> «${text}»`,
+        );
+        if (out.length >= 5) return out;
+      }
+    }
+    return out;
+  }, vw);
 }
 
 async function login(page, account) {
@@ -350,9 +396,12 @@ async function main() {
 
     // Larghezza mobile: menu chiuso fuori dalla tabulazione, menu aperto accessibile.
     await page.setViewportSize({ width: 375, height: 812 });
-    await audit(page, "/certezze", "/certezze (mobile)");
-    await audit(page, "/match-center", "/match-center (mobile)");
+    // Tutte le pagine anche da telefono: accessibilità e niente che esca dallo schermo.
+    for (const path of PAGES.filter((p) => p !== "/dashboard")) {
+      await audit(page, path, `${path} (mobile)`);
+    }
     if (match) await audit(page, match, "/match-center/[id] (mobile)");
+    if (slip) await audit(page, slip, "/bet-builder/slips/[id] (mobile)");
     await audit(page, "/dashboard", "/dashboard (mobile)");
     await page.click('button[aria-controls="sidebar"]');
     const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();

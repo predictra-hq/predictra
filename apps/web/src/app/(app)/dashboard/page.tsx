@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       ) : null}
 
       {/* Tre riquadri di sintesi: ognuno porta alla sua sezione e si carica da solo. */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
           <CertaintiesCard />
         </Suspense>

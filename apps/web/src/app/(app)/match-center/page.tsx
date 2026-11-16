@@ -111,7 +111,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
       <FilterForm
         resets={{ c: ["s", "g"], s: ["g"] }}
-        className="mb-4 grid gap-3 sm:grid-cols-[1fr_9rem_10rem_auto] sm:items-end"
+        className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_9rem_10rem_auto] sm:items-end"
       >
         <Field label={m.matchCenter.competition} htmlFor="c">
           <Select id="c" name="c" defaultValue={competition.code ?? undefined}>

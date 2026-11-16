@@ -189,7 +189,7 @@ async function CertaintiesContent() {
   return (
     <>
       {multiples.length > 0 ? (
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {multiples.map((x) => (
             <MultipleCard
               key={x.key}
@@ -215,7 +215,7 @@ async function CertaintiesContent() {
       {matches.length === 0 ? (
         <EmptyState>{c.empty}</EmptyState>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {matches.map((match) => (
             <li key={match.matchId}>
               <Card className="h-full">
@@ -284,7 +284,7 @@ export default async function CertaintiesPage() {
       <PageHeader title={c.title} description={c.description} />
       <Suspense
         fallback={
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />

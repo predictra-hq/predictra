@@ -149,7 +149,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
         </Table>
       </Card>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardTitle>{a.queueTitle}</CardTitle>
           {queue && queue.length === 0 ? (

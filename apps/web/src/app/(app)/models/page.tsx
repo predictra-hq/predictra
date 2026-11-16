@@ -67,7 +67,7 @@ export default async function ModelsPage() {
       <SectionTabs section="system" current="/models" />
       <PageHeader title={mi.title} description={mi.description} />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardTitle>{mi.activeModel}</CardTitle>
           {active ? (

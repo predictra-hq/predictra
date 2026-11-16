@@ -177,16 +177,17 @@ textarea {
  * le tabelle dentro `Card scrollLabel` e `ScrollRegion`. Le tabelle nascoste su schermo
  * piccolo (`hidden sm:table`) restano nascoste. Regole fuori dai layer di Tailwind: così
  * prevalgono su `min-w-[…]`, `whitespace-nowrap` e sui padding delle celle.
+ * Le tabelle compatte (`compact-sm`) sono escluse: vedi sotto.
  */
 @media (max-width: 639.98px) {
-  .stack-sm {
+  .stack-sm:not(:has(table.compact-sm)) {
     overflow-x: visible;
   }
-  .stack-sm table:not(.hidden) {
+  .stack-sm table:not(.hidden, .compact-sm) {
     display: block;
     min-width: 0;
   }
-  .stack-sm table:not(.hidden) thead {
+  .stack-sm table:not(.hidden, .compact-sm) thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -194,15 +195,15 @@ textarea {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .stack-sm table:not(.hidden) tbody,
-  .stack-sm table:not(.hidden) tr {
+  .stack-sm table:not(.hidden, .compact-sm) tbody,
+  .stack-sm table:not(.hidden, .compact-sm) tr {
     display: block;
   }
-  .stack-sm table:not(.hidden) tbody tr {
+  .stack-sm table:not(.hidden, .compact-sm) tbody tr {
     padding: 0.625rem 1rem;
   }
-  .stack-sm table:not(.hidden) tbody td,
-  .stack-sm table:not(.hidden) tbody th {
+  .stack-sm table:not(.hidden, .compact-sm) tbody td,
+  .stack-sm table:not(.hidden, .compact-sm) tbody th {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
@@ -210,9 +211,10 @@ textarea {
     padding: 0.2rem 0;
     text-align: right;
     white-space: normal;
+    overflow-wrap: anywhere;
   }
-  .stack-sm table:not(.hidden) tbody td[data-label]::before,
-  .stack-sm table:not(.hidden) tbody th[data-label]::before {
+  .stack-sm table:not(.hidden, .compact-sm) tbody td[data-label]::before,
+  .stack-sm table:not(.hidden, .compact-sm) tbody th[data-label]::before {
     content: attr(data-label);
     flex-shrink: 0;
     max-width: 50%;
@@ -221,52 +223,37 @@ textarea {
     font-weight: 400;
     text-align: left;
   }
+  .stack-sm table:not(.hidden) .sm-secondary {
+    display: none;
+  }
 }
 
 /*
  * Tabelle compatte (`compact-sm`, es. classifiche): sul telefono restano tabelle vere,
- * senza larghezza minima, e nascondono le colonne secondarie (`sm-secondary`, anche
- * nell'intestazione). Venti squadre in venti righe, non venti schede.
+ * larghe quanto lo schermo, con le colonne secondarie (`sm-secondary`) nascoste,
+ * intestazioni che vanno a capo e celle più strette. Se restano più larghe dello schermo
+ * scorrono dentro la loro card, mai la pagina.
  */
 @media (max-width: 639.98px) {
   .stack-sm table.compact-sm:not(.hidden) {
-    display: table;
     min-width: 0;
+    width: 100%;
   }
-  .stack-sm table.compact-sm:not(.hidden) thead {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip-path: none;
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th) {
+    padding: 0.5rem 0.4rem;
   }
-  .stack-sm table.compact-sm:not(.hidden) tbody {
-    display: table-row-group;
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):first-child {
+    padding-left: 0.75rem;
   }
-  .stack-sm table.compact-sm:not(.hidden) tr,
-  .stack-sm table.compact-sm:not(.hidden) tbody tr {
-    display: table-row;
-    padding: 0;
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):last-child {
+    padding-right: 0.75rem;
   }
-  .stack-sm table.compact-sm:not(.hidden) tbody td,
-  .stack-sm table.compact-sm:not(.hidden) tbody th {
-    display: table-cell;
-    padding: 0.5rem 0.5rem;
-    white-space: nowrap;
+  .stack-sm table.compact-sm:not(.hidden) thead th {
+    white-space: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
   }
-  .stack-sm table.compact-sm:not(.hidden) tbody td[data-label]::before,
-  .stack-sm table.compact-sm:not(.hidden) tbody th[data-label]::before {
-    content: none;
-  }
-  .stack-sm table.compact-sm:not(.hidden) .sm-secondary {
-    display: none;
-  }
-}
-
-/* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
-@media (max-width: 639.98px) {
-  .stack-sm table:not(.hidden) tbody td.sm-secondary,
-  .stack-sm table:not(.hidden) tbody th.sm-secondary {
-    display: none;
+  .stack-sm table.compact-sm:not(.hidden) td[colspan] {
+    white-space: normal;
   }
 }

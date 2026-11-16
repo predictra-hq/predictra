@@ -104,7 +104,7 @@ export function LikelyCard({
           {multiples.length > 0 ? (
             <>
               <h3 className="mb-2 mt-4 text-sm font-semibold">{m.multiples}</h3>
-              <div className="grid gap-3 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                 {multiples.map((x) => (
                   <div
                     key={x.category}

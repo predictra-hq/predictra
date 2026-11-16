@@ -114,7 +114,7 @@ export async function MatchPredictions({
         {p.asOf} {formatDateTime(first.as_of)}
       </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {primary.map((g) => (
           <GroupTable key={`${g.market}-${g.line}`} group={g} />
         ))}
@@ -123,7 +123,7 @@ export async function MatchPredictions({
       {others.length > 0 ? (
         <details className="mt-4">
           <summary className="cursor-pointer text-sm font-medium">{p.otherMarkets}</summary>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((g) => (
               <GroupTable key={`${g.market}-${g.line}`} group={g} />
             ))}

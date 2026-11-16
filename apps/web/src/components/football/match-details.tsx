@@ -81,7 +81,7 @@ export function MatchDetailsCard({
       {rows.length === 0 && !hasLineups ? (
         <p className="mt-2 text-sm text-muted">{m.noDetails}</p>
       ) : (
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div>
             <h3 className="mb-2 text-sm font-semibold">{m.statistics}</h3>
             {rows.length === 0 ? (
@@ -119,7 +119,7 @@ export function MatchDetailsCard({
           <div>
             <h3 className="mb-2 text-sm font-semibold">{m.lineups}</h3>
             {hasLineups ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Lineup team={home} details={details} />
                 <Lineup team={away} details={details} />
               </div>
