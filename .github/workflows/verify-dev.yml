@@ -101,6 +101,10 @@ jobs:
               APP_URL=http://localhost:3000 SCREENSHOT_DIR="$RUNNER_TEMP/screenshots" PRINT_TEXT=1                 node apps/web/scripts/verify-accessibility.mjs ;;
           esac
 
+      - name: Errori del server (solo se la verifica fallisce)
+        if: failure() && env.CHECK == 'accessibility'
+        run: grep -iE "error|warn|unhandled|timeout" "$RUNNER_TEMP/web.log" | tail -80 || true
+
       # Screenshot di dashboard e lista utenti (account temporaneo, dati DEV), per
       # controllare a occhio il risultato. Conservati 3 giorni.
       - uses: actions/upload-artifact@v6
