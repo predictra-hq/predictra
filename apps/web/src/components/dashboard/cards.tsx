@@ -503,7 +503,7 @@ export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) 
 
 // --- Certezze ------------------------------------------------------------------------
 
-/** Le giocate più probabili delle prossime 72 ore (probabilità combinata modello/mercato). */
+/** Le giocate più probabili delle prossimi 7 giorni (probabilità combinata modello/mercato). */
 export async function CertaintiesCard() {
   const d = getMessages().dashboard;
   const picks = await loadHomeCertainties().catch(() => null);

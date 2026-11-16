@@ -16,7 +16,7 @@ import { getMessages } from "@/lib/i18n";
 export const metadata: Metadata = { title: "Home" };
 
 /**
- * Home: in alto le certezze delle prossime 72 ore, sotto bankroll, schedine consigliate
+ * Home: in alto le certezze delle prossimi 7 giorni, sotto bankroll, schedine consigliate
  * e stato del sistema. Le partite hanno la loro pagina. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
  * dato non è disponibile. Le notifiche compaiono solo quando ce ne sono.
  */
