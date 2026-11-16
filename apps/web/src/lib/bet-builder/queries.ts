@@ -15,6 +15,7 @@ import { cache } from "react";
 import { marketConsensus } from "./bollette";
 import { bestItalianPrices, LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
 import { matchMarkets, type Outcome, usedProbability } from "./market";
+import { inChunks } from "@/lib/chunks";
 import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { ManualSelection } from "./evaluate";
@@ -302,30 +303,25 @@ export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
   const end = new Date(now.getTime() + MANUAL_HORIZON_DAYS * 86_400_000);
   // Prima le partite in programma, poi le previsioni per partita (vedi upcomingMatchIds).
   const ids = await upcomingMatchIds(now, end);
-  const rows: LikelyRow[] = [];
-  for (let i = 0; i < ids.length; i += 200) {
-    const chunk = ids.slice(i, i + 200);
-    // Circa 35 righe per partita: oltre le 1.000 righe servono più pagine.
-    rows.push(
-      ...(await selectAll<LikelyRow>(
-        (from, to) =>
-          supabase
-            .from("v_active_predictions")
-            .select(
-              "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
-            )
-            .in("match_id", chunk)
-            .in("market", Object.keys(LIKELY_MARKETS))
-            .order("match_id")
-            .order("market")
-            .order("line", { nullsFirst: true })
-            .order("selection")
-            .range(from, to),
-        "previsioni",
-      )),
-    );
-  }
-  return rows;
+  // Circa 35 righe per partita: gruppi da 25 partite stanno in una pagina, in parallelo.
+  return inChunks(ids, 25, (chunk) =>
+    selectAll<LikelyRow>(
+      (from, to) =>
+        supabase
+          .from("v_active_predictions")
+          .select(
+            "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+          )
+          .in("match_id", chunk)
+          .in("market", Object.keys(LIKELY_MARKETS))
+          .order("match_id")
+          .order("market")
+          .order("line", { nullsFirst: true })
+          .order("selection")
+          .range(from, to),
+      "previsioni",
+    ),
+  );
 }
 
 /**
@@ -333,10 +329,16 @@ export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
  * indicate. `italian` distingue le quote giocabili (bookmaker italiani, ADR 0028); tutte
  * insieme danno la probabilità di mercato senza margine.
  */
+/** Elenco dei bookmaker, letto una volta per richiesta anche con molti gruppi di quote. */
+const listBookmakers = cache(async () => {
+  const supabase = await createClient();
+  return supabase.from("bookmakers").select("code, title, italian_market");
+});
+
 export async function listLatestOdds(matchIds: readonly number[]): Promise<LatestOddsRow[]> {
   if (matchIds.length === 0) return [];
   const supabase = await createClient();
-  const books = await supabase.from("bookmakers").select("code, title, italian_market");
+  const books = await listBookmakers();
   if (books.error) throw new BetBuilderDataUnavailable("bookmaker", books.error);
   const titles = new Map((books.data ?? []).map((b) => [String(b.code), String(b.title)]));
   const italian = new Set(
@@ -441,6 +443,7 @@ export async function listPastProposals(
 export const loadPicksData = cache(async () => {
   const rows = await listLikelyRows(new Date());
   const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
-  const odds = await listLatestOdds(matchIds);
+  // Circa 200 righe di quote per partita: gruppi da 5, in parallelo.
+  const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk));
   return { rows, prices: bestItalianPrices(odds), consensus: marketConsensus(odds) };
 });
