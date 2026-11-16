@@ -50,4 +50,7 @@ export const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   security: KeyRound,
   preferences: Settings2,
   profile: CircleUserRound,
+  groupBets: ShieldCheck,
+  groupFootball: Trophy,
+  tabMoney: Wallet,
 };

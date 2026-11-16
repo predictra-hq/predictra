@@ -78,3 +78,13 @@ Attivare Ask PREDICTRA con **Groq (opzione A)** come fornitore e **Cloudflare Wo
 ## Alternativa
 
 Se la proposta non è approvata: Ask PREDICTRA resta disattivata nella v1. L'etichetta "M8" nella navigazione diventa "Non attiva nella v1", per non far pensare che arrivi in questa milestone.
+
+## Aggiornamento del 16/11/2026: dati della stagione in corso e risposte leggibili
+
+Segnalazione del proprietario: alla domanda sul Napoli la risposta citava 8 partite e 11 punti, mentre in classifica erano 11 partite e 15 punti.
+
+- **Causa.** `statistiche_squadra` prendeva le due stagioni con l'id più alto. Lo storico 2022–2024 è stato caricato dopo la stagione in corso, quindi ha id più alti: uscivano stagioni vecchie, senza dire quali.
+- **Correzione.** Lo strumento ora sceglie la stagione per data d'inizio (`currentSeasonRows`, testata), dà una riga per competizione con nome della competizione, stagione e posizione in classifica. `classifica` sceglie la stagione più recente per etichetta e una sola competizione.
+- **Strumenti nuovi, in sola lettura:** `partite_campionato` (prossime o ultime partite di un campionato) e `giocate_piu_probabili` (le stesse della pagina Certezze). Le probabilità restano quelle del modello e del mercato: l'assistente le legge, non le calcola.
+- **Prompt.** Deve chiamare sempre uno strumento prima di rispondere sul calcio e dire a quale competizione e stagione si riferisce un dato.
+- **Formato.** L'assistente può usare `**grassetto**` ed elenchi con `- `; l'interfaccia li disegna (`lib/ask/rich-text.ts`, testato) e toglie gli altri simboli. Il controllo sui numeri non cambia.

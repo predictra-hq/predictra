@@ -61,14 +61,33 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
   },
 ];
 
-/** Barra in basso sul telefono: le pagine di tutti i giorni. */
+/**
+ * Barra in basso sul telefono: le stesse sezioni del menu laterale. Ogni voce apre la prima
+ * pagina della sezione e resta accesa su tutte le sue pagine; le altre pagine della sezione
+ * sono le schede in alto (`SectionNav`). Profilo raccoglie account e amministrazione.
+ */
+const sectionTab = (key: NavItem["key"], groupId: string): NavItem => {
+  const items = MAIN_NAV_GROUPS.find((g) => g.id === groupId)!.items;
+  return { key, href: items[0]!.href, alsoMatch: items.slice(1).map((i) => i.href) };
+};
+
 export const BOTTOM_NAV: readonly NavItem[] = [
-  { key: "dashboard", href: "/dashboard" },
-  { key: "matchCenter", href: "/match-center" },
-  { key: "certainties", href: "/certezze" },
-  { key: "betBuilder", href: "/bet-builder" },
-  { key: "profile", href: "/settings", alsoMatch: ["/bankroll", "/tracker"] },
+  sectionTab("dashboard", "home"),
+  sectionTab("groupBets", "bets"),
+  sectionTab("groupFootball", "football"),
+  sectionTab("tabMoney", "money"),
+  {
+    key: "profile",
+    href: "/settings",
+    alsoMatch: ["/admin", "/models", "/data-center", "/markets", "/statistics"],
+  },
 ];
+
+/** Sezione del menu a cui appartiene la pagina, se ha più di una vista. */
+export function sectionOf(pathname: string): NavGroup | null {
+  const group = MAIN_NAV_GROUPS.find((g) => g.items.some((i) => isNavItemActive(i, pathname)));
+  return group && group.items.length > 1 ? group : null;
+}
 
 /** Schede interne delle sezioni di amministrazione: pagine che parlano della stessa cosa. */
 export const ADMIN_SECTIONS = {
