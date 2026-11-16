@@ -212,3 +212,15 @@ Banco di prova, stima su 2024-25 e verifica su 2025-26 (1.751 partite). Combinaz
 
 - `market`: ancora solo 19 partite finite con quote e previsione. LogLoss modello 0,8136, mercato 0,8072, combinata al 50% 0,8063, al 70% 0,8057: differenze sotto il rumore, il peso resta 0,5.
 - `stats`: tiri in porta e xG solo su 168 partite (una competizione). Sulle partite con statistiche Dixon-Coles (0,9638) resta meglio di Poisson corretto con gli xG (0,9653): nessun cambio. Da ripetere quando le statistiche coprono più campionati.
+
+### Giorni di riposo (16/11/2026)
+
+Banco di prova, stima su 2024-25 (1.732 partite) e verifica su 2025-26 (1.751). Correzione della previsione attuale con i giorni di riposo calcolati dalle sole partite di campionato (le coppe non sono nei dati del banco):
+
+| Variante                               | Log Loss stima | Log Loss verifica |
+| -------------------------------------- | -------------- | ----------------- |
+| Previsione attuale                     | 0,9836         | 0,9926            |
+| Differenza di riposo casa − ospite     | 0,9831         | 0,9929            |
+| Riposo corto (≤ 3 giorni) casa, ospite | 0,9826         | 0,9955            |
+
+Migliora la stagione di stima e peggiora quella mai vista: è adattamento. **Non adottato.** Da riprovare solo con il calendario completo di coppe nazionali ed europee.
