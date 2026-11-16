@@ -24,6 +24,7 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const m = getMessages();
   const d = m.dashboard;
+  const canMonitor = hasPermission(user.roles, "agents.monitor");
 
   return (
     <>
@@ -44,21 +45,28 @@ export default async function DashboardPage() {
         <CertaintiesCard />
       </Suspense>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <Suspense fallback={<CardSkeleton />}>
           <BankrollCard />
         </Suspense>
         <Suspense fallback={<CardSkeleton />}>
           <SchedineCard />
         </Suspense>
-        <Suspense fallback={<CardSkeleton />}>
-          <SystemStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
-        </Suspense>
       </div>
 
-      <Suspense fallback={null}>
-        <NotificationsCard />
-      </Suspense>
+      {/* Stato tecnico e avvisi dell'agente: solo per chi gestisce il sistema. */}
+      {canMonitor ? (
+        <>
+          <div className="mt-4">
+            <Suspense fallback={<CardSkeleton />}>
+              <SystemStatusCard canMonitor />
+            </Suspense>
+          </div>
+          <Suspense fallback={null}>
+            <NotificationsCard />
+          </Suspense>
+        </>
+      ) : null}
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>
     </>

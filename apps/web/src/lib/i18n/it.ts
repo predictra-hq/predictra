@@ -93,12 +93,10 @@ export const it = {
   dashboard: {
     title: "Home",
     welcome: "Bentornato",
-    mfaWarning:
-      "La 2FA non è attiva sul tuo account: attivala per proteggere l'accesso (obbligatoria per gli amministratori).",
-    mfaWarningAction: "Attiva la 2FA",
-    certaintiesTitle: "Certezze delle prossime 72 ore",
-    certaintiesEmpty:
-      "Nessuna giocata dall'80% in su nelle prossime 72 ore: apri Certezze per vedere le altre soglie.",
+    mfaWarning: "Proteggi il tuo account con il codice di verifica (2FA).",
+    mfaWarningAction: "Attiva",
+    certaintiesTitle: "Le più sicure dei prossimi 3 giorni",
+    certaintiesEmpty: "Nessuna giocata abbastanza sicura nei prossimi 3 giorni.",
     activeModel: "Modello attivo",
     noActiveModel: "Nessun modello attivo",
     brier: "Brier",
@@ -106,7 +104,7 @@ export const it = {
     belowBaseline: "Non supera il riferimento",
     trainedOn: "Partite di addestramento",
     yourBankroll: "Il tuo bankroll",
-    noBankroll: "Nessun bankroll: creane uno per tracciare le giocate.",
+    noBankroll: "Crea un bankroll per segnare le tue giocate.",
     createBankroll: "Crea un bankroll",
     balance: "Saldo",
     available: "Disponibile",
@@ -149,10 +147,10 @@ export const it = {
     },
     agentStatus: "Stato agente",
     dataFreshness: "Freschezza dati",
-    noData: "Nessun dato",
+    noData: "Non disponibile ora, riprova tra poco.",
     lastUpdate: "Ultimo aggiornamento",
     systemTitle: "Stato del sistema",
-    schedineEmpty: "Nessuna schedina per ora: le quote arrivano nelle 48 ore prima delle partite.",
+    schedineEmpty: "Le schedine compaiono 1–2 giorni prima delle partite.",
   },
   security: {
     title: "Sicurezza",
@@ -590,8 +588,7 @@ export const it = {
       "PREDICTRA non piazza scommesse e non garantisce vincite: le proposte sono stime soggette a incertezza. Il valore atteso (EV) è calcolato sulle probabilità del modello, non è un guadagno sicuro. Gioca responsabilmente.",
     bollette: {
       title: "Schedine consigliate",
-      description:
-        "Per ogni turno, una multipla pronta per profilo di rischio. In ogni partita si sceglie, tra le giocate abbastanza probabili per il profilo, quella con il valore più alto: la quota che paga di più rispetto al rischio. Niente quote bassissime messe solo perché sicure. Quote reali di bookmaker italiani.",
+      description: "Multiple pronte per il prossimo turno, con quote reali di bookmaker italiani.",
       profiles: { SOLID: "Solida", BALANCED: "Equilibrata", HIGH: "Alta quota" },
       profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
       register: "L'ho giocata",
@@ -601,22 +598,19 @@ export const it = {
       registerSelection: "{profile} · {n} selezioni",
       advice: "Puntata consigliata per «{name}»: {stake}",
       adviceCapped: "ridotta al tuo stake massimo",
-      adviceNone:
-        "Per «{name}» nessuna puntata consigliata: a questa quota la schedina non ha valore.",
-      adviceHint: "Un quarto di Kelly, al massimo il 2% del disponibile. Solo informativo.",
+      adviceNone: "Per «{name}» meglio non giocarla: la quota è troppo bassa.",
+      adviceHint: "Calcolata sul tuo bankroll: euro interi, minimo 2 €.",
       legs: "{n} selezioni",
       totalOdds: "Quota totale",
       winProbability: "Probabilità di vincita",
       value: "Valore",
       valueShort: "valore",
-      valueHint:
-        "Valore atteso per 1 € puntato: probabilità × quota − 1. Positivo vuol dire che la quota paga più del rischio secondo modello e mercato; non è un guadagno sicuro.",
+      valueHint: "Quanto paga la quota rispetto al rischio: positivo vuol dire che conviene.",
       round: "Turno {round}",
       oddsRead: "Quote lette il {at}",
-      oddsOld: "Quote lette il {at}: ricontrollale dal bookmaker prima di giocare.",
-      empty:
-        "Nessuna schedina per ora: servono almeno due partite con una quota italiana aggiornata e una probabilità che rispetta le soglie. Le quote si raccolgono nelle 48 ore prima delle partite: le schedine compaiono a ridosso del turno. Non forziamo una schedina pur di proporne una.",
-      note: "Come si legge: la probabilità è prudente, la media tra quella del modello e quella del mercato (quote di tutti i bookmaker senza margine), come nelle proposte con valore. La probabilità di vincita è quella che escano tutte le selezioni, considerando le partite indipendenti. Valore = probabilità × quota − 1: si scartano le quote che pagano meno del giusto e i valori troppo alti per essere credibili. Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+      oddsOld: "Quote del {at}: ricontrollale prima di giocare.",
+      empty: "Le schedine compaiono 1–2 giorni prima delle partite, quando arrivano le quote.",
+      note: "Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
     },
     likely: {
       title: "Le più probabili",
@@ -725,8 +719,7 @@ export const it = {
     stakeWin: "Vinci {payout} (guadagno {profit})",
     stakeWinProbability: "probabilità {p}",
     stakeLose: "Perdi {stake}",
-    stakeNote:
-      "Calcolo sulla quota della proposta e sulla probabilità del modello: è una stima, non una garanzia.",
+    stakeNote: "È una stima, non una garanzia.",
     correlationIndependence:
       "Partite diverse: la probabilità è il prodotto delle probabilità delle selezioni (le partite sono considerate indipendenti).",
     correlationNone: "Singola: probabilità della previsione del modello.",

@@ -3,7 +3,6 @@ import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeSimulation } from "@/components/bet-builder/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import {
-  BOLLETTA_RULES,
   buildBollette,
   oddsAreOld,
   type Bolletta,
@@ -49,7 +48,6 @@ function BollettaCard({
   bankroll: AdviceBankroll | null;
 }) {
   const m = getMessages().betBuilder.bollette;
-  const rule = BOLLETTA_RULES[bolletta.profile];
   const old = oddsAreOld(bolletta, now);
   const advice = bankroll ? bollettaAdvice(bolletta, bankroll) : null;
   const advised = advice?.kelly ? advice.kelly : null;
@@ -63,12 +61,6 @@ function BollettaCard({
           {fillTemplate(m.legs, { n: bolletta.picks.length })}
         </Badge>
       </div>
-      <p className="mt-1 text-xs text-muted">
-        {fillTemplate(m.profileHint, {
-          p: formatPercent(rule.minProbability, 0),
-          price: formatOdds(rule.minPrice),
-        })}
-      </p>
 
       <dl className="mt-3 grid grid-cols-3 gap-2">
         <div className="rounded-lg border border-border bg-surface px-3 py-2">
