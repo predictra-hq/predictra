@@ -1,5 +1,6 @@
 import "server-only";
 import type { ActivePredictionRow } from "@predictra/shared-types";
+import { inChunks } from "@/lib/chunks";
 import { createClient } from "@/lib/supabase/server";
 import { PredictionsUnavailable } from "@/lib/predictions/queries";
 import { BANDS, CERTAINTY_MARKETS } from "./logic";
@@ -32,7 +33,7 @@ async function pagedPredictions(
 }
 
 /** Partite per gruppi: `match_id` è la chiave del DISTINCT ON della vista e usa l'indice. */
-const ID_CHUNK = 200;
+const ID_CHUNK = 40;
 /** Orizzonte delle previsioni del motore (prossimi 10 giorni) con un margine. */
 const UPCOMING_DAYS = 14;
 
@@ -43,26 +44,21 @@ export async function predictionsFor(
   relation: "v_active_predictions" | "v_pre_kickoff_predictions" = "v_active_predictions",
 ): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();
-  const out: ActivePredictionRow[] = [];
-  for (let i = 0; i < ids.length; i += ID_CHUNK) {
-    const chunk = ids.slice(i, i + ID_CHUNK) as number[];
-    out.push(
-      ...(await pagedPredictions(what, (from, to) =>
-        supabase
-          .from(relation)
-          .select("*")
-          .in("match_id", chunk)
-          .in("market", [...CERTAINTY_MARKETS])
-          .gte("probability", MIN_PROBABILITY)
-          .order("match_id", { ascending: true })
-          .order("market", { ascending: true })
-          .order("selection", { ascending: true })
-          .order("line", { ascending: true })
-          .range(from, to),
-      )),
-    );
-  }
-  return out;
+  return inChunks(ids, ID_CHUNK, (chunk) =>
+    pagedPredictions(what, (from, to) =>
+      supabase
+        .from(relation)
+        .select("*")
+        .in("match_id", chunk)
+        .in("market", [...CERTAINTY_MARKETS])
+        .gte("probability", MIN_PROBABILITY)
+        .order("match_id", { ascending: true })
+        .order("market", { ascending: true })
+        .order("selection", { ascending: true })
+        .order("line", { ascending: true })
+        .range(from, to),
+    ),
+  );
 }
 
 /** Previsioni sopra la soglia minima per le partite non ancora iniziate. */

@@ -4,6 +4,7 @@ import type { ActivePredictionRow } from "@predictra/shared-types";
 import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
 import { bestItalianPrices, type ItalianPrice } from "@/lib/bet-builder/likely";
 import { listLatestOdds } from "@/lib/bet-builder/queries";
+import { inChunks } from "@/lib/chunks";
 import { selectPicks, type MarketLookup, type Pick } from "./logic";
 import {
   predictionsFor,
@@ -23,10 +24,8 @@ const matchIds = (rows: readonly ActivePredictionRow[]) => [
 
 /** Ultime quote a gruppi di partite, per tenere corto l'indirizzo della richiesta. */
 async function oddsFor(ids: readonly number[]) {
-  const out = [];
-  for (let i = 0; i < ids.length; i += 200)
-    out.push(...(await listLatestOdds(ids.slice(i, i + 200))));
-  return out;
+  // Circa 200 righe di quote per partita: gruppi da 5 stanno in una pagina, 8 in parallelo.
+  return inChunks(ids, 5, (chunk) => listLatestOdds(chunk));
 }
 
 export function marketLookup(consensus: ReadonlyMap<string, number>): MarketLookup {
