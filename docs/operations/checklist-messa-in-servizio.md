@@ -145,7 +145,9 @@ Note:
 
 - [ ] Logout e nuovo login: viene chiesto il codice 2FA.
 - [ ] _Amministrazione → Inviti → Crea invito_ per un `Utente`: compare il link e l'attivazione funziona.
+- [ ] Il link di invito incollato in una chat (WhatsApp o Telegram, con anteprima) funziona ancora quando il destinatario lo apre e preme _Continua_.
 - [ ] _Revoca_ di un invito: il link non funziona più.
+- [ ] Invito aperto ma non completato → _Revoca_ → _Crea invito_ per la stessa email: compare un nuovo link.
 - [ ] _Amministrazione → Utenti → Link reset password_: la nuova password funziona.
 - [ ] _Sospendi_ un utente: viene bloccato. _Riattiva_.
 - [ ] _Amministrazione → Audit_ mostra le azioni.
