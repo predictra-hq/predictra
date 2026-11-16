@@ -10,6 +10,7 @@ import {
   clv,
   computeMetrics,
   flatStake,
+  playableStake,
   kellyFraction,
   kellyStake,
   lossSince,
@@ -154,6 +155,23 @@ describe("stake suggerito (ADR 0031)", () => {
       limits: { max_stake: 15, max_open_bets: null, max_daily_loss: null, max_weekly_loss: null },
     });
     expect(limited).toEqual({ flat: 10, kelly: 15, kellyNote: null, cappedByLimit: true });
+  });
+});
+
+describe("puntata giocabile", () => {
+  it("euro interi e minimo 2 €: niente centesimi", () => {
+    expect(playableStake(0.97, 100, null)).toBe(2);
+    expect(playableStake(12.34, 100, null)).toBe(12);
+    expect(playableStake(0, 100, null)).toBe(0);
+    expect(playableStake(5, 1.5, null)).toBe(0);
+    expect(playableStake(5, 100, 1)).toBe(0);
+    expect(playableStake(9.9, 100, 7.5)).toBe(7);
+  });
+
+  it("i suggerimenti sono giocabili", () => {
+    // Kelly 0,97 € su una schedina: si suggeriscono 2 €, non i centesimi.
+    expect(suggestStake({ available: 97, probability: 0.52, odds: 2 }).kelly).toBe(2);
+    expect(suggestStake({ available: 1234.56 }).flat).toBe(12);
   });
 });
 
