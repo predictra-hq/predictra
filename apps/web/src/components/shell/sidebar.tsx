@@ -1,8 +1,8 @@
 "use client";
 
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import {
   BarChart3,
   Bot,
@@ -17,6 +17,7 @@ import {
   LogOut,
   Mail,
   Menu,
+  RefreshCw,
   MessageCircleQuestion,
   ScrollText,
   Settings2,
@@ -110,7 +111,7 @@ function NavLinks({
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                 active
                   ? "bg-positive-soft font-medium text-positive-strong shadow-[inset_2px_0_0_var(--color-positive)]"
-                  : "text-muted hover:bg-surface-2 hover:text-fg",
+                  : "text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2",
               )}
             >
               {icon}
@@ -121,6 +122,31 @@ function NavLinks({
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Ricarica i dati della pagina senza perdere la posizione: nell'app installata sul
+ * telefono non c'è il pulsante di ricarica del browser.
+ */
+function RefreshButton({ label }: { label: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  return (
+    <button
+      type="button"
+      onClick={() => startTransition(() => router.refresh())}
+      disabled={pending}
+      aria-busy={pending}
+      aria-label={label}
+      className="mr-auto cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2"
+    >
+      <RefreshCw
+        size={20}
+        aria-hidden="true"
+        className={cn(pending && "motion-safe:animate-spin")}
+      />
+    </button>
   );
 }
 
@@ -223,7 +249,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
   return (
     <>
       {/* Telefono: menu a sinistra, logo a destra. */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg px-4 lg:hidden">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -234,6 +260,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
+        <RefreshButton label={messages.nav.refresh} />
         <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
           {messages.app.name}
           <span className="-ml-2 text-positive" aria-hidden="true">

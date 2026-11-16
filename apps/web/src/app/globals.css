@@ -70,23 +70,57 @@
   --color-veil: rgb(0 0 0 / 0.03);
 }
 
-html,
-body {
+html {
   background: var(--color-bg);
-  color: var(--color-fg);
+  /* Su telefono il riscontro al tocco lo danno gli stati `active`, non il velo grigio del browser. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
+  color: var(--color-fg);
   font-family: var(--font-sans);
   font-feature-settings: "tnum" 1;
-  /* Alone smeraldo appena accennato in alto: dà profondità senza togliere contrasto. */
+  /* Caselle di spunta e radio nel colore del tema. */
+  accent-color: var(--color-positive);
+}
+
+/*
+ * Alone appena accennato in alto: dà profondità senza togliere contrasto. Sta su un livello
+ * fisso a parte e non su `background-attachment: fixed`, che su telefono fa ridisegnare
+ * tutta la pagina a ogni scorrimento.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(56rem 28rem at 78% -8rem, rgb(16 185 129 / 0.08), transparent 70%),
     radial-gradient(40rem 24rem at 8% -10rem, rgb(96 165 250 / 0.05), transparent 70%);
   background-repeat: no-repeat;
-  background-attachment: fixed;
-  /* Caselle di spunta e radio nel colore del tema. */
-  accent-color: var(--color-positive);
+}
+
+/* Niente attesa del doppio tocco: link e controlli rispondono subito. */
+a,
+button,
+summary,
+label,
+select,
+input,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Ingresso della pagina a ogni cambio di sezione (app/(app)/template.tsx). */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.page-enter {
+  animation: page-enter 180ms ease-out;
 }
 
 ::selection {
