@@ -37,6 +37,8 @@
 
 ## Lavoro in corso (per chi riprende)
 
+**16/11/2026, rifinitura dell'interfaccia (corsia B, `Alfry1299` con Claude Code).** In `dev`: logo, menu a gruppi, app installabile sul telefono con barra in basso, tema chiaro, puntata consigliata e «L'ho giocata» sulle schedine, campionato preferito (#84, #86, #93–#96). PR aperte da unire: avviso di nuova versione (#97), fluidità su telefono (#98), striscia dell'esito e andamento in Home (#99). Nessuna migrazione: le scelte dell'utente restano in cookie. Nulla è stato provato nell'app in esecuzione da chi l'ha scritto: cosa guardare su DEV, cosa è stato escluso e perché sono in [interfaccia.md](interfaccia.md). Da decidere dal proprietario: tenere in memoria previsioni e quote per velocizzare la navigazione (tocca l'ADR 0006).
+
 **15/11/2026, pagina Certezze (`/certezze`).** Giocate del modello attivo sopra una soglia scelta (70–90%) su 1X2, doppia chance, under/over a linea mezza, gol/no gol e gol di una squadra, senza doppioni implicati; verifica per fascia sulle partite finite degli ultimi 120 giorni (quante volte la fascia è uscita rispetto al previsto). Solo letture su `v_active_predictions` e `v_match_results`: nessuna migrazione.
 
 M2 fase A3: risultati storici completi; statistiche e formazioni si scaricano da sole ogni giorno (job `api-football.details`).

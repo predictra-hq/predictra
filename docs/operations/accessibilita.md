@@ -4,9 +4,10 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
 
 ## Come si verifica
 
-- **Contrasti del tema:** test automatico in `apps/web/src/lib/theme-contrast.test.ts`, eseguito in CI. Legge i colori da `globals.css` e controlla due soglie su `bg`, `surface` e `surface-2`:
+- **Contrasti del tema:** test automatico in `apps/web/src/lib/theme-contrast.test.ts`, eseguito in CI. Legge i colori da `globals.css` e controlla, **per il tema scuro e per il tema chiaro**, tre soglie su `bg`, `surface` e `surface-2`:
   - testo almeno 4.5:1;
-  - bordo dei campi almeno 3:1.
+  - bordo dei campi almeno 3:1;
+  - testo del pulsante principale (`on-positive` su `positive`) almeno 4.5:1.
 - **Audit delle pagine:** _Actions → Verifica DEV → Run workflow_ con `check = accessibility`.
   - Il workflow avvia nel runner l'app del branch scelto, collegata a Supabase DEV.
   - Crea un Super Admin temporaneo con 2FA e un bankroll `DEMO`.
@@ -45,6 +46,17 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
 - Grafici SVG con `role="img"` e descrizione.
 - Avvisi dei form in un'area live.
 
+## Aggiunte del 16/11/2026 (rifinitura dell'interfaccia)
+
+Dettagli in [interfaccia.md](interfaccia.md). Per l'accessibilità:
+
+- **Tema chiaro:** stessi token del tema scuro, stesse soglie di contrasto, stesso test.
+- **Barra in basso sul telefono:** `nav` con nome proprio («Pagine principali»), voce attiva con `aria-current`.
+- **Selettori a pulsante** (tema, campionato preferito): stato con `aria-pressed`, funzionano senza JavaScript perché sono form con Server Action.
+- **Barre delle probabilità e striscia dell'esito:** decorative; il dato resta sempre scritto accanto (numero, colonna Stato).
+- **Animazioni** (dissolvenza al cambio pagina, voce che pulsa): ridotte a zero con «riduci movimento», come le altre.
+- **Avviso di nuova versione:** `role="status"`, pulsante raggiungibile da tastiera.
+
 ## Limiti
 
 - axe trova circa un terzo dei problemi WCAG. Restano da provare a mano, con NVDA o VoiceOver, l'ordine di lettura e gli annunci delle Server Action.
@@ -53,3 +65,5 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
   - il Tracker con giocate, perché l'account temporaneo non ne ha.
 
   Il controllo le include in automatico quando i dati ci sono.
+
+- Le aggiunte del 16/11/2026 non sono ancora passate dall'audit con axe: l'ultimo run (15/11) è precedente. In particolare **il tema chiaro non è mai stato controllato pagina per pagina**: il test dei contrasti copre i token, non ogni combinazione usata nelle pagine. Va rilanciato _Verifica DEV_ con `check = accessibility`, e lo script va esteso per ripetere le pagine con il cookie `predictra-theme=light`.
