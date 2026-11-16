@@ -30,6 +30,7 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { betOutcome } from "@/lib/bankroll/outcome";
 import { parsePeriod, PERIODS, timeWindows } from "@/lib/bankroll/period";
 import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/lib/bankroll/kelly";
 import {
@@ -43,9 +44,18 @@ import {
 import { usedProbability } from "@/lib/bet-builder/market";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent } from "@/lib/predictions/format";
+import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
 
 export const metadata: Metadata = { title: "Giocate fatte" };
+
+/** Striscia a sinistra della riga: l'esito si riconosce senza leggere la colonna Stato. */
+const OUTCOME_STRIPE = {
+  open: "border-l-border-strong",
+  won: "border-l-positive",
+  lost: "border-l-negative",
+  even: "border-l-warning",
+} as const;
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 
@@ -475,7 +485,13 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
             </thead>
             <tbody>
               {bets.map((bet) => (
-                <tr key={bet.id} className="border-b border-border align-top last:border-0">
+                <tr
+                  key={bet.id}
+                  className={cn(
+                    "border-b border-l-[3px] border-border align-top last:border-b-0",
+                    OUTCOME_STRIPE[betOutcome(bet.status, bet.profit)],
+                  )}
+                >
                   <td className="whitespace-nowrap px-3 py-3 text-muted">
                     {formatDateTime(bet.placed_at)}
                   </td>
