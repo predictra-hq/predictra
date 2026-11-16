@@ -262,10 +262,11 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
             <NavGroupSection key={group.id} group={group} messages={messages} onNavigate={close} />
           ))}
           {admin.length > 0 ? (
-            <div className="mt-4">
-              <p className={cn(GROUP_TITLE, "mb-1")}>{messages.nav.administration}</p>
-              <NavLinks items={admin} messages={messages} onNavigate={close} />
-            </div>
+            <NavGroupSection
+              group={{ id: "admin", label: "administration", collapsible: true, items: admin }}
+              messages={messages}
+              onNavigate={close}
+            />
           ) : null}
           <div className="mt-4 border-t border-border pt-3">
             <NavLinks items={settings} messages={messages} onNavigate={close} />
