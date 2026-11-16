@@ -10,6 +10,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions/format";
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Modello" };
 
@@ -63,6 +64,7 @@ export default async function ModelsPage() {
 
   return (
     <>
+      <SectionTabs section="system" current="/models" />
       <PageHeader title={mi.title} description={mi.description} />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">

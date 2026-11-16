@@ -28,6 +28,7 @@ import {
   listOddsCoverage,
   ODDS_PROVIDER,
 } from "@/lib/odds/queries";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Quote" };
 
@@ -183,6 +184,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
 
   return (
     <>
+      <SectionTabs section="football" current="/markets" />
       <PageHeader title={m.title} description={m.description} />
 
       <Alert tone="warning" className="mb-6">

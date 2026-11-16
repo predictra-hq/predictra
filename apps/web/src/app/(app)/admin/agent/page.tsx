@@ -31,6 +31,7 @@ import {
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { retryDeadJob } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Agente" };
 
@@ -102,6 +103,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
 
   return (
     <>
+      <SectionTabs section="system" current="/admin/agent" />
       <PageHeader title={a.title} description={a.description} />
       {unavailable ? <Alert tone="negative">{a.unavailable}</Alert> : null}
 

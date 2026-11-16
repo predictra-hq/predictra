@@ -6,6 +6,8 @@ export interface NavItem {
   href: string;
   /** Prefisso che rende attiva la voce, se diverso da `href` (es. più pagine sotto `/settings`). */
   match?: string;
+  /** Altre pagine della stessa sezione (schede interne) che rendono attiva la voce. */
+  alsoMatch?: readonly string[];
   /** Milestone in cui la sezione diventa disponibile; se presente la voce è disattivata. */
   milestone?: number;
   permission?: Permission;
@@ -26,7 +28,13 @@ export interface NavGroup {
  * Gli indirizzi delle pagine non cambiano: cambiano solo ordine, gruppi e nomi nel menu.
  */
 export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
-  { id: "home", items: [{ key: "dashboard", href: "/dashboard" }] },
+  {
+    id: "home",
+    items: [
+      { key: "dashboard", href: "/dashboard" },
+      { key: "askPredictra", href: "/ask" },
+    ],
+  },
   {
     id: "bets",
     label: "groupBets",
@@ -51,7 +59,6 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
       { key: "tracker", href: "/tracker" },
     ],
   },
-  { id: "ask", items: [{ key: "askPredictra", href: "/ask" }] },
 ];
 
 /** Barra in basso sul telefono: le pagine di tutti i giorni. */
@@ -63,17 +70,49 @@ export const BOTTOM_NAV: readonly NavItem[] = [
   { key: "tracker", href: "/tracker" },
 ];
 
-/** Amministrazione: gestione e pagine tecniche (quote, statistiche, modello, dati). */
+/** Schede interne delle sezioni di amministrazione: pagine che parlano della stessa cosa. */
+export const ADMIN_SECTIONS = {
+  system: [
+    { key: "modelIntelligence", href: "/models" },
+    { key: "agent", href: "/admin/agent" },
+    { key: "dataCenter", href: "/data-center" },
+  ],
+  people: [
+    { key: "users", href: "/admin/users" },
+    { key: "invitations", href: "/admin/invitations" },
+    { key: "audit", href: "/admin/audit" },
+  ],
+  football: [
+    { key: "marketIntelligence", href: "/markets" },
+    { key: "statisticsCenter", href: "/statistics" },
+    { key: "teamAliases", href: "/admin/team-aliases" },
+  ],
+} as const satisfies Record<string, readonly NavItem[]>;
+
+export type AdminSection = keyof typeof ADMIN_SECTIONS;
+
+const others = (section: AdminSection) => ADMIN_SECTIONS[section].slice(1).map((t) => t.href);
+
+/** Amministrazione: tre sezioni, ognuna con le sue schede interne. */
 export const ADMIN_NAV: readonly NavItem[] = [
-  { key: "modelIntelligence", href: "/models", permission: "agents.monitor" },
-  { key: "marketIntelligence", href: "/markets", permission: "agents.monitor" },
-  { key: "statisticsCenter", href: "/statistics", permission: "agents.monitor" },
-  { key: "dataCenter", href: "/data-center", permission: "agents.monitor" },
-  { key: "users", href: "/admin/users", permission: "users.read" },
-  { key: "invitations", href: "/admin/invitations", permission: "invitations.manage" },
-  { key: "audit", href: "/admin/audit", permission: "audit.read" },
-  { key: "teamAliases", href: "/admin/team-aliases", permission: "providers.manage" },
-  { key: "agent", href: "/admin/agent", permission: "agents.monitor" },
+  {
+    key: "adminSystem",
+    href: "/models",
+    alsoMatch: others("system"),
+    permission: "agents.monitor",
+  },
+  {
+    key: "adminPeople",
+    href: "/admin/users",
+    alsoMatch: others("people"),
+    permission: "users.read",
+  },
+  {
+    key: "adminFootball",
+    href: "/markets",
+    alsoMatch: others("football"),
+    permission: "agents.monitor",
+  },
 ];
 
 /** Una sola voce: Sicurezza e Preferenze sono due schede della stessa sezione. */
@@ -89,6 +128,6 @@ export const SETTINGS_TABS = [
 
 /** Vero se `pathname` è la pagina della voce o una sua sottopagina. */
 export function isNavItemActive(item: NavItem, pathname: string): boolean {
-  const base = item.match ?? item.href;
-  return pathname === base || pathname.startsWith(`${base}/`);
+  const bases = [item.match ?? item.href, ...(item.alsoMatch ?? [])];
+  return bases.some((base) => pathname === base || pathname.startsWith(`${base}/`));
 }

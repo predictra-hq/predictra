@@ -8,6 +8,7 @@ import {
   Bot,
   CalendarDays,
   ChevronDown,
+  Cpu,
   Database,
   Layers,
   LayoutDashboard,
@@ -52,6 +53,9 @@ export const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   audit: ScrollText,
   teamAliases: Tags,
   agent: Bot,
+  adminSystem: Cpu,
+  adminPeople: Users,
+  adminFootball: TrendingUp,
   settings: Settings2,
 };
 
@@ -230,11 +234,15 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <span className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
+        <Link
+          href="/dashboard"
+          aria-label={`${messages.app.name} · ${messages.nav.dashboard}`}
+          className="flex items-center gap-2.5 font-bold tracking-[0.2em]"
+        >
           {messages.app.name}
           <span className="-ml-2 text-positive">.</span>
           <Logo className="size-7 shrink-0" />
-        </span>
+        </Link>
       </div>
 
       <aside
@@ -244,7 +252,11 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
           open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
-        <div className="hidden h-16 items-center gap-3 px-5 lg:flex">
+        <Link
+          href="/dashboard"
+          aria-label={`${messages.app.name} · ${messages.nav.dashboard}`}
+          className="hidden h-16 items-center gap-3 px-5 lg:flex"
+        >
           <Logo className="size-8 shrink-0" />
           <div>
             <p className="font-bold tracking-[0.2em]">
@@ -255,7 +267,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
               {messages.app.tagline}
             </p>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Navigazione principale">
           {groups.map((group) => (

@@ -12,6 +12,7 @@ import {
   listRecentRuns,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Dati" };
 
@@ -46,6 +47,7 @@ export default async function DataCenterPage() {
 
   return (
     <>
+      <SectionTabs section="system" current="/data-center" />
       <PageHeader title={d.title} description={d.description} />
 
       <h2 className="mb-3 text-lg font-semibold">{d.sources}</h2>
