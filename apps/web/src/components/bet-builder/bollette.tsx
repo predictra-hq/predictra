@@ -101,6 +101,14 @@ function BollettaCard({
               <span className="block truncate text-xs text-muted">
                 {formatDateTime(p.kickoffAt)} · {p.bookmaker}
               </span>
+              {p.better ? (
+                <span className="block truncate text-xs text-warning">
+                  {fillTemplate(m.betterElsewhere, {
+                    price: formatOdds(p.better.price),
+                    bookmaker: p.better.bookmaker,
+                  })}
+                </span>
+              ) : null}
             </span>
             <span className="shrink-0 text-right font-mono">
               <span className="block text-base font-semibold">{formatOdds(p.price)}</span>

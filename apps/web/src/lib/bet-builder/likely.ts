@@ -68,6 +68,8 @@ export interface ItalianPrice {
   price: number;
   bookmaker: string;
   observedAt: string;
+  /** Un altro bookmaker italiano paga di più della quota mostrata (quella del sito dell'utente). */
+  better?: { price: number; bookmaker: string };
 }
 
 /** Mercato di quote corrispondente (ADR 0029): 1X2 → h2h, Totale gol 2,5 → totals_2_5. */
@@ -94,23 +96,34 @@ export interface LatestOddsRow {
 /**
  * Quota italiana per (partita, mercato, esito), tra le righe già filtrate: quella del
  * bookmaker dell'utente (`preferred`, il sito del suo bankroll) quando c'è, altrimenti la
- * migliore tra i bookmaker italiani.
+ * migliore tra i bookmaker italiani. Quando si mostra la quota del sito dell'utente e
+ * un altro bookmaker italiano paga di più, `better` dice dove e quanto (confronto quote).
  */
 export function bestItalianPrices(
   rows: readonly LatestOddsRow[],
   preferred: string | null = null,
 ): Map<string, ItalianPrice> {
   const best = new Map<string, ItalianPrice>();
+  const mine = new Map<string, ItalianPrice>();
   for (const r of rows) {
     if (r.match_id === null || r.italian === false) continue;
     const key = `${r.match_id}|${r.market}|${r.selection}`;
-    const price = Number(r.price);
+    const candidate = { price: Number(r.price), bookmaker: r.bookmaker, observedAt: r.observed_at };
     const cur = best.get(key);
-    const mine = preferred !== null && r.bookmaker === preferred;
-    const curMine = preferred !== null && cur?.bookmaker === preferred;
-    if (!cur || (mine && !curMine) || (mine === curMine && price > cur.price)) {
-      best.set(key, { price, bookmaker: r.bookmaker, observedAt: r.observed_at });
+    if (!cur || candidate.price > cur.price) best.set(key, candidate);
+    if (preferred !== null && r.bookmaker === preferred) {
+      const own = mine.get(key);
+      if (!own || candidate.price > own.price) mine.set(key, candidate);
     }
+  }
+  for (const [key, own] of mine) {
+    const top = best.get(key)!;
+    best.set(
+      key,
+      top.price > own.price
+        ? { ...own, better: { price: top.price, bookmaker: top.bookmaker } }
+        : own,
+    );
   }
   return best;
 }

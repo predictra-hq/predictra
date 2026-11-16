@@ -71,6 +71,8 @@ export interface BollettaPick extends LikelyPick {
   marketProbability: number | null;
   price: number;
   bookmaker: string;
+  /** Quota più alta su un altro bookmaker italiano, se quella mostrata è del sito dell'utente. */
+  better?: { price: number; bookmaker: string } | null;
   /** Quando è stata letta la quota. */
   observedAt: string;
   /** probabilità × quota − 1. */
@@ -212,6 +214,7 @@ export function playablePicks(
       marketProbability: market,
       price: it.price,
       bookmaker: it.bookmaker,
+      better: it.better ?? null,
       observedAt: it.observedAt,
       edge,
     });
