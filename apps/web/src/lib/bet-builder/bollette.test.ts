@@ -166,3 +166,41 @@ describe("schedine consigliate (valori DEMO)", () => {
     expect(buildBollette([row(1, "1X2", "HOME", 0.7)], prices)).toEqual([]);
   });
 });
+
+describe("una schedina consigliata non perde in media (valori DEMO)", () => {
+  it("le selezioni che porterebbero il valore sotto zero non entrano", () => {
+    // Probabilità 0,70: a quota 1,50 il valore è +5%, a 1,40 è −2% (ammesso da solo).
+    const rows = [1, 3, 5].map((m) => row(m, "1X2", "HOME", 0.7));
+    const good = buildBollette(
+      rows,
+      bestItalianPrices([odds(1, "h2h", "HOME", 1.5), odds(3, "h2h", "HOME", 1.5)]),
+    );
+    expect(good.length).toBeGreaterThan(0);
+    expect(good.every((b) => b.expectedValue >= 0)).toBe(true);
+
+    // Una conveniente e due appena sotto: entrano finché il valore complessivo resta ≥ 0.
+    const mixed = buildBollette(
+      rows,
+      bestItalianPrices([
+        odds(1, "h2h", "HOME", 1.5),
+        odds(3, "h2h", "HOME", 1.4),
+        odds(5, "h2h", "HOME", 1.4),
+      ]),
+    );
+    expect(mixed.length).toBeGreaterThan(0);
+    expect(mixed.every((b) => b.expectedValue >= 0)).toBe(true);
+
+    // +1,5% e −2%: insieme farebbero −0,5%, quindi la seconda non entra e la schedina non nasce.
+    const tooThin = buildBollette(
+      rows,
+      bestItalianPrices([odds(1, "h2h", "HOME", 1.45), odds(3, "h2h", "HOME", 1.4)]),
+    );
+    expect(tooThin).toEqual([]);
+  });
+
+  it("solo selezioni che non convengono: nessuna schedina", () => {
+    const rows = [1, 3].map((m) => row(m, "1X2", "HOME", 0.7));
+    const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.4), odds(3, "h2h", "HOME", 1.4)]);
+    expect(buildBollette(rows, prices)).toEqual([]);
+  });
+});

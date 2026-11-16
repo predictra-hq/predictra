@@ -34,6 +34,9 @@ import {
  * - per ogni partita, tra le selezioni che rispettano probabilità e quota minime del
  *   profilo, si sceglie quella con il valore più alto: "sicura" per la soglia, con il
  *   margine migliore tra quelle sicure. Tra le partite, prima quelle con più valore;
+ * - il valore dell'intera schedina non scende sotto `MIN_SLIP_VALUE` (zero): una selezione
+ *   che lo porterebbe sotto non entra. Meglio una schedina in meno che una che in media
+ *   fa perdere;
  * - se le selezioni valide sono meno di `MIN_LEGS`, quel profilo non viene proposto.
  */
 
@@ -63,6 +66,11 @@ export const MAX_EDGE = 0.15;
 /** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
 export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
 export const MIN_LEGS = 2;
+/**
+ * Valore atteso minimo dell'intera schedina (probabilità × quota totale − 1). Zero: non si
+ * consiglia una schedina che in media fa perdere, anche se ogni selezione è "sicura".
+ */
+export const MIN_SLIP_VALUE = 0;
 
 export interface BollettaPick extends LikelyPick {
   /** Probabilità del solo modello; `probability` è quella prudente usata per le scelte. */
@@ -243,10 +251,15 @@ function buildOne(
     if (!current || byValue(p, current) < 0) perMatch.set(p.matchId, p);
   }
   const chosen: BollettaPick[] = [];
+  let value = 0;
   const teams = new Set<string>();
   for (const p of [...perMatch.values()].sort(byValue)) {
     if (chosen.length >= rule.legs) break;
     if (teams.has(p.home) || teams.has(p.away)) continue;
+    // Una schedina consigliata non deve perdere in media: una selezione che porterebbe il
+    // valore complessivo sotto zero non entra (le più convenienti vengono prima).
+    if ((1 + value) * (1 + p.edge) - 1 < MIN_SLIP_VALUE) continue;
+    value = (1 + value) * (1 + p.edge) - 1;
     teams.add(p.home).add(p.away);
     chosen.push(p);
   }

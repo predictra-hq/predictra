@@ -654,7 +654,8 @@ export const it = {
       oddsRead: "Quote lette il {at}",
       betterElsewhere: "Altrove paga di più: {price} su {bookmaker}",
       oddsOld: "Quote del {at}: ricontrollale prima di giocare.",
-      empty: "Le schedine compaiono 1–2 giorni prima delle partite, quando arrivano le quote.",
+      empty:
+        "Nessuna schedina conviene con le quote di adesso. Le quote arrivano 1–2 giorni prima delle partite: riprova più avanti.",
       note: "Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
     },
     likely: {
