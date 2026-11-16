@@ -1,4 +1,5 @@
 import "server-only";
+import { userBookmaker } from "@/lib/bankroll/queries";
 import type {
   ActivePredictionRow,
   ActiveBetProposalRow,
@@ -454,5 +455,10 @@ export const loadPicksData = cache(async () => {
   const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
   // Circa 200 righe di quote per partita: gruppi da 5, in parallelo.
   const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk), 4);
-  return { rows, prices: bestItalianPrices(odds), consensus: marketConsensus(odds) };
+  const site = await userBookmaker();
+  return {
+    rows,
+    prices: bestItalianPrices(odds, site?.tracked ?? null),
+    consensus: marketConsensus(odds),
+  };
 });

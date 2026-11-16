@@ -1,4 +1,5 @@
 import "server-only";
+import { userBookmaker } from "@/lib/bankroll/queries";
 import { cache } from "react";
 import type { ActivePredictionRow } from "@predictra/shared-types";
 import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
@@ -47,7 +48,12 @@ export interface UpcomingData {
 export const loadUpcoming = cache(async (): Promise<UpcomingData> => {
   const rows = await upcomingHighProbability();
   const odds = await oddsFor(matchIds(rows));
-  return { rows, market: marketLookup(marketConsensus(odds)), prices: bestItalianPrices(odds) };
+  const site = await userBookmaker();
+  return {
+    rows,
+    market: marketLookup(marketConsensus(odds)),
+    prices: bestItalianPrices(odds, site?.tracked ?? null),
+  };
 });
 
 export interface VerificationData extends Verification {
