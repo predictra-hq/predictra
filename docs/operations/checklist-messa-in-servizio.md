@@ -144,11 +144,11 @@ Note:
 ## FASE E — Verifica finale
 
 - [ ] Logout e nuovo login: viene chiesto il codice 2FA.
-- [ ] _Administration → Inviti → Crea invito_ per un `Utente`: compare il link e l'attivazione funziona.
+- [ ] _Amministrazione → Inviti → Crea invito_ per un `Utente`: compare il link e l'attivazione funziona.
 - [ ] _Revoca_ di un invito: il link non funziona più.
-- [ ] _Administration → Utenti → Link reset password_: la nuova password funziona.
+- [ ] _Amministrazione → Utenti → Link reset password_: la nuova password funziona.
 - [ ] _Sospendi_ un utente: viene bloccato. _Riattiva_.
-- [ ] _Administration → Audit_ mostra le azioni.
+- [ ] _Amministrazione → Audit_ mostra le azioni.
 
 ---
 
