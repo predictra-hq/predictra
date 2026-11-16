@@ -92,6 +92,7 @@ export const it = {
     teamAliases: "Alias squadre",
     agent: "Agente",
     quickNav: "Pagine principali",
+    refresh: "Aggiorna i dati",
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
   },

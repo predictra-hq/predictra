@@ -1,11 +1,27 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { BOTTOM_NAV, isNavItemActive } from "./nav-config";
 import { NAV_ICONS } from "./sidebar";
+
+/** Contenuto di una voce: pulsa finché la pagina toccata non arriva, così il tocco si vede subito. */
+function TabContent({ children }: { children: ReactNode }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      className={cn(
+        "flex min-w-0 max-w-full flex-col items-center gap-0.5",
+        pending && "text-fg motion-safe:animate-pulse",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
 
 /**
  * Barra in basso sul telefono: le pagine di tutti i giorni a un tocco, senza aprire il
@@ -16,7 +32,7 @@ export function BottomNav({ messages }: { messages: Messages }) {
   return (
     <nav
       aria-label={messages.nav.quickNav}
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-bg pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <ul className="mx-auto flex max-w-lg">
         {BOTTOM_NAV.map((item) => {
@@ -28,12 +44,14 @@ export function BottomNav({ messages }: { messages: Messages }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-14 flex-col items-center justify-center gap-0.5 px-1 text-[11px]",
+                  "flex h-14 flex-col items-center justify-center px-1 text-[11px] transition-colors active:bg-surface-2",
                   active ? "font-medium text-positive-strong" : "text-muted hover:text-fg",
                 )}
               >
-                {Icon ? <Icon size={20} aria-hidden="true" /> : null}
-                <span className="max-w-full truncate">{messages.nav[item.key]}</span>
+                <TabContent>
+                  {Icon ? <Icon size={20} aria-hidden="true" /> : null}
+                  <span className="max-w-full truncate">{messages.nav[item.key]}</span>
+                </TabContent>
               </Link>
             </li>
           );
