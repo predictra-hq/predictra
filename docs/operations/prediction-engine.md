@@ -198,6 +198,10 @@ Comando `market` (sola lettura): partite finite degli ultimi 60 giorni con l'ult
 
 Prima misura ([run 48](https://github.com/predictra-hq/predictra/actions/runs/43728372630)), **19 partite**: modello 0,8136, mercato 0,8072, combinata con peso 0,5 (in uso) 0,8063, con peso 0,6–0,7 0,8057. La combinazione batte modello e mercato da soli; tra 0,5 e 0,7 la differenza è rumore su 19 partite: **peso invariato a 0,5**. Da rilanciare quando le partite saranno qualche centinaio.
 
+## Combinazione Dixon-Coles + Elo: stacking (16/11/2026)
+
+Banco di prova, stima su 2024-25 e verifica su 2025-26 (1.751 partite). Combinazione attuale (media 0,6/0,4): Log Loss 0,9926; media geometrica con gli stessi pesi 0,9927; stacking (regressione multinomiale sui logaritmi delle due previsioni, pesi per esito) 0,9945 sul 2025-26, pur migliorando la stagione di stima (0,9836 → 0,9821). È adattamento: **non adottato**, la media fissa resta la scelta più solida.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
