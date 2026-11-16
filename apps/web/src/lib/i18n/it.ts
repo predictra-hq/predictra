@@ -114,6 +114,8 @@ export const it = {
     available: "Disponibile",
     openBets: "Giocate aperte",
     roi: "ROI",
+    hitRateRecent: "Vinte (ultimi {days} giorni)",
+    trendRecent: "ultimi {days} giorni",
     bankrollsCount: "{n} bankroll",
     upcomingTitle: "Prossime partite",
     upcomingDescription: "Calendario con le probabilità 1X2 del modello attivo, dalla più vicina.",
