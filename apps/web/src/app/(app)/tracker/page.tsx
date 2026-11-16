@@ -152,7 +152,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       </FilterForm>
 
       <h2 className="mb-3 text-lg font-semibold">{t.metrics}</h2>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {BANKROLL_KINDS.map((kind) => {
           const { metrics, clv, curve } = metricsFor(kind);
           return (
@@ -204,7 +204,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
           </Link>
         </Alert>
       ) : (
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
           {/* Modulo chiuso finché non serve: la pagina resta corta. */}
           <details
             open={prefill.open}
@@ -216,7 +216,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                 {t.addBetOpen}
               </span>
             </summary>
-            <ActionForm action={addBet} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <ActionForm action={addBet} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label={t.bankroll} htmlFor="bet-bankroll">
                 <Select id="bet-bankroll" name="bankrollId" required>
                   {bankrolls.map((x) => (
@@ -351,7 +351,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
           {kellyMatches.length === 0 ? (
             <p className="mt-3 text-sm text-muted">{k.noMatches}</p>
           ) : (
-            <FilterForm className="mt-4 grid gap-3 sm:grid-cols-[1fr_11rem_9rem_auto] sm:items-end">
+            <FilterForm className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_11rem_9rem_auto] sm:items-end">
               <input type="hidden" name="p" value={period} />
               <Field label={k.match} htmlFor="km">
                 <Select

@@ -19,7 +19,7 @@ export function CompetitionFilter({
   submitLabel: string;
 }) {
   return (
-    <FilterForm className="mb-4 grid gap-3 sm:grid-cols-[minmax(0,24rem)_auto] sm:items-end">
+    <FilterForm className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,24rem)_auto] sm:items-end">
       <Field label={label} htmlFor="c">
         <Select id="c" name="c" defaultValue={selected ?? undefined}>
           {competitions.map((c) =>

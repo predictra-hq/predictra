@@ -265,7 +265,7 @@ export async function UpcomingMatchesCard() {
               <li key={match.matchId}>
                 <Link
                   href={`/match-center/${match.matchId}`}
-                  className="-mx-2 grid gap-2 rounded-lg px-2 py-3 hover:bg-surface-2 sm:grid-cols-[1fr_14rem] sm:items-center"
+                  className="-mx-2 grid grid-cols-1 gap-2 rounded-lg px-2 py-3 hover:bg-surface-2 sm:grid-cols-[1fr_14rem] sm:items-center"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">
@@ -407,7 +407,7 @@ export function ExploreGrid() {
       <h2 id="explore-title" className="mb-3 text-lg font-semibold">
         {m.dashboard.explore}
       </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {EXPLORE.map(({ key, href, icon: Icon }) => (
           <li key={key}>
             <Link

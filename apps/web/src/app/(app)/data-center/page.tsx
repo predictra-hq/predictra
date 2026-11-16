@@ -51,7 +51,7 @@ export default async function DataCenterPage() {
       <PageHeader title={d.title} description={d.description} />
 
       <h2 className="mb-3 text-lg font-semibold">{d.sources}</h2>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {sources.map((s) => (
           <Card key={s.provider}>
             <div className="flex flex-wrap items-center justify-between gap-2">

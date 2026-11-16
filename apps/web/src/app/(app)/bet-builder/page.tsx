@@ -241,7 +241,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                           {m.categories[c]}{" "}
                           <span className="font-normal text-muted">({m.categoryHints[c]})</span>
                         </h3>
-                        <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                           {group.map((p) => (
                             <ProposalCard
                               key={p.proposal_id}
