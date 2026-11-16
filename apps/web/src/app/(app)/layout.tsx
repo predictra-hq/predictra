@@ -2,6 +2,7 @@ import { hasPermission, highestRole } from "@predictra/shared-types";
 import { ADMIN_NAV, MAIN_NAV_GROUPS, SETTINGS_NAV } from "@/components/shell/nav-config";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { Sidebar } from "@/components/shell/sidebar";
+import { UpdateNotice } from "@/components/shell/update-notice";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
       <BottomNav messages={m} />
+      <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />
     </div>
   );
 }

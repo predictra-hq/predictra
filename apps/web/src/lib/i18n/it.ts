@@ -20,6 +20,8 @@ export const it = {
     availableFrom: "Disponibile da",
     loading: "Caricamento in corso…",
     skipToContent: "Vai al contenuto",
+    updateAvailable: "È disponibile una nuova versione di PREDICTRA.",
+    updateAction: "Aggiorna",
     actions: "Azioni",
     confirmDelete: "Confermi l'eliminazione? L'operazione non si può annullare.",
     errorTitle: "Qualcosa non ha funzionato",
