@@ -94,3 +94,17 @@ def test_esiti_dalla_matrice():
     m = np.zeros((3, 3))
     m[1, 0], m[1, 1], m[0, 2] = 0.5, 0.3, 0.2
     assert outcome_probabilities(m) == pytest.approx([0.5, 0.3, 0.2])
+
+
+def test_btts_tarato_verso_il_50_per_cento():
+    """ADR 0053: stessa direzione della matrice, meno sicurezza; Sì e No sommano a 1."""
+    from predictra_engine.markets import calibrate_btts
+
+    assert 0.5 < calibrate_btts(0.7) < 0.7
+    assert 0.3 < calibrate_btts(0.3) < 0.5
+    assert calibrate_btts(0.6) > calibrate_btts(0.5) > calibrate_btts(0.4)
+    m = score_matrix(1.6, 1.0, rho=-0.05)
+    groups = {(p.market, p.selection): p.probability for p in derive_markets(m)}
+    yes, no = groups[("BTTS", "YES")], groups[("BTTS", "NO")]
+    assert abs(yes + no - 1) < 1e-12
+    assert abs(yes - calibrate_btts(float(m[1:, 1:].sum()))) < 1e-12

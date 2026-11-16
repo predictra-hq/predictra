@@ -37,6 +37,20 @@ def _over_under(dist: np.ndarray, line: float) -> tuple[float, float, float | No
     return over, under, push
 
 
+# Entrambe segnano: la matrice dei risultati è troppo sicura (ADR 0053). Sul banco di
+# prova la taratura σ(a·logit p + b) migliora il Log Loss in tutte e due le stagioni di
+# verifica e in tutti i campionati: 0,6870 → 0,6844 (2024-25) e 0,6897 → 0,6870 (2025-26).
+BTTS_SLOPE = 0.6
+BTTS_SHIFT = 0.05
+
+
+def calibrate_btts(p: float) -> float:
+    """Probabilità di «entrambe segnano» tarata: più vicina al 50% di quella della matrice."""
+    p = min(max(p, 1e-9), 1 - 1e-9)
+    z = BTTS_SLOPE * float(np.log(p / (1 - p))) + BTTS_SHIFT
+    return float(1 / (1 + np.exp(-z)))
+
+
 def derive_markets(m: np.ndarray) -> list[MarketPrice]:
     h, d, a = (float(x) for x in outcome_probabilities(m))
     out = [
@@ -60,7 +74,7 @@ def derive_markets(m: np.ndarray) -> list[MarketPrice]:
             MarketPrice("TOTAL_GOALS", line, "UNDER", under, push),
         ]
 
-    btts = float(m[1:, 1:].sum())
+    btts = calibrate_btts(float(m[1:, 1:].sum()))
     out += [
         MarketPrice("BTTS", None, "YES", btts, None),
         MarketPrice("BTTS", None, "NO", 1 - btts, None),
