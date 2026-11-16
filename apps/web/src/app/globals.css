@@ -38,7 +38,7 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius-card: 0.875rem;
+  --radius-card: 1rem;
 }
 
 :root {
@@ -99,6 +99,23 @@ body::before {
     radial-gradient(56rem 28rem at 78% -8rem, rgb(16 185 129 / 0.08), transparent 70%),
     radial-gradient(40rem 24rem at 8% -10rem, rgb(96 165 250 / 0.05), transparent 70%);
   background-repeat: no-repeat;
+}
+
+/*
+ * Telefono: i campi sotto i 16 px fanno ingrandire la pagina su iPhone quando ci si
+ * scrive, e la pagina resta ingrandita. Sotto i 640 px i campi sono sempre a 16 px.
+ */
+@media (max-width: 639.98px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* App sul telefono: niente rimbalzo che trascina tutta la pagina oltre i bordi. */
+body {
+  overscroll-behavior-y: none;
 }
 
 /* Niente attesa del doppio tocco: link e controlli rispondono subito. */

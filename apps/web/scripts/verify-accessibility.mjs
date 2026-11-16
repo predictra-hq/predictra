@@ -67,6 +67,7 @@ const PAGES = [
   "/bankroll",
   "/tracker",
   "/ask",
+  "/settings",
   "/settings/preferences",
   "/settings/security",
   "/admin/users",
@@ -245,6 +246,24 @@ async function printText(page, label) {
   console.log(`----- TESTO ${label} -----\n${compact}\n----- FINE ${label} -----`);
 }
 
+/**
+ * Con PRINT_SHOTS=1 stampa nel log una foto leggera (JPEG in base64, a pezzi) delle pagine
+ * a larghezza telefono: serve a rivederle quando l'artefatto del run non è scaricabile.
+ */
+async function printShot(page, label) {
+  if (process.env.PRINT_SHOTS !== "1" || (page.viewportSize()?.width ?? 1280) >= 640) return;
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  const buffer = await page.screenshot({
+    type: "jpeg",
+    quality: 45,
+    fullPage: true,
+    clip: { x: 0, y: 0, width: 375, height: Math.min(height, 2600) },
+  });
+  const data = buffer.toString("base64");
+  for (let i = 0; i < data.length; i += 4000)
+    console.log(`SHOT|${label}|${data.slice(i, i + 4000)}`);
+}
+
 async function audit(page, path, label = path) {
   runtime = [];
   const response = await page.goto(`${appUrl}${path}`, { waitUntil: "networkidle" });
@@ -252,6 +271,7 @@ async function audit(page, path, label = path) {
   const landed = new URL(page.url()).pathname;
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
   await printText(page, label);
+  await printShot(page, label);
   if (process.env.SCREENSHOT_DIR && SCREENSHOTS.has(label)) {
     const name = label.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
     await page.screenshot({ path: `${process.env.SCREENSHOT_DIR}/${name}.png`, fullPage: true });

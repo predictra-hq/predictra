@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { getMessages } from "@/lib/i18n";
 import { SETTINGS_TABS } from "./nav-config";
 
@@ -6,7 +7,14 @@ import { SETTINGS_TABS } from "./nav-config";
 export function SettingsTabs({ current }: { current: (typeof SETTINGS_TABS)[number]["key"] }) {
   const nav = getMessages().nav;
   return (
-    <nav aria-label={nav.settings} className="mb-4 flex flex-wrap gap-2">
+    <nav aria-label={nav.settings} className="mb-4 flex flex-wrap items-center gap-2">
+      <Link
+        href="/settings"
+        className="-ml-1 mr-1 inline-flex items-center gap-0.5 rounded-lg py-1.5 pr-2 text-sm text-muted hover:text-fg"
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+        {nav.profile}
+      </Link>
       {SETTINGS_TABS.map((tab) => (
         <Link
           key={tab.key}
