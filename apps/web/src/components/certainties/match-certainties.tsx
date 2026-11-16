@@ -1,4 +1,4 @@
-import { PickChip } from "@/components/certainties/pick-chip";
+import { PickRow } from "@/components/certainties/pick-chip";
 import { Card, CardTitle } from "@/components/ui/primitives";
 import { marketConsensus } from "@/lib/bet-builder/bollette";
 import { bestItalianPrices } from "@/lib/bet-builder/likely";
@@ -6,8 +6,6 @@ import { listLatestOdds } from "@/lib/bet-builder/queries";
 import { marketLookup } from "@/lib/certainties/load";
 import { selectPicks } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
-import { fillTemplate } from "@/lib/odds/format";
-import { formatPercent } from "@/lib/predictions/format";
 import { getMatchPredictions } from "@/lib/predictions/queries";
 
 /** Soglia delle certezze nel dettaglio partita: la più bassa della pagina Certezze. */
@@ -32,12 +30,10 @@ export async function MatchCertainties({ matchId, status }: { matchId: number; s
   const prices = bestItalianPrices(odds);
   return (
     <Card className="mb-4">
-      <CardTitle>
-        {fillTemplate(c.matchTitle, { value: formatPercent(MATCH_THRESHOLD, 0) })}
-      </CardTitle>
-      <ul className="mt-3 flex flex-wrap gap-2">
+      <CardTitle>{c.matchTitle}</CardTitle>
+      <ul className="mt-2 divide-y divide-border">
         {picks.map((p) => (
-          <PickChip key={`${p.market}|${p.line ?? ""}|${p.selection}`} pick={p} prices={prices} />
+          <PickRow key={`${p.market}|${p.line ?? ""}|${p.selection}`} pick={p} prices={prices} />
         ))}
       </ul>
     </Card>

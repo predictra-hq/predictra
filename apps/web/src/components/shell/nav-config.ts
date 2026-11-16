@@ -27,45 +27,16 @@ export interface NavGroup {
  */
 export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
   {
-    id: "home",
+    id: "main",
     items: [
       { key: "dashboard", href: "/dashboard" },
-      { key: "askPredictra", href: "/ask" },
-    ],
-  },
-  {
-    id: "bets",
-    label: "groupBets",
-    items: [
       { key: "certainties", href: "/certezze" },
       { key: "betBuilder", href: "/bet-builder" },
-    ],
-  },
-  {
-    id: "football",
-    label: "groupFootball",
-    items: [
       { key: "matchCenter", href: "/match-center" },
       { key: "leagueIntelligence", href: "/leagues" },
-    ],
-  },
-  {
-    id: "money",
-    label: "groupMoney",
-    items: [
       { key: "bankroll", href: "/bankroll" },
       { key: "tracker", href: "/tracker" },
-    ],
-  },
-  {
-    id: "system",
-    label: "groupSystem",
-    collapsible: true,
-    items: [
-      { key: "marketIntelligence", href: "/markets" },
-      { key: "statisticsCenter", href: "/statistics" },
-      { key: "modelIntelligence", href: "/models" },
-      { key: "dataCenter", href: "/data-center" },
+      { key: "askPredictra", href: "/ask" },
     ],
   },
 ];
@@ -79,7 +50,12 @@ export const BOTTOM_NAV: readonly NavItem[] = [
   { key: "tracker", href: "/tracker" },
 ];
 
+/** Amministrazione: gestione e pagine tecniche (quote, statistiche, modello, dati). */
 export const ADMIN_NAV: readonly NavItem[] = [
+  { key: "modelIntelligence", href: "/models", permission: "agents.monitor" },
+  { key: "marketIntelligence", href: "/markets", permission: "agents.monitor" },
+  { key: "statisticsCenter", href: "/statistics", permission: "agents.monitor" },
+  { key: "dataCenter", href: "/data-center", permission: "agents.monitor" },
   { key: "users", href: "/admin/users", permission: "users.read" },
   { key: "invitations", href: "/admin/invitations", permission: "invitations.manage" },
   { key: "audit", href: "/admin/audit", permission: "audit.read" },

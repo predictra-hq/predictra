@@ -14,8 +14,7 @@ import {
 } from "@/lib/predictions/format";
 import { getMatchPredictions, hasActiveModel } from "@/lib/predictions/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-
-type Components = Partial<Record<"sample" | "calibration" | "agreement" | "data", number>>;
+import { fillTemplate } from "@/lib/odds/format";
 
 /** Barra decorativa: la probabilità si legge a colpo d'occhio, il numero resta accanto. */
 function ProbabilityBar({ value }: { value: number }) {
@@ -99,8 +98,6 @@ export async function MatchPredictions({
   const first = rows[0]!;
   const score = Number(first.confidence_score);
   const band: ConfidenceBand = confidenceBand(score);
-  const oneXTwo = rows.find((r) => r.market === "1X2");
-  const components = ((oneXTwo?.explanation?.confidence ?? {}) as Components) || {};
   const groups = groupPredictions(rows);
   const primary = groups.filter(isPrimaryGroup);
   const others = groups.filter((g) => !isPrimaryGroup(g));
@@ -110,23 +107,12 @@ export async function MatchPredictions({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>{p.title}</CardTitle>
         <Badge tone={confidenceTone(score)}>
-          {p.confidence}: {score.toFixed(2).replace(".", ",")} ({p.confidenceBand[band]})
+          {fillTemplate(p.reliabilityBadge, { band: p.confidenceBand[band] })}
         </Badge>
       </div>
       <p className="mt-1 text-xs text-muted">
-        {p.modelVersion}: {m.modelIntelligence.modelNames[first.model_key]} ({first.model_version})
-        · {p.asOf} {formatDateTime(first.as_of)}
+        {p.asOf} {formatDateTime(first.as_of)}
       </p>
-      <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        {(Object.keys(p.components) as (keyof typeof p.components)[]).map((k) => (
-          <div key={k} className="flex gap-1">
-            <dt>{p.components[k]}</dt>
-            <dd className="font-mono">
-              {components[k] === undefined ? "–" : Number(components[k]).toFixed(2)}
-            </dd>
-          </div>
-        ))}
-      </dl>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {primary.map((g) => (

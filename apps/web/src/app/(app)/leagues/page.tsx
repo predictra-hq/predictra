@@ -91,22 +91,22 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
       <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>
       <Card scrollLabel={m.overviewTitle} className="mb-8 p-0">
-        <table className="w-full min-w-[1040px] text-left text-sm">
+        <table className="compact-sm w-full text-left text-sm sm:min-w-[1040px]">
           <caption className="sr-only">{m.overviewTitle}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
             <tr>
               <Th>{m.competition}</Th>
-              <Th>{m.season}</Th>
+              <Th className="sm-secondary">{m.season}</Th>
               <Th className="text-right">{m.matches}</Th>
               <Th className="text-right">{m.avgGoals}</Th>
-              <Th className="text-right">{m.avgHome}</Th>
-              <Th className="text-right">{m.avgAway}</Th>
-              <Th className="text-right">{m.homeWin}</Th>
-              <Th className="text-right">{m.draw}</Th>
-              <Th className="text-right">{m.awayWin}</Th>
+              <Th className="sm-secondary text-right">{m.avgHome}</Th>
+              <Th className="sm-secondary text-right">{m.avgAway}</Th>
+              <Th className="sm-secondary text-right">{m.homeWin}</Th>
+              <Th className="sm-secondary text-right">{m.draw}</Th>
+              <Th className="sm-secondary text-right">{m.awayWin}</Th>
               <Th className="text-right">{m.over25}</Th>
               <Th className="text-right">{m.bothScored}</Th>
-              <Th className="text-right">{m.homeAdvantage}</Th>
+              <Th className="sm-secondary text-right">{m.homeAdvantage}</Th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +152,9 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                       <td className="px-3 py-2 text-right font-mono">
                         {formatPercent(Number(s.both_scored_rate), 0)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">{formatSigned(adv?.goals)}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
+                        {formatSigned(adv?.goals)}
+                      </td>
                     </>
                   ) : (
                     <td colSpan={10} className="px-3 py-2 text-muted">
@@ -215,7 +217,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                   {m.group}: {g.title}
                 </h3>
               ) : null}
-              <table className="w-full min-w-[760px] text-left text-sm">
+              <table className="compact-sm w-full text-left text-sm sm:min-w-[760px]">
                 <caption className="sr-only">
                   {m.standingsTitle} {competition.name} {g.title}
                 </caption>
@@ -224,14 +226,14 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                     <Th>{m.position}</Th>
                     <Th>{m.team}</Th>
                     <Th className="text-right">{m.played}</Th>
-                    <Th className="text-right">{m.won}</Th>
-                    <Th className="text-right">{m.drawn}</Th>
-                    <Th className="text-right">{m.lost}</Th>
-                    <Th className="text-right">{m.goalsFor}</Th>
-                    <Th className="text-right">{m.goalsAgainst}</Th>
+                    <Th className="sm-secondary text-right">{m.won}</Th>
+                    <Th className="sm-secondary text-right">{m.drawn}</Th>
+                    <Th className="sm-secondary text-right">{m.lost}</Th>
+                    <Th className="sm-secondary text-right">{m.goalsFor}</Th>
+                    <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
                     <Th className="text-right">{m.goalDifference}</Th>
                     <Th className="text-right">{m.points}</Th>
-                    <Th>{m.quality}</Th>
+                    <Th className="sm-secondary">{m.quality}</Th>
                   </tr>
                 </thead>
                 <tbody>
