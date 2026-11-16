@@ -28,6 +28,7 @@ Le sezioni marcate **(PR #97)**, **(PR #98)** e **(PR #99)** descrivono codice n
 - **Profilo** (`app/(app)/settings/page.tsx`): una sola voce nel menu. Mostra chi sei e porta a Sicurezza, Preferenze, Amministrazione (secondo i permessi) e all'uscita. Sicurezza e Preferenze restano due schede (`components/shell/settings-tabs.tsx`) con il ritorno al Profilo. Le icone delle voci stanno in `components/shell/nav-icons.ts`, usabile anche dalle pagine lato server.
 - **Barra in basso sul telefono** (`components/shell/bottom-nav.tsx`, voci in `BOTTOM_NAV`): le stesse sezioni del menu laterale, cioè Home, Pronostici, Calcio, Soldi, più Profilo. Ogni voce apre la prima pagina della sezione e resta accesa su tutte le sue pagine. Le altre pagine della sezione sono schede in alto (`components/shell/section-nav.tsx`, solo sotto `lg`): Home → Home, Chiedi a PREDICTRA; Pronostici → Certezze, Schedine; Calcio → Partite, Campionati; Soldi → Bankroll, Giocate fatte. Profilo raccoglie account e amministrazione. Chi aggiunge una pagina la mette nel gruppo giusto di `MAIN_NAV_GROUPS`: barra e schede si aggiornano da sole. Con `viewportFit: "cover"` barra e intestazione rispettano le zone dei gesti di iPhone (`env(safe-area-inset-*)`).
 - **Schede interne** (Schedine, Profilo, Amministrazione): classe `tab-strip` in `globals.css`. Sul telefono stanno su una riga che scorre di lato.
+- **Tabelle sul telefono** (`globals.css`): dentro `Card scrollLabel` e `ScrollRegion` ogni riga diventa una scheda a due colonne (etichetta sopra, valore sotto). `compact-sm` le lascia tabelle vere con le colonne `sm-secondary` nascoste (classifiche: l'intestazione deve avere le stesse classi delle celle). `limit-sm` mostra solo le prime 8 righe e una nota (`data-more`), per gli elenchi lunghi dell'amministrazione.
 - **Telefono, regole generali** (16/11/2026): campi a 16 px sotto i 640 px (altrimenti iPhone ingrandisce la pagina quando si scrive); descrizione sotto il titolo solo da 640 px in su; griglie sempre con `grid-cols-1` di base; avvertenze in piccolo a fondo pagina invece che in riquadri in cima.
 
 ## App sul telefono
@@ -108,3 +109,15 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 | Dopo la PR #98: alone di sfondo ancora visibile, scorrimento più fluido, dissolvenza gradita | iPhone                           |
 | Striscia dell'esito in tabella e nelle schede su telefono; grafico in Home con poche giocate | Giocate fatte, Home              |
 | Audit di accessibilità con tema chiaro e barra in basso                                      | _Verifica DEV_ (`accessibility`) |
+
+## Gestionale: funzioni del 16/11/2026
+
+| Funzione                                                                                                 | Dove                                  | Codice                                                                     |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------- |
+| Sito del bankroll, quote di quel sito, quota modificabile in «L'ho giocata»                              | Bankroll, Schedine, Certezze          | ADR 0051, `components/bet-builder/stake-box.tsx`                           |
+| Confronto quote: «Altrove paga di più» accanto alla quota del proprio sito                               | Schedine, Certezze, dettaglio partita | `bestItalianPrices` in `lib/bet-builder/likely.ts`                         |
+| Chiusura automatica delle giocate a partite finite                                                       | Giocate fatte, Bankroll, Home         | ADR 0030 (aggiornamento), `lib/bankroll/legs.ts`, `lib/bankroll/settle.ts` |
+| «Come sto andando»: per mese, tipo di giocata e sito                                                     | Giocate fatte                         | `lib/bankroll/breakdown.ts`                                                |
+| «Da non perdere»: giocate sopra soglia entro 36 ore, schedina con valore, giocate aperte e appena chiuse | Home; soglia in Preferenze (cookie)   | `lib/alerts.ts`, `AlertsCard` in `components/dashboard/cards.tsx`          |
+
+Non verificato con dati reali da chi le ha scritte: le quote del proprio sito e il confronto (l'utente di prova non ha un sito collegato e le quote erano ferme per la sosta), la chiusura automatica su una giocata vera, il riquadro «Da non perdere» con partite entro 36 ore. La logica di ognuna è coperta da test.
