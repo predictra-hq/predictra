@@ -1461,10 +1461,10 @@ export const it = {
     suggestions: "Puntata consigliata",
     tools: "Strumenti",
     suggestionsHint:
-      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per lo stake con Kelly usa il calcolatore qui sotto.",
+      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per una giocata precisa usa «Quanto puntare su una giocata» qui sotto.",
     flatSuggestion: "Flat",
     kelly: {
-      title: "Calcolatore Kelly",
+      title: "Quanto puntare su una giocata",
       howItWorks: "Come funziona",
       description:
         "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
@@ -1483,7 +1483,7 @@ export const it = {
       probability: "Probabilità usata (media)",
       fairOdds: "Quota equa (1/p)",
       expectedValue: "Valore atteso per 1 € puntato",
-      stake: "Stake Kelly",
+      stake: "Puntata suggerita",
       noValue: "Nessun valore: la quota è più bassa di quella equa, stake zero.",
       capped: "ridotto allo stake massimo dei tuoi limiti",
     },

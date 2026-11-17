@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
     sub.add_parser("stats", help="prova tiri e xG nel modello gol (sola lettura)")
     sub.add_parser("market", help="peso del mercato nella probabilità combinata (sola lettura)")
+    sub.add_parser("totals", help="taratura dei gol totali sui dati reali (sola lettura)")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -61,6 +62,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "market":
         for line in run_market(store, datetime.now(UTC).replace(microsecond=0)):
+            print(line, flush=True)
+        return 0
+    if args.command == "totals":
+        from .data import MatchResult
+        from .models import dixon_coles_model
+        from .totals_lab import run_totals
+
+        now = datetime.now(UTC).replace(microsecond=0)
+        results = [MatchResult.from_row(r) for r in store.training_results(now)]
+        for line in run_totals(dixon_coles_model(), results, now):
             print(line, flush=True)
         return 0
     if args.command == "stats":
