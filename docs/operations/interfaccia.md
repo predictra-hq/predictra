@@ -89,6 +89,33 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 - **Striscia dell'esito** nelle giocate fatte: verde vinta, rossa persa, gialla in pari, grigia aperta; esito in `lib/bankroll/outcome.ts`.
 - **Andamento in Home**: nel riquadro del bankroll, profitto cumulato e percentuale di giocate vinte degli ultimi 90 giorni. Come i totali del riquadro, somma bankroll reali e simulati.
 
+## Ampliamenti del 17/11/2026
+
+| Funzione                                                  | Stato               | PR         |
+| --------------------------------------------------------- | ------------------- | ---------- |
+| Pagina squadra e ricerca delle squadre                    | PR aperta, da unire | #103       |
+| Risultati esatti più probabili e movimento delle quote    | PR aperta, da unire | #104       |
+| Pagina Affidabilità                                       | PR aperta, da unire | #105       |
+| Squadre e campionati seguiti (contratto, poi interfaccia) | PR aperte, da unire | #106, #107 |
+| Notifiche sul telefono                                    | proposta, non fatta | ADR 0054   |
+
+Ordine di merge: #103 e #106 prima della #107, che le contiene entrambe. Quando le PR sono unite si aggiorna questa tabella.
+
+- **Pagina squadra** (`app/(app)/teams/[id]/page.tsx`): forma delle ultime 5, prossime partite, ultimi risultati, numeri delle stagioni in corso. Si apre toccando il nome di una squadra nel dettaglio partita, in classifica e nelle statistiche. Logica in `lib/football/team.ts`.
+- **Ricerca** (`/teams`, voce «Squadre» nel gruppo Calcio): per nome, almeno due lettere. `containsPattern` neutralizza i caratteri jolly di Postgres e i separatori dei filtri.
+- **Risultati più probabili** nel pannello previsioni: i cinque risultati esatti più probabili tra quelli già pubblicati dal motore (`topScores` in `lib/predictions/format.ts`). Nessun calcolo nuovo.
+- **Movimento delle quote** (`components/odds/odds-movement.tsx`, calcolo in `lib/odds/movement.ts`): 1X2, media dei bookmaker raccolti, dalla prima quota raccolta all'ultima. «Prima» non è l'apertura del bookmaker ma la prima raccolta di PREDICTRA. Compare solo se ci sono almeno due rilevamenti.
+- **Affidabilità** (`/affidabilita`, gruppo Pronostici): delle giocate date almeno al 70% prima della partita, quante sono uscite negli ultimi 60 giorni, per tipo di giocata e per campionato. Stesse regole della verifica delle Certezze (`lib/certainties/reliability.ts`); sotto le 20 giocate si mostra solo il conteggio.
+- **Seguiti** (`user_follows`, [identity.md](../data-dictionary/identity.md)): pulsante «Segui» sulla squadra, elenco nella pagina Squadre, prossime partite in Home. La stella del campionato preferito registra anche il campionato tra i seguiti: senza cookie, su un altro dispositivo, si parte da quello. Scritture con la sessione dell'utente; al più 50 seguiti.
+
+**Non provato nell'app in esecuzione** da chi l'ha scritto. Da guardare su DEV:
+
+- pagina squadra con una squadra che gioca in due competizioni (campionato e coppa);
+- movimento delle quote su una partita con molte raccolte: tempo di caricamento del dettaglio;
+- Affidabilità: i numeri devono coincidere con la verifica per fascia delle Certezze;
+- Segui / smetti di seguire, e il riquadro in Home;
+- la barra in basso e le schede di sezione con le voci nuove (Squadre, Affidabilità) su telefono.
+
 ## Scelte escluse
 
 - **Stemmi delle squadre:** non aggiunti. La documentazione delle fonti non copre l'uso delle immagini e API-Football dichiara di non dare licenza di pubblicazione ([api-football.md](../data-sources/api-football.md)); gli stemmi sono marchi dei club. Si riapre solo con una licenza verificata.
