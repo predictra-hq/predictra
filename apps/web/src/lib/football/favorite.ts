@@ -3,9 +3,9 @@ import { parseCompetitionCode } from "./format";
 
 /*
  * Campionato preferito: quello che Partite e Campionati aprono quando non se ne sceglie
- * uno. Resta in un cookie di questo browser: non è un dato personale e non richiede
- * modifiche al database. Per averlo su tutti i dispositivi servirebbe una colonna in
- * `user_preferences`, cioè una modifica al contratto con una PR dedicata.
+ * uno. Il cookie vale per questo browser; la stella lo registra anche tra i campionati
+ * seguiti (`user_follows`), così sugli altri dispositivi si parte da lì
+ * (`readFavoriteCompetitionAnywhere` in follows.ts).
  */
 export const FAVORITE_COMPETITION_COOKIE = "predictra-campionato";
 
