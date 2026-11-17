@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ChevronDown } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
@@ -229,27 +230,30 @@ async function CertaintiesContent() {
       {matches.length === 0 ? (
         <EmptyState>{c.empty}</EmptyState>
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           {groupByCompetition(
             matches,
             competitions.map((x) => x.id),
-          ).map((group) => (
-            <section
+          ).map((group, index) => (
+            <details
               key={group.competitionId ?? "altro"}
-              aria-labelledby={`comp-${group.competitionId ?? "altro"}`}
+              open={index === 0}
+              className="group rounded-[var(--radius-card)] border border-border bg-surface/40 p-3 sm:p-4"
             >
-              <h3
-                id={`comp-${group.competitionId ?? "altro"}`}
-                className="mb-2 flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-muted"
-              >
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted hover:text-fg [&::-webkit-details-marker]:hidden">
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className="shrink-0 transition-transform group-open:rotate-180"
+                />
                 {competitions.find((x) => x.id === group.competitionId)?.name ?? c.otherCompetition}
                 <span className="font-normal normal-case tracking-normal text-subtle">
                   {group.matches.length === 1
                     ? c.competitionCountOne
                     : fillTemplate(c.competitionCount, { count: String(group.matches.length) })}
                 </span>
-              </h3>
-              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              </summary>
+              <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {group.matches.map((match) => (
                   <li key={match.matchId}>
                     <Card className="h-full">
@@ -273,7 +277,7 @@ async function CertaintiesContent() {
                   </li>
                 ))}
               </ul>
-            </section>
+            </details>
           ))}
         </div>
       )}
