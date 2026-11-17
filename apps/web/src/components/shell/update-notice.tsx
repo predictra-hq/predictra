@@ -41,7 +41,7 @@ export function UpdateNotice({ labels }: { labels: { message: string; action: st
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-20 z-30 flex items-center justify-between gap-3 rounded-lg border border-positive/40 bg-surface px-4 py-3 text-sm shadow-lg lg:inset-x-auto lg:bottom-6 lg:right-6 lg:max-w-sm"
+      className="fixed inset-x-4 bottom-[calc(4.75rem+max(env(safe-area-inset-bottom),0.375rem))] z-30 flex items-center justify-between gap-3 rounded-lg border border-positive/40 bg-surface px-4 py-3 text-sm shadow-lg lg:inset-x-auto lg:bottom-6 lg:right-6 lg:max-w-sm"
     >
       <span>{labels.message}</span>
       <Button className="h-9 shrink-0 px-3" onClick={() => window.location.reload()}>
