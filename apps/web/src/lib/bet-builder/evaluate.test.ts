@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { evaluateSelections, parseSelectionKeys, type ManualSelection } from "./evaluate";
+import {
+  evaluateSelections,
+  parseSelectionKeys,
+  selectionKey,
+  type ManualSelection,
+} from "./evaluate";
 
 const NOW = new Date("2026-11-20T08:00:00Z");
 
@@ -98,15 +103,43 @@ describe("valutazione manuale (ADR 0025–0027)", () => {
 
 describe("chiavi delle selezioni nei form", () => {
   it("accetta solo <id>:<1X2>, senza duplicati, al massimo 10", () => {
+    const one = (
+      matchId: number,
+      selection: string,
+      market = "1X2",
+      line: number | null = null,
+    ) => ({
+      matchId,
+      market,
+      line,
+      selection,
+    });
     expect(
-      parseSelectionKeys(["5:HOME", "5:HOME", "6:DRAW", "x:HOME", "7:OVER", "0:HOME"]),
-    ).toEqual([
-      { matchId: 5, selection: "HOME" },
-      { matchId: 6, selection: "DRAW" },
-    ]);
-    expect(parseSelectionKeys("9:AWAY")).toEqual([{ matchId: 9, selection: "AWAY" }]);
+      parseSelectionKeys(["5:HOME", "5:DRAW", "6:DRAW", "x:HOME", "7:OVER", "0:HOME"]),
+    ).toEqual([one(5, "HOME"), one(6, "DRAW")]);
+    expect(parseSelectionKeys("9:AWAY")).toEqual([one(9, "AWAY")]);
     expect(parseSelectionKeys(undefined)).toEqual([]);
     const many = Array.from({ length: 15 }, (_, i) => `${i + 1}:HOME`);
     expect(parseSelectionKeys(many)).toHaveLength(10);
+  });
+
+  it("giocate di altri mercati: gol totali con la linea, doppia chance, entrambe segnano", () => {
+    expect(
+      parseSelectionKeys([
+        "3:TOTAL_GOALS:2.5:OVER",
+        "4:DOUBLE_CHANCE::HOME_DRAW",
+        "8:BTTS::YES",
+        "10:TOTAL_GOALS:4.5:OVER",
+        "11:TOTAL_GOALS::OVER",
+        "12:BTTS::OVER",
+      ]),
+    ).toEqual([
+      { matchId: 3, market: "TOTAL_GOALS", line: 2.5, selection: "OVER" },
+      { matchId: 4, market: "DOUBLE_CHANCE", line: null, selection: "HOME_DRAW" },
+      { matchId: 8, market: "BTTS", line: null, selection: "YES" },
+    ]);
+    expect(selectionKey({ matchId: 3, market: "TOTAL_GOALS", line: 2.5, selection: "OVER" })).toBe(
+      "3:TOTAL_GOALS:2.5:OVER",
+    );
   });
 });

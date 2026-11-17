@@ -662,6 +662,29 @@ async function main() {
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
 
+    // Costruisci: una giocata scelta compare nella barra in basso, sempre visibile sopra
+    // la barra di navigazione, e una seconda giocata della stessa partita sostituisce la prima.
+    await page.goto(`${appUrl}/bet-builder/builder`);
+    const choices = page.locator("main button[aria-pressed]");
+    if ((await choices.count()) >= 2) {
+      await choices.nth(0).click();
+      await page.waitForURL(/[?&]s=/, { timeout: 15000 }).catch(() => null);
+      const bar = page.locator('main a[href="#valutazione"]');
+      const box = await bar.boundingBox();
+      const nav = await page.locator('nav[aria-label="Pagine principali"]').boundingBox();
+      check(
+        "costruisci: «Valuta» sempre visibile sopra la barra in basso",
+        box !== null && nav !== null && box.y + box.height <= nav.y && box.y > 0,
+        JSON.stringify({ box, nav }),
+      );
+      await choices.nth(1).click();
+      await page.waitForTimeout(500);
+      check(
+        "costruisci: una sola giocata per partita",
+        (await page.locator('main button[aria-pressed="true"]').count()) === 1,
+      );
+    }
+
     // Indirizzi in inglese: i vecchi indirizzi in italiano portano ai nuovi.
     for (const [from, to] of [
       ["/certezze", "/certainties"],
