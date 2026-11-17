@@ -75,6 +75,7 @@ export const it = {
     matchCenter: "Partite",
     statisticsCenter: "Statistiche",
     betBuilder: "Schedine",
+    reliability: "Affidabilità",
     certainties: "Certezze",
     marketIntelligence: "Quote",
     leagueIntelligence: "Campionati",
@@ -1053,6 +1054,21 @@ export const it = {
     pastValueSummary:
       "Multiple con valore delle settimane passate: {wins} vinte su {count}, guadagno {roi}.",
     empty: "Nessuna giocata abbastanza sicura per ora.",
+  },
+  reliability: {
+    title: "Affidabilità",
+    description: "Quante delle giocate che PREDICTRA dava per molto probabili sono uscite davvero.",
+    overall: "Giocate uscite",
+    overallDetail: "{wins} uscite su {count}. In media erano date al {predicted}.",
+    basis:
+      "Partite finite negli ultimi {days} giorni; giocate date almeno al {min} prima del calcio d'inizio.",
+    byMarket: "Per tipo di giocata",
+    byCompetition: "Per campionato",
+    result: "{observed} · {wins} su {count}",
+    few: "{wins} su {count} · ancora poche",
+    expected: "Erano date in media al {predicted} (la tacca sulla barra).",
+    empty: "Ancora nessuna partita giocata da controllare.",
+    note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Con poche giocate il caso pesa molto: i risultati passati non garantiscono quelli futuri.",
   },
   bankroll: {
     title: "Bankroll",
