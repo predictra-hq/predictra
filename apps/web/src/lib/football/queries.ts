@@ -7,6 +7,7 @@ import type {
   MatchLineupRow,
   MatchTeamStatisticRow,
   SourceHealthRow,
+  TeamSeasonStatsRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
 import { sortCompetitions } from "./format";
@@ -299,4 +300,81 @@ export async function getMatchDetails(matchId: number): Promise<MatchDetails> {
     lineups: (lineups.data ?? []) as MatchDetails["lineups"],
     players: (players.data ?? []) as MatchDetails["players"],
   };
+}
+
+export interface TeamInfo {
+  id: number;
+  name: string;
+  short_name: string | null;
+  tla: string | null;
+}
+
+const TEAM_COLUMNS = "id, name, short_name, tla";
+
+export async function getTeam(teamId: number): Promise<TeamInfo | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("teams")
+    .select(TEAM_COLUMNS)
+    .eq("id", teamId)
+    .maybeSingle();
+  if (error) throw new FootballDataUnavailable("squadra", error);
+  return (data as TeamInfo | null) ?? null;
+}
+
+/** Squadre il cui nome contiene il testo cercato (modello già preparato da `containsPattern`). */
+export async function searchTeams(pattern: string, limit = 30): Promise<TeamInfo[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("teams")
+    .select(TEAM_COLUMNS)
+    .or(`name.ilike.${pattern},short_name.ilike.${pattern}`)
+    .order("name")
+    .limit(limit);
+  if (error) throw new FootballDataUnavailable("ricerca squadre", error);
+  return (data ?? []) as TeamInfo[];
+}
+
+/** Ultime partite giocate (dalla più recente) e prossime (dalla più vicina) di una squadra. */
+export async function listTeamMatches(
+  teamId: number,
+  now: Date,
+  limits = { played: 10, upcoming: 5 },
+): Promise<{ played: MatchCenterRow[]; upcoming: MatchCenterRow[] }> {
+  const supabase = await createClient();
+  const ofTeam = () =>
+    supabase
+      .from("v_match_center")
+      .select(MATCH_COLUMNS)
+      .or(`home_team_id.eq.${teamId},away_team_id.eq.${teamId}`);
+  const [played, upcoming] = await Promise.all([
+    ofTeam()
+      .not("home_score", "is", null)
+      .not("away_score", "is", null)
+      .order("kickoff_at", { ascending: false })
+      .limit(limits.played),
+    ofTeam()
+      .is("home_score", null)
+      .gte("kickoff_at", now.toISOString())
+      .order("kickoff_at", { ascending: true })
+      .limit(limits.upcoming),
+  ]);
+  const error = played.error ?? upcoming.error;
+  if (error) throw new FootballDataUnavailable("partite della squadra", error);
+  return {
+    played: (played.data ?? []) as MatchCenterRow[],
+    upcoming: (upcoming.data ?? []) as MatchCenterRow[],
+  };
+}
+
+/** Statistiche di una squadra per stagione e competizione (solo partite concluse). */
+export async function listTeamSeasonStatsOf(teamId: number): Promise<TeamSeasonStatsRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_team_season_stats")
+    .select("*")
+    .eq("team_id", teamId)
+    .limit(60);
+  if (error) throw new FootballDataUnavailable("statistiche della squadra", error);
+  return (data ?? []) as TeamSeasonStatsRow[];
 }
