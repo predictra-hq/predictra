@@ -136,7 +136,7 @@ Tema chiaro o scuro: _Impostazioni → Preferenze_ (vale per il browser in uso).
 
 ## 7. Produzione
 
-Passi completi e semplici: [produzione.md](produzione.md). In breve: progetti `predictra-prod` su Supabase e Vercel, segreti `PROD_*`, merge di `dev` in `main`, copia iniziale dei dati da DEV (workflow _Copia dati tra ambienti_, `dev-to-prod`), variabile `DATA_TARGET=prod`, schedule QStash su PROD, workflow **Bootstrap Super Admin** con ambiente `prod`. Solo PROD raccoglie dati; DEV ne riceve una copia ogni giorno (ADR 0054).
+Passi completi e semplici: [produzione.md](produzione.md). In breve: progetti `predictra-prod` su Supabase e Vercel, segreti `PROD_*`, merge di `dev` in `main`, copia iniziale dei dati da DEV (workflow _Copia dati tra ambienti_, `dev-to-prod`), variabile `DATA_TARGET=prod`, schedule QStash su PROD, workflow **Bootstrap Super Admin** con ambiente `prod`. Solo PROD raccoglie dati; DEV ne riceve una copia ogni giorno (ADR 0055).
 
 ## 8. Protezione dei branch
 

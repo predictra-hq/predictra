@@ -1,6 +1,6 @@
 name: Copia dati tra ambienti
 
-# ADR 0054. Solo PROD parla con le fonti esterne (partite, quote, statistiche); DEV
+# ADR 0055. Solo PROD parla con le fonti esterne (partite, quote, statistiche); DEV
 # riceve ogni giorno una copia dei dati calcistici e calcolati, da database a database,
 # senza nessuna chiamata alle fonti. Account e dati personali non si copiano mai.
 #

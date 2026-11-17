@@ -32,7 +32,7 @@ export function dispatchConfigFromEnv(
   if (!token) return null;
   const repo = env.GITHUB_DISPATCH_REPO?.trim() || "predictra-hq/predictra";
   if (!REPO_RE.test(repo)) return null;
-  // Branch da avviare: `dev` su DEV, `main` su PROD (ADR 0054: con PROD in servizio
+  // Branch da avviare: `dev` su DEV, `main` su PROD (ADR 0055: con PROD in servizio
   // solo `main` raccoglie dati). Qualunque altro valore resta `dev`.
   const ref = env.GITHUB_DISPATCH_REF?.trim() === "main" ? "main" : "dev";
   return { token, repo, workflow: "agent-python.yml", ref };

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tabelle del database e che cosa ne fa la copia tra ambienti (ADR 0054).
+# Tabelle del database e che cosa ne fa la copia tra ambienti (ADR 0055).
 # Ogni tabella di `public` deve stare in uno di questi elenchi: lo controlla
 # supabase/tests/sync-tables.test.ts, così una tabella nuova non viene dimenticata.
 # shellcheck disable=SC2034
@@ -26,6 +26,6 @@ SEED_ONLY_TABLES=(
 LOCAL_TABLES=(
   profiles roles user_roles invitations audit_logs user_preferences user_dashboard_settings
   bankrolls bankroll_movements bets personal_limits user_bet_slips user_bet_slip_selections
-  ask_usage notifications
+  ask_usage notifications user_follows
   providers markets source_freshness_rules
 )

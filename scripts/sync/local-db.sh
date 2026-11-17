@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Database temporaneo con lo schema di PREDICTRA, per provare la copia tra ambienti
-# senza toccare PROD (ADR 0054). Ruoli e schema `auth` minimi di Supabase, poi tutte
+# senza toccare PROD (ADR 0055). Ruoli e schema `auth` minimi di Supabase, poi tutte
 # le migrazioni del repository. Uso: local-db.sh <url del database vuoto>
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"

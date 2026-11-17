@@ -1,4 +1,4 @@
-# ADR 0054 — Una sola raccolta dati: PROD raccoglie, DEV riceve una copia
+# ADR 0055 — Una sola raccolta dati: PROD raccoglie, DEV riceve una copia
 
 - **Stato:** accettato (16/11/2026, scelta del proprietario)
 - **Milestone:** M8 (A4, ambiente PROD)

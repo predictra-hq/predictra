@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copia dei dati calcistici e calcolati da un database Supabase a un altro (ADR 0054).
+# Copia dei dati calcistici e calcolati da un database Supabase a un altro (ADR 0055).
 #
 # Nessuna chiamata alle fonti esterne: si leggono i dati già salvati nel database di
 # origine e si riscrivono, uguali (stessi id), in quello di destinazione. Nella

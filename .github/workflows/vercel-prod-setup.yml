@@ -1,6 +1,6 @@
 name: Prepara Vercel PROD
 
-# Crea il progetto Vercel di PROD senza collegarlo a Git (ADR 0054, produzione.md).
+# Crea il progetto Vercel di PROD senza collegarlo a Git (ADR 0055, produzione.md).
 # La pipeline non usa l'integrazione Git di Vercel: costruisce e pubblica il sito da
 # GitHub Actions con VERCEL_TOKEN (deploy-target.yml). Per questo il progetto non deve
 # importare il repository, e il limite del piano Hobby sui repository delle

@@ -1,5 +1,5 @@
 /**
- * Copia dei dati tra ambienti (ADR 0054): ogni tabella di `public` deve essere
+ * Copia dei dati tra ambienti (ADR 0055): ogni tabella di `public` deve essere
  * classificata in scripts/sync/tables.sh. Una tabella nuova dimenticata non verrebbe
  * copiata (se è un dato calcistico) o, peggio, finirebbe copiata per sbaglio.
  */
@@ -57,6 +57,7 @@ describe("copia tra ambienti", () => {
       "ask_usage",
       "audit_logs",
       "invitations",
+      "user_follows",
     ]) {
       expect(copied.has(personal)).toBe(false);
     }
