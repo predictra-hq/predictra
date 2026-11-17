@@ -149,3 +149,19 @@ export function emptyPredictionsReason(input: {
   if (input.status !== "SCHEDULED" || new Date(input.kickoffAt) <= now) return "NOT_UPCOMING";
   return "NOT_YET_EVALUATED";
 }
+
+/**
+ * I risultati esatti più probabili secondo il modello attivo (righe `CORRECT_SCORE`, senza
+ * "Altro"), dal più probabile. Sono già calcolati dal motore: qui si ordinano soltanto.
+ */
+export function topScores(
+  rows: readonly ActivePredictionRow[],
+  n = 5,
+): { score: string; probability: number }[] {
+  return rows
+    .filter((r) => r.market === "CORRECT_SCORE" && /^\d+-\d+$/.test(r.selection))
+    .map((r) => ({ score: r.selection, probability: Number(r.probability) }))
+    .filter((r) => Number.isFinite(r.probability))
+    .sort((a, b) => b.probability - a.probability || a.score.localeCompare(b.score))
+    .slice(0, n);
+}

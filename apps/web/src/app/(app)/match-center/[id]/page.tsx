@@ -10,6 +10,7 @@ import {
 } from "@/components/football/badges";
 import { MatchDetailsCard } from "@/components/football/match-details";
 import { MatchCertainties } from "@/components/certainties/match-certainties";
+import { OddsMovementCard } from "@/components/odds/odds-movement";
 import { MatchPredictions } from "@/components/predictions/match-predictions";
 import { Badge, Card, CardSkeleton, CardTitle } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -102,6 +103,10 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
           status={match.status}
           kickoffAt={match.kickoff_at}
         />
+      </Suspense>
+
+      <Suspense fallback={null}>
+        <OddsMovementCard matchId={match.match_id} />
       </Suspense>
 
       <MatchDetailsCard

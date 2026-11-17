@@ -10,6 +10,7 @@ import {
   groupPredictions,
   isPrimaryGroup,
   sortSelections,
+  topScores,
   type PredictionGroup,
 } from "@/lib/predictions/format";
 import { getMatchPredictions, hasActiveModel } from "@/lib/predictions/queries";
@@ -101,6 +102,7 @@ export async function MatchPredictions({
   const groups = groupPredictions(rows);
   const primary = groups.filter(isPrimaryGroup);
   const others = groups.filter((g) => !isPrimaryGroup(g));
+  const scores = topScores(rows);
 
   return (
     <Card className="mt-4">
@@ -119,6 +121,23 @@ export async function MatchPredictions({
           <GroupTable key={`${g.market}-${g.line}`} group={g} />
         ))}
       </div>
+
+      {scores.length > 0 ? (
+        <section className="mt-4">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">{p.topScores}</h3>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {scores.map((s) => (
+              <li
+                key={s.score}
+                className="flex min-w-16 flex-col items-center rounded-xl border border-border bg-surface-2 px-3 py-1.5"
+              >
+                <span className="font-mono text-base font-semibold">{s.score}</span>
+                <span className="font-mono text-xs text-muted">{formatPercent(s.probability)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {others.length > 0 ? (
         <details className="mt-4">
