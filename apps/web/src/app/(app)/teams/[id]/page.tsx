@@ -129,6 +129,66 @@ function SeasonStats({ title, s }: { title: string; s: TeamSeasonStatsRow }) {
  * Pagina di una squadra: forma, prossime partite, ultimi risultati e numeri delle stagioni
  * in corso. Solo letture sulle viste già esistenti (`v_match_center`, `v_team_season_stats`).
  */
+/**
+ * Gol fatti (sopra, verde) e subiti (sotto, rosso) nelle ultime partite, dalla più vecchia
+ * alla più recente. Solo risultati reali; nessun grafico senza partite giocate.
+ */
+function GoalsChart({ views }: { views: readonly TeamMatchView[] }) {
+  const m = getMessages().teams;
+  const shown = views
+    .filter((v) => v.goalsFor !== null && v.goalsAgainst !== null)
+    .slice(0, 10)
+    .reverse();
+  if (shown.length < 3) return null;
+  const max = Math.max(3, ...shown.flatMap((v) => [v.goalsFor ?? 0, v.goalsAgainst ?? 0]));
+  const scored = shown.reduce((n, v) => n + (v.goalsFor ?? 0), 0);
+  const conceded = shown.reduce((n, v) => n + (v.goalsAgainst ?? 0), 0);
+  return (
+    <div className="mt-5">
+      <p className="text-sm font-medium">{fillTemplate(m.goalsChart, { n: shown.length })}</p>
+      <p className="text-xs text-muted">
+        {fillTemplate(m.goalsChartSummary, { scored, conceded })}
+      </p>
+      <ul className="mt-3 flex h-36 gap-1.5" aria-label={m.goalsChart}>
+        {shown.map((v) => (
+          <li key={v.matchId} className="flex min-w-0 flex-1 flex-col items-center">
+            <span className="flex w-full flex-1 flex-col justify-end">
+              <span
+                className="mx-auto w-full max-w-6 rounded-t-sm bg-positive"
+                style={{ height: `${((v.goalsFor ?? 0) / max) * 100}%` }}
+              />
+            </span>
+            <span className="h-px w-full bg-border" />
+            <span className="flex w-full flex-1 flex-col justify-start">
+              <span
+                className="mx-auto w-full max-w-6 rounded-b-sm bg-negative/80"
+                style={{ height: `${((v.goalsAgainst ?? 0) / max) * 100}%` }}
+              />
+            </span>
+            <span className="sr-only">
+              {fillTemplate(m.goalsChartMatch, {
+                opponent: v.opponentName,
+                scored: v.goalsFor ?? 0,
+                conceded: v.goalsAgainst ?? 0,
+              })}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 flex gap-4 text-xs text-muted" aria-hidden="true">
+        <span className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm bg-positive" />
+          {m.goalsScored}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="size-2.5 rounded-sm bg-negative/80" />
+          {m.goalsConceded}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
   await requireUser();
   const m = getMessages().teams;
@@ -184,6 +244,7 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
             ))}
           </p>
         )}
+        <GoalsChart views={played} />
       </Card>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">

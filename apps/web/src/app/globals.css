@@ -45,7 +45,9 @@
   --color-veil: rgb(255 255 255 / 0.025);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Numeri: stesso carattere del testo con cifre a larghezza fissa (`tabular-nums`, sotto).
+     Il monospaziato allargava virgole e parole ("2 , 27", "13  su  15"). */
+  --font-mono: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1rem;
 }
@@ -411,4 +413,9 @@ input::-webkit-date-and-time-value {
 [data-row-limit="5"]:not([data-open]) tbody > tr:nth-child(n + 6),
 [data-row-limit="10"]:not([data-open]) tbody > tr:nth-child(n + 11) {
   display: none;
+}
+
+/* Cifre allineate in colonna dove prima si usava il monospaziato. */
+.font-mono {
+  font-variant-numeric: tabular-nums;
 }
