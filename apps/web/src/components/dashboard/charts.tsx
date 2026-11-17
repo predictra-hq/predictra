@@ -30,12 +30,19 @@ export async function ModelHitsCard() {
   const d = getMessages().dashboard;
   const verification = await loadVerification().catch(() => null);
   if (!verification) return null;
-  const weeks = weeklyHits(
+  const all = weeklyHits(
     verification.rows,
     verification.results,
     HOME_CERTAINTY_THRESHOLD,
     verification.market,
     WEEKS,
+  );
+  // Niente barre vuote prima della prima settimana con giocate (es. prima del modello).
+  const weeks = all.slice(
+    Math.max(
+      all.findIndex((w) => w.count > 0),
+      0,
+    ),
   );
   const count = weeks.reduce((n, w) => n + w.count, 0);
   const wins = weeks.reduce((n, w) => n + w.wins, 0);
@@ -57,7 +64,7 @@ export async function ModelHitsCard() {
           wins: String(wins),
           count: String(count),
           rate: formatPercent(wins / count, 0),
-          weeks: String(WEEKS),
+          weeks: String(weeks.length),
         })}
       </p>
       <ul className="mt-4 flex h-36 items-end gap-2" aria-label={d.hitsTitle}>
