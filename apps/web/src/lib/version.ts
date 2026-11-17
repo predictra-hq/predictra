@@ -7,6 +7,19 @@
 export const LOCAL_VERSION = "local";
 export const APP_VERSION = process.env.APP_VERSION ?? LOCAL_VERSION;
 
+/**
+ * Versione mostrata agli utenti (es. «v1.0.0»; regole in docs/operations/interfaccia.md): il campo `version` di
+ * `apps/web/package.json`, con il versionamento semantico (maggiore.minore.correzione).
+ * Si aggiorna a mano nella PR che porta la novità. Il commit resta solo per l'avviso di
+ * aggiornamento e non si mostra.
+ */
+export const APP_RELEASE = process.env.APP_RELEASE ?? "0.0.0";
+
+/** «1.0.0» → «v1.0.0»; un valore non valido diventa «v0.0.0». */
+export function formatRelease(release: string = APP_RELEASE): string {
+  return /^\d+\.\d+\.\d+$/.test(release) ? `v${release}` : "v0.0.0";
+}
+
 /** Ogni quanto la pagina aperta chiede al server se c'è una versione nuova. */
 export const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
