@@ -384,6 +384,7 @@ async function formAlert(page) {
  * L'utente invitato (`verifica-invito-…@example.com`) viene sempre cancellato.
  */
 async function authFlows(browser, account, matchPath) {
+  await removeLeftoverTestUsers();
   // 1. Accesso con password sbagliata.
   {
     const context = await browser.newContext({
@@ -546,8 +547,28 @@ async function authFlows(browser, account, matchPath) {
   } catch (e) {
     check("flussi di accesso", false, e instanceof Error ? e.message : String(e));
   } finally {
-    if (invitedId) await admin.auth.admin.deleteUser(invitedId);
     if (invitationId) await admin.from("invitations").delete().eq("id", invitationId);
+    if (invitedId) {
+      const { error } = await admin.auth.admin.deleteUser(invitedId);
+      check("utente di prova dell'invito cancellato", !error, error?.message ?? "");
+    }
+  }
+}
+
+/**
+ * Utenti di prova rimasti dalle verifiche precedenti (`verifica-invito-…@example.com`):
+ * prima del 17/11/2026 l'audit impediva di cancellarli. Si tolgono all'inizio.
+ */
+async function removeLeftoverTestUsers() {
+  for (let page = 1; page <= 10; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error || !data?.users?.length) return;
+    for (const u of data.users) {
+      if (!/^verifica-invito-[0-9a-f]+@example\.com$/.test(u.email ?? "")) continue;
+      await admin.from("invitations").delete().eq("email", u.email);
+      await admin.auth.admin.deleteUser(u.id);
+    }
+    if (data.users.length < 200) return;
   }
 }
 

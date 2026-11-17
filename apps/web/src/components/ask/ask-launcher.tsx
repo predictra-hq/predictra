@@ -44,9 +44,11 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
         data-tour="ask"
         aria-label={m.title}
         title={m.title}
-        className="fixed bottom-[calc(4.75rem+max(env(safe-area-inset-bottom),0.375rem))] right-4 z-20 flex size-12 cursor-pointer items-center justify-center rounded-full border border-positive/40 bg-surface text-positive shadow-lg transition-colors hover:bg-positive-soft lg:bottom-6 lg:right-6 lg:size-14"
+        // Telefono: nella barra in alto, accanto ad «Aggiorna», così non copre mai bottoni e
+        // contenuti. Computer: pulsante tondo in basso a destra.
+        className="fixed left-[5.75rem] top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 flex size-10 cursor-pointer items-center justify-center rounded-md text-positive transition-colors hover:bg-surface-2 lg:bottom-6 lg:left-auto lg:right-6 lg:top-auto lg:size-14 lg:rounded-full lg:border lg:border-positive/40 lg:bg-surface lg:shadow-lg lg:hover:bg-positive-soft"
       >
-        <MessageCircleQuestion className="size-6" aria-hidden />
+        <MessageCircleQuestion className="size-[22px] lg:size-6" aria-hidden />
       </button>
       <dialog
         ref={ref}

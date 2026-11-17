@@ -197,7 +197,7 @@ export function BuilderPicker({
       ))}
 
       {/* Barra sempre visibile: sopra la barra di navigazione sul telefono. */}
-      <div className="sticky bottom-[calc(4.5rem+max(env(safe-area-inset-bottom),0.375rem))] z-10 lg:bottom-4">
+      <div className="sticky bottom-[calc(4.5rem+max(env(safe-area-inset-bottom),0.375rem))] z-10 lg:bottom-4 lg:mr-20">
         <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface/95 p-3 shadow-lg backdrop-blur">
           <div className="min-w-0 flex-1" aria-live="polite">
             <p className="text-sm font-semibold">

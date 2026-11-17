@@ -52,4 +52,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0057](0057-verifica-storica-su-tutti-i-mercati.md) | Verifica storica del modello su tutti i mercati                          | Accettata |
 | [0058](0058-comunita-commenti-e-maggiore-eta.md)    | Comunità: commenti alle partite, maggiore età dichiarata, stile del nome | Proposta  |
 | [0059](0059-schermata-offline.md)                   | Schermata «Sei offline» con un service worker minimo                     | Proposta  |
-| [0058](0058-taratura-gol-totali-dati-reali.md)      | Taratura dei gol totali sui dati reali                                   | Accettata |
+| [0060](0060-taratura-gol-totali-dati-reali.md)      | Taratura dei gol totali sui dati reali                                   | Accettata |
