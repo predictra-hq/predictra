@@ -50,7 +50,8 @@ Misura del 17/11/2026: database a 91 MB, di cui 49 MB di previsioni, che crescev
 
 Decisione: a fine giro il motore chiama `prune_predictions` (migrazione `20261117120000`), che cancella le previsioni e le matrici dei risultati esatti **più vecchie di 7 giorni e superate**. Restano sempre:
 
-- l'ultima previsione di ogni partita, versione del modello, mercato, linea ed esito: per una partita giocata è quella prima del calcio d'inizio, usata da Certezze, Affidabilità, verifica del peso del mercato e controlli del modello;
+- l'ultima previsione di ogni partita, mercato, linea ed esito della **famiglia** del modello (stesso `model_key`, qualunque versione): per una partita giocata è quella prima del calcio d'inizio, usata da Certezze, Affidabilità, verifica del peso del mercato e controlli del modello;
+- l'ultima di ogni versione **attiva o in gara**, cioè quella mostrata per le partite in programma. Le versioni **ritirate** non tengono una copia propria: ogni modifica al codice del modello crea una versione nuova, e la prima regola, che teneva l'ultima di ogni versione, su DEV non trovava nulla da cancellare (migrazione `20261117140000`);
 - le previsioni degli ultimi 7 giorni;
 - quelle usate da una proposta del Bet Builder o da una schedina di un utente.
 
