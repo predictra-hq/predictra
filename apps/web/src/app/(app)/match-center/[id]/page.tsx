@@ -65,18 +65,24 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
           {match.group_name ? ` · ${match.group_name}` : ""}
         </p>
         <h1 className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <span className="text-balance text-base font-semibold leading-tight sm:text-xl">
+          <Link
+            href={`/teams/${match.home_team_id}`}
+            className="text-balance text-base font-semibold leading-tight hover:underline sm:text-xl"
+          >
             {match.home_team_name}
-          </span>
+          </Link>
           <span
             className="whitespace-nowrap font-mono text-3xl font-semibold"
             aria-hidden={!played}
           >
             {played ? formatScore(match.home_score, match.away_score) : "–"}
           </span>
-          <span className="text-balance text-base font-semibold leading-tight sm:text-xl">
+          <Link
+            href={`/teams/${match.away_team_id}`}
+            className="text-balance text-base font-semibold leading-tight hover:underline sm:text-xl"
+          >
             {match.away_team_name}
-          </span>
+          </Link>
         </h1>
         <p className="mt-3 flex flex-wrap items-center justify-center gap-2 text-sm text-muted">
           {formatDateTime(match.kickoff_at)}

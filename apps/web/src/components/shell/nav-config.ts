@@ -49,6 +49,7 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { key: "matchCenter", href: "/match-center" },
       { key: "leagueIntelligence", href: "/leagues" },
+      { key: "teams", href: "/teams" },
     ],
   },
   {
