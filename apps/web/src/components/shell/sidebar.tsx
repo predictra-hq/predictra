@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
@@ -17,6 +18,7 @@ interface SidebarProps {
   groups: readonly NavGroup[];
   admin: readonly NavItem[];
   settings: readonly NavItem[];
+  userId: string;
   userLabel: string;
   roleLabel: string;
 }
@@ -174,7 +176,15 @@ function NavGroupSection({
   );
 }
 
-export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabel }: SidebarProps) {
+export function Sidebar({
+  messages,
+  groups,
+  admin,
+  settings,
+  userId,
+  userLabel,
+  roleLabel,
+}: SidebarProps) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -263,10 +273,15 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         </nav>
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
-          <p className="truncate text-sm font-medium" title={userLabel}>
-            {userLabel}
-          </p>
-          <p className="text-xs text-muted">{roleLabel}</p>
+          <div className="flex items-center gap-3">
+            <UserAvatar userId={userId} className="size-9" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium" title={userLabel}>
+                {userLabel}
+              </p>
+              <p className="text-xs text-muted">{roleLabel}</p>
+            </div>
+          </div>
           <form action="/auth/signout" method="post" className="mt-3">
             <button
               type="submit"
