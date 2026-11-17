@@ -14,6 +14,7 @@ import { OddsMovementCard } from "@/components/odds/odds-movement";
 import { MatchPredictions } from "@/components/predictions/match-predictions";
 import { PredictionVsResult } from "@/components/predictions/prediction-vs-result";
 import { Badge, Card, CardSkeleton, CardTitle } from "@/components/ui/primitives";
+import { MatchComments } from "@/components/community/match-comments";
 import { requireUser } from "@/lib/auth/dal";
 import { humanize } from "@/lib/football/details";
 import { formatScore, parseId, severityTone } from "@/lib/football/format";
@@ -126,6 +127,11 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
 
       <Suspense fallback={null}>
         <OddsMovementCard matchId={match.match_id} />
+      </Suspense>
+
+      {/* Commenti degli iscritti maggiorenni (ADR 0058). */}
+      <Suspense fallback={null}>
+        <MatchComments matchId={match.match_id} />
       </Suspense>
 
       <MatchDetailsCard

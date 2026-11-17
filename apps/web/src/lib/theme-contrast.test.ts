@@ -50,6 +50,14 @@ describe.each(["dark", "light"] as const)("contrasti del tema %s", (theme) => {
     "negative-strong",
     "warning",
     "info",
+    "name-green",
+    "name-teal",
+    "name-blue",
+    "name-violet",
+    "name-pink",
+    "name-orange",
+    "name-amber",
+    "name-red",
   ])("testo %s ≥ 4.5:1 su tutti gli sfondi", (text) => {
     for (const bg of BACKGROUNDS) {
       expect(contrast(token(text), token(bg)), `${text} su ${bg}`).toBeGreaterThanOrEqual(4.5);
