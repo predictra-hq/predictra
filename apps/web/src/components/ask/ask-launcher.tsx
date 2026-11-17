@@ -33,7 +33,6 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-
   if (pathname === "/ask") return null;
 
   return (
