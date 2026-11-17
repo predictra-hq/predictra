@@ -548,7 +548,7 @@ export const it = {
     detailsTitle: "Statistiche e formazioni",
     detailsSource: "Fonte: API-Football.",
     noDetails:
-      "Statistiche e formazioni non ancora disponibili per questa partita. Le scarica l'agente da API-Football, circa 44 partite al giorno, a partire dalle stagioni 2022–2024.",
+      "Statistiche e formazioni non ancora disponibili per questa partita: arrivano di solito nei giorni dopo la partita.",
     statistics: "Statistiche",
     lineups: "Formazioni",
     formation: "Modulo",
@@ -581,7 +581,7 @@ export const it = {
     noIssues: "Nessun problema di qualità aperto.",
     notFound: "Partita non trovata.",
     delayedNote:
-      "Piano gratuito della fonte: punteggi e calendari possono arrivare in ritardo. Nessun dato live.",
+      "Risultati e calendari si aggiornano più volte al giorno, non in diretta: un risultato appena finito può arrivare con un po' di ritardo.",
     matchStatus: {
       SCHEDULED: "In programma",
       LIVE: "In corso",
@@ -1053,11 +1053,20 @@ export const it = {
       "Ultima elaborazione: {at} · combinazioni valutate {candidates} · proposte {proposals}",
     thresholds:
       "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote aggiornate.",
-    builderTitle: "Costruisci una combinazione",
+    builderTitle: "Costruisci una schedina",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota aggiornata dei bookmaker italiani.",
+      "Scegli una giocata per partita, fino a 10 partite dei prossimi giorni: esito finale, doppia chance, gol o entrambe segnano. La valutazione si aggiorna da sola.",
+    builderMore: "Altre giocate: doppia chance, gol, entrambe segnano",
+    builderMatches: "{n} partite",
+    builderPicked: "{n} giocate scelte",
+    builderNone: "Tocca una giocata per iniziare",
+    builderClear: "Togli tutte le giocate",
+    builderSummary: "Vincita {p} · quota {price}",
+    builderSummaryNoPrice: "Vincita {p} · quota non raccolta per tutte",
+    builderGoals: "Gol {line}",
+    builderNoPrice: "–",
     builderEmpty:
-      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato nella pagina Modello.",
+      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi.",
     evaluate: "Valuta",
     evaluation: "Valutazione",
     noSelection: "Seleziona almeno un esito.",
@@ -1294,6 +1303,10 @@ export const it = {
     bandLabel: "Giocate da {from}",
     bandResult: "uscite {observed} ({wins} su {count})",
     bandFew: "{wins} su {count}, ancora poche",
+    bandHistory: "uscite {observed} nello storico ({wins} su {count})",
+    bandLive: "Queste settimane: {wins} su {count}",
+    reliabilityHistoryNote:
+      "Le percentuali vengono dalla verifica del modello su tutte le partite passate; il conteggio di queste settimane cresce a ogni giornata.",
     verifyEmpty: "Ancora nessuna partita giocata da controllare.",
     pastValueSummary:
       "Multiple con valore delle settimane passate: {wins} vinte su {count}, guadagno {roi}.",
@@ -1309,10 +1322,10 @@ export const it = {
     byMarket: "Per tipo di giocata",
     byCompetition: "Per campionato",
     result: "{observed} · {wins} su {count}",
-    few: "{wins} su {count} · ancora poche",
+    few: "{wins} su {count}",
     expected: "Erano date in media al {predicted} (la tacca sulla barra).",
     empty: "Ancora nessuna partita giocata da controllare.",
-    note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Con poche giocate il caso pesa molto: i risultati passati non garantiscono quelli futuri.",
+    note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Sotto le 20 giocate mostriamo solo il conteggio: la percentuale direbbe poco. I risultati passati non garantiscono quelli futuri.",
     historyTitle: "Il modello su tutto lo storico",
     historyIntro:
       "PREDICTRA ha rigiocato {matches} partite dal {from} al {to}: ogni settimana il modello ha previsto le partite vedendo solo quelle giocate prima, poi le previsioni sono state confrontate con i risultati veri.",

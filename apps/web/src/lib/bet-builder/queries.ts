@@ -6,20 +6,24 @@ import type {
   BetBuilderLatestRunRow,
   BetProposalKind,
   BetProposalLegRow,
-  FreshnessStatus,
-  MatchOddsH2hRow,
   UserBetSlipRow,
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
 import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { cache } from "react";
-import { marketConsensus } from "./bollette";
-import { bestItalianPrices, LIKELY_MARKETS, type LatestOddsRow, type LikelyRow } from "./likely";
-import { matchMarkets, type Outcome, usedProbability } from "./market";
+import { consensusFor, marketConsensus } from "./bollette";
+import {
+  bestItalianPrices,
+  italianPriceFor,
+  LIKELY_MARKETS,
+  type LatestOddsRow,
+  type LikelyRow,
+} from "./likely";
+import { usedProbability } from "./market";
 import { inChunks } from "@/lib/chunks";
 import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
-import type { ManualSelection } from "./evaluate";
+import { BUILDER_MARKETS, type ManualSelection } from "./evaluate";
 import type { MatchScore, PastProposal, ResultLeg } from "./results";
 
 /*
@@ -150,74 +154,67 @@ export interface ManualOption {
   kickoffAt: string;
   homeTeam: string;
   awayTeam: string;
-  modelKey: string;
-  modelVersion: string;
-  outcomes: ManualSelection[];
+  /** Giocate della partita: 1X2, doppia chance, gol totali 1,5–2,5–3,5, entrambe segnano. */
+  outcomes: (ManualSelection & { market: string; line: number | null })[];
 }
 
+const BUILDER_ORDER = Object.entries(BUILDER_MARKETS).flatMap(([market, spec]) =>
+  spec.lines.flatMap((line) => spec.selections.map((sel) => `${market}|${line ?? ""}|${sel}`)),
+);
+
 /**
- * Previsioni 1X2 attive delle partite in programma nei prossimi giorni, con le
- * migliori quote FRESH (`v_best_odds_h2h` considera solo bookmaker con quote fresche).
+ * Giocate delle partite in programma nei prossimi giorni per Costruisci: previsioni del
+ * modello attivo sui mercati di `BUILDER_MARKETS`, probabilità combinata con il mercato
+ * (ADR 0028) e migliore quota italiana raccolta, preferendo il sito del bankroll.
  */
 export async function listManualOptions(now: Date, matchIds?: number[]): Promise<ManualOption[]> {
   const supabase = await createClient();
   const end = new Date(now.getTime() + MANUAL_HORIZON_DAYS * 86_400_000);
-  let query = supabase
-    .from("v_active_predictions")
-    .select(
-      "match_id, competition_id, kickoff_at, match_status, home_team_name, away_team_name, selection, probability, confidence_score, model_key, model_version",
-    )
-    .eq("market", "1X2")
-    .order("kickoff_at")
-    .order("match_id");
-  if (matchIds) {
-    if (matchIds.length === 0) return [];
-    query = query.in("match_id", matchIds);
-  } else {
-    // Per partita, non per data: la vista usa l'indice (vedi upcomingMatchIds).
-    const ids = await upcomingMatchIds(now, end);
-    if (ids.length === 0) return [];
-    query = query.in("match_id", ids.slice(0, 300));
-  }
-  const { data, error } = await query;
-  if (error) throw new BetBuilderDataUnavailable("previsioni", error);
-  const predictions = (data ?? []) as Pick<
-    ActivePredictionRow,
-    | "match_id"
-    | "competition_id"
-    | "kickoff_at"
-    | "home_team_name"
-    | "away_team_name"
-    | "selection"
-    | "probability"
-    | "confidence_score"
-    | "model_key"
-    | "model_version"
-  >[];
-  const ids = [...new Set(predictions.map((p) => p.match_id))];
-  // ADR 0028: consenso da tutti i bookmaker, quota giocabile solo italiana.
-  let oddsRows: MatchOddsH2hRow[] = [];
-  if (ids.length > 0) {
-    oddsRows = await selectAll<MatchOddsH2hRow>(
-      (from, to) =>
-        supabase
-          .from("v_match_odds_h2h")
-          .select(
-            "match_id, bookmaker, italian_market, home_price, draw_price, away_price, home_probability, draw_probability, away_probability, observed_at, freshness, quality",
-          )
-          .in("match_id", ids)
-          .order("match_id")
-          .order("bookmaker")
-          .order("observed_at")
-          .range(from, to),
-      "quote",
-    );
-  }
-  const markets = matchMarkets(oddsRows);
+  const ids = matchIds ?? (await upcomingMatchIds(now, end)).slice(0, 300);
+  if (ids.length === 0) return [];
+  const predictions = await selectAll<
+    Pick<
+      ActivePredictionRow,
+      | "match_id"
+      | "competition_id"
+      | "kickoff_at"
+      | "home_team_name"
+      | "away_team_name"
+      | "market"
+      | "line"
+      | "selection"
+      | "probability"
+      | "confidence_score"
+    >
+  >(
+    (from, to) =>
+      supabase
+        .from("v_active_predictions")
+        .select(
+          "match_id, competition_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+        )
+        .in("match_id", ids)
+        .in("market", Object.keys(BUILDER_MARKETS))
+        .order("match_id")
+        .order("market")
+        .order("selection")
+        .range(from, to),
+    "previsioni",
+  );
+  const withPrediction = [...new Set(predictions.map((p) => p.match_id))];
+  const [odds, site] = await Promise.all([
+    inChunks(withPrediction, 5, (chunk) => listLatestOdds(chunk), 4),
+    userBookmaker(),
+  ]);
+  const prices = bestItalianPrices(odds, site?.tracked ?? null);
+  const consensus = marketConsensus(odds);
   const weight = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0;
 
   const options = new Map<number, ManualOption>();
   for (const p of predictions) {
+    const line = p.line === null ? null : Number(p.line);
+    const spec = BUILDER_MARKETS[p.market];
+    if (!spec || !spec.lines.includes(line) || !spec.selections.includes(p.selection)) continue;
     let option = options.get(p.match_id);
     if (!option) {
       option = {
@@ -226,33 +223,32 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
         kickoffAt: p.kickoff_at,
         homeTeam: p.home_team_name,
         awayTeam: p.away_team_name,
-        modelKey: p.model_key,
-        modelVersion: p.model_version,
         outcomes: [],
       };
       options.set(p.match_id, option);
     }
-    const market = markets.get(p.match_id);
-    const outcome = p.selection as Outcome;
-    const price = market?.italian[outcome]?.price ?? null;
-    const freshness: FreshnessStatus | null = price === null ? null : "FRESH";
+    const pick = { matchId: p.match_id, market: p.market, line, selection: p.selection };
+    const price = italianPriceFor(prices, pick)?.price ?? null;
     option.outcomes.push({
-      matchId: p.match_id,
+      ...pick,
       homeTeam: p.home_team_name,
       awayTeam: p.away_team_name,
       kickoffAt: p.kickoff_at,
-      selection: p.selection,
-      probability: usedProbability(Number(p.probability), market?.consensus[outcome], weight),
+      probability: usedProbability(
+        Number(p.probability),
+        consensusFor(consensus, pick) ?? undefined,
+        weight,
+      ),
       confidence: Number(p.confidence_score),
-      price: price === null ? null : Number(price),
-      freshness,
+      price,
+      freshness: price === null ? null : "FRESH",
     });
   }
-  const order = ["HOME", "DRAW", "AWAY"];
-  for (const o of options.values()) {
-    o.outcomes.sort((a, b) => order.indexOf(a.selection) - order.indexOf(b.selection));
-  }
-  return [...options.values()];
+  const rank = (o: { market: string; line: number | null; selection: string }) =>
+    BUILDER_ORDER.indexOf(`${o.market}|${o.line ?? ""}|${o.selection}`);
+  const list = [...options.values()];
+  for (const o of list) o.outcomes.sort((a, b) => rank(a) - rank(b));
+  return list.sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt) || a.matchId - b.matchId);
 }
 
 export interface MatchInfo {

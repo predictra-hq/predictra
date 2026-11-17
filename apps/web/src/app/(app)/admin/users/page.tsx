@@ -102,35 +102,7 @@ export default async function UsersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      {manageable && role ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span>{m.roles[role]}</span>
-                          <ActionDialog
-                            trigger={d.changeRole}
-                            triggerVariant="ghost"
-                            title={fillTemplate(d.roleTitle, { name })}
-                            description={d.roleText}
-                            confirm={m.admin.applyRole}
-                            action={setUserRole}
-                            fields={{ userId: u.id }}
-                            labels={dialogLabels}
-                          >
-                            <Field label={m.admin.role} htmlFor={`role-${u.id}`}>
-                              <Select id={`role-${u.id}`} name="role" defaultValue={role}>
-                                {assignable.map((r) => (
-                                  <option key={r} value={r}>
-                                    {m.roles[r]}
-                                  </option>
-                                ))}
-                              </Select>
-                            </Field>
-                          </ActionDialog>
-                        </div>
-                      ) : (
-                        <span>{role ? m.roles[role] : "—"}</span>
-                      )}
-                    </td>
+                    <td className="px-4 py-3">{role ? m.roles[role] : "—"}</td>
                     <td className="px-4 py-3">
                       <Badge tone={u.status === "ACTIVE" ? "positive" : "negative"}>
                         {m.accountStatus[u.status]}
@@ -139,46 +111,70 @@ export default async function UsersPage() {
                     <td className="whitespace-nowrap px-4 py-3 text-muted">
                       {formatDateTime(u.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex flex-col items-end gap-2">
-                        {manageable ? (
-                          u.status === "ACTIVE" ? (
+                    <td className="sm-wide px-4 py-3">
+                      {manageable ? (
+                        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                          {role ? (
                             <ActionDialog
-                              trigger={m.admin.suspend}
-                              triggerVariant="danger"
-                              title={fillTemplate(d.suspendTitle, { name })}
-                              description={d.suspendText}
-                              confirm={m.admin.suspend}
-                              confirmVariant="danger"
-                              action={setAccountStatus}
-                              fields={{ userId: u.id, status: "SUSPENDED" }}
+                              trigger={d.changeRole}
+                              triggerVariant="secondary"
+                              title={fillTemplate(d.roleTitle, { name })}
+                              description={d.roleText}
+                              confirm={m.admin.applyRole}
+                              action={setUserRole}
+                              fields={{ userId: u.id }}
+                              labels={dialogLabels}
+                            >
+                              <Field label={m.admin.role} htmlFor={`role-${u.id}`}>
+                                <Select id={`role-${u.id}`} name="role" defaultValue={role}>
+                                  {assignable.map((r) => (
+                                    <option key={r} value={r}>
+                                      {m.roles[r]}
+                                    </option>
+                                  ))}
+                                </Select>
+                              </Field>
+                            </ActionDialog>
+                          ) : null}
+                          {manageable ? (
+                            u.status === "ACTIVE" ? (
+                              <ActionDialog
+                                trigger={m.admin.suspend}
+                                triggerVariant="danger"
+                                title={fillTemplate(d.suspendTitle, { name })}
+                                description={d.suspendText}
+                                confirm={m.admin.suspend}
+                                confirmVariant="danger"
+                                action={setAccountStatus}
+                                fields={{ userId: u.id, status: "SUSPENDED" }}
+                                labels={dialogLabels}
+                              />
+                            ) : (
+                              <ActionDialog
+                                trigger={m.admin.reactivate}
+                                title={fillTemplate(d.reactivateTitle, { name })}
+                                description={d.reactivateText}
+                                confirm={m.admin.reactivate}
+                                action={setAccountStatus}
+                                fields={{ userId: u.id, status: "ACTIVE" }}
+                                labels={dialogLabels}
+                              />
+                            )
+                          ) : null}
+                          {manageable && u.status === "ACTIVE" ? (
+                            <ActionDialog
+                              trigger={m.admin.resetLink}
+                              triggerVariant="secondary"
+                              title={fillTemplate(d.resetTitle, { name })}
+                              description={d.resetText}
+                              confirm={d.generate}
+                              action={createPasswordResetLink}
+                              fields={{ userId: u.id }}
                               labels={dialogLabels}
                             />
-                          ) : (
-                            <ActionDialog
-                              trigger={m.admin.reactivate}
-                              title={fillTemplate(d.reactivateTitle, { name })}
-                              description={d.reactivateText}
-                              confirm={m.admin.reactivate}
-                              action={setAccountStatus}
-                              fields={{ userId: u.id, status: "ACTIVE" }}
-                              labels={dialogLabels}
-                            />
-                          )
-                        ) : null}
-                        {manageable && u.status === "ACTIVE" ? (
-                          <ActionDialog
-                            trigger={m.admin.resetLink}
-                            triggerVariant="ghost"
-                            title={fillTemplate(d.resetTitle, { name })}
-                            description={d.resetText}
-                            confirm={d.generate}
-                            action={createPasswordResetLink}
-                            fields={{ userId: u.id }}
-                            labels={dialogLabels}
-                          />
-                        ) : null}
-                      </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </td>
                   </tr>
                 );

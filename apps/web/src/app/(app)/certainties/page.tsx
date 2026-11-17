@@ -35,7 +35,10 @@ import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
-import { hasActiveModel } from "@/lib/predictions/queries";
+import { getActiveHistoryCheck, hasActiveModel } from "@/lib/predictions/queries";
+
+const formatCount = (n: number) =>
+  new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(n);
 
 export const metadata: Metadata = { title: "Certezze" };
 
@@ -135,14 +138,21 @@ function Reliability({
   wins,
   count,
   roi,
+  history,
 }: {
   stats: BandStat[];
   wins: number;
   count: number;
   roi: number | null;
+  /** Verifica storica per fascia (ADR 0057): usata dove le giocate recenti sono poche. */
+  history: ReadonlyMap<number, { wins: number; count: number }>;
 }) {
   const c = getMessages().certainties;
   const shown = stats.filter((s) => s.count > 0);
+  const historyFor = (from: number) => {
+    const h = history.get(from);
+    return h && h.count >= MIN_SAMPLE ? h : null;
+  };
   return (
     <details className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
       <summary className="cursor-pointer text-sm font-medium text-muted hover:text-fg">
@@ -157,19 +167,38 @@ function Reliability({
               <span className="text-muted">
                 {fillTemplate(c.bandLabel, { from: formatPercent(s.from, 0) })}
               </span>
-              <span>
-                {s.count < MIN_SAMPLE
-                  ? fillTemplate(c.bandFew, { wins: String(s.wins), count: String(s.count) })
-                  : fillTemplate(c.bandResult, {
-                      observed: formatPercent(s.observed, 0),
-                      wins: String(s.wins),
-                      count: String(s.count),
+              <span className="text-right">
+                {s.count >= MIN_SAMPLE ? (
+                  fillTemplate(c.bandResult, {
+                    observed: formatPercent(s.observed, 0),
+                    wins: String(s.wins),
+                    count: String(s.count),
+                  })
+                ) : historyFor(s.from) ? (
+                  <>
+                    {fillTemplate(c.bandHistory, {
+                      observed: formatPercent(
+                        historyFor(s.from)!.wins / historyFor(s.from)!.count,
+                        0,
+                      ),
+                      wins: formatCount(historyFor(s.from)!.wins),
+                      count: formatCount(historyFor(s.from)!.count),
                     })}
+                    <span className="block text-xs text-muted">
+                      {fillTemplate(c.bandLive, { wins: String(s.wins), count: String(s.count) })}
+                    </span>
+                  </>
+                ) : (
+                  fillTemplate(c.bandFew, { wins: String(s.wins), count: String(s.count) })
+                )}
               </span>
             </li>
           ))}
         </ul>
       )}
+      {shown.some((s) => s.count < MIN_SAMPLE && historyFor(s.from)) ? (
+        <p className="mt-2 text-xs text-subtle">{c.reliabilityHistoryNote}</p>
+      ) : null}
       {count > 0 && roi !== null ? (
         <p className="mt-3 text-sm">
           {fillTemplate(c.pastValueSummary, {
@@ -287,7 +316,13 @@ async function CertaintiesContent() {
 
 /** Verifica sulle partite già giocate: la lettura più pesante, caricata per ultima. */
 async function ReliabilitySection() {
-  const verification = await loadVerification();
+  const [verification, historyCheck] = await Promise.all([
+    loadVerification(),
+    getActiveHistoryCheck().catch(() => null),
+  ]);
+  const history = new Map(
+    (historyCheck?.bands ?? []).map((b) => [b.from, { wins: b.wins, count: b.count }]),
+  );
   const stats = bandStats(verification.rows, verification.results, verification.market);
   const pastValue = pastValueMultiples(
     verification.rows,
@@ -302,6 +337,7 @@ async function ReliabilitySection() {
       wins={pastValue.filter((x) => x.won).length}
       count={pastValue.length}
       roi={flatReturn(pastValue)}
+      history={history}
     />
   );
 }

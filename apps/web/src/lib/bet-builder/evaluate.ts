@@ -23,6 +23,9 @@ export interface ManualSelection {
   homeTeam: string;
   awayTeam: string;
   kickoffAt: string;
+  /** Mercato della giocata (predefinito 1X2) e linea per i gol totali. */
+  market?: string;
+  line?: number | null;
   selection: string;
   /** Probabilità del modello attivo; `null` se manca la previsione. */
   probability: number | null;
@@ -141,26 +144,56 @@ export function evaluateSelections(
   };
 }
 
-/** Selezione codificata nei form: `<match_id>:<HOME|DRAW|AWAY>`. */
-export function parseSelectionKey(raw: unknown): { matchId: number; selection: string } | null {
-  if (typeof raw !== "string") return null;
-  const m = /^([1-9][0-9]{0,15}):(HOME|DRAW|AWAY)$/.exec(raw);
-  if (!m) return null;
-  const matchId = Number(m[1]);
-  return Number.isSafeInteger(matchId) ? { matchId, selection: m[2]! } : null;
+/** Giocate sceglibili in Costruisci: mercato → linee ammesse ed esiti. */
+export const BUILDER_MARKETS: Readonly<
+  Record<string, { lines: readonly (number | null)[]; selections: readonly string[] }>
+> = {
+  "1X2": { lines: [null], selections: ["HOME", "DRAW", "AWAY"] },
+  DOUBLE_CHANCE: { lines: [null], selections: ["HOME_DRAW", "HOME_AWAY", "DRAW_AWAY"] },
+  TOTAL_GOALS: { lines: [1.5, 2.5, 3.5], selections: ["OVER", "UNDER"] },
+  BTTS: { lines: [null], selections: ["YES", "NO"] },
+};
+
+export interface SelectionKey {
+  matchId: number;
+  market: string;
+  line: number | null;
+  selection: string;
 }
 
-/** Chiavi uniche, valide e al massimo `MAX_MANUAL_SELECTIONS`. */
-export function parseSelectionKeys(values: unknown): { matchId: number; selection: string }[] {
+/** Chiave di una giocata nei form e nell'indirizzo: `<partita>:<mercato>:<linea>:<esito>`. */
+export function selectionKey(k: SelectionKey): string {
+  return `${k.matchId}:${k.market}:${k.line ?? ""}:${k.selection}`;
+}
+
+/**
+ * Selezione codificata: `<partita>:<mercato>:<linea>:<esito>` (es. `12:TOTAL_GOALS:2.5:OVER`)
+ * oppure, come nelle schedine salvate prima, `<partita>:<HOME|DRAW|AWAY>` per l'1X2.
+ */
+export function parseSelectionKey(raw: unknown): SelectionKey | null {
+  if (typeof raw !== "string") return null;
+  const short = /^([1-9][0-9]{0,15}):(HOME|DRAW|AWAY)$/.exec(raw);
+  const full = /^([1-9][0-9]{0,15}):([A-Z0-9_]{2,20}):([0-9.]{0,4}):([A-Z_]{2,12})$/.exec(raw);
+  const matchId = Number((short ?? full)?.[1]);
+  if (!Number.isSafeInteger(matchId) || matchId <= 0) return null;
+  if (short) return { matchId, market: "1X2", line: null, selection: short[2]! };
+  if (!full) return null;
+  const market = full[2]!;
+  const line = full[3] === "" ? null : Number(full[3]);
+  const spec = BUILDER_MARKETS[market];
+  if (!spec || !spec.lines.includes(line) || !spec.selections.includes(full[4]!)) return null;
+  return { matchId, market, line, selection: full[4]! };
+}
+
+/** Chiavi valide, una sola giocata per partita (la prima), al massimo `MAX_MANUAL_SELECTIONS`. */
+export function parseSelectionKeys(values: unknown): SelectionKey[] {
   const list = Array.isArray(values) ? values : values === undefined ? [] : [values];
-  const seen = new Set<string>();
-  const out: { matchId: number; selection: string }[] = [];
+  const seen = new Set<number>();
+  const out: SelectionKey[] = [];
   for (const raw of list) {
     const parsed = parseSelectionKey(raw);
-    if (!parsed) continue;
-    const key = `${parsed.matchId}:${parsed.selection}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (!parsed || seen.has(parsed.matchId)) continue;
+    seen.add(parsed.matchId);
     out.push(parsed);
     if (out.length === MAX_MANUAL_SELECTIONS) break;
   }

@@ -269,6 +269,10 @@ textarea {
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
+  /* Celle vuote (es. azioni non disponibili): niente etichetta senza contenuto. */
+  .stack-sm table:not(.hidden, .compact-sm) tbody td:empty {
+    display: none;
+  }
   .stack-sm table:not(.hidden) .sm-secondary {
     display: none;
   }
