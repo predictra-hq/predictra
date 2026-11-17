@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Alert, Button, Field, Input } from "@/components/ui/primitives";
+import { CodeInput } from "@/components/auth/code-input";
+import { Alert, Button, Field } from "@/components/ui/primitives";
 import type { Messages } from "@/lib/i18n";
 import { confirmTotpEnrollment, startTotpEnrollment, type EnrollResult } from "./actions";
 
@@ -64,15 +65,14 @@ export function TotpEnrollment({ messages }: { messages: Messages }) {
         }}
       >
         <Field label={m.auth.mfaCode} htmlFor="totp-code">
-          <Input
+          <CodeInput
             id="totp-code"
-            inputMode="numeric"
-            pattern="\d{6}"
-            maxLength={6}
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            required
+            onChange={setCode}
+            labels={{
+              digit: m.auth.codeDigit,
+              paste: m.auth.codePaste,
+              pasteEmpty: m.auth.codePasteEmpty,
+            }}
           />
         </Field>
         <Button type="submit" disabled={pending || code.length !== 6}>

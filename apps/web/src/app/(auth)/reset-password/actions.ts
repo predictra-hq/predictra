@@ -23,7 +23,7 @@ export async function resetPassword(_prev: ActionState, formData: FormData): Pro
   if (error) {
     // Con 2FA attiva Supabase può richiedere una sessione aal2 per il cambio password.
     if (error.code === "insufficient_aal") redirect("/mfa?next=/reset-password");
-    if (error.code === "weak_password") return { ok: false, message: error.message };
+    if (error.code === "weak_password") return { ok: false, message: m.auth.passwordWeak };
     return { ok: false, message: m.common.genericError };
   }
   // Dopo il reset chiude le sessioni su tutti gli altri dispositivi.

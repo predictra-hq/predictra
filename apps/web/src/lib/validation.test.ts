@@ -32,7 +32,7 @@ describe("validazione input", () => {
         .success,
     ).toBe(false);
     expect(
-      newPasswordSchema.safeParse({ password: "unapasswordlunga", confirm: "unapasswordlunga" })
+      newPasswordSchema.safeParse({ password: "unapasswordlunga1", confirm: "unapasswordlunga1" })
         .success,
     ).toBe(true);
   });

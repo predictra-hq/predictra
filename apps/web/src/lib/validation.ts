@@ -7,7 +7,13 @@ const m = getMessages();
 /** Normalizza (trim + minuscolo) PRIMA di validare. */
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254));
 
-export const passwordSchema = z.string().min(12, m.auth.passwordTooShort).max(128);
+// Stessi requisiti di Supabase Auth (config.toml: 12 caratteri, lettere e numeri),
+// controllati prima per rispondere con un messaggio breve in italiano.
+export const passwordSchema = z
+  .string()
+  .min(12, m.auth.passwordTooShort)
+  .max(128)
+  .refine((v) => /\p{L}/u.test(v) && /\d/.test(v), m.auth.passwordLetterDigit);
 
 export const newPasswordSchema = z
   .object({ password: passwordSchema, confirm: z.string() })
