@@ -4,6 +4,7 @@ import { ChevronRight, LogOut } from "lucide-react";
 import { hasPermission, highestRole } from "@predictra/shared-types";
 import { ADMIN_NAV, type NavItem } from "@/components/shell/nav-config";
 import { NAV_ICONS } from "@/components/shell/nav-icons";
+import { TourRestartButton } from "@/components/shell/tour";
 import { Badge } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -115,6 +116,8 @@ export default async function ProfilePage() {
           rows={admin.map((item) => ({ key: item.key, href: item.href }))}
         />
       ) : null}
+
+      <TourRestartButton label={p.restartTour} />
 
       <form action="/auth/signout" method="post" className="mt-6">
         <button
