@@ -44,4 +44,4 @@ Regole comuni:
 
 ## Conservazione (ADR 0041, 17/11/2026)
 
-`prune_predictions(p_keep_days, p_limit)`, solo `service_role`, chiamata dal motore a fine giro: cancella a blocchi le righe di `predictions` e `prediction_score_matrices` più vecchie di 7 giorni che non sono le ultime della loro partita, versione, mercato, linea ed esito (per le matrici: partita e versione) e non sono usate da `bet_proposal_legs` o `user_bet_slip_selections`. Il trigger di immutabilità ammette le cancellazioni solo dentro questa funzione.
+`prune_predictions(p_keep_days, p_limit)`, solo `service_role`, chiamata dal motore a fine giro: cancella a blocchi le righe di `predictions` e `prediction_score_matrices` più vecchie di 7 giorni che l'app non usa. Restano l'ultima della famiglia del modello attivo, l'ultima di ogni versione attiva o in gara, l'ultima in assoluto per partita (per le matrici: per partita) e le righe usate da `bet_proposal_legs` o `user_bet_slip_selections`. Il trigger di immutabilità ammette le cancellazioni solo dentro questa funzione ([ADR 0041](../decisions/0041-retention.md)).
