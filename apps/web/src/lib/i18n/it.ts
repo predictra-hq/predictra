@@ -957,6 +957,7 @@ export const it = {
     fairOdds: "Quota equa",
     line: "Linea",
     otherMarkets: "Altri mercati",
+    topScores: "Risultati più probabili",
     markets: {
       "1X2": "Esito finale 1X2",
       DOUBLE_CHANCE: "Doppia chance",
@@ -985,6 +986,17 @@ export const it = {
       AWAY_UNDER: "Ospite under",
       OTHER: "Altro",
     },
+  },
+  oddsMovement: {
+    title: "Movimento delle quote",
+    basis: "Esito finale 1X2, media di {n} bookmaker raccolti.",
+    outcome: "Esito",
+    open: "Prima",
+    now: "Ora",
+    change: "Variazione",
+    trend: "Andamento",
+    directions: { down: "in calo", up: "in salita", flat: "ferma" },
+    note: "Una quota che scende indica che il mercato dà quell'esito più probabile di prima. «Prima» è la prima quota raccolta da PREDICTRA, non l'apertura del bookmaker.",
   },
   certainties: {
     title: "Certezze",

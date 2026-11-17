@@ -9,6 +9,7 @@ import {
   groupPredictions,
   relativeDelta,
   sortSelections,
+  topScores,
 } from "./format";
 
 const row = (over: Partial<ActivePredictionRow>): ActivePredictionRow => ({
@@ -116,5 +117,28 @@ describe("pannello vuoto", () => {
         now,
       }),
     ).toBe("NOT_YET_EVALUATED");
+  });
+});
+
+describe("risultati più probabili", () => {
+  const score = (selection: string, probability: number) =>
+    ({ market: "CORRECT_SCORE", selection, probability }) as unknown as ActivePredictionRow;
+
+  it("ordina per probabilità, senza Altro e senza gli altri mercati", () => {
+    const rows = [
+      score("0-0", 0.08),
+      score("1-1", 0.12),
+      score("OTHER", 0.3),
+      score("2-1", 0.1),
+      { market: "1X2", selection: "HOME", probability: 0.5 } as unknown as ActivePredictionRow,
+    ];
+    expect(topScores(rows, 2)).toEqual([
+      { score: "1-1", probability: 0.12 },
+      { score: "2-1", probability: 0.1 },
+    ]);
+  });
+
+  it("senza righe di risultato esatto non mostra nulla", () => {
+    expect(topScores([])).toEqual([]);
   });
 });
