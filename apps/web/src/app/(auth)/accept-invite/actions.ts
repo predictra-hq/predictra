@@ -34,7 +34,7 @@ export async function acceptInvite(_prev: ActionState, formData: FormData): Prom
   if (pwdError) {
     return {
       ok: false,
-      message: pwdError.code === "weak_password" ? pwdError.message : m.common.genericError,
+      message: pwdError.code === "weak_password" ? m.auth.passwordWeak : m.common.genericError,
     };
   }
   await supabase.from("profiles").update({ display_name: name.data }).eq("id", user.id);

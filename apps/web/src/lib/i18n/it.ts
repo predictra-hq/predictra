@@ -47,7 +47,16 @@ export const it = {
       "Per motivi di sicurezza il link di reimpostazione viene generato da un amministratore. Contatta un amministratore della piattaforma.",
     resetTitle: "Nuova password",
     resetButton: "Aggiorna password",
-    passwordRules: "Almeno 12 caratteri.",
+    passwordRules: "Almeno 12 caratteri, con lettere e numeri.",
+    passwordChecks: {
+      length: "Almeno 12 caratteri",
+      letter: "Almeno una lettera",
+      digit: "Almeno un numero",
+      match: "Le due password coincidono",
+    },
+    passwordLetterDigit: "La password deve contenere almeno una lettera e un numero.",
+    passwordWeak:
+      "Password troppo debole: usa almeno 12 caratteri, con lettere e numeri, e non una password comune.",
     passwordMismatch: "Le password non coincidono.",
     passwordTooShort: "La password deve avere almeno 12 caratteri.",
     linkInvalid: "Link non valido o scaduto. Richiedine uno nuovo.",

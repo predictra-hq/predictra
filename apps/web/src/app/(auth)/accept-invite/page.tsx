@@ -1,6 +1,9 @@
+import { NewPasswordFields } from "@/components/auth/new-password-fields";
+import { newPasswordLabels } from "@/components/auth/new-password-labels";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { KeepInput } from "@/components/ui/keep-input";
 import { Card, Field, Input } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -22,28 +25,15 @@ export default async function AcceptInvitePage() {
           <Input id="email" value={user.email} readOnly disabled />
         </Field>
         <Field label={m.auth.displayName} htmlFor="displayName">
-          <Input id="displayName" name="displayName" maxLength={80} autoComplete="name" required />
-        </Field>
-        <Field label={m.common.password} htmlFor="password" hint={m.auth.passwordRules}>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            minLength={12}
+          <KeepInput
+            id="displayName"
+            name="displayName"
+            maxLength={80}
+            autoComplete="name"
             required
           />
         </Field>
-        <Field label={m.common.confirmPassword} htmlFor="confirm">
-          <Input
-            id="confirm"
-            name="confirm"
-            type="password"
-            autoComplete="new-password"
-            minLength={12}
-            required
-          />
-        </Field>
+        <NewPasswordFields labels={newPasswordLabels()} />
         <SubmitButton>{m.auth.acceptButton}</SubmitButton>
       </ActionForm>
     </Card>

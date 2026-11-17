@@ -205,7 +205,7 @@ export function Alert({
       {...props}
     >
       <Icon size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">{children}</div>
     </div>
   );
 }

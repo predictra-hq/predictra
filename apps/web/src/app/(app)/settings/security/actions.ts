@@ -89,7 +89,7 @@ export async function changePassword(_prev: ActionState, formData: FormData): Pr
   if (error) {
     return {
       ok: false,
-      message: error.code === "weak_password" ? error.message : m.common.genericError,
+      message: error.code === "weak_password" ? m.auth.passwordWeak : m.common.genericError,
     };
   }
   await supabase.auth.signOut({ scope: "others" });

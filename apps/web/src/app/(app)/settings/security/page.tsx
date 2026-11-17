@@ -1,16 +1,10 @@
+import { NewPasswordFields } from "@/components/auth/new-password-fields";
+import { newPasswordLabels } from "@/components/auth/new-password-labels";
 import type { Metadata } from "next";
 import { hasPermission } from "@predictra/shared-types";
 import { SettingsTabs } from "@/components/shell/settings-tabs";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import {
-  Alert,
-  Badge,
-  Card,
-  CardTitle,
-  Field,
-  Input,
-  PageHeader,
-} from "@/components/ui/primitives";
+import { Alert, Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -60,26 +54,7 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
         <Card>
           <CardTitle>{m.security.passwordSection}</CardTitle>
           <ActionForm action={changePassword} className="mt-4 flex flex-col gap-4 sm:max-w-sm">
-            <Field label={m.common.password} htmlFor="password" hint={m.auth.passwordRules}>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={12}
-                required
-              />
-            </Field>
-            <Field label={m.common.confirmPassword} htmlFor="confirm">
-              <Input
-                id="confirm"
-                name="confirm"
-                type="password"
-                autoComplete="new-password"
-                minLength={12}
-                required
-              />
-            </Field>
+            <NewPasswordFields labels={newPasswordLabels()} />
             <SubmitButton variant="secondary">{m.auth.resetButton}</SubmitButton>
           </ActionForm>
         </Card>
