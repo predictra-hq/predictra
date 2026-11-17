@@ -10,6 +10,7 @@ import {
   SchedineCard,
   SystemStatusCard,
 } from "@/components/dashboard/cards";
+import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -59,6 +60,11 @@ export default async function DashboardPage() {
           <BankrollCard />
         </Suspense>
       </div>
+
+      {/* Prossime partite delle squadre seguite; senza seguiti non compare. */}
+      <Suspense fallback={null}>
+        <FollowedMatchesCard />
+      </Suspense>
 
       {/* Stato tecnico e avvisi dell'agente: solo per chi gestisce il sistema. */}
       {canMonitor ? (

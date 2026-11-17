@@ -10,7 +10,8 @@ import { requireUser } from "@/lib/auth/dal";
 import { strongestPicks } from "@/lib/certainties/load";
 import type { Pick } from "@/lib/certainties/logic";
 import { FavoriteCompetitionButton } from "@/components/football/favorite-button";
-import { chooseCompetition, readFavoriteCompetition } from "@/lib/football/favorite";
+import { chooseCompetition } from "@/lib/football/favorite";
+import { readFavoriteCompetitionAnywhere } from "@/lib/football/follows";
 import { formatScore, parseCompetitionCode, parseId, parseMatchday } from "@/lib/football/format";
 import {
   getCurrentSeason,
@@ -73,7 +74,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
   }
 
   const requestedCode = parseCompetitionCode(params.c);
-  const favorite = await readFavoriteCompetition();
+  const favorite = await readFavoriteCompetitionAnywhere();
   const competition = chooseCompetition(competitions, requestedCode, favorite)!;
   const requestedSeason = typeof params.s === "string" ? parseId(params.s) : null;
   const [season, seasons] = await Promise.all([
