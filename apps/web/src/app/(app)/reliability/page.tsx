@@ -18,6 +18,12 @@ export const metadata: Metadata = { title: "Affidabilità" };
 /** Soglia minima delle giocate controllate: la stessa da cui partono le Certezze. */
 const MIN_PROBABILITY = BANDS[0]![0];
 
+/**
+ * Scarto entro cui uscite e probabilità data si considerano in linea (barra verde): due
+ * punti, meno del margine casuale su qualche centinaio di giocate.
+ */
+const TOLERANCE = 0.02;
+
 /** Barra: quante sono uscite (piena) rispetto a quanto erano date (tacca). Decorativa. */
 function OutcomeBar({ stat }: { stat: GroupStat }) {
   const pct = (v: number) => `${Math.min(100, Math.max(0, v * 100))}%`;
@@ -26,7 +32,7 @@ function OutcomeBar({ stat }: { stat: GroupStat }) {
       <span
         className={cn(
           "block h-full rounded-full",
-          stat.observed >= stat.predicted ? "bg-positive" : "bg-warning",
+          stat.observed >= stat.predicted - TOLERANCE ? "bg-positive" : "bg-warning",
         )}
         style={{ width: pct(stat.observed) }}
       />
@@ -152,7 +158,7 @@ function WeeklyCard({ history }: { history: HistoryCheck }) {
                 <span
                   className={cn(
                     "absolute inset-x-0 bottom-0 rounded-sm",
-                    rate >= predicted ? "bg-positive" : "bg-warning",
+                    rate >= predicted - TOLERANCE ? "bg-positive" : "bg-warning",
                   )}
                   style={{ height: `${Math.max(rate * 100, 3)}%` }}
                 />
@@ -174,7 +180,8 @@ function WeeklyCard({ history }: { history: HistoryCheck }) {
   );
 }
 
-const formatCount = (n: number) => new Intl.NumberFormat("it-IT").format(n);
+const formatCount = (n: number) =>
+  new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(n);
 
 /**
  * Quanto ci si può fidare: delle giocate che PREDICTRA dava almeno al 70% prima della
