@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { MessageCircleQuestion, Sparkles } from "lucide-react";
 import { ask, type AskState } from "@/app/(app)/ask/actions";
 import { Alert, Button, Card, CardTitle, Label, ScrollRegion } from "@/components/ui/primitives";
+import { RowLimitClient } from "@/components/ui/row-limit";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { parseRichText, type RichSpan } from "@/lib/ask/rich-text";
@@ -28,29 +29,36 @@ function SourceTable({ source }: { source: ToolOutput }) {
       <p className="text-sm font-medium text-fg">{source.title}</p>
       {source.source ? <p className="text-xs text-subtle">{source.source}</p> : null}
       <ScrollRegion label={source.title} className="mt-2">
-        <table className="w-full min-w-max text-left text-xs">
-          <caption className="sr-only">{source.title}</caption>
-          <thead className="text-muted">
-            <tr>
-              {columns.map((c) => (
-                <th key={c} scope="col" className="py-1 pr-4 font-medium">
-                  {c}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {source.rows.map((row, i) => (
-              <tr key={i} className="border-t border-border">
+        <RowLimitClient
+          total={source.rows.length}
+          limit={5}
+          more={getMessages().common.showMoreRows}
+          less={getMessages().common.showLessRows}
+        >
+          <table className="w-full min-w-max text-left text-xs">
+            <caption className="sr-only">{source.title}</caption>
+            <thead className="text-muted">
+              <tr>
                 {columns.map((c) => (
-                  <td key={c} className="py-1 pr-4 tabular-nums text-fg">
-                    {row[c]}
-                  </td>
+                  <th key={c} scope="col" className="py-1 pr-4 font-medium">
+                    {c}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {source.rows.map((row, i) => (
+                <tr key={i} className="border-t border-border">
+                  {columns.map((c) => (
+                    <td key={c} className="py-1 pr-4 tabular-nums text-fg">
+                      {row[c]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </RowLimitClient>
       </ScrollRegion>
     </div>
   );

@@ -248,3 +248,77 @@ describe("multiple delle certezze", () => {
     expect(new Set(cards.map((c) => c.key)).size).toBe(cards.length);
   });
 });
+
+describe("partite divise per competizione", () => {
+  it("segue l'ordine delle competizioni e mette in fondo quelle sconosciute", async () => {
+    const { groupByCompetition } = await import("./logic");
+    const groups = groupByCompetition(
+      [
+        { id: "a", competitionId: 2 },
+        { id: "b", competitionId: 1 },
+        { id: "c", competitionId: 9 },
+        { id: "d", competitionId: 2 },
+      ],
+      [1, 2],
+    );
+    expect(groups.map((g) => g.competitionId)).toEqual([1, 2, 9]);
+    expect(groups[1]!.matches.map((m) => m.id)).toEqual(["a", "d"]);
+  });
+});
+
+describe("giocate uscite per settimana", () => {
+  it("conta per settimana le giocate dalla soglia, comprese le settimane vuote", async () => {
+    const { weeklyHits } = await import("./logic");
+    const base = {
+      match_status: "FINISHED",
+      competition_id: 1,
+      season_id: 1,
+      home_team_name: "A",
+      away_team_name: "B",
+      market: "DOUBLE_CHANCE",
+      line: null,
+      push_probability: null,
+      confidence_score: "0.8",
+      explanation: {},
+      as_of: "2026-11-01T00:00:00Z",
+      created_at: "2026-11-01T00:00:00Z",
+      model_version_id: 1,
+      model_key: "poisson",
+      model_version: "1",
+    };
+    const rows = [
+      {
+        ...base,
+        match_id: 1,
+        kickoff_at: "2026-11-10T20:00:00Z",
+        selection: "HOME_DRAW",
+        probability: "0.9",
+      },
+      {
+        ...base,
+        match_id: 2,
+        kickoff_at: "2026-11-11T20:00:00Z",
+        selection: "HOME_DRAW",
+        probability: "0.85",
+      },
+      {
+        ...base,
+        match_id: 3,
+        kickoff_at: "2026-11-03T20:00:00Z",
+        selection: "HOME_DRAW",
+        probability: "0.5",
+      },
+    ] as unknown as Parameters<typeof weeklyHits>[0];
+    const results = new Map([
+      [1, { home: 1, away: 0 }],
+      [2, { home: 0, away: 2 }],
+      [3, { home: 1, away: 1 }],
+    ]);
+    const weeks = weeklyHits(rows, results, 0.8, undefined, 3, new Date("2026-11-17T12:00:00Z"));
+    expect(weeks).toEqual([
+      { weekStart: "2026-11-02", count: 0, wins: 0 },
+      { weekStart: "2026-11-09", count: 2, wins: 1 },
+      { weekStart: "2026-11-16", count: 0, wins: 0 },
+    ]);
+  });
+});

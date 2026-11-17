@@ -383,7 +383,7 @@ async function formAlert(page) {
  * - uscita: si torna all'accesso e le pagine non si aprono più.
  * L'utente invitato (`verifica-invito-…@example.com`) viene sempre cancellato.
  */
-async function authFlows(browser, account) {
+async function authFlows(browser, account, matchPath) {
   // 1. Accesso con password sbagliata.
   {
     const context = await browser.newContext({
@@ -515,6 +515,13 @@ async function authFlows(browser, account) {
       welcome,
     );
 
+    // Un utente normale non vede i dettagli tecnici della partita (fonte, ID, qualità).
+    if (matchPath) {
+      await page.goto(`${appUrl}${matchPath}`);
+      const technical = await page.getByText("Dettagli tecnici").count();
+      check("utente: nessun dettaglio tecnico nella partita", technical === 0, `${technical}`);
+    }
+
     // 3. Uscita dal Profilo.
     await page.goto(`${appUrl}/settings`);
     await Promise.all([
@@ -643,8 +650,24 @@ async function main() {
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
 
+    // Azioni sugli utenti in una finestra modale: si apre, sta nello schermo, Esc la chiude.
+    await page.goto(`${appUrl}/admin/users`);
+    const resetButton = page.getByRole("button", { name: "Link reset password" }).first();
+    if (await resetButton.count()) {
+      await resetButton.click();
+      const dialog = page.locator("dialog[open]");
+      const box = await dialog.boundingBox().catch(() => null);
+      check(
+        "utenti: «Link reset password» apre una finestra",
+        box !== null && box.x >= 0 && box.x + box.width <= 375,
+        JSON.stringify(box),
+      );
+      await page.keyboard.press("Escape");
+      check("utenti: Esc chiude la finestra", (await page.locator("dialog[open]").count()) === 0);
+    }
+
     await page.setViewportSize({ width: 375, height: 812 });
-    await authFlows(browser, account);
+    await authFlows(browser, account, match);
   } finally {
     await browser.close();
     if (account) {

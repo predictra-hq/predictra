@@ -23,12 +23,14 @@ import {
   certaintyMultiples,
   DEFAULT_THRESHOLD,
   flatReturn,
+  groupByCompetition,
   groupByMatch,
   pastValueMultiples,
   selectPicks,
   type BandStat,
   type Pick,
 } from "@/lib/certainties/logic";
+import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
@@ -183,7 +185,11 @@ function Reliability({
 /** Multiple e partite: la parte principale, caricata appena possibile. */
 async function CertaintiesContent() {
   const c = getMessages().certainties;
-  const [upcoming, site] = await Promise.all([loadUpcoming(), userBookmaker()]);
+  const [upcoming, site, competitions] = await Promise.all([
+    loadUpcoming(),
+    userBookmaker(),
+    listCompetitions(),
+  ]);
   const picks = selectPicks(upcoming.rows, DEFAULT_THRESHOLD, upcoming.market);
   const matches = groupByMatch(picks);
   const prices = upcoming.prices;
@@ -223,30 +229,53 @@ async function CertaintiesContent() {
       {matches.length === 0 ? (
         <EmptyState>{c.empty}</EmptyState>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {matches.map((match) => (
-            <li key={match.matchId}>
-              <Card className="h-full">
-                <Link
-                  href={`/match-center/${match.matchId}`}
-                  className="block font-medium hover:underline"
-                >
-                  {match.home} – {match.away}
-                </Link>
-                <p className="text-xs text-muted">{formatDateTime(match.kickoffAt)}</p>
-                <ul className="mt-2 divide-y divide-border">
-                  {match.picks.map((p) => (
-                    <PickRow
-                      key={`${p.market}|${p.line ?? ""}|${p.selection}`}
-                      pick={p}
-                      prices={prices}
-                    />
-                  ))}
-                </ul>
-              </Card>
-            </li>
+        <div className="flex flex-col gap-6">
+          {groupByCompetition(
+            matches,
+            competitions.map((x) => x.id),
+          ).map((group) => (
+            <section
+              key={group.competitionId ?? "altro"}
+              aria-labelledby={`comp-${group.competitionId ?? "altro"}`}
+            >
+              <h3
+                id={`comp-${group.competitionId ?? "altro"}`}
+                className="mb-2 flex items-baseline gap-2 text-sm font-semibold uppercase tracking-wide text-muted"
+              >
+                {competitions.find((x) => x.id === group.competitionId)?.name ?? c.otherCompetition}
+                <span className="font-normal normal-case tracking-normal text-subtle">
+                  {group.matches.length === 1
+                    ? c.competitionCountOne
+                    : fillTemplate(c.competitionCount, { count: String(group.matches.length) })}
+                </span>
+              </h3>
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {group.matches.map((match) => (
+                  <li key={match.matchId}>
+                    <Card className="h-full">
+                      <Link
+                        href={`/match-center/${match.matchId}`}
+                        className="block font-medium hover:underline"
+                      >
+                        {match.home} – {match.away}
+                      </Link>
+                      <p className="text-xs text-muted">{formatDateTime(match.kickoffAt)}</p>
+                      <ul className="mt-2 divide-y divide-border">
+                        {match.picks.map((p) => (
+                          <PickRow
+                            key={`${p.market}|${p.line ?? ""}|${p.selection}`}
+                            pick={p}
+                            prices={prices}
+                          />
+                        ))}
+                      </ul>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </>
   );

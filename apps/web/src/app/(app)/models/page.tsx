@@ -11,6 +11,7 @@ import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Modello" };
 
@@ -118,75 +119,77 @@ export default async function ModelsPage() {
         {current.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noVersions}</p>
         ) : (
-          <table className="w-full min-w-[960px] text-left text-sm">
-            <caption className="sr-only">{mi.versions}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{mi.model}</Th>
-                <Th>{mi.status}</Th>
-                <Th className="text-right">{mi.trainingMatches}</Th>
-                <Th className="text-right">{mi.backtestMatches}</Th>
-                <Th className="text-right">{mi.brier}</Th>
-                <Th className="text-right">{mi.logLoss}</Th>
-                <Th className="text-right">{mi.ece}</Th>
-                <Th>{mi.vsBaseline}</Th>
-                {canManage ? (
-                  <Th>
-                    <span className="sr-only">{getMessages().common.actions}</span>
-                  </Th>
-                ) : null}
-              </tr>
-            </thead>
-            <tbody>
-              {current.map((v) => (
-                <tr
-                  key={v.model_version_id}
-                  className="border-b border-border align-top last:border-0"
-                >
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <span className="font-medium">{mi.modelNames[v.model_key]}</span>
-                    <span className="block font-mono text-xs text-muted">{v.version}</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <Badge tone={modelStatusTone(v.status)}>{mi.modelStatus[v.status]}</Badge>
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">{v.training_matches}</td>
-                  <td className="px-3 py-3 text-right font-mono">{v.backtest_matches ?? "–"}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-right font-mono">
-                    {metric(v.brier)}
-                    {v.model_key !== "baseline" ? (
-                      <Delta value={v.brier} baseline={v.baseline_brier} />
-                    ) : null}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-right font-mono">
-                    {metric(v.log_loss)}
-                    {v.model_key !== "baseline" ? (
-                      <Delta value={v.log_loss} baseline={v.baseline_log_loss} />
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">{metric(v.ece)}</td>
-                  <td className="px-3 py-3">
-                    {v.backtest_id === null ? (
-                      <span className="text-xs text-muted">{mi.noBacktest}</span>
-                    ) : v.model_key === "baseline" ? (
-                      "—"
-                    ) : (
-                      <Badge tone={v.beats_baseline ? "positive" : "negative"}>
-                        {v.beats_baseline ? mi.beatsBaseline : mi.notBeatsBaseline}
-                      </Badge>
-                    )}
-                  </td>
+          <Limited total={current.length}>
+            <table className="w-full min-w-[960px] text-left text-sm">
+              <caption className="sr-only">{mi.versions}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{mi.model}</Th>
+                  <Th>{mi.status}</Th>
+                  <Th className="text-right">{mi.trainingMatches}</Th>
+                  <Th className="text-right">{mi.backtestMatches}</Th>
+                  <Th className="text-right">{mi.brier}</Th>
+                  <Th className="text-right">{mi.logLoss}</Th>
+                  <Th className="text-right">{mi.ece}</Th>
+                  <Th>{mi.vsBaseline}</Th>
                   {canManage ? (
-                    <td className="px-3 py-3">
-                      {v.status !== "ACTIVE" && v.beats_baseline ? (
-                        <ActivateButton version={v} />
-                      ) : null}
-                    </td>
+                    <Th>
+                      <span className="sr-only">{getMessages().common.actions}</span>
+                    </Th>
                   ) : null}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {current.map((v) => (
+                  <tr
+                    key={v.model_version_id}
+                    className="border-b border-border align-top last:border-0"
+                  >
+                    <td className="whitespace-nowrap px-3 py-3">
+                      <span className="font-medium">{mi.modelNames[v.model_key]}</span>
+                      <span className="block font-mono text-xs text-muted">{v.version}</span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <Badge tone={modelStatusTone(v.status)}>{mi.modelStatus[v.status]}</Badge>
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono">{v.training_matches}</td>
+                    <td className="px-3 py-3 text-right font-mono">{v.backtest_matches ?? "–"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-right font-mono">
+                      {metric(v.brier)}
+                      {v.model_key !== "baseline" ? (
+                        <Delta value={v.brier} baseline={v.baseline_brier} />
+                      ) : null}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3 text-right font-mono">
+                      {metric(v.log_loss)}
+                      {v.model_key !== "baseline" ? (
+                        <Delta value={v.log_loss} baseline={v.baseline_log_loss} />
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono">{metric(v.ece)}</td>
+                    <td className="px-3 py-3">
+                      {v.backtest_id === null ? (
+                        <span className="text-xs text-muted">{mi.noBacktest}</span>
+                      ) : v.model_key === "baseline" ? (
+                        "—"
+                      ) : (
+                        <Badge tone={v.beats_baseline ? "positive" : "negative"}>
+                          {v.beats_baseline ? mi.beatsBaseline : mi.notBeatsBaseline}
+                        </Badge>
+                      )}
+                    </td>
+                    {canManage ? (
+                      <td className="px-3 py-3">
+                        {v.status !== "ACTIVE" && v.beats_baseline ? (
+                          <ActivateButton version={v} />
+                        ) : null}
+                      </td>
+                    ) : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
@@ -215,43 +218,44 @@ export default async function ModelsPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noRuns}</p>
         ) : (
-          <table
-            className="limit-sm w-full min-w-[640px] text-left text-sm"
-            data-more={getMessages().common.moreOnDesktop}
-          >
-            <caption className="sr-only">{mi.recentRuns}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{mi.started}</Th>
-                <Th>{mi.model}</Th>
-                <Th>{mi.status}</Th>
-                <Th className="text-right">{mi.matchesScored}</Th>
-                <Th className="text-right">{mi.rows}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r) => (
-                <tr key={r.id} className="border-b border-border align-top last:border-0">
-                  <td className="whitespace-nowrap px-3 py-3 text-muted">
-                    {formatDateTime(r.started_at)}
-                  </td>
-                  <td className="px-3 py-3">
-                    {r.model_versions ? mi.modelNames[r.model_versions.model_key] : "—"}
-                    {r.error_summary ? (
-                      <span className="mt-1 block text-xs text-negative-strong">
-                        {r.error_summary}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-3">
-                    <Badge tone={runStatusTone(r.status)}>{m.dataCenter.runStatus[r.status]}</Badge>
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">{r.matches_scored}</td>
-                  <td className="px-3 py-3 text-right font-mono">{r.predictions_written}</td>
+          <Limited total={runs.length}>
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <caption className="sr-only">{mi.recentRuns}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{mi.started}</Th>
+                  <Th>{mi.model}</Th>
+                  <Th>{mi.status}</Th>
+                  <Th className="text-right">{mi.matchesScored}</Th>
+                  <Th className="text-right">{mi.rows}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {runs.map((r) => (
+                  <tr key={r.id} className="border-b border-border align-top last:border-0">
+                    <td className="whitespace-nowrap px-3 py-3 text-muted">
+                      {formatDateTime(r.started_at)}
+                    </td>
+                    <td className="px-3 py-3">
+                      {r.model_versions ? mi.modelNames[r.model_versions.model_key] : "—"}
+                      {r.error_summary ? (
+                        <span className="mt-1 block text-xs text-negative-strong">
+                          {r.error_summary}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3">
+                      <Badge tone={runStatusTone(r.status)}>
+                        {m.dataCenter.runStatus[r.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono">{r.matches_scored}</td>
+                    <td className="px-3 py-3 text-right font-mono">{r.predictions_written}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 

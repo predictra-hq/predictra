@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { AGENT_JOB_STATUSES, type AgentJobStatus } from "@predictra/shared-types";
 import {
   currentWindows,
@@ -32,6 +32,7 @@ import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { retryDeadJob } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Agente" };
 
@@ -64,13 +65,15 @@ function Td({ children, className }: { children: ReactNode; className?: string }
 function Table({ label, head, children }: { label: string; head: ReactNode; children: ReactNode }) {
   return (
     <ScrollRegion label={label} className="mt-3">
-      <table className="limit-sm w-full text-sm" data-more={getMessages().common.moreOnDesktop}>
-        <caption className="sr-only">{label}</caption>
-        <thead className="text-xs uppercase tracking-wide text-muted">
-          <tr className="border-b border-border">{head}</tr>
-        </thead>
-        <tbody className="divide-y divide-border">{children}</tbody>
-      </table>
+      <Limited total={Children.count(children)}>
+        <table className="w-full text-sm">
+          <caption className="sr-only">{label}</caption>
+          <thead className="text-xs uppercase tracking-wide text-muted">
+            <tr className="border-b border-border">{head}</tr>
+          </thead>
+          <tbody className="divide-y divide-border">{children}</tbody>
+        </table>
+      </Limited>
     </ScrollRegion>
   );
 }

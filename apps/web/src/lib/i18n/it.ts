@@ -11,8 +11,8 @@ export const it = {
       "Le previsioni sono stime soggette a incertezza. PREDICTRA è uno strumento informativo: non piazza scommesse e non garantisce vincite.",
   },
   common: {
-    moreOnDesktop:
-      "Sul telefono vedi le prime 8 righe: l'elenco completo è su uno schermo più grande.",
+    showMoreRows: "Mostra altre {count}",
+    showLessRows: "Mostra meno",
     email: "Email",
     password: "Password",
     confirmPassword: "Conferma password",
@@ -175,6 +175,25 @@ export const it = {
     favourite: "Favorito",
     probabilitiesLabel: "Probabilità: 1 {home}, X {draw}, 2 {away}",
     confidence: "Confidenza",
+    hitsTitle: "Come ci ha preso il modello",
+    hitsMore: "Affidabilità",
+    hitsSummary:
+      "Nelle ultime {weeks} settimane sono uscite {wins} giocate su {count} tra quelle date almeno all'80% ({rate}).",
+    hitsWeek: "Settimana del {week}: {wins} uscite su {count}",
+    hitsWeekEmpty: "Settimana del {week}: nessuna partita",
+    hitsNote: "Ogni barra è una settimana: più è alta, più giocate sono uscite.",
+    leaguesTitle: "Campionati a confronto",
+    leaguesMore: "Campionati",
+    leaguesDescription: "Dal campionato con più gol a quello con meno, stagione in corso.",
+    leaguesOver: "Più di 2,5 gol",
+    leaguesBtts: "Gol di entrambe",
+    leaguesGoals: "{goals} gol a partita",
+    leaguesRow: "Partite con più di 2,5 gol: {over}. Partite con gol di entrambe: {btts}.",
+    confidenceWords: {
+      HIGH: "Previsione solida",
+      MEDIUM: "Previsione media",
+      LOW: "Previsione incerta",
+    },
     proposalsTitle: "Proposte con valore",
     proposalsEmpty:
       "Nessuna proposta attiva: compaiono quando il modello trova selezioni con valore e confidenza sufficienti.",
@@ -283,6 +302,24 @@ export const it = {
     target: "Oggetto",
     when: "Quando",
     noAudit: "Nessun evento.",
+    dialog: {
+      cancel: "Annulla",
+      close: "Chiudi",
+      roleTitle: "Cambia ruolo di {name}",
+      roleText: "Il nuovo ruolo vale dal prossimo accesso a una pagina.",
+      changeRole: "Cambia ruolo",
+      suspendTitle: "Sospendere {name}?",
+      suspendText: "Non potrà più accedere finché non lo riattivi. I suoi dati restano dove sono.",
+      reactivateTitle: "Riattivare {name}?",
+      reactivateText: "Potrà di nuovo accedere con la sua password e il codice di verifica.",
+      resetTitle: "Link per cambiare la password di {name}",
+      resetText:
+        "Genera un link personale e monouso: consegnalo tu all'utente con un canale sicuro. Nessuna email viene inviata.",
+      generate: "Genera link",
+      revokeTitle: "Revocare l'invito per {email}?",
+      revokeText: "Il link già consegnato smetterà di funzionare.",
+      inviteResult: "Invito",
+    },
   },
   matchCenter: {
     title: "Partite",
@@ -291,7 +328,7 @@ export const it = {
     favoriteHint:
       "Il campionato preferito è quello che Partite e Campionati aprono per primo. Vale per questo browser.",
     description:
-      "Calendario e risultati reali per competizione, stagione e giornata: la stagione in corso e lo storico 2022–2024. Ogni partita indica fonte, orario di osservazione e qualità del dato.",
+      "Calendario e risultati per campionato e giornata, con le probabilità del modello. Apri una partita per i dettagli.",
     competition: "Competizione",
     matchday: "Giornata",
     allMatchdays: "Tutte",
@@ -658,6 +695,7 @@ export const it = {
     pointsHome: "Punti/partita in casa",
     pointsAway: "Punti/partita in trasferta",
     standingsTitle: "Classifica",
+    standingsUpdated: "Classifica aggiornata al {at}.",
     standingsSource: "Classifica pubblicata dalla fonte ({provider}), osservata il {observedAt}.",
     noStandings: "Nessuna classifica disponibile per questa stagione.",
     position: "#",
@@ -677,9 +715,9 @@ export const it = {
   betBuilder: {
     title: "Schedine",
     description:
-      "Schedine pronte e proposte costruite dalle probabilità del modello e dalle quote reali aggiornate dei bookmaker italiani. Si propone solo ciò che supera le soglie: nessuna schedina forzata.",
+      "Schedine pronte, costruite dalle probabilità del modello e dalle quote dei siti italiani. Se non c'è niente di buono non si propone niente.",
     disclaimer:
-      "PREDICTRA non piazza scommesse e non garantisce vincite: le proposte sono stime soggette a incertezza. Il valore atteso (EV) è calcolato sulle probabilità del modello, non è un guadagno sicuro. Gioca responsabilmente.",
+      "PREDICTRA non piazza scommesse e non garantisce vincite: le proposte sono stime. Il «valore» indica quanto la quota paga più di quanto dovrebbe secondo il modello, non è un guadagno sicuro. Gioca responsabilmente.",
     bollette: {
       title: "Schedine consigliate",
       description: "Multiple pronte per il prossimo turno, con quote reali di bookmaker italiani.",
@@ -809,6 +847,7 @@ export const it = {
     currentPrice: "Quota attuale",
     freshness: "Freschezza",
     oddsObservedAt: "Quote lette alle",
+    oddsUpdated: "Quote aggiornate al {at}",
     generatedAt: "Generata alle",
     details: "Dettaglio",
     back: "Torna alle proposte",
@@ -1065,6 +1104,9 @@ export const it = {
     multipleWin: "Probabilità di vincerla",
     multiplePrice: "Quota {price}",
     matchesTitle: "Partite ({count})",
+    otherCompetition: "Altre competizioni",
+    competitionCount: "{count} partite",
+    competitionCountOne: "1 partita",
     matchTitle: "Le giocate più probabili",
     priceShort: "quota {price}",
     worth: "+{value}",
@@ -1109,9 +1151,12 @@ export const it = {
     flatPctHint: "Tra 0,1% e 5%. Predefinito 1%.",
     createButton: "Crea bankroll",
     bookmaker: "Sito dove giochi",
-    bookmakerHint: "Schedine e Certezze ti mostrano le quote di questo sito quando le raccogliamo.",
+    bookmakerHint:
+      "Schedine e Certezze ti mostrano le quote di questo sito quando le raccogliamo; per gli altri siti ti proponiamo la migliore quota italiana e la correggi tu.",
     bookmakerChoose: "Scegli il sito",
-    bookmakerOther: "Altro sito (non in elenco)",
+    bookmakerOther: "Altro sito (scrivi il nome qui sotto)",
+    bookmakerGroupTracked: "Con le quote in PREDICTRA",
+    bookmakerGroupUntracked: "Altri siti italiani (quote non raccolte)",
     bookmakerOtherLabel: "Nome del sito, se non è in elenco",
     bookmakerOtherHint:
       "Es. il nome del tuo bookmaker. Non ne raccogliamo le quote: ti proponiamo la migliore disponibile e la correggi quando registri la giocata.",
@@ -1375,8 +1420,7 @@ export const it = {
     description:
       "Fai una domanda su partite, previsioni, quote, statistiche e classifiche. Le risposte usano solo i dati già presenti in PREDICTRA: i numeri vengono dai modelli e dalle fonti, mai dall’" +
       "assistente.",
-    disabled:
-      "Ask PREDICTRA non è attiva in questo ambiente: manca la chiave del fornitore oppure è stata spenta (ADR 0042).",
+    disabled: "Chiedi a PREDICTRA non è disponibile al momento. Riprova più tardi.",
     question: "La tua domanda",
     placeholder: "Es. Che probabilità dà il modello alla prossima partita dell’" + "Inter?",
     send: "Chiedi",

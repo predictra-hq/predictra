@@ -26,3 +26,10 @@ Schedine e Certezze mostravano la migliore quota tra i bookmaker italiani raccol
 - Valore atteso e puntata consigliata si calcolano sulla quota mostrata, quindi su quella del sito dell'utente quando c'è.
 - La verifica storica delle Certezze continua a usare la migliore quota italiana: è una misura del metodo, non del singolo utente.
 - Limite: le quote si raccolgono nelle 48 ore prima delle partite (ADR 0032). Prima di allora la quota proposta può essere vecchia e va ricontrollata sul sito.
+
+## Aggiornamento del 17/11/2026: elenco dei siti italiani
+
+Segnalazione del proprietario: nel menu del bankroll compariva solo Codere.
+
+- **Causa.** Il menu elencava solo i bookmaker italiani di cui raccogliamo le quote. La fonte (The Odds API, regione `eu`) ne ha oggi uno solo, Codere (IT); Unibet (IT) è documentato ma non compare nelle risposte.
+- **Correzione.** Il menu ha due gruppi: «Con le quote in PREDICTRA» (dalla tabella `bookmakers`) e «Altri siti italiani (quote non raccolte)», un elenco fisso di nomi in `apps/web/src/lib/bankroll/sites.ts` (Snai, Sisal, Eurobet, Bet365…). Per questi si salva solo il nome, come per il nome scritto a mano: nessuna quota inventata, si mostra la migliore quota italiana raccolta e la si corregge registrando la giocata. Resta il campo per scrivere un sito che non è in elenco.

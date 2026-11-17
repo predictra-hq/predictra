@@ -15,6 +15,9 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { createInvitation, revokeInvitation } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
+import { fillTemplate } from "@/lib/odds/format";
+import { ActionDialog } from "@/components/ui/action-dialog";
 
 export const metadata: Metadata = { title: "Inviti" };
 
@@ -57,6 +60,7 @@ export default async function InvitationsPage() {
         <CardTitle>{m.admin.invite}</CardTitle>
         <ActionForm
           action={createInvitation}
+          resultDialog={{ title: m.admin.dialog.inviteResult, close: m.admin.dialog.close }}
           className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end"
         >
           <Field label={m.common.email} htmlFor="email">
@@ -79,66 +83,70 @@ export default async function InvitationsPage() {
         {invitations.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.admin.noInvitations}</p>
         ) : (
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <caption className="sr-only">{m.admin.invitationsTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th scope="col" className="px-4 py-3">
-                  {m.common.email}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.role}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.status}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.createdAt}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.expiresAt}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  <span className="sr-only">Azioni</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {invitations.map((inv) => (
-                <tr key={inv.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    {inv.email}
-                    {inv.send_error ? (
-                      <p className="text-xs text-negative-strong">{m.admin.linkFailed}</p>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">{m.roles[inv.role]}</td>
-                  <td className="px-4 py-3">
-                    <Badge tone={statusTone[inv.status]}>{m.invitationStatus[inv.status]}</Badge>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(inv.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(inv.expires_at)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {inv.status === "PENDING" && canGrantRole(user.roles, inv.role) ? (
-                      <ActionForm
-                        action={revokeInvitation}
-                        className="inline-flex flex-col items-end gap-1"
-                      >
-                        <input type="hidden" name="id" value={inv.id} />
-                        <SubmitButton variant="danger" className="h-8 px-3 text-xs">
-                          {m.admin.revoke}
-                        </SubmitButton>
-                      </ActionForm>
-                    ) : null}
-                  </td>
+          <Limited total={invitations.length}>
+            <table className="w-full min-w-[720px] text-left text-sm">
+              <caption className="sr-only">{m.admin.invitationsTitle}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th scope="col" className="px-4 py-3">
+                    {m.common.email}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.role}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.status}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.createdAt}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.expiresAt}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    <span className="sr-only">Azioni</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {invitations.map((inv) => (
+                  <tr key={inv.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3">
+                      {inv.email}
+                      {inv.send_error ? (
+                        <p className="text-xs text-negative-strong">{m.admin.linkFailed}</p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3">{m.roles[inv.role]}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={statusTone[inv.status]}>{m.invitationStatus[inv.status]}</Badge>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(inv.created_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(inv.expires_at)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {inv.status === "PENDING" && canGrantRole(user.roles, inv.role) ? (
+                        <ActionDialog
+                          trigger={m.admin.revoke}
+                          triggerVariant="danger"
+                          title={fillTemplate(m.admin.dialog.revokeTitle, { email: inv.email })}
+                          description={m.admin.dialog.revokeText}
+                          confirm={m.admin.revoke}
+                          confirmVariant="danger"
+                          action={revokeInvitation}
+                          fields={{ id: String(inv.id) }}
+                          labels={{ cancel: m.admin.dialog.cancel, close: m.admin.dialog.close }}
+                        />
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
     </>
