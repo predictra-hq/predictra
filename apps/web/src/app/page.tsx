@@ -13,6 +13,7 @@ import {
 import { DemoVideo } from "@/components/landing/demo-video";
 import { Logo } from "@/components/shell/logo";
 import { getMessages } from "@/lib/i18n";
+import { formatRelease } from "@/lib/version";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: { absolute: "PREDICTRA" } };
@@ -110,6 +111,9 @@ export default async function Home() {
 
       <footer className="mx-auto max-w-6xl border-t border-border px-4 py-8 text-xs text-subtle sm:px-8">
         <p>{m.app.disclaimer}</p>
+        <p className="mt-2">
+          {m.app.name} {formatRelease()}
+        </p>
       </footer>
     </div>
   );
