@@ -1454,6 +1454,8 @@ export const it = {
     sources: "Dati usati",
     noSources: "Nessun dato consultato per questa domanda.",
     history: "Domande di questa sessione",
+    openFull: "Apri a pagina intera",
+    close: "Chiudi",
     you: "Tu",
     assistant: "PREDICTRA",
     privacy:
