@@ -119,6 +119,7 @@ export const it = {
     agent: "Agente",
     quickNav: "Pagine principali",
     refresh: "Aggiorna i dati",
+    refreshed: "Dati aggiornati",
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
   },
@@ -1141,6 +1142,32 @@ export const it = {
     expected: "Erano date in media al {predicted} (la tacca sulla barra).",
     empty: "Ancora nessuna partita giocata da controllare.",
     note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Con poche giocate il caso pesa molto: i risultati passati non garantiscono quelli futuri.",
+    historyTitle: "Il modello su tutto lo storico",
+    historyIntro:
+      "PREDICTRA ha rigiocato {matches} partite dal {from} al {to}: ogni settimana il modello ha previsto le partite vedendo solo quelle giocate prima, poi le previsioni sono state confrontate con i risultati veri.",
+    historyMatches: "Partite rigiocate",
+    historyFavourite: "Vince la favorita",
+    historyFavouriteHint: "data in media al {predicted}",
+    historyPicks: "Giocate dal 70% uscite",
+    historyPicksHint: "{wins} su {count}, date al {predicted}",
+    historyExact: "Risultato esatto",
+    historyExactHint: "il più probabile, dato al {predicted}",
+    calibrationTitle: "Le probabilità sono giuste?",
+    calibrationIntro:
+      "Per ogni fascia di probabilità: quante volte l'esito è uscito davvero (barra) rispetto a quanto era dato (tacca). Più barra e tacca coincidono, più ci si può fidare dei numeri.",
+    band: "dal {from} al {to}",
+    bandLast: "dal {from} in su",
+    bySeason: "Per stagione",
+    weeklyTitle: "Settimana per settimana",
+    weeklyIntro: "Giocate dal 70% uscite nelle ultime settimane dello storico.",
+    weeklyNote:
+      "Barra verde: uscite più di quanto previsto; gialla: meno. La linea è la probabilità data.",
+    week: "Settimana del {week}: {wins} uscite su {count}",
+    historyNote:
+      "Verifica del solo modello: per le stagioni passate non ci sono quote raccolte. Aggiornata ogni settimana, l'ultima il {date}.",
+    liveTitle: "Sulle partite di queste settimane",
+    liveIntro:
+      "Le giocate davvero proposte da PREDICTRA prima delle partite, con modello e quote insieme.",
   },
   bankroll: {
     title: "Bankroll",
