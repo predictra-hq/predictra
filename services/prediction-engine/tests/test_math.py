@@ -127,7 +127,7 @@ def test_over_15_tarato_e_coerente_con_le_altre_linee():
 
 
 def test_gol_totali_tarati_e_coerenti_su_tutte_le_linee():
-    """ADR 0058: 1,5 e 2,5 tarati; l'over scende salendo di linea; linee intere coerenti."""
+    """ADR 0060: 1,5 e 2,5 tarati; l'over scende salendo di linea; linee intere coerenti."""
     from predictra_engine.markets import TOTAL_LINES
 
     for home, away in ((1.6, 1.0), (0.4, 0.3), (3.2, 2.4), (2.8, 0.2)):

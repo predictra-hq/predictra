@@ -37,7 +37,7 @@ def _over_under(dist: np.ndarray, line: float) -> tuple[float, float, float | No
     return over, under, push
 
 
-# Tarature per mercato (ADR 0053, aggiornate dall'ADR 0058): su «entrambe segnano» e sui
+# Tarature per mercato (ADR 0053, aggiornate dall'ADR 0060): su «entrambe segnano» e sui
 # gol totali 1,5 e 2,5 la matrice dei risultati è troppo sicura. La taratura
 # σ(a·logit p + b) è stimata sulle stagioni vecchie e verificata sulle recenti (e
 # viceversa) e migliora il Log Loss nei due versi:

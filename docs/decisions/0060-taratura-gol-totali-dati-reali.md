@@ -1,4 +1,4 @@
-# ADR 0058 — Taratura dei gol totali sui dati reali
+# ADR 0060 — Taratura dei gol totali sui dati reali
 
 - **Stato:** accettato (17/11/2026)
 - **Milestone:** M8 (corsia A, motore delle previsioni)
