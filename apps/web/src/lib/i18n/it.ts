@@ -130,6 +130,45 @@ export const it = {
     preferencesHint: "Nome, tema chiaro o scuro, formato quote",
     mfaOn: "2FA attiva",
     mfaOff: "2FA da attivare",
+    restartTour: "Rivedi il tutorial",
+  },
+  tour: {
+    stepOf: "Passo {n} di {total}",
+    next: "Avanti",
+    back: "Indietro",
+    skip: "Salta",
+    done: "Ho capito",
+    steps: {
+      welcome: {
+        title: "Benvenuto in PREDICTRA",
+        text: "In un minuto ti mostro dove trovare le cose. Puoi saltare quando vuoi e rivedere il tutorial dal Profilo.",
+      },
+      home: {
+        title: "Home",
+        text: "Il riassunto della giornata: partite da non perdere, Certezze in arrivo e le tue giocate aperte.",
+      },
+      bets: {
+        title: "Pronostici",
+        text: "Certezze sono le giocate che i modelli danno più probabili; Schedine propone combinazioni già calcolate. Le probabilità vengono sempre da modelli matematici.",
+      },
+      football: {
+        title: "Calcio",
+        text: "Partite, campionati e squadre: classifiche, statistiche, quote e previsioni di ogni partita.",
+      },
+      money: {
+        title: "Soldi",
+        text: "Bankroll e giocate fatte: registri tu le giocate e vedi come vanno. PREDICTRA non piazza scommesse. Questi dati li vedi solo tu.",
+      },
+      ask: {
+        title: "Chiedi a PREDICTRA",
+        text: "Fai una domanda a parole sui dati di PREDICTRA, da qualunque pagina.",
+      },
+      profile: {
+        title: "Profilo",
+        text:
+          "Tema chiaro o scuro, sicurezza dell’" + "account e questo tutorial, se vuoi rivederlo.",
+      },
+    },
   },
   dashboard: {
     title: "Home",
