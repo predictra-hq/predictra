@@ -348,6 +348,195 @@ async function horizontalOverflow(page) {
   }, vw);
 }
 
+/** Esito di un controllo di funzionamento (non axe): OK/KO nel log e nel riepilogo. */
+function check(label, ok, detail = "") {
+  results.push({
+    label,
+    status: ok ? 200 : 500,
+    landed: "",
+    violations: [],
+    skipLink: null,
+    errors: ok ? [] : [detail || "controllo non superato"],
+  });
+  console.log(`${ok ? "OK" : "KO"} ${label}${!ok && detail ? ` — ${detail}` : ""}`);
+}
+
+/** Testo dell'avviso del modulo e se resta dentro la card (niente testo che esce di lato). */
+async function formAlert(page) {
+  const alert = page.locator('form [role="alert"], form [role="status"]').first();
+  await alert.waitFor({ timeout: 15000 });
+  const text = (await alert.innerText()).trim();
+  const inside = await alert.evaluate((el) => {
+    const card = el.closest(".rounded-\\[var\\(--radius-card\\)\\]") ?? el.closest("form");
+    const a = el.getBoundingClientRect();
+    const c = card.getBoundingClientRect();
+    return a.right <= c.right + 1 && el.scrollWidth <= el.clientWidth + 1;
+  });
+  return { text, inside };
+}
+
+/**
+ * Flussi di accesso da utente vero, da telefono (375 px):
+ * - accesso con password sbagliata: l'email resta scritta;
+ * - attivazione da link di invito: password solo numeri, password diverse, nome che
+ *   resta compilato, nome salvato nel profilo;
+ * - uscita: si torna all'accesso e le pagine non si aprono più.
+ * L'utente invitato (`verifica-invito-…@example.com`) viene sempre cancellato.
+ */
+async function authFlows(browser, account) {
+  // 1. Accesso con password sbagliata.
+  {
+    const context = await browser.newContext({
+      locale: "it-IT",
+      viewport: { width: 375, height: 812 },
+    });
+    const page = await context.newPage();
+    await page.goto(`${appUrl}/login`);
+    await page.fill("#email", account.email);
+    await page.fill("#password", "password-sbagliata-1");
+    await page.click('form:has(#password) button[type="submit"]');
+    const { text, inside } = await formAlert(page);
+    const email = await page.inputValue("#email");
+    check(
+      "accesso: con la password sbagliata l'email resta scritta",
+      email === account.email,
+      `email "${email}"`,
+    );
+    check("accesso: avviso di credenziali errate dentro la card", inside && text.length > 0, text);
+    await context.close();
+  }
+
+  // 2. Attivazione da invito.
+  const inviteEmail = `verifica-invito-${run}@example.com`;
+  let invitedId = null;
+  let invitationId = null;
+  try {
+    const { data: invitation, error: invError } = await admin
+      .from("invitations")
+      .insert({ email: inviteEmail, role: "USER", invited_by: null })
+      .select("id")
+      .single();
+    if (invError) throw new Error(`Invito: ${invError.message}`);
+    invitationId = invitation.id;
+    const { data: link, error: linkError } = await admin.auth.admin.generateLink({
+      type: "invite",
+      email: inviteEmail,
+    });
+    if (linkError || !link.properties?.hashed_token) throw new Error(`Link: ${linkError?.message}`);
+    invitedId = link.user?.id ?? null;
+    await admin
+      .from("invitations")
+      .update({ sent_at: new Date().toISOString(), auth_user_id: invitedId })
+      .eq("id", invitationId);
+
+    const confirm = new URL("/auth/confirm", appUrl);
+    confirm.searchParams.set("token_hash", link.properties.hashed_token);
+    confirm.searchParams.set("type", "invite");
+    confirm.searchParams.set("next", "/accept-invite");
+
+    const context = await browser.newContext({
+      locale: "it-IT",
+      viewport: { width: 375, height: 812 },
+    });
+    const page = await context.newPage();
+    await page.goto(confirm.toString());
+    await page.waitForURL(/\/accept-invite/);
+    const submit = () => page.click('form:has(#displayName) button[type="submit"]');
+
+    // 2a. Solo numeri: rifiutata con un avviso breve, il nome resta.
+    await page.fill("#displayName", "DEMO Verifica");
+    await page.fill("#password", "123456789012");
+    await page.fill("#confirm", "123456789012");
+    const letterCheck = await page
+      .locator("#password-checks li", { hasText: "lettera" })
+      .getAttribute("class");
+    check(
+      "attivazione: il requisito «lettera» resta da spuntare con soli numeri",
+      !letterCheck?.includes("positive"),
+      letterCheck ?? "",
+    );
+    await submit();
+    let alert = await formAlert(page);
+    check(
+      "attivazione: password di soli numeri rifiutata con avviso breve",
+      /lettera e un numero/.test(alert.text),
+      alert.text,
+    );
+    check("attivazione: avviso dentro la card", alert.inside, alert.text);
+    check(
+      "attivazione: il nome resta compilato dopo l'errore",
+      (await page.inputValue("#displayName")) === "DEMO Verifica",
+    );
+
+    // 2b. Password diverse: il requisito non si spunta e il server la rifiuta.
+    await page.fill("#password", "passwordsicura9X");
+    await page.fill("#confirm", "passwordsicura9Y");
+    const matchCheck = await page
+      .locator("#password-checks li", { hasText: "coincidono" })
+      .getAttribute("class");
+    check(
+      "attivazione: «Le due password coincidono» non spuntato se diverse",
+      !matchCheck?.includes("positive"),
+      matchCheck ?? "",
+    );
+    await submit();
+    await page
+      .waitForFunction(
+        () => /coincidono/.test(document.querySelector("form [role=alert]")?.textContent ?? ""),
+        null,
+        { timeout: 15000 },
+      )
+      .catch(() => null);
+    alert = await formAlert(page);
+    check("attivazione: password diverse rifiutate", /non coincidono/.test(alert.text), alert.text);
+
+    // 2c. Tutto giusto: account attivo e nome salvato.
+    await page.fill("#confirm", "passwordsicura9X");
+    await Promise.all([page.waitForURL(/\/settings\/security/, { timeout: 20000 }), submit()]);
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("display_name")
+      .eq("id", invitedId)
+      .single();
+    check(
+      "attivazione: nome visualizzato salvato nel profilo",
+      profile?.display_name === "DEMO Verifica",
+      `"${profile?.display_name}"`,
+    );
+    await page.goto(`${appUrl}/dashboard`);
+    const welcome = await page.locator("h1").first().innerText();
+    check(
+      "attivazione: la Home saluta con il nome scelto",
+      welcome.includes("DEMO Verifica"),
+      welcome,
+    );
+
+    // 3. Uscita dal Profilo.
+    await page.goto(`${appUrl}/settings`);
+    await Promise.all([
+      page.waitForURL(/\/login/, { timeout: 15000 }),
+      page.locator('main form[action="/auth/signout"] button[type="submit"]').click(),
+    ]);
+    check(
+      "uscita: dal Profilo si torna alla pagina di accesso",
+      new URL(page.url()).pathname === "/login",
+      page.url(),
+    );
+    await page.goto(`${appUrl}/dashboard`);
+    check(
+      "uscita: dopo l'uscita le pagine chiedono di nuovo l'accesso",
+      new URL(page.url()).pathname === "/login",
+      page.url(),
+    );
+    await context.close();
+  } catch (e) {
+    check("flussi di accesso", false, e instanceof Error ? e.message : String(e));
+  } finally {
+    if (invitedId) await admin.auth.admin.deleteUser(invitedId);
+    if (invitationId) await admin.from("invitations").delete().eq("id", invitationId);
+  }
+}
+
 async function login(page, account) {
   await page.goto(`${appUrl}/login`);
   await page.fill("#email", account.email);
@@ -360,11 +549,9 @@ async function login(page, account) {
     await audit(page, "/mfa");
     const next = await freshCode(account.totpSecret, account.lastCounter);
     account.lastCounter = next.counter;
+    // Sei caselle: il codice scritto nella prima si distribuisce e il modulo parte da solo.
     await page.fill("#code", next.code);
-    await Promise.all([
-      page.waitForURL(/\/dashboard/),
-      page.click('form:has(#code) button[type="submit"]'),
-    ]);
+    await page.waitForURL(/\/dashboard/);
   }
 }
 
@@ -451,6 +638,9 @@ async function main() {
       skipLink: null,
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await authFlows(browser, account);
   } finally {
     await browser.close();
     if (account) {

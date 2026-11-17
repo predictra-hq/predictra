@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import { Card, Field, Input } from "@/components/ui/primitives";
+import { CodeInput } from "@/components/auth/code-input";
+import { Card, Field } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/validation";
 import { verifyMfa } from "./actions";
@@ -21,15 +22,16 @@ export default async function MfaPage({ searchParams }: PageProps<"/mfa">) {
           value={safeNextPath(typeof next === "string" ? next : null)}
         />
         <Field label={m.auth.mfaCode} htmlFor="code">
-          <Input
+          <CodeInput
             id="code"
             name="code"
-            inputMode="numeric"
-            pattern="\d{6}"
-            maxLength={6}
-            autoComplete="one-time-code"
             autoFocus
-            required
+            autoSubmit
+            labels={{
+              digit: m.auth.codeDigit,
+              paste: m.auth.codePaste,
+              pasteEmpty: m.auth.codePasteEmpty,
+            }}
           />
         </Field>
         <SubmitButton>{m.auth.mfaButton}</SubmitButton>
