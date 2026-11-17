@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   canGrantRole,
   canManageAccount,
@@ -88,13 +89,18 @@ export default async function UsersPage() {
                 return (
                   <tr key={u.id} className="border-b border-border align-top last:border-0">
                     <td className="px-4 py-3">
-                      <p className="font-medium">
-                        {u.display_name ?? "—"}{" "}
-                        {isSelf ? (
-                          <span className="text-xs text-muted">({m.admin.you})</span>
-                        ) : null}
-                      </p>
-                      <p className="text-xs text-muted">{u.email}</p>
+                      <div className="flex items-center gap-3">
+                        <UserAvatar userId={u.id} className="size-8" />
+                        <div className="min-w-0">
+                          <p className="font-medium">
+                            {u.display_name ?? "—"}{" "}
+                            {isSelf ? (
+                              <span className="text-xs text-muted">({m.admin.you})</span>
+                            ) : null}
+                          </p>
+                          <p className="text-xs text-muted">{u.email}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       {manageable && role ? (

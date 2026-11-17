@@ -33,6 +33,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         groups={MAIN_NAV_GROUPS}
         admin={adminNav}
         settings={SETTINGS_NAV}
+        userId={user.id}
         userLabel={user.displayName ?? user.email}
         roleLabel={role ? m.roles[role] : ""}
       />
