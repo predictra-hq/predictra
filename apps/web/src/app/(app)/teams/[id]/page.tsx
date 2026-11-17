@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import type { TeamSeasonStatsRow } from "@predictra/shared-types";
+import { FollowButton } from "@/components/football/follow-button";
 import { Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { listFollows } from "@/lib/football/follows";
 import { formatScore, parseId } from "@/lib/football/format";
 import { getTeam, listTeamMatches, listTeamSeasonStatsOf } from "@/lib/football/queries";
 import {
@@ -130,13 +132,15 @@ function SeasonStats({ title, s }: { title: string; s: TeamSeasonStatsRow }) {
 export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
   await requireUser();
   const m = getMessages().teams;
+  const f = getMessages().follows;
   const teamId = parseId((await params).id);
   if (teamId === null) notFound();
 
-  const [team, matches, stats] = await Promise.all([
+  const [team, matches, stats, follows] = await Promise.all([
     getTeam(teamId),
     listTeamMatches(teamId, new Date()),
     listTeamSeasonStatsOf(teamId),
+    listFollows(),
   ]);
   if (!team) notFound();
 
@@ -160,6 +164,14 @@ export default async function TeamPage({ params }: PageProps<"/teams/[id]">) {
         </Link>
       </p>
       <PageHeader title={team.name} />
+      <div className="mb-4">
+        <FollowButton
+          kind="team"
+          id={team.id}
+          following={follows.teamIds.includes(teamId)}
+          labels={{ follow: f.follow, following: f.following }}
+        />
+      </div>
 
       <Card>
         <CardTitle>{fillTemplate(m.form, { n: FORM_SIZE })}</CardTitle>
