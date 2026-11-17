@@ -76,6 +76,11 @@ class FakeStore:
     def finish_run(self, run_id, status, matches, error):
         self.runs[run_id - 1][1] = status
 
+    def prune_predictions(self, keep_days):
+        self.prune_calls = getattr(self, "prune_calls", 0) + 1
+        batches = getattr(self, "prune_batches", [])
+        return batches.pop(0) if batches else {"predictions": 0, "score_matrices": 0}
+
 
 def setup(league):
     cutoff = league[-40].kickoff_at
@@ -102,6 +107,8 @@ def test_scrittura_completa_e_idempotente(league):
     store.clock = now
     summary = run(store, models, now=now, code_commit=COMMIT, model_code=CODE)
     assert not summary.failed
+    # A fine giro il motore chiama la pulizia delle previsioni superate (ADR 0041).
+    assert getattr(store, "prune_calls", 0) == 1
     # Solo i modelli in gara si registrano: la baseline è un riferimento interno.
     assert len(store.versions) == 1
     assert len(store.backtests) == 1
@@ -198,3 +205,22 @@ def test_in_gara_solo_il_modello_predictra(league):
     by_key = {m.key: m for m in summary.models}
     assert by_key["baseline"].backtest is not None and by_key["elo"].backtest is not None
     assert by_key["baseline"].predictions == 0 and by_key["elo"].predictions == 0
+
+
+def test_pulizia_delle_previsioni_superate_a_fine_giro():
+    """ADR 0041: a fine giro il motore cancella a blocchi le previsioni superate."""
+    from predictra_engine.pipeline import prune
+
+    store = FakeStore([], [])
+    store.prune_batches = [
+        {"predictions": 20000, "score_matrices": 10},
+        {"predictions": 500, "score_matrices": 0},
+    ]
+    assert prune(store) == (20500, None)
+    assert store.prune_calls == 3
+
+    class Broken(FakeStore):
+        def prune_predictions(self, keep_days):
+            raise RuntimeError("rete")
+
+    assert prune(Broken([], [])) == (0, "RuntimeError: rete")

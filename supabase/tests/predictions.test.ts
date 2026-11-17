@@ -520,3 +520,190 @@ describe("previsioni prima del calcio d'inizio", () => {
     });
   });
 });
+
+describe("conservazione delle previsioni (ADR 0041)", () => {
+  it("cancella solo le previsioni superate e vecchie, mai l'ultima né quelle in una schedina", async () => {
+    let finished = 0;
+    let upcoming = 0;
+    let run = 0;
+    let mv = 0;
+    await asServiceRole(db, async (tx) => {
+      ({ upcoming } = await seedMatches(tx));
+      finished = await num(
+        tx,
+        "select id v from public.matches where status = 'FINISHED' order by kickoff_at limit 1",
+      );
+      mv = await register(tx, version("dixon_coles", "v1"));
+      run = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [mv, COMMIT]);
+    });
+    // Righe con date di creazione nel passato: inserite dal proprietario del database.
+    const insert = (match: number, asOf: string, createdAt: string, probability = 0.45) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', $4, 0.4, $5, $6, $7) returning id v`,
+        [match, mv, run, probability, HASH, asOf, createdAt],
+      );
+    const finishedOld = await insert(finished, "2026-08-20T10:00:00Z", "2020-01-01T00:00:00Z");
+    const finishedLast = await insert(finished, "2026-08-30T10:00:00Z", "2020-01-02T00:00:00Z");
+    const upcomingOld = await insert(upcoming, "2026-11-10T10:00:00Z", "2020-01-01T00:00:00Z");
+    const upcomingInSlip = await insert(upcoming, "2026-11-11T10:00:00Z", "2020-01-01T00:00:00Z");
+    const upcomingRecent = await insert(upcoming, "2026-11-12T10:00:00Z", new Date().toISOString());
+    const upcomingLast = await insert(upcoming, "2026-11-13T10:00:00Z", "2020-01-03T00:00:00Z");
+
+    // Una schedina di Alice usa una previsione superata: deve restare.
+    await asUser(db, alice, async (tx) => {
+      const slip = await num(
+        tx,
+        "insert into public.user_bet_slips (name) values ('DEMO') returning id v",
+      );
+      await tx.query(
+        `insert into public.user_bet_slip_selections (slip_id, leg_no, match_id, market, selection, prediction_id)
+         values ($1, 1, $2, '1X2', 'HOME', $3)`,
+        [slip, upcoming, upcomingInSlip],
+      );
+    });
+
+    // Solo il motore può chiamarla.
+    await asUser(db, alice, async (tx) => {
+      expect(await attempt(tx, "select public.prune_predictions()")).toMatch(/permission denied/);
+    });
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r).toEqual({ predictions: 2, score_matrices: 0 });
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([finishedLast, upcomingInSlip, upcomingRecent, upcomingLast]);
+      expect(left).not.toContain(finishedOld);
+      expect(left).not.toContain(upcomingOld);
+      // Fuori dalla pulizia la tabella resta immutabile.
+      expect(await attempt(tx, "delete from public.predictions")).toMatch(/immutabile/);
+      // Seconda chiamata: niente da fare.
+      const again = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(again.r).toEqual({ predictions: 0, score_matrices: 0 });
+    });
+  });
+
+  it("le versioni ritirate tengono solo ciò che nessuna versione più recente ha rifatto", async () => {
+    let finished = 0;
+    let other = 0;
+    let oldV = 0;
+    let newV = 0;
+    let runOld = 0;
+    let runNew = 0;
+    await asServiceRole(db, async (tx) => {
+      await seedMatches(tx);
+      const ids = (
+        await tx.query<{ id: number }>(
+          "select id from public.matches where status = 'FINISHED' order by kickoff_at",
+        )
+      ).rows.map((r) => Number(r.id));
+      [finished, other] = ids as [number, number];
+      oldV = await register(tx, version("dixon_coles", "v-vecchia"));
+      newV = await register(tx, version("dixon_coles", "v-nuova", HASH2));
+      runOld = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        oldV,
+        COMMIT,
+      ]);
+      runNew = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        newV,
+        COMMIT,
+      ]);
+      // La vecchia è ritirata (codice superato).
+      await tx.query("select public.retire_superseded_model_versions($1)", [[newV]]);
+    });
+    const insert = (match: number, mv: number, run: number, asOf: string) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', 0.5, 0.4, $4, $5, '2020-01-01T00:00:00Z') returning id v`,
+        [match, mv, run, HASH, asOf],
+      );
+    // Partita rifatta dalla versione nuova: la vecchia va cancellata.
+    const oldRedone = await insert(finished, oldV, runOld, "2026-08-20T10:00:00Z");
+    const newLast = await insert(finished, newV, runNew, "2026-08-30T10:00:00Z");
+    // Partita prevista solo dalla vecchia: resta (è l'ultima della famiglia).
+    const oldOnly = await insert(other, oldV, runOld, "2026-09-20T10:00:00Z");
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r.predictions).toBe(1);
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([newLast, oldOnly]);
+      expect(left).not.toContain(oldRedone);
+    });
+  });
+
+  it("le previsioni dei modelli non più in uso si cancellano se il modello attivo ha rifatto la partita", async () => {
+    let finished = 0;
+    let other = 0;
+    let poisson = 0;
+    let dixon = 0;
+    let runP = 0;
+    let runD = 0;
+    await asServiceRole(db, async (tx) => {
+      await seedMatches(tx);
+      const ids = (
+        await tx.query<{ id: number }>(
+          "select id from public.matches where status = 'FINISHED' order by kickoff_at",
+        )
+      ).rows.map((r) => Number(r.id));
+      [finished, other] = ids as [number, number];
+      poisson = await register(tx, version("poisson", "p1"));
+      dixon = await register(tx, version("dixon_coles", "d1", HASH2));
+      runP = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        poisson,
+        COMMIT,
+      ]);
+      runD = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        dixon,
+        COMMIT,
+      ]);
+    });
+    // Dixon-Coles è il modello attivo, Poisson è stato tolto dalla gara.
+    await db.query("update public.model_versions set status = 'RETIRED' where id = $1", [poisson]);
+    await db.query(
+      "update public.model_versions set status = 'ACTIVE', activated_at = now() where id = $1",
+      [dixon],
+    );
+    const insert = (match: number, mv: number, run: number, asOf: string) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', 0.5, 0.4, $4, $5, '2020-01-01T00:00:00Z') returning id v`,
+        [match, mv, run, HASH, asOf],
+      );
+    const poissonRedone = await insert(finished, poisson, runP, "2026-08-20T10:00:00Z");
+    const dixonLast = await insert(finished, dixon, runD, "2026-08-30T10:00:00Z");
+    const poissonOnly = await insert(other, poisson, runP, "2026-09-20T10:00:00Z");
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r.predictions).toBe(1);
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([dixonLast, poissonOnly]);
+      expect(left).not.toContain(poissonRedone);
+    });
+  });
+});

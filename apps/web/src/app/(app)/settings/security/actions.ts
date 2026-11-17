@@ -1,5 +1,6 @@
 "use server";
 
+import { totpIssuer } from "@/lib/auth/totp";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/dal";
 import type { ActionState } from "@/lib/errors";
@@ -32,6 +33,7 @@ export async function startTotpEnrollment(): Promise<EnrollResult> {
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: "totp",
     friendlyName: "PREDICTRA",
+    issuer: totpIssuer(process.env.APP_BASE_URL),
   });
   if (error || !data) return { ok: false, message: m.common.genericError };
   return { ok: true, factorId: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };

@@ -89,7 +89,7 @@ jobs:
 
       - uses: supabase/setup-cli@v3
         with:
-          version: 3.0.0
+          version: 3.2.0
 
       - name: Verifica chiavi B2
         if: env.ACTION == 'check'
