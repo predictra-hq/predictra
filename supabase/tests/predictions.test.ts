@@ -592,4 +592,60 @@ describe("conservazione delle previsioni (ADR 0041)", () => {
       expect(again.r).toEqual({ predictions: 0, score_matrices: 0 });
     });
   });
+
+  it("le versioni ritirate tengono solo ciò che nessuna versione più recente ha rifatto", async () => {
+    let finished = 0;
+    let other = 0;
+    let oldV = 0;
+    let newV = 0;
+    let runOld = 0;
+    let runNew = 0;
+    await asServiceRole(db, async (tx) => {
+      await seedMatches(tx);
+      const ids = (
+        await tx.query<{ id: number }>(
+          "select id from public.matches where status = 'FINISHED' order by kickoff_at",
+        )
+      ).rows.map((r) => Number(r.id));
+      [finished, other] = ids as [number, number];
+      oldV = await register(tx, version("dixon_coles", "v-vecchia"));
+      newV = await register(tx, version("dixon_coles", "v-nuova", HASH2));
+      runOld = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        oldV,
+        COMMIT,
+      ]);
+      runNew = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        newV,
+        COMMIT,
+      ]);
+      // La vecchia è ritirata (codice superato).
+      await tx.query("select public.retire_superseded_model_versions($1)", [[newV]]);
+    });
+    const insert = (match: number, mv: number, run: number, asOf: string) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', 0.5, 0.4, $4, $5, '2020-01-01T00:00:00Z') returning id v`,
+        [match, mv, run, HASH, asOf],
+      );
+    // Partita rifatta dalla versione nuova: la vecchia va cancellata.
+    const oldRedone = await insert(finished, oldV, runOld, "2026-08-20T10:00:00Z");
+    const newLast = await insert(finished, newV, runNew, "2026-08-30T10:00:00Z");
+    // Partita prevista solo dalla vecchia: resta (è l'ultima della famiglia).
+    const oldOnly = await insert(other, oldV, runOld, "2026-09-20T10:00:00Z");
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r.predictions).toBe(1);
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([newLast, oldOnly]);
+      expect(left).not.toContain(oldRedone);
+    });
+  });
 });
