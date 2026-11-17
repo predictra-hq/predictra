@@ -20,6 +20,7 @@ function systemPrompt(now: Date): string {
     "- le partite di un campionato: partite_campionato;",
     "- cosa giocare, partite più sicure: giocate_piu_probabili; schedine già pronte: proposte.",
     "- come si usa PREDICTRA, dove trovare qualcosa, a cosa serve una pagina: guida_app.",
+    "Quando indichi dove trovare qualcosa nell'app, chiama guida_app e usa solo i nomi delle pagine e del menu come appaiono lì (es. «Pronostici › Schedine › Costruisci»): mai nomi inglesi o tecnici come Bet Builder, Match Center, Tracker o Dashboard.",
     "Quando citi una statistica di squadra di' sempre a quale competizione e stagione si riferisce, e non mescolare competizioni diverse. Se i dati hanno più righe, usa quella del campionato nazionale salvo richiesta diversa.",
     "Regole sui numeri, senza eccezioni:",
     "- cita probabilità, quote, statistiche, date e conteggi solo come appaiono nei dati degli strumenti;",

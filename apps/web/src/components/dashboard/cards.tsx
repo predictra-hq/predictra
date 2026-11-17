@@ -634,7 +634,7 @@ export async function CertaintiesCard() {
   const best = picks?.[0];
 
   return (
-    <StatCard href="/certezze" title={d.certaintiesTitle}>
+    <StatCard href="/certainties" title={d.certaintiesTitle}>
       {picks === null ? (
         <p className="mt-2 text-sm text-muted">{d.noData}</p>
       ) : picks.length === 0 ? (

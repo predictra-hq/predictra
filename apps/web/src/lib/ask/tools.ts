@@ -159,7 +159,8 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     type: "function",
     function: {
       name: "proposte",
-      description: "Le proposte attive del Bet Builder, la migliore per categoria.",
+      description:
+        "Le schedine consigliate (pagina Pronostici › Schedine › Proposte), la migliore per categoria.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -168,7 +169,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: "guida_app",
       description:
-        "Guida all'uso di PREDICTRA: le sezioni del menu, le pagine e a cosa servono. Per domande su come usare l'app o dove trovare qualcosa.",
+        "Guida all'uso di PREDICTRA: le sezioni del menu, i nomi esatti delle pagine, dove si trovano e a cosa servono. Per domande su come usare l'app o dove trovare qualcosa, e prima di indicare una pagina.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -530,6 +531,7 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
         rows: m.ask.guide.map((g) => ({
           [t.guideSection]: g.section,
           [t.guidePage]: g.page,
+          [t.guideWhere]: g.where,
           [t.guideWhat]: g.what,
         })),
       };

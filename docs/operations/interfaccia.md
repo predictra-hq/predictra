@@ -105,7 +105,7 @@ Ordine di merge: #103 e #106 prima della #107, che le contiene entrambe. Quando 
 - **Ricerca** (`/teams`, voce «Squadre» nel gruppo Calcio): per nome, almeno due lettere. `containsPattern` neutralizza i caratteri jolly di Postgres e i separatori dei filtri.
 - **Risultati più probabili** nel pannello previsioni: i cinque risultati esatti più probabili tra quelli già pubblicati dal motore (`topScores` in `lib/predictions/format.ts`). Nessun calcolo nuovo.
 - **Movimento delle quote** (`components/odds/odds-movement.tsx`, calcolo in `lib/odds/movement.ts`): 1X2, media dei bookmaker raccolti, dalla prima quota raccolta all'ultima. «Prima» non è l'apertura del bookmaker ma la prima raccolta di PREDICTRA. Compare solo se ci sono almeno due rilevamenti.
-- **Affidabilità** (`/affidabilita`, gruppo Pronostici): delle giocate date almeno al 70% prima della partita, quante sono uscite negli ultimi 60 giorni, per tipo di giocata e per campionato. Stesse regole della verifica delle Certezze (`lib/certainties/reliability.ts`); sotto le 20 giocate si mostra solo il conteggio.
+- **Affidabilità** (`/reliability`, gruppo Pronostici): delle giocate date almeno al 70% prima della partita, quante sono uscite negli ultimi 60 giorni, per tipo di giocata e per campionato. Stesse regole della verifica delle Certezze (`lib/certainties/reliability.ts`); sotto le 20 giocate si mostra solo il conteggio.
 - **Seguiti** (`user_follows`, [identity.md](../data-dictionary/identity.md)): pulsante «Segui» sulla squadra, elenco nella pagina Squadre, prossime partite in Home. La stella del campionato preferito registra anche il campionato tra i seguiti: senza cookie, su un altro dispositivo, si parte da quello. Scritture con la sessione dell'utente; al più 50 seguiti.
 
 **Non provato nell'app in esecuzione** da chi l'ha scritto. Da guardare su DEV:
@@ -154,3 +154,8 @@ Non verificato con dati reali da chi le ha scritte: le quote del proprio sito e 
 - **Dettagli tecnici solo per chi amministra** (permesso `agents.monitor`): provenienza e qualità della partita, modello e versione delle schedine, fonte e qualità della classifica. Gli altri vedono solo «aggiornato al …». L'attribuzione richiesta dalle licenze delle fonti resta per tutti.
 - **Home.** Prossime partite con le probabilità 1X2, grafico settimanale «Come ci ha preso il modello» (giocate dall'80%, ultime 6 settimane) e «Campionati a confronto» (gol medi, più di 2,5 gol, gol di entrambe).
 - **Certezze** divise per campionato; in **Campionati** il clic su una competizione scende al campionato aperto.
+
+## 17/11/2026: indirizzi in inglese e nomi delle pagine in Chiedi a PREDICTRA
+
+- Tutti gli indirizzi delle pagine sono in inglese. `/certezze` è diventato `/certainties` e `/affidabilita` è diventato `/reliability`; i vecchi indirizzi reindirizzano ai nuovi (`next.config.ts`, redirect permanente), così i link salvati continuano a funzionare. La Verifica DEV lo controlla.
+- I nomi mostrati restano in italiano. Chiedi a PREDICTRA indica le pagine solo con i nomi del menu (es. «Pronostici › Schedine › Costruisci»), presi dalla guida `guida_app`, mai con nomi interni come «Bet Builder».
