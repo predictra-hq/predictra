@@ -707,3 +707,29 @@ describe("conservazione delle previsioni (ADR 0041)", () => {
     });
   });
 });
+
+describe("verifica storica nei backtest (ADR 0057)", () => {
+  it("record_backtest salva il riepilogo di tutti i mercati; senza riepilogo resta vuoto", async () => {
+    await asServiceRole(db, async (tx) => {
+      const mv = await register(tx, version("dixon_coles", "v-rel"));
+      const reliability = {
+        version: 1,
+        matches: 2,
+        picks: { count: 1, wins: 1, predicted: 0.8 },
+        markets: [{ market: "DOUBLE_CHANCE", count: 1, wins: 1, predicted: 0.8 }],
+      };
+      await tx.query("select public.record_backtest($1)", [
+        JSON.stringify({ ...backtest(mv, 0.6, 1.0), reliability }),
+      ]);
+      await tx.query("select public.record_backtest($1)", [
+        JSON.stringify({ ...backtest(mv, 0.6, 1.0), reliability: [1, 2] }),
+      ]);
+      const { rows } = await tx.query<{ reliability: unknown }>(
+        "select reliability from public.backtests where model_version_id = $1 order by id",
+        [mv],
+      );
+      expect(rows[0]!.reliability).toEqual(reliability);
+      expect(rows[1]!.reliability).toEqual({});
+    });
+  });
+});

@@ -7,8 +7,8 @@ import { requireUser } from "@/lib/auth/dal";
 import type { ActionState } from "@/lib/errors";
 import { getMessages, LOCALES } from "@/lib/i18n";
 import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
-import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
+import { parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
 
 const timezones = new Set(Intl.supportedValuesOf("timeZone"));
 
@@ -45,10 +45,6 @@ export async function savePreferences(
   return { ok: true, message: m.preferences.saved };
 }
 
-/**
- * Tema dell'interfaccia: resta in un cookie di questo browser (non è un dato personale e
- * non passa dal database). Il layout lo legge e lo applica a `<html>`.
- */
 /** Soglia degli avvisi in Home: preferenza di questo browser, come il tema. */
 export async function setAlertThreshold(formData: FormData): Promise<void> {
   await requireUser();
@@ -63,14 +59,43 @@ export async function setAlertThreshold(formData: FormData): Promise<void> {
   revalidatePath("/settings/preferences");
 }
 
-export async function setTheme(formData: FormData): Promise<void> {
-  await requireUser();
-  const theme = parseTheme(formData.get("theme"));
-  (await cookies()).set(THEME_COOKIE, theme, {
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+/** Data di nascita (ADR 0058): solo il proprietario la legge; il database ricontrolla la data. */
+export async function saveBirthday(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const birthDate = parseBirthDate(formData.get("birthDate"), todayInRome());
+  if (!birthDate) return { ok: false, message: m.preferences.birthdayInvalid };
+  const supabase = await createClient();
+  const { error } = await supabase.from("user_birthdays").upsert({
+    user_id: user.id,
+    birth_date: birthDate,
+    show_birthday: formData.get("showBirthday") === "on",
   });
-  revalidatePath("/", "layout");
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/settings/preferences");
+  revalidatePath("/dashboard");
+  return { ok: true, message: m.preferences.birthdaySaved };
+}
+
+export async function removeBirthday(): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from("user_birthdays").delete().eq("user_id", user.id);
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/settings/preferences");
+  revalidatePath("/dashboard");
+  return { ok: true, message: m.preferences.birthdayRemoved };
+}
+
+/** Colore e scritta del nome, da elenchi chiusi (vincoli anche nel database). */
+export async function saveNameStyle(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const style = parseNameStyle(formData.get("nameColor"), formData.get("nameStyle"));
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update(style).eq("id", user.id);
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/settings/preferences");
+  return { ok: true, message: m.preferences.nameStyleSaved };
 }

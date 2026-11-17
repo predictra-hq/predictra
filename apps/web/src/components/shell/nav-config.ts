@@ -31,8 +31,9 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
   {
     id: "home",
     items: [
+      // «Chiedi a PREDICTRA» non è una voce del menu: è il pulsante fisso in basso a destra
+      // (AskLauncher), che apre la chat sopra qualunque pagina.
       { key: "dashboard", href: "/dashboard" },
-      { key: "askPredictra", href: "/ask" },
     ],
   },
   {

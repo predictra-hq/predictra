@@ -26,6 +26,6 @@ SEED_ONLY_TABLES=(
 LOCAL_TABLES=(
   profiles roles user_roles invitations audit_logs user_preferences user_dashboard_settings
   bankrolls bankroll_movements bets personal_limits user_bet_slips user_bet_slip_selections
-  ask_usage notifications user_follows
+  ask_usage notifications user_follows user_birthdays match_comments
   providers markets source_freshness_rules
 )
