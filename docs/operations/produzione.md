@@ -58,6 +58,16 @@ Serve perché i workflow avviabili a mano (passi 4, 7, 8, 11) compaiono in _Acti
 
 Se il workflow non compare in _Actions_, il passo 3 non è ancora finito. Se si ferma con un errore, mandami il messaggio rosso.
 
+**Errore 403 da Supabase** («il token non vede il progetto PROD»). Il token `SUPABASE_ACCESS_TOKEN` non ha accesso al nuovo progetto. Sistemalo così:
+
+1. Controlla che `PROD_SUPABASE_PROJECT_ID` sia proprio il Project ID di PROD (passo 1.1), senza spazi.
+2. Controlla che il progetto PROD sia nella **stessa organizzazione** Supabase di DEV: nella dashboard, in alto a sinistra, il nome dell'organizzazione è lo stesso aprendo i due progetti.
+3. Crea un token nuovo: dashboard Supabase → avatar in alto a destra → _Account preferences_ → _Access Tokens_ → _Generate new token_ → nome `github-actions-predictra`. Se ti chiede a quali organizzazioni o progetti dare accesso, scegli quella che contiene DEV e PROD (o entrambi i progetti). Copia il valore (`sbp_…`, si vede una volta sola).
+4. GitHub → _Secrets_ → `SUPABASE_ACCESS_TOKEN` → _Update secret_ → incolla il token nuovo.
+5. Rilancia **Prepara Vercel PROD**: il progetto Vercel già creato viene riusato, non si crea un doppione.
+
+Il vecchio token puoi revocarlo dalla stessa pagina _Access Tokens_ dopo che il passo 7 è andato a buon fine.
+
 ### 5. GitHub: ultimi due segreti
 
 Nella scheda _Secrets_ crea:
