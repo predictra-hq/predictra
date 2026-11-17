@@ -1,8 +1,9 @@
 """Taratura automatica del modello PREDICTRA (ADR 0056).
 
-Ogni settimana, insieme al confronto dei backtest, il motore prova sei varianti vicine
-alle impostazioni attuali del modello (Dixon-Coles + Elo): quanto in fretta si dimenticano
-le partite vecchie (ξ), quanto il modello è prudente (L2) e quanto conta l'Elo nell'1X2.
+Ogni settimana, insieme al confronto dei backtest, il motore prova due varianti vicine
+alle impostazioni attuali del modello (Dixon-Coles + Elo), su una impostazione per volta a
+rotazione: quanto in fretta si dimenticano le partite vecchie (ξ), quanto il modello è
+prudente (L2) e quanto conta l'Elo nell'1X2.
 Ogni variante prevede le partite degli ultimi mesi come se fossero ancora da giocare (ogni
 settimana vede solo le partite precedenti) e si confronta con i risultati veri.
 
@@ -101,17 +102,30 @@ def _clip(value: float, bounds: tuple[float, float]) -> float:
     return min(max(value, bounds[0]), bounds[1])
 
 
-def neighbours(s: Settings) -> list[Settings]:
-    """Sei varianti: un passo alla volta su ξ, L2 e peso dell'Elo."""
+# Una impostazione per settimana, a rotazione: due varianti invece di sei, così la
+# taratura costa pochi minuti e resta dentro il lease del job (15 minuti).
+DIMENSIONS = ("xi", "l2", "elo_weight")
+
+
+def dimension_for(as_of: datetime) -> str:
+    """Impostazione da provare nella settimana di ``as_of`` (a rotazione)."""
+    return DIMENSIONS[as_of.isocalendar().week % len(DIMENSIONS)]
+
+
+def neighbours(s: Settings, dimensions: tuple[str, ...] = DIMENSIONS) -> list[Settings]:
+    """Varianti a un passo dalle impostazioni attuali, solo sulle impostazioni indicate."""
     out: list[Settings] = []
-    for f in XI_STEPS:
-        xi = _clip(round((s.xi or XI_RANGE[0]) * f, 6), XI_RANGE)
-        out.append(Settings(xi, s.l2, s.elo_weight))
-    for f in L2_STEPS:
-        out.append(Settings(s.xi, _clip(round(s.l2 * f, 3), L2_RANGE), s.elo_weight))
-    for d in (-WEIGHT_STEP, WEIGHT_STEP):
-        w = _clip(round(s.elo_weight + d, 3), WEIGHT_RANGE)
-        out.append(Settings(s.xi, s.l2, w))
+    if "xi" in dimensions:
+        for f in XI_STEPS:
+            xi = _clip(round((s.xi or XI_RANGE[0]) * f, 6), XI_RANGE)
+            out.append(Settings(xi, s.l2, s.elo_weight))
+    if "l2" in dimensions:
+        for f in L2_STEPS:
+            out.append(Settings(s.xi, _clip(round(s.l2 * f, 3), L2_RANGE), s.elo_weight))
+    if "elo_weight" in dimensions:
+        for d in (-WEIGHT_STEP, WEIGHT_STEP):
+            w = _clip(round(s.elo_weight + d, 3), WEIGHT_RANGE)
+            out.append(Settings(s.xi, s.l2, w))
     unique: list[Settings] = []
     for c in out:
         if c != s and c not in unique:
@@ -156,13 +170,17 @@ def autotune(
     *,
     recent_days: int = RECENT_DAYS,
     margin: float = MARGIN,
+    dimensions: tuple[str, ...] | None = None,
 ) -> AutotuneResult | None:
-    """Confronta le impostazioni attuali con le varianti vicine sulle partite recenti."""
+    """Confronta le impostazioni attuali con le varianti vicine sulle partite recenti.
+
+    Senza ``dimensions`` prova solo l'impostazione della settimana (``dimension_for``).
+    """
     start = as_of - timedelta(days=recent_days)
     if not any(r.kickoff_at >= start for r in results):
         return None
     current = settings_of(model)
-    variants = neighbours(current)
+    variants = neighbours(current, dimensions or (dimension_for(as_of),))
     models: list[Model] = [with_settings(model, current)]
     keys = {"attuale": current}
     for i, s in enumerate(variants):

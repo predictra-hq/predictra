@@ -31,7 +31,7 @@ In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/202
 
 ## Taratura automatica (ADR 0056)
 
-Dal 17/11/2026 il motore ritocca da solo le impostazioni del modello PREDICTRA. Ogni settimana, insieme al confronto dei backtest, prova sei varianti vicine (ξ, L2, peso dell'Elo) sulle partite degli ultimi sei mesi rigiocate con le sole partite precedenti. Adotta la migliore solo se batte quella attuale di almeno 0,001 di Log Loss e non è peggiore sull'intero storico. Il log del ciclo riporta le varianti provate e l'esito (`taratura automatica su N partite recenti`); un'adozione crea una versione nuova e compare in _Audit_.
+Dal 17/11/2026 il motore ritocca da solo le impostazioni del modello PREDICTRA. Ogni settimana, insieme al confronto dei backtest, prova due varianti vicine su una impostazione per volta a rotazione (ξ, L2, peso dell'Elo) sulle partite degli ultimi sei mesi rigiocate con le sole partite precedenti. Adotta la migliore solo se batte quella attuale di almeno 0,001 di Log Loss e non è peggiore sull'intero storico. Il log del ciclo riporta le varianti provate e l'esito (`taratura automatica su N partite recenti`); un'adozione crea una versione nuova e compare in _Audit_.
 
 ## Modello attivo: automatico (ADR 0023)
 

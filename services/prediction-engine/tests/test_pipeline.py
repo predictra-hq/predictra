@@ -309,6 +309,7 @@ def test_varianti_e_ricostruzione_dagli_iperparametri():
     current = settings_of(model)
     variants = neighbours(current)
     assert len(variants) == 6 and current not in variants
+    assert len(neighbours(current, ("elo_weight",))) == 2
     assert all(0.1 <= v.elo_weight <= 0.8 and v.l2 > 0 and v.xi > 0 for v in variants)
     rebuilt = model_from_hyperparameters(model, model.hyperparameters())
     assert rebuilt is not None
