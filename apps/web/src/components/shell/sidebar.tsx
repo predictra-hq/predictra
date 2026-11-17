@@ -3,7 +3,7 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
+import { Check, ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -81,23 +81,40 @@ function NavLinks({
  * Ricarica i dati della pagina senza perdere la posizione: nell'app installata sul
  * telefono non c'è il pulsante di ricarica del browser.
  */
-function RefreshButton({ label }: { label: string }) {
+function RefreshButton({ label, doneLabel }: { label: string; doneLabel: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // Riscontro sempre visibile: la rotellina gira almeno un attimo anche se i dati arrivano
+  // subito, poi compare la spunta. Senza, sembrava che il tocco non facesse nulla.
+  const [spinning, setSpinning] = useState(false);
+  const [done, setDone] = useState(false);
+  const busy = pending || spinning;
   return (
     <button
       type="button"
-      onClick={() => startTransition(() => router.refresh())}
-      disabled={pending}
-      aria-busy={pending}
+      onClick={() => {
+        if (busy) return;
+        setDone(false);
+        setSpinning(true);
+        startTransition(() => router.refresh());
+        window.setTimeout(() => {
+          setSpinning(false);
+          setDone(true);
+          window.setTimeout(() => setDone(false), 1500);
+        }, 700);
+      }}
+      aria-busy={busy}
       aria-label={label}
       className="mr-auto cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2"
     >
-      <RefreshCw
-        size={20}
-        aria-hidden="true"
-        className={cn(pending && "motion-safe:animate-spin")}
-      />
+      {done && !busy ? (
+        <Check size={20} aria-hidden="true" className="text-positive-strong" />
+      ) : (
+        <RefreshCw size={20} aria-hidden="true" className={cn(busy && "animate-spin")} />
+      )}
+      <span className="sr-only" aria-live="polite">
+        {done && !busy ? doneLabel : ""}
+      </span>
     </button>
   );
 }
@@ -212,7 +229,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <RefreshButton label={messages.nav.refresh} />
+        <RefreshButton label={messages.nav.refresh} doneLabel={messages.nav.refreshed} />
         <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
           {messages.app.name}
           <span className="-ml-2 text-positive" aria-hidden="true">
