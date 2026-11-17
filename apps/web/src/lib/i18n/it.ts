@@ -178,7 +178,7 @@ export const it = {
     hitsTitle: "Come ci ha preso il modello",
     hitsMore: "Affidabilità",
     hitsSummary:
-      "Nelle ultime {weeks} settimane sono uscite {wins} giocate su {count} tra quelle date almeno all'80% ({rate}).",
+      "Nelle ultime settimane sono uscite {wins} giocate su {count} tra quelle date almeno all'80% ({rate}).",
     hitsWeek: "Settimana del {week}: {wins} uscite su {count}",
     hitsWeekEmpty: "Settimana del {week}: nessuna partita",
     hitsNote: "Ogni barra è una settimana: più è alta, più giocate sono uscite.",

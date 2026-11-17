@@ -650,20 +650,34 @@ async function main() {
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
 
-    // Azioni sugli utenti in una finestra modale: si apre, sta nello schermo, Esc la chiude.
-    await page.goto(`${appUrl}/admin/users`);
-    const resetButton = page.getByRole("button", { name: "Link reset password" }).first();
-    if (await resetButton.count()) {
-      await resetButton.click();
-      const dialog = page.locator("dialog[open]");
-      const box = await dialog.boundingBox().catch(() => null);
+    // Azioni di amministrazione in una finestra modale: si apre, sta nello schermo, Esc la
+    // chiude. Prova con un invito temporaneo, revocabile da chiunque gestisca gli inviti.
+    const { data: tempInvite } = await admin
+      .from("invitations")
+      .insert({ email: `verifica-finestra-${run}@example.com`, role: "USER", invited_by: null })
+      .select("id")
+      .single();
+    try {
+      await page.goto(`${appUrl}/admin/invitations`);
+      await page.getByRole("button", { name: "Revoca" }).first().click();
+      const box = await page
+        .locator("dialog[open]")
+        .boundingBox({ timeout: 5000 })
+        .catch(() => null);
       check(
-        "utenti: «Link reset password» apre una finestra",
+        "amministrazione: «Revoca» apre una finestra dentro lo schermo",
         box !== null && box.x >= 0 && box.x + box.width <= 375,
         JSON.stringify(box),
       );
       await page.keyboard.press("Escape");
-      check("utenti: Esc chiude la finestra", (await page.locator("dialog[open]").count()) === 0);
+      check(
+        "amministrazione: Esc chiude la finestra",
+        (await page.locator("dialog[open]").count()) === 0,
+      );
+    } catch (e) {
+      check("amministrazione: finestra", false, e instanceof Error ? e.message : String(e));
+    } finally {
+      if (tempInvite) await admin.from("invitations").delete().eq("id", tempInvite.id);
     }
 
     await page.setViewportSize({ width: 375, height: 812 });
