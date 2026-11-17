@@ -605,6 +605,16 @@ export const it = {
     over25: "Più di 2,5 gol",
     statsNote: "Calcolati sulle partite concluse raccolte da PREDICTRA.",
   },
+  follows: {
+    follow: "Segui",
+    following: "La segui",
+    limit:
+      "Puoi seguire al massimo {n} tra squadre e campionati: smetti di seguirne una per aggiungerne un'altra.",
+    teamsTitle: "Squadre che segui",
+    empty: "Apri una squadra e tocca «Segui» per ritrovarla qui e in Home.",
+    homeTitle: "Le tue squadre: prossime partite",
+    manage: "Gestisci",
+  },
   leagueIntelligence: {
     title: "Campionati",
     description:

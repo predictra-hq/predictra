@@ -16,6 +16,7 @@ export function FavoriteCompetitionButton({
     <form action={setFavoriteCompetition} className="mb-4">
       {/* Con il preferito già attivo il clic lo toglie: si invia un codice vuoto. */}
       <input type="hidden" name="code" value={isFavorite ? "" : code} />
+      <input type="hidden" name="current" value={code} />
       <button
         type="submit"
         aria-pressed={isFavorite}
