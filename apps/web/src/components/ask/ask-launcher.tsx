@@ -37,6 +37,7 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
+        data-tour="ask"
         aria-label={m.title}
         title={m.title}
         className="fixed bottom-[calc(4.75rem+max(env(safe-area-inset-bottom),0.375rem))] right-4 z-20 flex size-12 cursor-pointer items-center justify-center rounded-full border border-positive/40 bg-surface text-positive shadow-lg transition-colors hover:bg-positive-soft lg:bottom-6 lg:right-6 lg:size-14"
