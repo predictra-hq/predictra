@@ -73,6 +73,10 @@ export const it = {
     mfaTitle: "Verifica a due fattori",
     mfaSubtitle: "Inserisci il codice a 6 cifre dalla tua app di autenticazione.",
     mfaCode: "Codice",
+    codeDigit: "Cifra {n} di 6",
+    codePaste: "Incolla codice",
+    codePasteEmpty:
+      "Negli appunti non c'è un codice a 6 cifre: copialo dall'app di autenticazione.",
     mfaButton: "Verifica",
     mfaInvalid: "Codice non valido.",
     suspendedTitle: "Account sospeso",
