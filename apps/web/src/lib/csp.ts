@@ -6,7 +6,7 @@
  * autorizzati di caricare i propri moduli; nessuno script inline senza nonce viene
  * eseguito. Gli stili restano con `'unsafe-inline'` (attributi `style` di React e
  * Tailwind): un'iniezione di soli stili non esegue codice. `worker-src 'self'` permette solo
- * il service worker della schermata offline (`/sw.js`, ADR 0057).
+ * il service worker della schermata offline (`/sw.js`, ADR 0059).
  */
 
 export function generateNonce(): string {

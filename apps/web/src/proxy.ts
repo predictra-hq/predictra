@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
 }
 
 // Il manifest dell'app, il service worker e la schermata offline non contengono dati: il
-// browser li scarica senza sessione (ADR 0057).
+// browser li scarica senza sessione (ADR 0059).
 // /api/jobs/* non ha sessione: lo chiama QStash e l'autorizzazione è la sua firma
 // (src/lib/agent/qstash.ts), verificata dalla route prima di ogni accesso al database.
 export const config = {

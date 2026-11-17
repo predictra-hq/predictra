@@ -1,5 +1,5 @@
 /**
- * Schermata «Sei offline» (ADR 0057). Il service worker (`public/sw.js`) la conserva
+ * Schermata «Sei offline» (ADR 0059). Il service worker (`public/sw.js`) la conserva
  * all'installazione e la mostra quando una pagina non si carica per mancanza di rete.
  *
  * È una pagina autosufficiente: stili e simbolo sono dentro l'HTML, perché offline non

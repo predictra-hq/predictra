@@ -1,5 +1,5 @@
 /*
- * Service worker di PREDICTRA (ADR 0057). Fa una cosa sola: se una pagina non si carica
+ * Service worker di PREDICTRA (ADR 0059). Fa una cosa sola: se una pagina non si carica
  * perché manca la rete, mostra la schermata «Sei offline». Non conserva pagine, dati o
  * codice dell'app: tutto il resto passa dalla rete come se il service worker non ci fosse.
  */
