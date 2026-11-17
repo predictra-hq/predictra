@@ -10,6 +10,7 @@ import type {
 } from "@predictra/shared-types";
 import { sortCompetitions } from "@/lib/football/format";
 import { createClient } from "@/lib/supabase/server";
+import type { OddsPoint } from "./movement";
 import { parsePgInterval } from "./format";
 
 /*
@@ -248,4 +249,35 @@ export async function listLatestStandings(seasonId: number): Promise<StandingRow
     .limit(500);
   if (error) throw new OddsDataUnavailable("classifica", error);
   return (data ?? []) as StandingRow[];
+}
+
+/**
+ * Storico delle quote 1X2 di una partita: ogni variazione raccolta, per bookmaker.
+ * Serve al riquadro "Movimento delle quote" del dettaglio partita.
+ */
+export async function listMatchOddsHistory(matchId: number): Promise<OddsPoint[]> {
+  const supabase = await createClient();
+  const { data: events, error: eventsError } = await supabase
+    .from("odds_events")
+    .select("id")
+    .eq("match_id", matchId)
+    .limit(5);
+  if (eventsError) throw new OddsDataUnavailable("eventi di quote", eventsError);
+  const ids = (events ?? []).map((e) => Number(e.id));
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("odds_snapshots")
+    .select("bookmaker, selection, price, event_time")
+    .in("event_id", ids)
+    .eq("market", "h2h")
+    .eq("quality", "OK")
+    .order("event_time", { ascending: true })
+    .limit(3000);
+  if (error) throw new OddsDataUnavailable("storico delle quote", error);
+  return (data ?? []).map((r) => ({
+    bookmaker: String(r.bookmaker),
+    selection: String(r.selection),
+    price: Number(r.price),
+    at: String(r.event_time),
+  }));
 }
