@@ -6,19 +6,17 @@ Nessuna di queste funzioni modifica il database: le scelte dell'utente descritte
 
 ## Stato
 
-| Funzione                                                   | Stato               | PR  |
-| ---------------------------------------------------------- | ------------------- | --- |
-| Logo e icona della scheda                                  | in `dev`            | #84 |
-| Menu a gruppi, impostazioni in una voce con schede         | in `dev`            | #86 |
-| App installabile sul telefono, barra in basso              | in `dev`            | #93 |
-| Tema chiaro, barre delle probabilità nel dettaglio partita | in `dev`            | #94 |
-| Schedine: puntata consigliata e «L'ho giocata»             | in `dev`            | #95 |
-| Campionato preferito                                       | in `dev`            | #96 |
-| Avviso di nuova versione                                   | PR aperta, da unire | #97 |
-| Fluidità su telefono, transizioni, scheletri per pagina    | PR aperta, da unire | #98 |
-| Striscia dell'esito nelle giocate, andamento in Home       | PR aperta, da unire | #99 |
-
-Le sezioni marcate **(PR #97)**, **(PR #98)** e **(PR #99)** descrivono codice non ancora in `dev`: quando le PR vengono unite si toglie la marca e si aggiorna la tabella.
+| Funzione                                                   | Stato    | PR  |
+| ---------------------------------------------------------- | -------- | --- |
+| Logo e icona della scheda                                  | in `dev` | #84 |
+| Menu a gruppi, impostazioni in una voce con schede         | in `dev` | #86 |
+| App installabile sul telefono, barra in basso              | in `dev` | #93 |
+| Tema chiaro, barre delle probabilità nel dettaglio partita | in `dev` | #94 |
+| Schedine: puntata consigliata e «L'ho giocata»             | in `dev` | #95 |
+| Campionato preferito                                       | in `dev` | #96 |
+| Avviso di nuova versione                                   | in `dev` | #97 |
+| Fluidità su telefono, transizioni, scheletri per pagina    | in `dev` | #98 |
+| Striscia dell'esito nelle giocate, andamento in Home       | in `dev` | #99 |
 
 **Nessuna di queste funzioni è stata provata nell'app in esecuzione da chi le ha scritte** (in locale mancava `apps/web/.env.local`): hanno superato `pnpm check` e i test delle parti di logica. La colonna «Da verificare su DEV» in fondo elenca cosa guardare.
 
@@ -43,7 +41,7 @@ PREDICTRA si può aggiungere alla schermata Home e aprire a schermo intero. Non 
 
 **Installazione su Android (Chrome):** menu ⋮ → _Aggiungi a schermata Home_ (o _Installa app_).
 
-### Avviso di nuova versione (PR #97)
+### Avviso di nuova versione
 
 Dopo un deploy, una pagina già aperta continua a usare il codice vecchio; l'app installata può restare aperta per giorni.
 
@@ -72,7 +70,7 @@ Stella sotto il filtro di _Partite_: il campionato scelto è quello che Partite 
 
 **Limite voluto:** vale per il browser in uso e solo per il campionato. Per averlo su tutti i dispositivi, o per le squadre preferite, serve una colonna o tabella nuova: è una modifica al contratto, da fare con una PR dedicata.
 
-## Fluidità e caricamenti (PR #98)
+## Fluidità e caricamenti
 
 Server e database non sono la causa della poca reattività segnalata sul telefono (stessa regione, pagina di accesso in circa 0,17 s il 16/11/2026). Gli interventi sono sul disegno della pagina e sul riscontro al tocco:
 
@@ -88,8 +86,8 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 ## Altri elementi grafici
 
 - **Barre delle probabilità** nel pannello previsioni del dettaglio partita (`components/predictions/match-predictions.tsx`): decorative, il numero resta accanto.
-- **Striscia dell'esito** nelle giocate fatte (PR #99): verde vinta, rossa persa, gialla in pari, grigia aperta; esito in `lib/bankroll/outcome.ts`.
-- **Andamento in Home** (PR #99): nel riquadro del bankroll, profitto cumulato e percentuale di giocate vinte degli ultimi 90 giorni. Come i totali del riquadro, somma bankroll reali e simulati.
+- **Striscia dell'esito** nelle giocate fatte: verde vinta, rossa persa, gialla in pari, grigia aperta; esito in `lib/bankroll/outcome.ts`.
+- **Andamento in Home**: nel riquadro del bankroll, profitto cumulato e percentuale di giocate vinte degli ultimi 90 giorni. Come i totali del riquadro, somma bankroll reali e simulati.
 
 ## Scelte escluse
 
@@ -105,8 +103,8 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 | La barra in basso non copre contenuti o pulsanti a fondo pagina                              | telefono, tutte le pagine        |
 | Tema chiaro pagina per pagina: ombre, grafici, alone di sfondo                               | Preferenze → Chiaro              |
 | Puntata consigliata e «L'ho giocata» con schedine e bankroll reali                           | Schedine → Giocate fatte         |
-| L'avviso di nuova versione compare al deploy successivo a quello della PR #97                | pagina lasciata aperta           |
-| Dopo la PR #98: alone di sfondo ancora visibile, scorrimento più fluido, dissolvenza gradita | iPhone                           |
+| L'avviso di nuova versione compare al deploy successivo, sopra la barra in basso             | pagina lasciata aperta           |
+| Alone di sfondo ancora visibile, scorrimento più fluido, dissolvenza gradita                 | iPhone                           |
 | Striscia dell'esito in tabella e nelle schede su telefono; grafico in Home con poche giocate | Giocate fatte, Home              |
 | Audit di accessibilità con tema chiaro e barra in basso                                      | _Verifica DEV_ (`accessibility`) |
 
