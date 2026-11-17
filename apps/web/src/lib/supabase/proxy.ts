@@ -1,10 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Percorsi accessibili senza sessione. */
+/** Percorsi accessibili senza sessione, con le loro sottopagine. */
 const PUBLIC_PATHS = ["/login", "/forgot-password", "/auth/confirm"];
 
-function isPublic(pathname: string) {
+/** La presentazione (`/`) è pubblica solo lei: non le pagine sotto. */
+export function isPublic(pathname: string) {
+  if (pathname === "/") return true;
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 

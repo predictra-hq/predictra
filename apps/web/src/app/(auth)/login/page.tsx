@@ -37,6 +37,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <Link href="/forgot-password" className="text-center text-sm text-muted hover:text-fg">
           {m.auth.forgotPassword}
         </Link>
+        <Link href="/" className="text-center text-sm text-muted hover:text-fg">
+          {m.landing.about}
+        </Link>
       </ActionForm>
     </Card>
   );

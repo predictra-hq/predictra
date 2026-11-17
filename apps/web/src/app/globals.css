@@ -354,6 +354,42 @@ input::-webkit-date-and-time-value {
   text-align: left;
 }
 
+/* Presentazione prima del login: animazioni del video dimostrativo (spente se il sistema chiede meno movimento). */
+@keyframes demo-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes demo-draw {
+  from {
+    stroke-dashoffset: 400;
+  }
+}
+@keyframes demo-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.demo-grow {
+  transform-origin: left;
+  animation: demo-grow 0.9s ease-out both;
+}
+.demo-draw {
+  stroke-dasharray: 400;
+  animation: demo-draw 1.6s ease-out both;
+}
+.demo-in {
+  animation: demo-in 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-grow,
+  .demo-draw,
+  .demo-in {
+    animation: none;
+  }
+}
+
 /* Tabelle con limite di righe (`Limited`): oltre il limite le righe si aprono a richiesta. */
 [data-row-limit="5"]:not([data-open]) tbody > tr:nth-child(n + 6),
 [data-row-limit="10"]:not([data-open]) tbody > tr:nth-child(n + 11) {
