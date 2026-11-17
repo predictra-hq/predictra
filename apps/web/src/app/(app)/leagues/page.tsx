@@ -200,7 +200,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
         {advantage ? (
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat label={m.goalsDiff}>{formatSigned(advantage.goals)}</Stat>
-            <Stat label={m.winRateDiff}>{formatSigned(advantage.winRate * 100, 1)} pp</Stat>
+            <Stat label={m.winRateDiff}>{formatSigned(advantage.winRate * 100, 0)}%</Stat>
             <Stat label={m.pointsHome}>{formatDecimal(advantage.homePoints)}</Stat>
             <Stat label={m.pointsAway}>{formatDecimal(advantage.awayPoints)}</Stat>
           </dl>
