@@ -24,7 +24,7 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [x] Backup cifrato giornaliero su storage separato e test di ripristino mensile ([backup-restore.md](backup-restore.md), [ADR 0040](../decisions/0040-backup.md)).
 - [x] Primo backup e primo ripristino riusciti l'8/11/2026.
 - [ ] Il proprietario conferma di avere una copia della passphrase dei backup **fuori da GitHub**.
-- [ ] Backup attivo anche su PROD, con i segreti `PROD_*`, e primo test di ripristino del backup di PROD riuscito.
+- [x] Backup attivo anche su PROD (primo backup `predictra-prod-20261117T110015Z` su B2) e primo test di ripristino del backup di PROD riuscito il 17/11/2026 (18 tabelle su 18, 49 policy RLS), con Supabase CLI 3.2.0: con la 3.0.0 il ripristino si fermava su `pg_attver`, perché PROD ha un Postgres più recente. Il test mensile programmato usa la 3.2.0 dal prossimo merge in `main`.
 
 ## 3. Dati e modelli
 
@@ -39,7 +39,8 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 
 - [x] Coda con retry, dead-letter, heartbeat, watchdog e avvio di riserva; frequenza reale dichiarata nell'interfaccia.
 - [x] Budget misurati: minuti di GitHub Actions e messaggi QStash entro i limiti gratuiti ([ADR 0035](../decisions/0035-pianificazione-agente.md)).
-- [ ] Ricalcolo dei budget con **due ambienti** (DEV e PROD): i minuti di GitHub Actions e i crediti dei provider sono dell'account, non dell'ambiente. Decidere quali job restano attivi su DEV dopo l'avvio di PROD.
+- [x] Budget con **due ambienti**: solo PROD raccoglie dati e fa girare agente, motore e schedine; DEV riceve una copia al giorno ([ADR 0055](../decisions/0055-una-sola-raccolta-prod-copia-su-dev.md)). Verificato il 17/11/2026: il primo ciclo su PROD non ha ripetuto le raccolte già fatte da DEV.
+- [ ] **Spazio del database** (500 MB sul piano Free): 91 MB il 17/11/2026, di cui 49 MB di previsioni, che crescono di circa 12.000 righe (5 MB) al giorno. Al ritmo attuale il limite arriva verso febbraio 2027. Serve una regola di conservazione delle previsioni superate (ADR 0041, da decidere).
 
 ## 5. Accessibilità e interfaccia
 
@@ -59,14 +60,14 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 
 Procedura: [setup.md](setup.md) §7 e [checklist-messa-in-servizio.md](checklist-messa-in-servizio.md), con `prod` al posto di `dev`.
 
-- [ ] Progetto Supabase `predictra-prod` (regione europea, come DEV). Il piano Free ammette 2 progetti attivi: DEV e PROD li occupano entrambi.
-- [ ] Progetto Vercel `predictra-prod`, senza integrazioni, con le variabili d'ambiente dei tipi indicati nella checklist di messa in servizio (B2).
-- [ ] Segreti GitHub `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_SUPABASE_SECRET_KEY`, `PROD_APP_BASE_URL`, `PROD_VERCEL_PROJECT_ID`; token Supabase esteso al nuovo progetto.
-- [ ] Segreti e variabili di agente, QStash, provider, Ask PREDICTRA e backup per PROD ([ambienti.md](ambienti.md), [agent.md](agent.md)).
-- [ ] Merge di `dev` in `main` con CI verde: _Deploy PROD_ verde.
-- [ ] _Bootstrap Super Admin_ con ambiente `prod`; attivazione degli account con 2FA; run del workflow eliminati.
-- [ ] Verifica finale della checklist di messa in servizio (fase E) su PROD.
-- [ ] Primo ciclo dell'agente riuscito su PROD; _Data Center_ con fonti aggiornate; modello attivo; backup di PROD presente.
+- [x] Progetto Supabase `predictra-prod` (regione europea, come DEV). Il piano Free ammette 2 progetti attivi: DEV e PROD li occupano entrambi.
+- [x] Progetto Vercel `predictra-prod`, creato dal workflow _Prepara Vercel PROD_ senza collegamento a Git (il piano Hobby non importa i repository delle organizzazioni), senza integrazioni, con le variabili d'ambiente dei tipi indicati nella checklist di messa in servizio (B2).
+- [x] Segreti GitHub `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_SUPABASE_SECRET_KEY`, `PROD_APP_BASE_URL`, `PROD_VERCEL_PROJECT_ID`; token Supabase esteso al nuovo progetto.
+- [x] Segreti e variabili di agente, QStash, provider, Ask PREDICTRA e backup per PROD ([ambienti.md](ambienti.md), [agent.md](agent.md)).
+- [x] Merge di `dev` in `main` con CI verde: _Deploy PROD_ verde.
+- [x] _Bootstrap Super Admin_ con ambiente `prod`; attivazione degli account con 2FA; run del workflow eliminati.
+- [ ] Verifica finale della checklist di messa in servizio (fase E) su PROD. Parte automatica fatta il 17/11/2026: _Verifica DEV_ → `accessibility-prod`, 55 controlli su 55 sul sito in servizio. Restano le prove manuali (inviti, sospensione, reset password).
+- [x] Primo ciclo dell'agente riuscito su PROD; _Data Center_ con fonti aggiornate; modello attivo; backup di PROD presente.
 - [ ] `ambienti.md`, `README.md`, `CLAUDE.md` e la [roadmap](../roadmap/README.md) aggiornati con PROD in servizio.
 
 ## 8. Chiusura
