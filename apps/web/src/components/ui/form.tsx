@@ -3,6 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/errors";
+import { Modal } from "./modal";
 import { Alert, Button, Spinner } from "./primitives";
 
 /**
@@ -81,19 +82,50 @@ export function ActionForm({
   action,
   children,
   className,
+  resultDialog,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children: ReactNode;
   className?: string;
+  /** Esito in una finestra modale invece che sotto il modulo: titolo e testo di chiusura. */
+  resultDialog?: { title: string; close: string };
 }) {
   const [state, formAction] = useActionState(action, null);
+  // Ogni nuovo esito riapre la modale; chiuderla segna quell'esito come già visto.
+  const [seen, setSeen] = useState<ActionState>(null);
+  const result = state ? (
+    <>
+      <Alert tone={state.ok ? "positive" : "negative"}>{state.message}</Alert>
+      {state.link ? <OneTimeLink url={state.link} /> : null}
+    </>
+  ) : null;
   return (
     <form action={formAction} className={className ?? "flex flex-col gap-4"} noValidate>
       {children}
-      <div aria-live="polite" className="sm:col-span-full">
-        {state ? <Alert tone={state.ok ? "positive" : "negative"}>{state.message}</Alert> : null}
-        {state?.link ? <OneTimeLink url={state.link} /> : null}
-      </div>
+      {resultDialog ? (
+        <Modal
+          open={state !== null && state !== seen}
+          onClose={() => setSeen(state)}
+          title={resultDialog.title}
+          closeLabel={resultDialog.close}
+        >
+          <div aria-live="polite" className="flex flex-col gap-3">
+            {result}
+            <Button
+              type="button"
+              variant="secondary"
+              className="self-end"
+              onClick={() => setSeen(state)}
+            >
+              {resultDialog.close}
+            </Button>
+          </div>
+        </Modal>
+      ) : (
+        <div aria-live="polite" className="sm:col-span-full">
+          {result}
+        </div>
+      )}
     </form>
   );
 }

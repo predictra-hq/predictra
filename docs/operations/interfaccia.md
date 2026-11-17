@@ -146,3 +146,11 @@ Ordine di merge: #103 e #106 prima della #107, che le contiene entrambe. Quando 
 | «Da non perdere»: giocate sopra soglia entro 36 ore, schedina con valore, giocate aperte e appena chiuse | Home; soglia in Preferenze (cookie)   | `lib/alerts.ts`, `AlertsCard` in `components/dashboard/cards.tsx`          |
 
 Non verificato con dati reali da chi le ha scritte: le quote del proprio sito e il confronto (l'utente di prova non ha un sito collegato e le quote erano ferme per la sosta), la chiusura automatica su una giocata vera, il riquadro «Da non perdere» con partite entro 36 ore. La logica di ognuna è coperta da test.
+
+## 17/11/2026: tabelle, finestre e pagine più semplici
+
+- **Tabelle con limite.** Ogni tabella che può crescere mostra le prime 10 righe (5 nelle risposte di Chiedi a PREDICTRA) e il bottone «Mostra altre N» (`components/ui/limited.tsx`, `row-limit.tsx`). Sostituisce il vecchio limite solo da telefono (`limit-sm`). Classifiche e tabelle a righe fisse restano intere.
+- **Finestre modali.** Le azioni su Utenti (cambio ruolo, sospendi, riattiva, link per la password) e la revoca degli inviti si confermano in una finestra (`ActionDialog`, `<dialog>` nativo). Esito e link monouso compaiono nella finestra, non allungano la card. `ActionForm` accetta `resultDialog` per mostrare l'esito in una finestra (creazione inviti).
+- **Dettagli tecnici solo per chi amministra** (permesso `agents.monitor`): provenienza e qualità della partita, modello e versione delle schedine, fonte e qualità della classifica. Gli altri vedono solo «aggiornato al …». L'attribuzione richiesta dalle licenze delle fonti resta per tutti.
+- **Home.** Prossime partite con le probabilità 1X2, grafico settimanale «Come ci ha preso il modello» (giocate dall'80%, ultime 6 settimane) e «Campionati a confronto» (gol medi, più di 2,5 gol, gol di entrambe).
+- **Certezze** divise per campionato; in **Campionati** il clic su una competizione scende al campionato aperto.

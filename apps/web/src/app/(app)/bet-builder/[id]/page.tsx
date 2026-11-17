@@ -23,6 +23,7 @@ import { parseId } from "@/lib/football/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatDecimal, formatOdds, formatPercent } from "@/lib/odds/format";
 import { saveProposalSlip } from "../actions";
+import { hasPermission } from "@predictra/shared-types";
 
 export const metadata: Metadata = { title: "Proposta — Schedine" };
 
@@ -30,7 +31,8 @@ export default async function ProposalPage({
   params,
   searchParams,
 }: PageProps<"/bet-builder/[id]">) {
-  await requireUser();
+  const user = await requireUser();
+  const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().betBuilder;
   const { id } = await params;
   const stake = parseStake((await searchParams).s);
@@ -78,11 +80,15 @@ export default async function ProposalPage({
           {proposal.legs_count > 1 ? m.correlationIndependence : m.correlationNone}
         </p>
         <p className="text-xs text-muted">
-          {m.model}: {proposal.model_key} {proposal.model_version}
-          {proposal.rules_version ? ` · ${m.rulesVersion}: ${proposal.rules_version}` : ""} ·{" "}
-          {m.generatedAt} {formatDateTime(proposal.created_at)} · {m.oddsObservedAt}{" "}
-          {formatDateTime(proposal.odds_observed_at)}
+          {fillTemplate(m.oddsUpdated, { at: formatDateTime(proposal.odds_observed_at) })}
         </p>
+        {technical ? (
+          <p className="text-xs text-muted">
+            {m.model}: {proposal.model_key} {proposal.model_version}
+            {proposal.rules_version ? ` · ${m.rulesVersion}: ${proposal.rules_version}` : ""} ·{" "}
+            {m.generatedAt} {formatDateTime(proposal.created_at)}
+          </p>
+        ) : null}
         <p className="text-xs text-muted">{m.immutableNote}</p>
       </Card>
 

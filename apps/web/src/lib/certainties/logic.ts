@@ -35,6 +35,7 @@ export const BANDS: readonly (readonly [number, number])[] = [
 
 export interface Pick {
   matchId: number;
+  competitionId?: number;
   kickoffAt: string;
   home: string;
   away: string;
@@ -87,6 +88,7 @@ export function toPick(
   const marketProbability = market(row);
   return {
     matchId: row.match_id,
+    competitionId: row.competition_id,
     kickoffAt: row.kickoff_at,
     home: row.home_team_name,
     away: row.away_team_name,
@@ -150,6 +152,7 @@ export function selectPicks(
 
 export interface MatchPicks {
   matchId: number;
+  competitionId?: number;
   kickoffAt: string;
   home: string;
   away: string;
@@ -161,6 +164,7 @@ export function groupByMatch(picks: readonly Pick[]): MatchPicks[] {
   for (const p of picks) {
     const g = groups.get(p.matchId) ?? {
       matchId: p.matchId,
+      competitionId: p.competitionId,
       kickoffAt: p.kickoffAt,
       home: p.home,
       away: p.away,
@@ -170,6 +174,28 @@ export function groupByMatch(picks: readonly Pick[]): MatchPicks[] {
     groups.set(p.matchId, g);
   }
   return [...groups.values()];
+}
+
+/**
+ * Partite raggruppate per competizione, nell'ordine dato da `order` (gli id delle
+ * competizioni già ordinate); le competizioni sconosciute vanno in fondo.
+ */
+export function groupByCompetition<T extends { competitionId?: number }>(
+  matches: readonly T[],
+  order: readonly number[],
+): { competitionId: number | null; matches: T[] }[] {
+  const groups = new Map<number | null, T[]>();
+  for (const m of matches) {
+    const key = m.competitionId ?? null;
+    groups.set(key, [...(groups.get(key) ?? []), m]);
+  }
+  const rank = (id: number | null) => {
+    const i = id === null ? -1 : order.indexOf(id);
+    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  return [...groups.entries()]
+    .sort(([a], [b]) => rank(a) - rank(b))
+    .map(([competitionId, list]) => ({ competitionId, matches: list }));
 }
 
 /** Esito di una selezione dato il risultato al 90'; `null` se non risolvibile qui. */
@@ -469,4 +495,48 @@ export function certaintyMultiples(
     out.push({ key: "value", kind: "value", target: null, multiple: value });
   }
   return out;
+}
+
+export interface WeekHits {
+  /** Lunedì della settimana (AAAA-MM-GG, UTC). */
+  weekStart: string;
+  count: number;
+  wins: number;
+}
+
+function mondayOf(date: Date): string {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Giocate dalla soglia in su sulle partite già giocate, settimana per settimana: quante
+ * erano e quante sono uscite. Le ultime `weeks` settimane, dalla più vecchia, anche vuote.
+ */
+export function weeklyHits(
+  rows: readonly ActivePredictionRow[],
+  results: ReadonlyMap<number, { home: number; away: number }>,
+  threshold: number,
+  market: MarketLookup = noMarket,
+  weeks = 6,
+  now: Date = new Date(),
+): WeekHits[] {
+  const out = new Map<string, WeekHits>();
+  const current = new Date(`${mondayOf(now)}T00:00:00Z`);
+  for (let i = weeks - 1; i >= 0; i--) {
+    const start = new Date(current.getTime() - i * 7 * 86_400_000).toISOString().slice(0, 10);
+    out.set(start, { weekStart: start, count: 0, wins: 0 });
+  }
+  const played = rows.filter((r) => results.has(r.match_id));
+  for (const p of selectPicks(played, threshold, market)) {
+    const week = out.get(mondayOf(new Date(p.kickoffAt)));
+    const score = results.get(p.matchId);
+    if (!week || !score) continue;
+    const won = settle(p.market, p.line, p.selection, score.home, score.away);
+    if (won === null) continue;
+    week.count += 1;
+    if (won) week.wins += 1;
+  }
+  return [...out.values()];
 }

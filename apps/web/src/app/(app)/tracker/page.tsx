@@ -51,6 +51,7 @@ import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Giocate fatte" };
 
@@ -408,120 +409,122 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
         {bets.length === 0 ? (
           <p className="p-5 text-sm text-muted">{t.noBets}</p>
         ) : (
-          <table className="w-full min-w-[960px] text-left text-sm">
-            <caption className="sr-only">{t.bets}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{t.placedAt}</Th>
-                <Th>{t.event}</Th>
-                <Th>{t.bankroll}</Th>
-                <Th className="text-right">{t.odds}</Th>
-                <Th className="text-right">{t.stake}</Th>
-                <Th>{t.status}</Th>
-                <Th className="text-right">{t.profit}</Th>
-                <Th>
-                  <span className="sr-only">{c.actions}</span>
-                </Th>
-              </tr>
-            </thead>
-            <tbody>
-              {bets.map((bet) => (
-                <tr
-                  key={bet.id}
-                  className={cn(
-                    "border-b border-l-[3px] border-border align-top last:border-b-0",
-                    OUTCOME_STRIPE[betOutcome(bet.status, bet.profit)],
-                  )}
-                >
-                  <td className="whitespace-nowrap px-3 py-3 text-muted">
-                    {formatDateTime(bet.placed_at)}
-                  </td>
-                  <td className="px-3 py-3">
-                    {bet.description ?? "—"}
-                    <span className="block text-xs text-muted">
-                      {bet.market} · {bet.selection}
-                      {bet.line !== null ? ` · ${bet.line}` : ""}
-                      {bet.bookmaker ? ` · ${bet.bookmaker}` : ""}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <span className="block">{bet.bankroll_name}</span>
-                    <KindBadge kind={bet.bankroll_kind} />
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">{odds(bet.odds)}</td>
-                  <td className="px-3 py-3 text-right font-mono">{formatEuro(bet.stake)}</td>
-                  <td className="px-3 py-3">
-                    <Badge
-                      tone={
-                        bet.status === "OPEN"
-                          ? "neutral"
-                          : Number(bet.profit) > 0
-                            ? "positive"
-                            : Number(bet.profit) < 0
-                              ? "negative"
-                              : "warning"
-                      }
-                    >
-                      {t.statuses[bet.status]}
-                    </Badge>
-                  </td>
-                  <td className="px-3 py-3 text-right font-mono">
-                    <SignedEuro value={bet.profit} />
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex flex-col gap-2">
-                      {bet.status === "OPEN" ? (
-                        <ActionForm
-                          action={settleBet}
-                          className="flex flex-wrap items-center gap-2"
-                        >
-                          <input type="hidden" name="betId" value={bet.id} />
-                          <label className="sr-only" htmlFor={`st-${bet.id}`}>
-                            {t.status}
-                          </label>
-                          <Select
-                            id={`st-${bet.id}`}
-                            name="status"
-                            defaultValue="WON"
-                            className="h-8 w-36 text-xs"
+          <Limited total={bets.length}>
+            <table className="w-full min-w-[960px] text-left text-sm">
+              <caption className="sr-only">{t.bets}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{t.placedAt}</Th>
+                  <Th>{t.event}</Th>
+                  <Th>{t.bankroll}</Th>
+                  <Th className="text-right">{t.odds}</Th>
+                  <Th className="text-right">{t.stake}</Th>
+                  <Th>{t.status}</Th>
+                  <Th className="text-right">{t.profit}</Th>
+                  <Th>
+                    <span className="sr-only">{c.actions}</span>
+                  </Th>
+                </tr>
+              </thead>
+              <tbody>
+                {bets.map((bet) => (
+                  <tr
+                    key={bet.id}
+                    className={cn(
+                      "border-b border-l-[3px] border-border align-top last:border-b-0",
+                      OUTCOME_STRIPE[betOutcome(bet.status, bet.profit)],
+                    )}
+                  >
+                    <td className="whitespace-nowrap px-3 py-3 text-muted">
+                      {formatDateTime(bet.placed_at)}
+                    </td>
+                    <td className="px-3 py-3">
+                      {bet.description ?? "—"}
+                      <span className="block text-xs text-muted">
+                        {bet.market} · {bet.selection}
+                        {bet.line !== null ? ` · ${bet.line}` : ""}
+                        {bet.bookmaker ? ` · ${bet.bookmaker}` : ""}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className="block">{bet.bankroll_name}</span>
+                      <KindBadge kind={bet.bankroll_kind} />
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono">{odds(bet.odds)}</td>
+                    <td className="px-3 py-3 text-right font-mono">{formatEuro(bet.stake)}</td>
+                    <td className="px-3 py-3">
+                      <Badge
+                        tone={
+                          bet.status === "OPEN"
+                            ? "neutral"
+                            : Number(bet.profit) > 0
+                              ? "positive"
+                              : Number(bet.profit) < 0
+                                ? "negative"
+                                : "warning"
+                        }
+                      >
+                        {t.statuses[bet.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-3 text-right font-mono">
+                      <SignedEuro value={bet.profit} />
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col gap-2">
+                        {bet.status === "OPEN" ? (
+                          <ActionForm
+                            action={settleBet}
+                            className="flex flex-wrap items-center gap-2"
                           >
-                            {BET_STATUSES.filter((s) => s !== "OPEN").map((s) => (
-                              <option key={s} value={s}>
-                                {t.statuses[s]}
-                              </option>
-                            ))}
-                          </Select>
-                          <label className="sr-only" htmlFor={`po-${bet.id}`}>
-                            {t.cashOutAmount}
-                          </label>
-                          <Input
-                            id={`po-${bet.id}`}
-                            name="payout"
-                            inputMode="decimal"
-                            placeholder={t.cashOutAmount}
-                            className="h-8 w-40 text-xs"
-                          />
-                          <SubmitButton variant="secondary" className="h-8 px-3 text-xs">
-                            {t.settle}
+                            <input type="hidden" name="betId" value={bet.id} />
+                            <label className="sr-only" htmlFor={`st-${bet.id}`}>
+                              {t.status}
+                            </label>
+                            <Select
+                              id={`st-${bet.id}`}
+                              name="status"
+                              defaultValue="WON"
+                              className="h-8 w-36 text-xs"
+                            >
+                              {BET_STATUSES.filter((s) => s !== "OPEN").map((s) => (
+                                <option key={s} value={s}>
+                                  {t.statuses[s]}
+                                </option>
+                              ))}
+                            </Select>
+                            <label className="sr-only" htmlFor={`po-${bet.id}`}>
+                              {t.cashOutAmount}
+                            </label>
+                            <Input
+                              id={`po-${bet.id}`}
+                              name="payout"
+                              inputMode="decimal"
+                              placeholder={t.cashOutAmount}
+                              className="h-8 w-40 text-xs"
+                            />
+                            <SubmitButton variant="secondary" className="h-8 px-3 text-xs">
+                              {t.settle}
+                            </SubmitButton>
+                          </ActionForm>
+                        ) : null}
+                        <ActionForm action={deleteBet} className="inline">
+                          <input type="hidden" name="betId" value={bet.id} />
+                          <SubmitButton
+                            variant="ghost"
+                            className="h-7 px-2 text-xs hover:text-negative-strong"
+                            confirmMessage={c.confirmDelete}
+                          >
+                            {t.deleteBet}
                           </SubmitButton>
                         </ActionForm>
-                      ) : null}
-                      <ActionForm action={deleteBet} className="inline">
-                        <input type="hidden" name="betId" value={bet.id} />
-                        <SubmitButton
-                          variant="ghost"
-                          className="h-7 px-2 text-xs hover:text-negative-strong"
-                          confirmMessage={c.confirmDelete}
-                        >
-                          {t.deleteBet}
-                        </SubmitButton>
-                      </ActionForm>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
