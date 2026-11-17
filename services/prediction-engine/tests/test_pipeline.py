@@ -107,6 +107,8 @@ def test_scrittura_completa_e_idempotente(league):
     store.clock = now
     summary = run(store, models, now=now, code_commit=COMMIT, model_code=CODE)
     assert not summary.failed
+    # A fine giro il motore chiama la pulizia delle previsioni superate (ADR 0041).
+    assert getattr(store, "prune_calls", 0) == 1
     # Solo i modelli in gara si registrano: la baseline è un riferimento interno.
     assert len(store.versions) == 1
     assert len(store.backtests) == 1

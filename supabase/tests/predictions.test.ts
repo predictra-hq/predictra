@@ -648,4 +648,62 @@ describe("conservazione delle previsioni (ADR 0041)", () => {
       expect(left).not.toContain(oldRedone);
     });
   });
+
+  it("le previsioni dei modelli non più in uso si cancellano se il modello attivo ha rifatto la partita", async () => {
+    let finished = 0;
+    let other = 0;
+    let poisson = 0;
+    let dixon = 0;
+    let runP = 0;
+    let runD = 0;
+    await asServiceRole(db, async (tx) => {
+      await seedMatches(tx);
+      const ids = (
+        await tx.query<{ id: number }>(
+          "select id from public.matches where status = 'FINISHED' order by kickoff_at",
+        )
+      ).rows.map((r) => Number(r.id));
+      [finished, other] = ids as [number, number];
+      poisson = await register(tx, version("poisson", "p1"));
+      dixon = await register(tx, version("dixon_coles", "d1", HASH2));
+      runP = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        poisson,
+        COMMIT,
+      ]);
+      runD = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [
+        dixon,
+        COMMIT,
+      ]);
+    });
+    // Dixon-Coles è il modello attivo, Poisson è stato tolto dalla gara.
+    await db.query("update public.model_versions set status = 'RETIRED' where id = $1", [poisson]);
+    await db.query(
+      "update public.model_versions set status = 'ACTIVE', activated_at = now() where id = $1",
+      [dixon],
+    );
+    const insert = (match: number, mv: number, run: number, asOf: string) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', 0.5, 0.4, $4, $5, '2020-01-01T00:00:00Z') returning id v`,
+        [match, mv, run, HASH, asOf],
+      );
+    const poissonRedone = await insert(finished, poisson, runP, "2026-08-20T10:00:00Z");
+    const dixonLast = await insert(finished, dixon, runD, "2026-08-30T10:00:00Z");
+    const poissonOnly = await insert(other, poisson, runP, "2026-09-20T10:00:00Z");
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r.predictions).toBe(1);
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([dixonLast, poissonOnly]);
+      expect(left).not.toContain(poissonRedone);
+    });
+  });
 });

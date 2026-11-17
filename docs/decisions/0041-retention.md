@@ -48,11 +48,14 @@ Un job giornaliero dell'agente (`maintenance.retention`) che chiama una funzione
 
 Misura del 17/11/2026: database a 91 MB, di cui 49 MB di previsioni, che crescevano di circa 12.000 righe (5 MB) al giorno, perché il motore riscrive le previsioni delle partite in programma due volte al giorno. Con il limite di 500 MB del piano Free il database si sarebbe riempito verso febbraio 2027.
 
-Decisione: a fine giro il motore chiama `prune_predictions` (migrazione `20261117120000`), che cancella le previsioni e le matrici dei risultati esatti **più vecchie di 7 giorni e superate**. Restano sempre:
+Decisione: a fine giro il motore chiama `prune_predictions`, che cancella le previsioni e le matrici dei risultati esatti **più vecchie di 7 giorni** che l'app non usa più. L'app legge solo `v_active_predictions` (versione attiva) e `v_pre_kickoff_predictions` (famiglia del modello attivo). Restano sempre:
 
-- l'ultima previsione di ogni partita, mercato, linea ed esito della **famiglia** del modello (stesso `model_key`, qualunque versione): per una partita giocata è quella prima del calcio d'inizio, usata da Certezze, Affidabilità, verifica del peso del mercato e controlli del modello;
-- l'ultima di ogni versione **attiva o in gara**, cioè quella mostrata per le partite in programma. Le versioni **ritirate** non tengono una copia propria: ogni modifica al codice del modello crea una versione nuova, e la prima regola, che teneva l'ultima di ogni versione, su DEV non trovava nulla da cancellare (migrazione `20261117140000`);
+- l'ultima previsione di ogni partita, mercato, linea ed esito della **famiglia del modello attivo**: per una partita giocata è quella prima del calcio d'inizio, usata da Certezze, Affidabilità, verifica del peso del mercato e controlli del modello;
+- l'ultima di ogni versione **attiva o in gara** (le partite in programma);
+- l'ultima in assoluto per partita, mercato, linea ed esito, di qualunque modello: nessuna partita resta senza previsioni;
 - le previsioni degli ultimi 7 giorni;
 - quelle usate da una proposta del Bet Builder o da una schedina di un utente.
+
+Messa a punto del 17/11/2026, provata su DEV: con la prima regola, che teneva l'ultima di ogni versione e poi di ogni famiglia, non c'era nulla da cancellare. Le previsioni vecchie erano soprattutto del modello Poisson, tolto dalla gara il 14/11/2026, o di versioni ritirate a ogni modifica del codice del modello (migrazioni `20261117120000`, `20261117140000`, `20261117160000`).
 
 La riproducibilità resta: una versione del modello è immutabile e i dati di addestramento sono conservati, quindi ogni previsione cancellata si può ricalcolare. Le cancellate restano anche nei backup per 12 mesi (ADR 0040). Fuori da questa funzione le previsioni restano immutabili (test in `supabase/tests/predictions.test.ts`).
