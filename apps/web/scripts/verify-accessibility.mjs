@@ -439,8 +439,12 @@ async function authFlows(browser, account) {
       viewport: { width: 375, height: 812 },
     });
     const page = await context.newPage();
+    // La pagina di conferma non consuma il link finché non si preme il bottone.
     await page.goto(confirm.toString());
-    await page.waitForURL(/\/accept-invite/);
+    await Promise.all([
+      page.waitForURL(/\/accept-invite/),
+      page.click('main form button[type="submit"]'),
+    ]);
     const submit = () => page.click('form:has(#displayName) button[type="submit"]');
 
     // 2a. Solo numeri: rifiutata con un avviso breve, il nome resta.
