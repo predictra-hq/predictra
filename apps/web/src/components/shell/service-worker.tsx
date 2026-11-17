@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /**
- * Registra il service worker della schermata «Sei offline» (ADR 0057). Solo nella build di
+ * Registra il service worker della schermata «Sei offline» (ADR 0059). Solo nella build di
  * produzione (DEV e PROD su Vercel): in sviluppo locale confonderebbe il ricaricamento del codice.
  */
 export function ServiceWorkerRegister() {
