@@ -52,6 +52,7 @@ const AUTHENTICATED_WRITABLE = [
   "user_bet_slip_selections",
   "user_bet_slips",
   "user_dashboard_settings",
+  "user_follows",
   "user_preferences",
 ].sort();
 
