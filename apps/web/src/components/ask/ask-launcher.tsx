@@ -17,6 +17,13 @@ const m = getMessages().ask;
 export function AskLauncher({ enabled }: { enabled: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Cambiando pagina (es. un collegamento nella risposta) il pannello si chiude: lo stato
+  // si aggiorna durante il rendering, senza un effetto in più.
+  const [shownOn, setShownOn] = useState(pathname);
+  if (shownOn !== pathname) {
+    setShownOn(pathname);
+    setOpen(false);
+  }
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -26,8 +33,6 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
-  // Cambiando pagina (es. un collegamento nella risposta) il pannello si chiude.
-  useEffect(() => setOpen(false), [pathname]);
 
   if (pathname === "/ask") return null;
 
