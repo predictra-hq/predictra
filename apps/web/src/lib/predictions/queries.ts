@@ -78,6 +78,19 @@ export async function getMatchPredictions(matchId: number): Promise<ActivePredic
   return (data ?? []) as ActivePredictionRow[];
 }
 
+/** Ultima previsione prima del calcio d'inizio di una partita (anche finita). */
+export async function getPreKickoffPredictions(matchId: number): Promise<ActivePredictionRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_pre_kickoff_predictions")
+    .select("*")
+    .eq("match_id", matchId)
+    .in("market", ["1X2", "DOUBLE_CHANCE", "TOTAL_GOALS", "BTTS"])
+    .limit(200);
+  if (error) throw new PredictionsUnavailable("previsioni prima della partita", error);
+  return (data ?? []) as ActivePredictionRow[];
+}
+
 /**
  * ID delle partite in programma tra `now` e `end` (lettura leggera di `v_match_center`).
  * Le letture di `v_active_predictions` vanno fatte per `match_id`: è la chiave del
