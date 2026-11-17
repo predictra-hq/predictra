@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 // La Content-Security-Policy con nonce la imposta il proxy a ogni richiesta (src/proxy.ts).
 const securityHeaders = [
@@ -15,8 +16,9 @@ const nextConfig: NextConfig = {
   // Cache Components disattivato: app privata e interamente dinamica per utente
   // (ADR 0006). Si rivaluta quando esisteranno dati condivisi cacheabili (M2+).
   poweredByHeader: false,
-  // Versione dell'app fissata alla build: serve all'avviso di aggiornamento (src/lib/version.ts).
-  env: { APP_VERSION: process.env.GITHUB_SHA ?? "local" },
+  // Fissati alla build (src/lib/version.ts): il commit serve solo all'avviso di aggiornamento,
+  // il numero di versione di package.json è quello mostrato agli utenti (docs/operations/interfaccia.md).
+  env: { APP_VERSION: process.env.GITHUB_SHA ?? "local", APP_RELEASE: packageJson.version },
   transpilePackages: ["@predictra/quant", "@predictra/shared-types"],
   turbopack: {
     rules: {

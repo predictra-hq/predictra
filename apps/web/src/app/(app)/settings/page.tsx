@@ -8,6 +8,7 @@ import { TourRestartButton } from "@/components/shell/tour";
 import { Badge } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
+import { formatRelease } from "@/lib/version";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 export const metadata: Metadata = { title: "Profilo" };
@@ -114,6 +115,9 @@ export default async function ProfilePage() {
           {m.common.signOut}
         </button>
       </form>
+      <p className="mt-4 text-center text-xs text-subtle">
+        {m.app.name} {formatRelease()}
+      </p>
     </div>
   );
 }

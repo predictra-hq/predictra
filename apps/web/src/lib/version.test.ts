@@ -1,5 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { isNewerDeploy } from "./version";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { formatRelease, isNewerDeploy } from "./version";
+
+describe("versione mostrata", () => {
+  it("numero di versione con la v davanti", () => {
+    expect(formatRelease("1.0.0")).toBe("v1.0.0");
+    expect(formatRelease("12.3.45")).toBe("v12.3.45");
+  });
+
+  it("un valore non valido non mostra testo strano", () => {
+    expect(formatRelease("abc123")).toBe("v0.0.0");
+    expect(formatRelease("")).toBe("v0.0.0");
+  });
+
+  it("package.json ha una versione maggiore.minore.correzione", () => {
+    const pkg = JSON.parse(readFileSync(join(__dirname, "../../package.json"), "utf8"));
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
 
 describe("avviso di nuova versione", () => {
   it("compare solo se il server pubblica una versione diversa", () => {
