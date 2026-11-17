@@ -39,7 +39,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # ADR 0054: con PROD in servizio si salva PROD (DEV ne è una copia).
+  # ADR 0055: con PROD in servizio si salva PROD (DEV ne è una copia).
   ENVIRONMENT: ${{ vars.DATA_TARGET == 'prod' && 'prod' || 'dev' }}
   ACTION: >-
     ${{ github.event_name == 'workflow_dispatch' && inputs.action

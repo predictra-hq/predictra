@@ -1,6 +1,6 @@
 # Messa in produzione — cosa fare, passo per passo
 
-Per il proprietario (`gennpalm`). Tempo stimato: un'ora e mezza, in due momenti. Scelta di fondo: [ADR 0054](../decisions/0054-una-sola-raccolta-prod-copia-su-dev.md), cioè solo PROD scarica i dati dalle fonti e DEV ne riceve una copia ogni giorno, senza chiamate in più.
+Per il proprietario (`gennpalm`). Tempo stimato: un'ora e mezza, in due momenti. Scelta di fondo: [ADR 0055](../decisions/0055-una-sola-raccolta-prod-copia-su-dev.md), cioè solo PROD scarica i dati dalle fonti e DEV ne riceve una copia ogni giorno, senza chiamate in più.
 
 Il codice è pronto su `dev`. Finché non fai il passo 9 tutto continua a funzionare come oggi, su DEV: i passi 1–8 non cambiano nulla per nessuno.
 

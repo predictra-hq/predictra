@@ -95,10 +95,10 @@ jobs:
         id: secrets
         working-directory: .
         run: |
-          # ADR 0054: con PROD in servizio solo `main` raccoglie dati (su PROD); DEV li
+          # ADR 0055: con PROD in servizio solo `main` raccoglie dati (su PROD); DEV li
           # riceve copiati da PROD, così ogni chiamata alle fonti si fa una volta sola.
           if [ "$DATA_ENV" = "nessuno" ]; then
-            echo "::notice title=Raccolta saltata::DEV riceve i dati da PROD (workflow Copia dati tra ambienti, ADR 0054)"
+            echo "::notice title=Raccolta saltata::DEV riceve i dati da PROD (workflow Copia dati tra ambienti, ADR 0055)"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
