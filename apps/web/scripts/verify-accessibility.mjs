@@ -384,12 +384,14 @@ async function formAlert(page) {
  * L'utente invitato (`verifica-invito-…@example.com`) viene sempre cancellato.
  */
 async function authFlows(browser, account, matchPath) {
+  await removeLeftoverTestUsers();
   // 1. Accesso con password sbagliata.
   {
     const context = await browser.newContext({
       locale: "it-IT",
       viewport: { width: 375, height: 812 },
     });
+    await skipTour(context);
     const page = await context.newPage();
     await page.goto(`${appUrl}/login`);
     await page.fill("#email", account.email);
@@ -438,6 +440,8 @@ async function authFlows(browser, account, matchPath) {
       locale: "it-IT",
       viewport: { width: 375, height: 812 },
     });
+
+    await skipTour(context);
     const page = await context.newPage();
     // La pagina di conferma non consuma il link finché non si preme il bottone.
     await page.goto(confirm.toString());
@@ -543,9 +547,37 @@ async function authFlows(browser, account, matchPath) {
   } catch (e) {
     check("flussi di accesso", false, e instanceof Error ? e.message : String(e));
   } finally {
-    if (invitedId) await admin.auth.admin.deleteUser(invitedId);
     if (invitationId) await admin.from("invitations").delete().eq("id", invitationId);
+    if (invitedId) {
+      const { error } = await admin.auth.admin.deleteUser(invitedId);
+      check("utente di prova dell'invito cancellato", !error, error?.message ?? "");
+    }
   }
+}
+
+/**
+ * Utenti di prova rimasti dalle verifiche precedenti (`verifica-invito-…@example.com`):
+ * prima del 17/11/2026 l'audit impediva di cancellarli. Si tolgono all'inizio.
+ */
+async function removeLeftoverTestUsers() {
+  for (let page = 1; page <= 10; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error || !data?.users?.length) return;
+    for (const u of data.users) {
+      if (!/^verifica-invito-[0-9a-f]+@example\.com$/.test(u.email ?? "")) continue;
+      await admin.from("invitations").delete().eq("email", u.email);
+      await admin.auth.admin.deleteUser(u.id);
+    }
+    if (data.users.length < 200) return;
+  }
+}
+
+/**
+ * Il tutorial si apre alla prima entrata e prende il focus: per le prove automatiche si
+ * segna come già visto (cookie `predictra-tour`, come dopo «Salta»).
+ */
+async function skipTour(context) {
+  await context.addCookies([{ name: "predictra-tour", value: "done", url: appUrl }]);
 }
 
 async function login(page, account) {
@@ -597,6 +629,7 @@ async function main() {
   let account = null;
   try {
     const context = await browser.newContext({ locale: "it-IT" });
+    await skipTour(context);
     const page = await context.newPage();
     watchRuntime(page);
     await audit(page, "/login");
@@ -649,6 +682,29 @@ async function main() {
       skipLink: null,
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
+
+    // Costruisci: una giocata scelta compare nella barra in basso, sempre visibile sopra
+    // la barra di navigazione, e una seconda giocata della stessa partita sostituisce la prima.
+    await page.goto(`${appUrl}/bet-builder/builder`);
+    const choices = page.locator("main button[aria-pressed]");
+    if ((await choices.count()) >= 2) {
+      await choices.nth(0).click();
+      await page.waitForURL(/[?&]s=/, { timeout: 15000 }).catch(() => null);
+      const bar = page.locator('main a[href="#valutazione"]');
+      const box = await bar.boundingBox();
+      const nav = await page.locator('nav[aria-label="Pagine principali"]').boundingBox();
+      check(
+        "costruisci: «Valuta» sempre visibile sopra la barra in basso",
+        box !== null && nav !== null && box.y + box.height <= nav.y && box.y > 0,
+        JSON.stringify({ box, nav }),
+      );
+      await choices.nth(1).click();
+      await page.waitForTimeout(500);
+      check(
+        "costruisci: una sola giocata per partita",
+        (await page.locator('main button[aria-pressed="true"]').count()) === 1,
+      );
+    }
 
     // Indirizzi in inglese: i vecchi indirizzi in italiano portano ai nuovi.
     for (const [from, to] of [

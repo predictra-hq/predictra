@@ -3,8 +3,9 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
+import { Check, ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
@@ -17,7 +18,10 @@ interface SidebarProps {
   groups: readonly NavGroup[];
   admin: readonly NavItem[];
   settings: readonly NavItem[];
+  userId: string;
   userLabel: string;
+  /** Versione mostrata (es. «v1.0.0»). */
+  release: string;
   roleLabel: string;
 }
 
@@ -81,23 +85,40 @@ function NavLinks({
  * Ricarica i dati della pagina senza perdere la posizione: nell'app installata sul
  * telefono non c'è il pulsante di ricarica del browser.
  */
-function RefreshButton({ label }: { label: string }) {
+function RefreshButton({ label, doneLabel }: { label: string; doneLabel: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // Riscontro sempre visibile: la rotellina gira almeno un attimo anche se i dati arrivano
+  // subito, poi compare la spunta. Senza, sembrava che il tocco non facesse nulla.
+  const [spinning, setSpinning] = useState(false);
+  const [done, setDone] = useState(false);
+  const busy = pending || spinning;
   return (
     <button
       type="button"
-      onClick={() => startTransition(() => router.refresh())}
-      disabled={pending}
-      aria-busy={pending}
+      onClick={() => {
+        if (busy) return;
+        setDone(false);
+        setSpinning(true);
+        startTransition(() => router.refresh());
+        window.setTimeout(() => {
+          setSpinning(false);
+          setDone(true);
+          window.setTimeout(() => setDone(false), 1500);
+        }, 700);
+      }}
+      aria-busy={busy}
       aria-label={label}
       className="mr-auto cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2"
     >
-      <RefreshCw
-        size={20}
-        aria-hidden="true"
-        className={cn(pending && "motion-safe:animate-spin")}
-      />
+      {done && !busy ? (
+        <Check size={20} aria-hidden="true" className="text-positive-strong" />
+      ) : (
+        <RefreshCw size={20} aria-hidden="true" className={cn(busy && "animate-spin")} />
+      )}
+      <span className="sr-only" aria-live="polite">
+        {done && !busy ? doneLabel : ""}
+      </span>
     </button>
   );
 }
@@ -174,7 +195,16 @@ function NavGroupSection({
   );
 }
 
-export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabel }: SidebarProps) {
+export function Sidebar({
+  messages,
+  groups,
+  admin,
+  settings,
+  userId,
+  userLabel,
+  release,
+  roleLabel,
+}: SidebarProps) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -212,7 +242,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         >
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <RefreshButton label={messages.nav.refresh} />
+        <RefreshButton label={messages.nav.refresh} doneLabel={messages.nav.refreshed} />
         <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
           {messages.app.name}
           <span className="-ml-2 text-positive" aria-hidden="true">
@@ -263,10 +293,15 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
         </nav>
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
-          <p className="truncate text-sm font-medium" title={userLabel}>
-            {userLabel}
-          </p>
-          <p className="text-xs text-muted">{roleLabel}</p>
+          <div className="flex items-center gap-3">
+            <UserAvatar userId={userId} className="size-9" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium" title={userLabel}>
+                {userLabel}
+              </p>
+              <p className="text-xs text-muted">{roleLabel}</p>
+            </div>
+          </div>
           <form action="/auth/signout" method="post" className="mt-3">
             <button
               type="submit"
@@ -276,6 +311,7 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
               {messages.common.signOut}
             </button>
           </form>
+          <p className="mt-2 text-xs text-subtle">{release}</p>
         </div>
       </aside>
 

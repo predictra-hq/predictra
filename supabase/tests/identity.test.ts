@@ -188,6 +188,23 @@ describe("visibilità amministrativa", () => {
       /append-only/,
     );
   });
+
+  it("cancellando un utente le sue voci di audit restano, senza autore", async () => {
+    await asUser(db, superA, async (tx) => {
+      await tx.query("select public.create_invitation('y@example.test', 'USER')");
+    });
+    // Togliere l'autore insieme ad altro resta vietato.
+    await expect(
+      db.query("update public.audit_logs set actor_id = null, action = 'x'"),
+    ).rejects.toThrow(/append-only/);
+    await db.query("delete from auth.users where id = $1", [superA.id]);
+    const { rows } = await db.query<{ actor_id: string | null; action: string }>(
+      "select actor_id, action from public.audit_logs",
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.actor_id === null)).toBe(true);
+    expect(rows.some((r) => r.action === "invitation.created")).toBe(true);
+  });
 });
 
 describe("inviti", () => {

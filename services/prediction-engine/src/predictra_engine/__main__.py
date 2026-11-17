@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("diagnose", help="verifica in sola lettura versioni e previsioni visibili")
     sub.add_parser("stats", help="prova tiri e xG nel modello gol (sola lettura)")
     sub.add_parser("market", help="peso del mercato nella probabilità combinata (sola lettura)")
+    sub.add_parser("totals", help="taratura dei gol totali sui dati reali (sola lettura)")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -63,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
         for line in run_market(store, datetime.now(UTC).replace(microsecond=0)):
             print(line, flush=True)
         return 0
+    if args.command == "totals":
+        from .data import MatchResult
+        from .models import dixon_coles_model
+        from .totals_lab import run_totals
+
+        now = datetime.now(UTC).replace(microsecond=0)
+        results = [MatchResult.from_row(r) for r in store.training_results(now)]
+        for line in run_totals(dixon_coles_model(), results, now):
+            print(line, flush=True)
+        return 0
     if args.command == "stats":
         for line in run_stats(store, datetime.now(UTC).replace(microsecond=0)):
             print(line, flush=True)
@@ -87,6 +98,13 @@ def main(argv: list[str] | None = None) -> int:
         f"Motore — {mode} — as_of {summary.as_of.isoformat()} — partite di addestramento "
         f"{summary.training_matches} — partite da prevedere {summary.fixtures}"
     )
+    if summary.tuned_from_store:
+        print(f"  impostazioni dalla taratura automatica: {summary.tuned_from_store}")
+    if summary.tuning:
+        for line in summary.tuning.lines():
+            print(line)
+        if summary.adopted:
+            print(f"  ADOTTATE le impostazioni {summary.adopted.describe()} (ADR 0056)")
     for m in summary.models:
         line = f"  {m.key:<12} {m.version:<32} partite={m.matches} righe={m.predictions}"
         if m.backtest:
@@ -98,6 +116,26 @@ def main(argv: list[str] | None = None) -> int:
         if m.error:
             line += f" errore={m.error}"
         print(line)
+        r = m.reliability
+        if r and r.get("matches"):
+
+            def pct(t: dict) -> str:
+                return (
+                    f"{t['wins']}/{t['count']} ({t['wins'] / t['count']:.1%})"
+                    if t["count"]
+                    else "–"
+                )
+
+            print(
+                f"    verifica storica su {r['matches']} partite: favorita {pct(r['favourite'])}"
+                f" · risultato esatto {pct(r['exact_score'])}"
+                f" · giocate dal 70% {pct(r['picks'])}"
+            )
+            for t in r["markets"]:
+                print(
+                    f"      {t['market']:<16} {pct(t)} "
+                    f"(date in media al {t['predicted'] / t['count']:.1%})"
+                )
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
     if summary.retired:
         print(f"  versioni superate ritirate: {summary.retired}")

@@ -124,3 +124,31 @@ def test_over_15_tarato_e_coerente_con_le_altre_linee():
         over, under = prices[("TOTAL_GOALS", 1.5, "OVER")], prices[("TOTAL_GOALS", 1.5, "UNDER")]
         assert abs(over + under - 1) < 1e-12
         assert prices[("TOTAL_GOALS", 0.5, "OVER")] >= over >= prices[("TOTAL_GOALS", 2.5, "OVER")]
+
+
+def test_gol_totali_tarati_e_coerenti_su_tutte_le_linee():
+    """ADR 0060: 1,5 e 2,5 tarati; l'over scende salendo di linea; linee intere coerenti."""
+    from predictra_engine.markets import TOTAL_LINES
+
+    for home, away in ((1.6, 1.0), (0.4, 0.3), (3.2, 2.4), (2.8, 0.2)):
+        prices = {
+            (p.market, p.line, p.selection): (p.probability, p.push)
+            for p in derive_markets(score_matrix(home, away, rho=-0.05))
+        }
+        halves = [x for x in TOTAL_LINES if not float(x).is_integer()]
+        overs = [prices[("TOTAL_GOALS", x, "OVER")][0] for x in halves]
+        assert overs == sorted(overs, reverse=True)
+        for line in TOTAL_LINES:
+            over, push = prices[("TOTAL_GOALS", line, "OVER")]
+            under, _ = prices[("TOTAL_GOALS", line, "UNDER")]
+            assert abs(over + under + (push or 0) - 1) < 1e-9
+            assert push is None or push >= 0
+        # Linea 2: vince con 3 gol o più, come l'over 2,5.
+        assert prices[("TOTAL_GOALS", 2.0, "OVER")][0] == prices[("TOTAL_GOALS", 2.5, "OVER")][0]
+
+
+def test_over_25_meno_estremo_della_matrice():
+    from predictra_engine.markets import OVER_25_SHIFT, OVER_25_SLOPE, _calibrate
+
+    assert _calibrate(0.2, OVER_25_SLOPE, OVER_25_SHIFT) > 0.2
+    assert _calibrate(0.85, OVER_25_SLOPE, OVER_25_SHIFT) < 0.85

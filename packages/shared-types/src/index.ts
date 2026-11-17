@@ -6,4 +6,5 @@ export * from "./bet-builder";
 export * from "./bankroll";
 export * from "./agent";
 export * from "./ask";
+export * from "./community";
 export * from "./follows";

@@ -16,11 +16,21 @@ from typing import Any, Protocol
 
 import numpy as np
 
+from .autotune import (
+    AutotuneResult,
+    Settings,
+    autotune,
+    model_from_hyperparameters,
+    settings_of,
+    with_settings,
+)
 from .backtest import BacktestResult, backtest_models
 from .confidence import confidence
 from .data import Fixture, MatchResult, parse_ts, sha256_json, training_data_hash
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
+from .models.blend import EloBlendModel
+from .reliability import Reliability
 from .selection import CONTENDERS, Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
@@ -35,6 +45,7 @@ class Store(Protocol):
     def find_model_version(self, model_key: str, version: str) -> int | None: ...
     def latest_backtest(self, model_version_id: int) -> dict[str, Any] | None: ...
     def active_model_version(self) -> int | None: ...
+    def active_version(self) -> dict[str, Any] | None: ...
     def auto_activate(self, model_version_id: int, reason: str) -> None: ...
     def retire_superseded(self, keep: list[int]) -> int: ...
     def register_model_version(self, payload: dict[str, Any]) -> int: ...
@@ -52,6 +63,7 @@ class ModelSummary:
     model_version_id: int | None = None
     backtest: BacktestResult | None = None
     backtest_recorded: bool = False
+    reliability: dict[str, Any] | None = None
     predictions: int = 0
     matches: int = 0
     error: str | None = None
@@ -71,6 +83,10 @@ class RunSummary:
     prune_error: str | None = None
     selection: Decision | None = None
     active_before: int | None = None
+    tuning: AutotuneResult | None = None
+    tuned_from_store: str | None = None
+    """Impostazioni del modello lette dalla versione attiva (taratura delle settimane prima)."""
+    adopted: Settings | None = None
 
     @property
     def failed(self) -> bool:
@@ -169,6 +185,7 @@ def run(
     triggered_by: str = "schedule",
     dry_run: bool = False,
     model_code: str | None = None,
+    autotune_enabled: bool = True,
 ) -> RunSummary:
     as_of = now.replace(microsecond=0)
     results = [MatchResult.from_row(r) for r in store.training_results(as_of)]
@@ -181,6 +198,25 @@ def run(
     summary = RunSummary(as_of, len(results), len(fixtures), data_hash, model_code=code_id)
     if not results:
         return summary
+
+    # Impostazioni adottate dalla taratura automatica (ADR 0056): stanno negli iperparametri
+    # della versione attiva. Valgono solo per lo stesso codice dei modelli; se il codice è
+    # cambiato si riparte dalle impostazioni predefinite.
+    models = list(models)
+    active = store.active_version() if hasattr(store, "active_version") else None
+    for i, m in enumerate(models):
+        if not isinstance(m, EloBlendModel) or m.key not in CONTENDERS or not active:
+            continue
+        if active.get("model_key") != m.key:
+            continue
+        if not str(active.get("version", "")).endswith(f"-{code_id[:7]}"):
+            continue
+        hp = (active.get("parameters") or {}).get("hyperparameters") or {}
+        restored = model_from_hyperparameters(m, hp)
+        if restored is not None and version_label(restored, code_id) == active["version"]:
+            models[i] = restored
+            if restored.hyperparameters() != m.hyperparameters():
+                summary.tuned_from_store = settings_of(restored).describe()
 
     fitted = {m.key: m.fit(results, as_of) for m in models}
     labels = {m.key: version_label(m, code_id) for m in models}
@@ -231,6 +267,11 @@ def run(
         "created_at" in r and as_of - parse_ts(str(r["created_at"])) > BACKTEST_MAX_AGE
         for r in recorded.values()
     )
+    # Backtest registrati prima della verifica storica (ADR 0057): si rifanno subito, così
+    # la pagina Affidabilità ha i numeri senza aspettare il confronto settimanale.
+    stale = stale or any(
+        "reliability_matches" in r and r["reliability_matches"] is None for r in recorded.values()
+    )
     if stale or (needs_backtest and recorded):
         needs_backtest = [m.key for m in contenders]
     summary.refreshed_backtests = stale
@@ -238,7 +279,11 @@ def run(
     # Backtest delle versioni nuove (o di tutte, nel confronto settimanale), tutti sulle
     # stesse partite della baseline.
     if needs_backtest:
-        backtests = backtest_models(models, results)
+        # Verifica storica su tutti i mercati principali per i modelli in gara (ADR 0057).
+        checks = {key: Reliability() for key in needs_backtest}
+        backtests = backtest_models(
+            models, results, observers={k: r.add for k, r in checks.items()}
+        )
         base = backtests.get("baseline")
         for key, bt in backtests.items():
             if key not in CONTENDERS:
@@ -247,6 +292,7 @@ def run(
             bt = backtests.get(key)
             s = summaries[key]
             s.backtest = bt
+            s.reliability = checks[key].to_json()
             if bt is None:
                 continue
             ece[key] = bt.ece
@@ -264,10 +310,32 @@ def run(
                         "baseline_brier": round(base.brier, 6) if base else None,
                         "baseline_log_loss": round(base.log_loss, 6) if base else None,
                         "calibration": bt.calibration,
+                        "reliability": checks[key].to_json(),
                         "code_commit": code_commit,
                     }
                 )
                 s.backtest_recorded = True
+
+    # Taratura automatica (ADR 0056): quando si rifanno i backtest (ogni settimana o con
+    # codice nuovo) si provano impostazioni vicine sulle partite recenti.
+    if autotune_enabled and needs_backtest:
+        _autotune_step(
+            store,
+            models,
+            contenders,
+            summaries,
+            fitted,
+            labels,
+            results,
+            as_of,
+            summary,
+            code_id,
+            code_commit,
+            data_hash,
+            window,
+            ece,
+            dry_run,
+        )
 
     # Il modello più forte diventa attivo da solo (ADR 0023).
     candidates: list[Candidate] = []
@@ -307,6 +375,19 @@ def run(
     if not dry_run:
         summary.active_before = store.active_model_version()
         summary.selection = choose_active(candidates, summary.active_before)
+        if summary.selection is not None and summary.adopted is not None and summary.tuning:
+            best = summary.tuning.best
+            summary.selection = Decision(
+                summary.selection.model_version_id,
+                summary.selection.version,
+                (
+                    f"taratura automatica: {summary.adopted.describe()} — Log Loss sulle "
+                    f"partite recenti {best.log_loss:.4f} contro "
+                    f"{summary.tuning.current.log_loss:.4f}"
+                    if best
+                    else "taratura automatica"
+                ),
+            )
         if summary.selection is not None:
             store.auto_activate(summary.selection.model_version_id, summary.selection.reason)
         # Le versioni superate (codice vecchio, famiglie non più in gara) si ritirano:
@@ -385,3 +466,98 @@ def prune(store: Store) -> tuple[int, str | None]:
     except Exception as exc:
         return total, f"{type(exc).__name__}: {exc}"[:300]
     return total, None
+
+
+def _autotune_step(
+    store: Store,
+    models: list[Model],
+    contenders: list[Model],
+    summaries: dict[str, ModelSummary],
+    fitted: dict[str, Any],
+    labels: dict[str, str],
+    results: list[MatchResult],
+    as_of: datetime,
+    summary: RunSummary,
+    code_id: str,
+    code_commit: str,
+    data_hash: str,
+    window: tuple[datetime, datetime],
+    ece: dict[str, float | None],
+    dry_run: bool,
+) -> None:
+    """Prova le varianti; se una è migliore prende il posto del modello in gara."""
+    target = next((m for m in contenders if isinstance(m, EloBlendModel)), None)
+    current_bt = summaries[target.key].backtest if target else None
+    if target is None or current_bt is None:
+        return
+    tuning = autotune(target, results, as_of)
+    summary.tuning = tuning
+    if tuning is None or tuning.best is None:
+        return
+    candidate = with_settings(target, tuning.best.settings)
+    baseline = next((m for m in models if m.key == "baseline"), None)
+    check = Reliability()
+    full = backtest_models(
+        [m for m in (baseline, candidate) if m is not None],
+        results,
+        observers={candidate.key: check.add},
+    )
+    bt = full.get(candidate.key)
+    # Sull'intero storico la variante non deve essere peggiore delle impostazioni attuali.
+    if bt is None or bt.log_loss > current_bt.log_loss:
+        tuning.best = None
+        return
+    summary.adopted = tuning.best.settings
+    i = models.index(target)
+    models[i] = candidate
+    contenders[contenders.index(target)] = candidate
+    fitted[candidate.key] = candidate.fit(results, as_of)
+    labels[candidate.key] = version_label(candidate, code_id)
+    s = ModelSummary(candidate.key, labels[candidate.key], backtest=bt, reliability=check.to_json())
+    summaries[candidate.key] = s
+    summary.models = list(summaries.values())
+    ece[candidate.key] = bt.ece
+    if dry_run:
+        return
+    s.model_version_id = store.find_model_version(candidate.key, s.version)
+    if s.model_version_id is None:
+        s.model_version_id = store.register_model_version(
+            {
+                "model_key": candidate.key,
+                "version": s.version,
+                "code_commit": code_commit,
+                "parameters": {
+                    "hyperparameters": candidate.hyperparameters(),
+                    "fitted": fitted[candidate.key].parameters(),
+                    "autotune": {
+                        "recent_matches": tuning.current.matches,
+                        "recent_log_loss": round(tuning.best.log_loss, 6),
+                        "previous_recent_log_loss": round(tuning.current.log_loss, 6),
+                        "previous": tuning.current.settings.describe(),
+                    },
+                },
+                "training_window_start": _iso(window[0]),
+                "training_window_end": _iso(window[1]),
+                "training_data_hash": data_hash,
+                "training_matches": len(results),
+            }
+        )
+    base = full.get("baseline")
+    store.record_backtest(
+        {
+            "model_version_id": s.model_version_id,
+            "baseline_model_version_id": None,
+            "window_start": _iso(bt.window_start),
+            "window_end": _iso(bt.window_end),
+            "matches": bt.matches,
+            "brier": round(bt.brier, 6),
+            "log_loss": round(bt.log_loss, 6),
+            "ece": round(bt.ece, 6),
+            "baseline_brier": round(base.brier, 6) if base else None,
+            "baseline_log_loss": round(base.log_loss, 6) if base else None,
+            "calibration": bt.calibration,
+            "reliability": check.to_json(),
+            "code_commit": code_commit,
+        }
+    )
+    s.backtest_recorded = True

@@ -127,7 +127,7 @@ export default async function InvitationsPage() {
                     <td className="whitespace-nowrap px-4 py-3 text-muted">
                       {formatDateTime(inv.expires_at)}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="sm-wide px-4 py-3 sm:text-right">
                       {inv.status === "PENDING" && canGrantRole(user.roles, inv.role) ? (
                         <ActionDialog
                           trigger={m.admin.revoke}

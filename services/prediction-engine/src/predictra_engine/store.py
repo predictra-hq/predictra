@@ -140,7 +140,10 @@ class SupabaseStore:
         rows = self.select(
             "backtests",
             {
-                "select": "brier,log_loss,ece,baseline_brier,baseline_log_loss,created_at",
+                "select": (
+                    "brier,log_loss,ece,baseline_brier,baseline_log_loss,created_at,"
+                    "reliability_matches:reliability->>matches"
+                ),
                 "model_version_id": f"eq.{model_version_id}",
                 "order": "created_at.desc",
                 "limit": "1",
@@ -151,6 +154,14 @@ class SupabaseStore:
     def active_model_version(self) -> int | None:
         rows = self.select("model_versions", {"select": "id", "status": "eq.ACTIVE"})
         return int(rows[0]["id"]) if rows else None
+
+    def active_version(self) -> dict[str, Any] | None:
+        """Famiglia, versione e parametri della versione attiva (taratura, ADR 0056)."""
+        rows = self.select(
+            "model_versions",
+            {"select": "id,model_key,version,parameters", "status": "eq.ACTIVE"},
+        )
+        return rows[0] if rows else None
 
     # -------------------------------------------------------------- scritture
     def register_model_version(self, payload: dict[str, Any]) -> int:

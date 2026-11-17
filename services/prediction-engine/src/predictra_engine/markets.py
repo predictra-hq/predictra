@@ -37,17 +37,24 @@ def _over_under(dist: np.ndarray, line: float) -> tuple[float, float, float | No
     return over, under, push
 
 
-# Tarature per mercato (ADR 0053): su «entrambe segnano» e sull'under/over 1,5 la matrice
-# dei risultati è troppo sicura. La taratura σ(a·logit p + b) migliora il Log Loss sul banco
-# di prova in tutte e due le stagioni di verifica e in tutti i campionati:
-# - entrambe segnano: 0,6870 → 0,6844 (2024-25) e 0,6897 → 0,6870 (2025-26);
-# - over 1,5:         0,5234 → 0,5213 (2024-25) e 0,5396 → 0,5374 (2025-26).
-# Sulle altre linee dei gol il guadagno non si ripete: restano quelle della matrice.
+# Tarature per mercato (ADR 0053, aggiornate dall'ADR 0060): su «entrambe segnano» e sui
+# gol totali 1,5 e 2,5 la matrice dei risultati è troppo sicura. La taratura
+# σ(a·logit p + b) è stimata sulle stagioni vecchie e verificata sulle recenti (e
+# viceversa) e migliora il Log Loss nei due versi:
+# - entrambe segnano: 0,6870 → 0,6844 (2024-25) e 0,6897 → 0,6870 (2025-26), ADR 0053;
+# - over 1,5 (8.616 partite reali, 17/11/2026): 0,5171 → 0,5143 e 0,5320 → 0,5261;
+# - over 2,5 (stesse partite):                  0,6745 → 0,6730 e 0,6879 → 0,6810.
+# Sulla linea 3,5 il guadagno c'è in un verso solo: resta quella della matrice.
 BTTS_SLOPE = 0.6
 BTTS_SHIFT = 0.05
-OVER_15_SLOPE = 0.7
-OVER_15_SHIFT = 0.4
-CALIBRATED_TOTAL_LINE = 1.5
+OVER_15_SLOPE = 0.6
+OVER_15_SHIFT = 0.55
+OVER_25_SLOPE = 0.6
+OVER_25_SHIFT = 0.15
+TOTAL_CALIBRATION: dict[float, tuple[float, float]] = {
+    1.5: (OVER_15_SLOPE, OVER_15_SHIFT),
+    2.5: (OVER_25_SLOPE, OVER_25_SHIFT),
+}
 
 
 def _calibrate(p: float, slope: float, shift: float) -> float:
@@ -66,6 +73,25 @@ def calibrate_over_15(p: float) -> float:
     return _calibrate(p, OVER_15_SLOPE, OVER_15_SHIFT)
 
 
+def total_overs(total: np.ndarray) -> dict[float, float]:
+    """Probabilità dell'over sulle linee x,5, tarate e coerenti tra loro.
+
+    Le linee tarate (``TOTAL_CALIBRATION``) passano per σ(a·logit p + b); poi, salendo di
+    linea, l'over non può crescere (più gol richiesti, meno probabile).
+    """
+    values = np.arange(len(total))
+    overs: dict[float, float] = {}
+    previous = 1.0
+    for line in sorted({x for x in TOTAL_LINES if not float(x).is_integer()}):
+        p = float(total[values > line].sum())
+        if line in TOTAL_CALIBRATION:
+            p = _calibrate(p, *TOTAL_CALIBRATION[line])
+        p = min(p, previous)
+        overs[line] = p
+        previous = p
+    return overs
+
+
 def derive_markets(m: np.ndarray) -> list[MarketPrice]:
     h, d, a = (float(x) for x in outcome_probabilities(m))
     out = [
@@ -82,12 +108,16 @@ def derive_markets(m: np.ndarray) -> list[MarketPrice]:
     n = m.shape[0]
     hg, ag = np.indices(m.shape)
     total = np.bincount((hg + ag).ravel(), weights=m.ravel(), minlength=2 * n - 1)
+    overs = total_overs(total)
     for line in TOTAL_LINES:
-        over, under, push = _over_under(total, line)
-        if line == CALIBRATED_TOTAL_LINE:
-            # Mai sotto l'over 2,5 della matrice: le linee restano coerenti tra loro.
-            floor = _over_under(total, 2.5)[0]
-            over = max(calibrate_over_15(over), floor)
+        if float(line).is_integer():
+            # Linee intere: vince sopra la linea, perde sotto, rimborso esattamente sulla
+            # linea; derivate dalle linee x,5 vicine, così restano coerenti con quelle.
+            over = overs.get(line + 0.5, 0.0)
+            under = 1 - overs.get(line - 0.5, 1.0)
+            push: float | None = max(0.0, 1 - over - under)
+        else:
+            over, push = overs[line], None
             under = 1 - over
         out += [
             MarketPrice("TOTAL_GOALS", line, "OVER", over, push),

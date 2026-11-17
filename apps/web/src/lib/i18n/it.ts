@@ -34,6 +34,74 @@ export const it = {
     notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
     backToDashboard: "Torna alla dashboard",
   },
+  landing: {
+    login: "Accedi",
+    heroTitle: "Il calcio letto con i numeri",
+    heroText:
+      "PREDICTRA raccoglie partite, statistiche e quote da fonti con licenza e le passa a modelli matematici. Tu vedi le probabilità, le giocate più solide e come vanno le tue.",
+    inviteOnly: "Accesso solo su invito: se l'hai ricevuto, usa il link che ti è stato inviato.",
+    videoLabel: "Presentazione animata di PREDICTRA",
+    play: "Riproduci",
+    pause: "Pausa",
+    sceneOf: "Scena {n} di {total}",
+    demo: "DEMO",
+    demoNote: "Dati di esempio, non reali.",
+    scenes: {
+      matches: {
+        title: "Le partite",
+        text: "Calendario, risultati e quote, aggiornati in automatico.",
+      },
+      model: {
+        title: "Il modello calcola",
+        text: "Le probabilità vengono da modelli statistici, mai da un'intelligenza artificiale che indovina.",
+      },
+      certainties: {
+        title: "Le Certezze",
+        text: "Le giocate che i modelli danno più probabili, con la percentuale accanto.",
+      },
+      bankroll: {
+        title: "Il tuo bankroll",
+        text: "Registri le tue giocate e vedi l'andamento. Questi dati li vedi solo tu.",
+      },
+    },
+    demoMatches: ["Squadra A – Squadra B", "Squadra C – Squadra D", "Squadra E – Squadra F"],
+    demoBet: "Almeno un gol nella partita",
+    demoBalance: "Andamento del bankroll",
+    featuresTitle: "Cosa trovi dentro",
+    features: [
+      {
+        title: "Partite e campionati",
+        text: "Classifiche, forma delle squadre, statistiche di stagione e movimento delle quote.",
+      },
+      {
+        title: "Previsioni",
+        text: "Probabilità di 1X2, gol, risultati esatti: ogni previsione è versionata e riproducibile.",
+      },
+      {
+        title: "Certezze e Schedine",
+        text: "Le giocate più solide e combinazioni già calcolate, con il loro valore atteso.",
+      },
+      {
+        title: "Affidabilità",
+        text: "Quante giocate date per probabili sono uscite davvero: i numeri del modello, senza filtri.",
+      },
+      {
+        title: "Bankroll e giocate",
+        text: "Un registro privato delle tue giocate, con limiti di spesa che scegli tu.",
+      },
+      {
+        title: "Chiedi a PREDICTRA",
+        text: "Domande a parole sui dati della piattaforma, da qualunque pagina.",
+      },
+    ],
+    rulesTitle: "Cosa PREDICTRA non fa",
+    rules: [
+      "Non piazza scommesse e non ti chiede di farlo.",
+      "Non inventa numeri: ogni dato viene da una fonte con licenza.",
+      "Non garantisce vincite: le previsioni sono stime con la loro incertezza.",
+    ],
+    about: "Cos'è PREDICTRA",
+  },
   auth: {
     loginTitle: "Accesso riservato",
     loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
@@ -119,8 +187,14 @@ export const it = {
     agent: "Agente",
     quickNav: "Pagine principali",
     refresh: "Aggiorna i dati",
+    refreshed: "Dati aggiornati",
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
+  },
+  offline: {
+    title: "Sei offline",
+    text: "PREDICTRA ha bisogno della connessione per mostrare dati aggiornati. Controlla la rete e riprova.",
+    retry: "Riprova",
   },
   profile: {
     title: "Profilo",
@@ -129,6 +203,45 @@ export const it = {
     preferencesHint: "Nome, tema chiaro o scuro, formato quote",
     mfaOn: "2FA attiva",
     mfaOff: "2FA da attivare",
+    restartTour: "Rivedi il tutorial",
+  },
+  tour: {
+    stepOf: "Passo {n} di {total}",
+    next: "Avanti",
+    back: "Indietro",
+    skip: "Salta",
+    done: "Ho capito",
+    steps: {
+      welcome: {
+        title: "Benvenuto in PREDICTRA",
+        text: "In un minuto ti mostro dove trovare le cose. Puoi saltare quando vuoi e rivedere il tutorial dal Profilo.",
+      },
+      home: {
+        title: "Home",
+        text: "Il riassunto della giornata: partite da non perdere, Certezze in arrivo e le tue giocate aperte.",
+      },
+      bets: {
+        title: "Pronostici",
+        text: "Certezze sono le giocate che i modelli danno più probabili; Schedine propone combinazioni già calcolate. Le probabilità vengono sempre da modelli matematici.",
+      },
+      football: {
+        title: "Calcio",
+        text: "Partite, campionati e squadre: classifiche, statistiche, quote e previsioni di ogni partita.",
+      },
+      money: {
+        title: "Soldi",
+        text: "Bankroll e giocate fatte: registri tu le giocate e vedi come vanno. PREDICTRA non piazza scommesse. Questi dati li vedi solo tu.",
+      },
+      ask: {
+        title: "Chiedi a PREDICTRA",
+        text: "Fai una domanda a parole sui dati di PREDICTRA, da qualunque pagina.",
+      },
+      profile: {
+        title: "Profilo",
+        text:
+          "Tema chiaro o scuro, sicurezza dell’" + "account e questo tutorial, se vuoi rivederlo.",
+      },
+    },
   },
   dashboard: {
     title: "Home",
@@ -242,6 +355,29 @@ export const it = {
     passwordSection: "Password",
     passwordUpdated: "Password aggiornata.",
   },
+  comments: {
+    title: "Commenti",
+    rules:
+      "Visibili a tutti gli iscritti maggiorenni, con il tuo nome visualizzato (mai l’" +
+      "email). Niente insulti, niente dati personali. Gli amministratori possono cancellare i commenti.",
+    label: "Il tuo commento",
+    placeholder: "Scrivi cosa ne pensi della partita…",
+    publish: "Pubblica",
+    published: "Commento pubblicato.",
+    invalid: "Scrivi un commento tra 1 e 500 caratteri.",
+    rateLimited: "Hai scritto molti commenti di seguito. Riprova tra qualche minuto.",
+    adultsOnly: "I commenti sono riservati a chi ha dichiarato almeno 18 anni.",
+    empty: "Ancora nessun commento: scrivi il primo.",
+    delete: "Elimina",
+    deleteConfirm: "Eliminare il tuo commento?",
+    moderate: "Rimuovi",
+    moderateConfirm: "Rimuovere questo commento? Resta traccia nel registro.",
+    locked:
+      "I commenti sono riservati agli iscritti maggiorenni. Indica la tua data di nascita nelle Preferenze per sbloccarli.",
+    underAge: "I commenti sono riservati a chi ha almeno 18 anni.",
+    unlock: "Indica la data di nascita",
+    birthdaysToday: "Oggi compie gli anni:",
+  },
   preferences: {
     title: "Preferenze",
     displayName: "Nome visualizzato",
@@ -254,6 +390,38 @@ export const it = {
     theme: "Tema",
     themeHint: "Vale per questo browser e si applica subito.",
     themes: { dark: "Scuro", light: "Chiaro" },
+    birthday: "Data di nascita",
+    birthdayHint:
+      "La vedi solo tu: nemmeno gli amministratori. Serve a sbloccare i commenti (almeno 18 anni). L’" +
+      "età è dichiarata da te, non verificata.",
+    birthdayShow: "Mostra agli altri iscritti che oggi è il mio compleanno (senza data né età)",
+    birthdaySaved: "Data di nascita salvata.",
+    birthdayInvalid: "Indica una data valida, non nel futuro.",
+    birthdayRemove: "Cancella la data",
+    birthdayRemoved: "Data di nascita cancellata.",
+    nameStyle: "Stile del nome",
+    nameStyleHint: "Come gli altri vedono il tuo nome nei commenti e nei compleanni.",
+    nameColor: "Colore",
+    nameFont: "Scritta",
+    nameDefault: "Normale",
+    nameColors: {
+      green: "Verde",
+      teal: "Verde acqua",
+      blue: "Blu",
+      violet: "Viola",
+      pink: "Rosa",
+      orange: "Arancio",
+      amber: "Ambra",
+      red: "Rosso",
+    },
+    nameStyles: {
+      bold: "Grassetto",
+      italic: "Corsivo",
+      mono: "Macchina da scrivere",
+      caps: "Maiuscolo",
+    },
+    namePreview: "Anteprima",
+    nameStyleSaved: "Stile del nome salvato.",
     alerts: "Avvisi in Home",
     alertsHint:
       "In Home vedi le giocate che iniziano a breve sopra questa probabilità. Vale per questo browser.",
@@ -380,7 +548,7 @@ export const it = {
     detailsTitle: "Statistiche e formazioni",
     detailsSource: "Fonte: API-Football.",
     noDetails:
-      "Statistiche e formazioni non ancora disponibili per questa partita. Le scarica l'agente da API-Football, circa 44 partite al giorno, a partire dalle stagioni 2022–2024.",
+      "Statistiche e formazioni non ancora disponibili per questa partita: arrivano di solito nei giorni dopo la partita.",
     statistics: "Statistiche",
     lineups: "Formazioni",
     formation: "Modulo",
@@ -413,7 +581,7 @@ export const it = {
     noIssues: "Nessun problema di qualità aperto.",
     notFound: "Partita non trovata.",
     delayedNote:
-      "Piano gratuito della fonte: punteggi e calendari possono arrivare in ritardo. Nessun dato live.",
+      "Risultati e calendari si aggiornano più volte al giorno, non in diretta: un risultato appena finito può arrivare con un po' di ritardo.",
     matchStatus: {
       SCHEDULED: "In programma",
       LIVE: "In corso",
@@ -625,6 +793,11 @@ export const it = {
     formResult: { V: "Vittoria", N: "Pareggio", P: "Sconfitta" },
   },
   teams: {
+    goalsChart: "Gol nelle ultime {n} partite",
+    goalsChartSummary: "{scored} fatti e {conceded} subiti, dalla più vecchia alla più recente.",
+    goalsChartMatch: "Contro {opponent}: {scored} fatti, {conceded} subiti",
+    goalsScored: "Fatti",
+    goalsConceded: "Subiti",
     title: "Squadre",
     description: "Cerca una squadra per vedere forma, risultati, prossime partite e numeri.",
     searchLabel: "Nome della squadra",
@@ -688,12 +861,11 @@ export const it = {
     homeAdvantage: "Vantaggio casalingo",
     noLeagueStats: "Nessuna partita conclusa.",
     homeAdvantageTitle: "Vantaggio casalingo",
-    homeAdvantageNote:
-      "Differenza tra squadra di casa e ospite nella stagione: gol medi segnati, percentuale di vittorie e punti medi per partita.",
-    goalsDiff: "Gol medi in più",
-    winRateDiff: "Vittorie in più",
-    pointsHome: "Punti/partita in casa",
-    pointsAway: "Punti/partita in trasferta",
+    homeAdvantageNote: "Quanto conta giocare in casa in questo campionato, stagione in corso.",
+    goalsDiff: "Gol a partita in più per chi gioca in casa",
+    winRateDiff: "Vittorie in più per chi gioca in casa",
+    pointsHome: "Punti a partita in casa",
+    pointsAway: "Punti a partita in trasferta",
     standingsTitle: "Classifica",
     standingsUpdated: "Classifica aggiornata al {at}.",
     standingsSource: "Classifica pubblicata dalla fonte ({provider}), osservata il {observedAt}.",
@@ -881,11 +1053,20 @@ export const it = {
       "Ultima elaborazione: {at} · combinazioni valutate {candidates} · proposte {proposals}",
     thresholds:
       "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote aggiornate.",
-    builderTitle: "Costruisci una combinazione",
+    builderTitle: "Costruisci una schedina",
     builderDescription:
-      "Scegli fino a 10 esiti 1X2 delle partite dei prossimi 10 giorni. La valutazione usa la media tra la probabilità del modello attivo e quella del mercato, e la migliore quota aggiornata dei bookmaker italiani.",
+      "Scegli una giocata per partita, fino a 10 partite dei prossimi giorni: esito finale, doppia chance, gol o entrambe segnano. La valutazione si aggiorna da sola.",
+    builderMore: "Altre giocate: doppia chance, gol, entrambe segnano",
+    builderMatches: "{n} partite",
+    builderPicked: "{n} giocate scelte",
+    builderNone: "Tocca una giocata per iniziare",
+    builderClear: "Togli tutte le giocate",
+    builderSummary: "Vincita {p} · quota {price}",
+    builderSummaryNoPrice: "Vincita {p} · quota non raccolta per tutte",
+    builderGoals: "Gol {line}",
+    builderNoPrice: "–",
     builderEmpty:
-      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi o controlla lo stato nella pagina Modello.",
+      "Nessuna partita in programma ha ancora una previsione. Il modello attivo le calcola man mano che le partite si avvicinano: riprova più tardi.",
     evaluate: "Valuta",
     evaluation: "Valutazione",
     noSelection: "Seleziona almeno un esito.",
@@ -1020,6 +1201,13 @@ export const it = {
     },
   },
   predictions: {
+    verdictTitle: "Cosa diceva il modello",
+    verdictSummary: "Prima del calcio d'inizio: {hits} esiti su {count} indovinati.",
+    verdictGiven: "dato al {p}",
+    verdictWon: "Uscito",
+    verdictLost: "Non uscito",
+    verdictNote:
+      "Per ogni mercato l'esito che il modello riteneva più probabile, con l'ultima previsione prima della partita.",
     title: "Previsioni",
     reliabilityBadge: "affidabilità {band}",
     noPredictions:
@@ -1115,6 +1303,10 @@ export const it = {
     bandLabel: "Giocate da {from}",
     bandResult: "uscite {observed} ({wins} su {count})",
     bandFew: "{wins} su {count}, ancora poche",
+    bandHistory: "uscite {observed} nello storico ({wins} su {count})",
+    bandLive: "Queste settimane: {wins} su {count}",
+    reliabilityHistoryNote:
+      "Le percentuali vengono dalla verifica del modello su tutte le partite passate; il conteggio di queste settimane cresce a ogni giornata.",
     verifyEmpty: "Ancora nessuna partita giocata da controllare.",
     pastValueSummary:
       "Multiple con valore delle settimane passate: {wins} vinte su {count}, guadagno {roi}.",
@@ -1130,10 +1322,36 @@ export const it = {
     byMarket: "Per tipo di giocata",
     byCompetition: "Per campionato",
     result: "{observed} · {wins} su {count}",
-    few: "{wins} su {count} · ancora poche",
+    few: "{wins} su {count}",
     expected: "Erano date in media al {predicted} (la tacca sulla barra).",
     empty: "Ancora nessuna partita giocata da controllare.",
-    note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Con poche giocate il caso pesa molto: i risultati passati non garantiscono quelli futuri.",
+    note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Sotto le 20 giocate mostriamo solo il conteggio: la percentuale direbbe poco. I risultati passati non garantiscono quelli futuri.",
+    historyTitle: "Il modello su tutto lo storico",
+    historyIntro:
+      "PREDICTRA ha rigiocato {matches} partite dal {from} al {to}: ogni settimana il modello ha previsto le partite vedendo solo quelle giocate prima, poi le previsioni sono state confrontate con i risultati veri.",
+    historyMatches: "Partite rigiocate",
+    historyFavourite: "Vince la favorita",
+    historyFavouriteHint: "data in media al {predicted}",
+    historyPicks: "Giocate dal 70% uscite",
+    historyPicksHint: "{wins} su {count}, date al {predicted}",
+    historyExact: "Risultato esatto",
+    historyExactHint: "il più probabile, dato al {predicted}",
+    calibrationTitle: "Le probabilità sono giuste?",
+    calibrationIntro:
+      "Per ogni fascia di probabilità: quante volte l'esito è uscito davvero (barra) rispetto a quanto era dato (tacca). Più barra e tacca coincidono, più ci si può fidare dei numeri.",
+    band: "dal {from} al {to}",
+    bandLast: "dal {from} in su",
+    bySeason: "Per stagione",
+    weeklyTitle: "Settimana per settimana",
+    weeklyIntro: "Giocate dal 70% uscite nelle ultime settimane dello storico.",
+    weeklyNote:
+      "Barra verde: uscite più di quanto previsto; gialla: meno. La linea è la probabilità data.",
+    week: "Settimana del {week}: {wins} uscite su {count}",
+    historyNote:
+      "Verifica del solo modello: per le stagioni passate non ci sono quote raccolte. Aggiornata ogni settimana, l'ultima il {date}.",
+    liveTitle: "Sulle partite di queste settimane",
+    liveIntro:
+      "Le giocate davvero proposte da PREDICTRA prima delle partite, con modello e quote insieme.",
   },
   bankroll: {
     title: "Bankroll",
@@ -1256,10 +1474,10 @@ export const it = {
     suggestions: "Puntata consigliata",
     tools: "Strumenti",
     suggestionsHint:
-      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per lo stake con Kelly usa il calcolatore qui sotto.",
+      "Solo informativo. Flat: percentuale del disponibile del bankroll. Per una giocata precisa usa «Quanto puntare su una giocata» qui sotto.",
     flatSuggestion: "Flat",
     kelly: {
-      title: "Calcolatore Kelly",
+      title: "Quanto puntare su una giocata",
       howItWorks: "Come funziona",
       description:
         "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
@@ -1278,7 +1496,7 @@ export const it = {
       probability: "Probabilità usata (media)",
       fairOdds: "Quota equa (1/p)",
       expectedValue: "Valore atteso per 1 € puntato",
-      stake: "Stake Kelly",
+      stake: "Puntata suggerita",
       noValue: "Nessun valore: la quota è più bassa di quella equa, stake zero.",
       capped: "ridotto allo stake massimo dei tuoi limiti",
     },
@@ -1447,6 +1665,8 @@ export const it = {
     sources: "Dati usati",
     noSources: "Nessun dato consultato per questa domanda.",
     history: "Domande di questa sessione",
+    openFull: "Apri a pagina intera",
+    close: "Chiudi",
     you: "Tu",
     assistant: "PREDICTRA",
     privacy:

@@ -94,7 +94,8 @@ export async function saveManualSlip(_prev: ActionState, formData: FormData): Pr
     selections.map((s, i) => ({
       leg_no: i + 1,
       match_id: s.matchId,
-      market: "1X2",
+      market: s.market,
+      line: s.line,
       selection: s.selection,
     })),
   );

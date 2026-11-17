@@ -6,6 +6,7 @@ import type {
   ModelVersionSummaryRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
+import { parseHistoryCheck, type HistoryCheck } from "./history";
 
 /*
  * Letture lato server sulle viste del contratto M4 (docs/data-dictionary/predictions.md),
@@ -75,6 +76,45 @@ export async function getMatchPredictions(matchId: number): Promise<ActivePredic
     .eq("match_id", matchId)
     .limit(500);
   if (error) throw new PredictionsUnavailable("previsioni", error);
+  return (data ?? []) as ActivePredictionRow[];
+}
+
+/** Verifica storica del modello attivo (ultimo backtest con il riepilogo, ADR 0057). */
+export async function getActiveHistoryCheck(): Promise<HistoryCheck | null> {
+  const supabase = await createClient();
+  const { data: active, error } = await supabase
+    .from("model_versions")
+    .select("id")
+    .eq("status", "ACTIVE")
+    .maybeSingle();
+  if (error) throw new PredictionsUnavailable("modello attivo", error);
+  if (!active) return null;
+  const { data, error: btError } = await supabase
+    .from("backtests")
+    .select("reliability, window_start, window_end, created_at")
+    .eq("model_version_id", active.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (btError) throw new PredictionsUnavailable("verifica storica", btError);
+  if (!data) return null;
+  return parseHistoryCheck(data.reliability, {
+    windowStart: data.window_start,
+    windowEnd: data.window_end,
+    checkedAt: data.created_at,
+  });
+}
+
+/** Ultima previsione prima del calcio d'inizio di una partita (anche finita). */
+export async function getPreKickoffPredictions(matchId: number): Promise<ActivePredictionRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_pre_kickoff_predictions")
+    .select("*")
+    .eq("match_id", matchId)
+    .in("market", ["1X2", "DOUBLE_CHANCE", "TOTAL_GOALS", "BTTS"])
+    .limit(200);
+  if (error) throw new PredictionsUnavailable("previsioni prima della partita", error);
   return (data ?? []) as ActivePredictionRow[];
 }
 

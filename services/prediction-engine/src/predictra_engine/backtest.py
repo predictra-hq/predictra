@@ -8,6 +8,7 @@ l'addestramento.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -33,17 +34,25 @@ class BacktestResult:
     outcomes: np.ndarray | None = None
 
 
+Observer = Callable[[MatchResult, "np.ndarray | None", np.ndarray], None]
+
+
 def walk_forward_predictions(
     model: Model,
     results: list[MatchResult],
     *,
     warmup_days: int = 28,
     step_days: int = 7,
+    start: datetime | None = None,
+    observer: Observer | None = None,
 ) -> tuple[list[MatchResult], np.ndarray]:
+    """Previsioni settimana per settimana; con ``start`` si valutano solo le partite da lì."""
     ordered = sorted(results, key=lambda r: (r.kickoff_at, r.match_id))
     if not ordered:
         return [], np.zeros((0, 3))
     cursor = ordered[0].kickoff_at + timedelta(days=warmup_days)
+    if start is not None:
+        cursor = max(cursor, start)
     last = ordered[-1].kickoff_at
     evaluated: list[MatchResult] = []
     rows: list[np.ndarray] = []
@@ -56,6 +65,8 @@ def walk_forward_predictions(
                 fx = Fixture(r.match_id, r.competition_id, r.kickoff_at, r.home, r.away)
                 if fitted.covers(fx):
                     evaluated.append(r)
+                    if observer is not None:
+                        observer(r, fitted.score_matrix(fx), fitted.probabilities_1x2(fx))
                     rows.append(fitted.probabilities_1x2(fx))
         cursor = window_end
     return evaluated, np.array(rows).reshape(-1, 3)
@@ -83,10 +94,20 @@ def evaluate(
 
 
 def backtest_models(
-    models: list[Model], results: list[MatchResult], **kwargs: int
+    models: list[Model],
+    results: list[MatchResult],
+    observers: dict[str, Observer] | None = None,
+    **kwargs: Any,
 ) -> dict[str, BacktestResult]:
-    """Backtest di tutti i modelli sulle stesse partite (quelle coperte da tutti)."""
-    raw = {m.key: walk_forward_predictions(m, results, **kwargs) for m in models}
+    """Backtest di tutti i modelli sulle stesse partite (quelle coperte da tutti).
+
+    ``observers`` riceve, per i modelli indicati, ogni partita rigiocata con la matrice dei
+    risultati e l'1X2 (verifica storica su tutti i mercati, ADR 0057).
+    """
+    raw = {
+        m.key: walk_forward_predictions(m, results, observer=(observers or {}).get(m.key), **kwargs)
+        for m in models
+    }
     common = (
         set.intersection(*({r.match_id for r in ev} for ev, _ in raw.values())) if raw else set()
     )

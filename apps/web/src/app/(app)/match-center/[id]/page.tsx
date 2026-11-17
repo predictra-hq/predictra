@@ -12,7 +12,9 @@ import { MatchDetailsCard } from "@/components/football/match-details";
 import { MatchCertainties } from "@/components/certainties/match-certainties";
 import { OddsMovementCard } from "@/components/odds/odds-movement";
 import { MatchPredictions } from "@/components/predictions/match-predictions";
+import { PredictionVsResult } from "@/components/predictions/prediction-vs-result";
 import { Badge, Card, CardSkeleton, CardTitle } from "@/components/ui/primitives";
+import { MatchComments } from "@/components/community/match-comments";
 import { requireUser } from "@/lib/auth/dal";
 import { humanize } from "@/lib/football/details";
 import { formatScore, parseId, severityTone } from "@/lib/football/format";
@@ -105,6 +107,16 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
         <MatchCertainties matchId={match.match_id} status={match.status} />
       </Suspense>
 
+      <Suspense fallback={null}>
+        <PredictionVsResult
+          matchId={match.match_id}
+          status={match.status}
+          score={{ home: match.home_score, away: match.away_score }}
+          home={match.home_team_name}
+          away={match.away_team_name}
+        />
+      </Suspense>
+
       <Suspense fallback={<CardSkeleton className="mt-4 h-64" />}>
         <MatchPredictions
           matchId={match.match_id}
@@ -115,6 +127,11 @@ export default async function MatchPage({ params }: PageProps<"/match-center/[id
 
       <Suspense fallback={null}>
         <OddsMovementCard matchId={match.match_id} />
+      </Suspense>
+
+      {/* Commenti degli iscritti maggiorenni (ADR 0058). */}
+      <Suspense fallback={null}>
+        <MatchComments matchId={match.match_id} />
       </Suspense>
 
       <MatchDetailsCard

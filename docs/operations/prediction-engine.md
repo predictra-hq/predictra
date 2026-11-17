@@ -29,6 +29,10 @@ Dal 14/11/2026 in gara c'è un solo modello, `dixon_coles` (Dixon-Coles + Elo); 
 
 In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/2026 Dixon-Coles è combinato con l'Elo, [ADR 0039](../decisions/0039-sfidante-dixon-coles-elo.md)), gli unici che calcolano tutti i mercati del Bet Builder: uno è il modello attivo, l'altro lo sfidante. Baseline ed Elo restano strumenti interni del motore: la baseline come riferimento del backtest, Elo come secondo parere per il Confidence Score. Non si registrano più e non scrivono previsioni. Le versioni superate si ritirano da sole e restano nello storico della pagina.
 
+## Taratura automatica (ADR 0056)
+
+Dal 17/11/2026 il motore ritocca da solo le impostazioni del modello PREDICTRA. Ogni settimana, insieme al confronto dei backtest, prova due varianti vicine su una impostazione per volta a rotazione (ξ, L2, peso dell'Elo) sulle partite degli ultimi sei mesi rigiocate con le sole partite precedenti. Adotta la migliore solo se batte quella attuale di almeno 0,001 di Log Loss e non è peggiore sull'intero storico. Il log del ciclo riporta le varianti provate e l'esito (`taratura automatica su N partite recenti`); un'adozione crea una versione nuova e compare in _Audit_.
+
 ## Modello attivo: automatico (ADR 0023)
 
 Dall'11/11/2026 il motore attiva da solo il modello più forte: tra le versioni del codice corrente che battono la baseline, quella con il Log Loss più basso nel backtest. La cambia se il modello attivo è di un codice superato, oppure se un'altra versione lo batte di almeno 0,001 di Log Loss. Ogni cambio compare in _Audit_ come `model.auto_activated`, con il motivo.

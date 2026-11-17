@@ -12,6 +12,15 @@
  */
 @theme {
   --color-bg: #0a0b0d;
+  /* Colori del nome utente (ADR 0058): leggibili su tutti gli sfondi in entrambi i temi. */
+  --color-name-green: #4ade80;
+  --color-name-teal: #2dd4bf;
+  --color-name-blue: #60a5fa;
+  --color-name-violet: #a78bfa;
+  --color-name-pink: #f472b6;
+  --color-name-orange: #fb923c;
+  --color-name-amber: #fbbf24;
+  --color-name-red: #f87171;
   --color-surface: #121418;
   --color-surface-2: #181b21;
   --color-border: #262a33;
@@ -36,7 +45,9 @@
   --color-veil: rgb(255 255 255 / 0.025);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Numeri: stesso carattere del testo con cifre a larghezza fissa (`tabular-nums`, sotto).
+     Il monospaziato allargava virgole e parole ("2 , 27", "13  su  15"). */
+  --font-mono: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1rem;
 }
@@ -48,6 +59,14 @@
 :root[data-theme="light"] {
   color-scheme: light;
   --color-bg: #f6f7f9;
+  --color-name-green: #166534;
+  --color-name-teal: #0f766e;
+  --color-name-blue: #1d4ed8;
+  --color-name-violet: #6d28d9;
+  --color-name-pink: #be185d;
+  --color-name-orange: #c2410c;
+  --color-name-amber: #854d0e;
+  --color-name-red: #b91c1c;
   --color-surface: #ffffff;
   --color-surface-2: #eef0f4;
   --color-border: #d9dde5;
@@ -250,6 +269,10 @@ textarea {
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
+  /* Celle vuote (es. azioni non disponibili): niente etichetta senza contenuto. */
+  .stack-sm table:not(.hidden, .compact-sm) tbody td:empty {
+    display: none;
+  }
   .stack-sm table:not(.hidden) .sm-secondary {
     display: none;
   }
@@ -354,8 +377,49 @@ input::-webkit-date-and-time-value {
   text-align: left;
 }
 
+/* Presentazione prima del login: animazioni del video dimostrativo (spente se il sistema chiede meno movimento). */
+@keyframes demo-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes demo-draw {
+  from {
+    stroke-dashoffset: 400;
+  }
+}
+@keyframes demo-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.demo-grow {
+  transform-origin: left;
+  animation: demo-grow 0.9s ease-out both;
+}
+.demo-draw {
+  stroke-dasharray: 400;
+  animation: demo-draw 1.6s ease-out both;
+}
+.demo-in {
+  animation: demo-in 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .demo-grow,
+  .demo-draw,
+  .demo-in {
+    animation: none;
+  }
+}
+
 /* Tabelle con limite di righe (`Limited`): oltre il limite le righe si aprono a richiesta. */
 [data-row-limit="5"]:not([data-open]) tbody > tr:nth-child(n + 6),
 [data-row-limit="10"]:not([data-open]) tbody > tr:nth-child(n + 11) {
   display: none;
+}
+
+/* Cifre allineate in colonna dove prima si usava il monospaziato. */
+.font-mono {
+  font-variant-numeric: tabular-nums;
 }
