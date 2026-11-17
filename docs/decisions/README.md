@@ -48,3 +48,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0053](0053-taratura-entrambe-segnano.md)           | Taratura di «entrambe segnano» e dell'under/over 1,5              | Accettata |
 | [0054](0054-notifiche-sul-telefono.md)              | Notifiche sul telefono (Web Push)                                 | Proposta  |
 | [0055](0055-una-sola-raccolta-prod-copia-su-dev.md) | Una sola raccolta dati: PROD raccoglie, DEV riceve una copia      | Accettata |
+| [0056](0056-taratura-automatica-del-modello.md)     | Taratura automatica del modello sui risultati reali               | Accettata |

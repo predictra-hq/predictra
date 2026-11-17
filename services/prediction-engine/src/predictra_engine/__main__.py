@@ -87,6 +87,13 @@ def main(argv: list[str] | None = None) -> int:
         f"Motore — {mode} — as_of {summary.as_of.isoformat()} — partite di addestramento "
         f"{summary.training_matches} — partite da prevedere {summary.fixtures}"
     )
+    if summary.tuned_from_store:
+        print(f"  impostazioni dalla taratura automatica: {summary.tuned_from_store}")
+    if summary.tuning:
+        for line in summary.tuning.lines():
+            print(line)
+        if summary.adopted:
+            print(f"  ADOTTATE le impostazioni {summary.adopted.describe()} (ADR 0056)")
     for m in summary.models:
         line = f"  {m.key:<12} {m.version:<32} partite={m.matches} righe={m.predictions}"
         if m.backtest:

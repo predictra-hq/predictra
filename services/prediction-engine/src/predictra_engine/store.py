@@ -152,6 +152,14 @@ class SupabaseStore:
         rows = self.select("model_versions", {"select": "id", "status": "eq.ACTIVE"})
         return int(rows[0]["id"]) if rows else None
 
+    def active_version(self) -> dict[str, Any] | None:
+        """Famiglia, versione e parametri della versione attiva (taratura, ADR 0056)."""
+        rows = self.select(
+            "model_versions",
+            {"select": "id,model_key,version,parameters", "status": "eq.ACTIVE"},
+        )
+        return rows[0] if rows else None
+
     # -------------------------------------------------------------- scritture
     def register_model_version(self, payload: dict[str, Any]) -> int:
         return int(self.rpc("register_model_version", {"p": payload}))

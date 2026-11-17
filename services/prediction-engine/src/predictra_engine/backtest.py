@@ -39,11 +39,15 @@ def walk_forward_predictions(
     *,
     warmup_days: int = 28,
     step_days: int = 7,
+    start: datetime | None = None,
 ) -> tuple[list[MatchResult], np.ndarray]:
+    """Previsioni settimana per settimana; con ``start`` si valutano solo le partite da lì."""
     ordered = sorted(results, key=lambda r: (r.kickoff_at, r.match_id))
     if not ordered:
         return [], np.zeros((0, 3))
     cursor = ordered[0].kickoff_at + timedelta(days=warmup_days)
+    if start is not None:
+        cursor = max(cursor, start)
     last = ordered[-1].kickoff_at
     evaluated: list[MatchResult] = []
     rows: list[np.ndarray] = []
@@ -83,7 +87,7 @@ def evaluate(
 
 
 def backtest_models(
-    models: list[Model], results: list[MatchResult], **kwargs: int
+    models: list[Model], results: list[MatchResult], **kwargs: Any
 ) -> dict[str, BacktestResult]:
     """Backtest di tutti i modelli sulle stesse partite (quelle coperte da tutti)."""
     raw = {m.key: walk_forward_predictions(m, results, **kwargs) for m in models}
