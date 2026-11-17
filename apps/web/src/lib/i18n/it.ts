@@ -122,6 +122,11 @@ export const it = {
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
   },
+  offline: {
+    title: "Sei offline",
+    text: "PREDICTRA ha bisogno della connessione per mostrare dati aggiornati. Controlla la rete e riprova.",
+    retry: "Riprova",
+  },
   profile: {
     title: "Profilo",
     account: "Account",
