@@ -23,6 +23,7 @@ const AUTHENTICATED_FUNCTIONS = [
   "app_private.current_roles",
   "app_private.has_role",
   "app_private.is_active_user",
+  "app_private.is_adult_user",
   "app_private.is_admin",
   "app_private.odds_market_for",
   "app_private.owns_bankroll",
@@ -31,10 +32,14 @@ const AUTHENTICATED_FUNCTIONS = [
   "public.add_team_alias",
   "public.ask_consume",
   "public.ask_record",
+  // SECURITY DEFINER di sola lettura: nome visualizzato e stile, mai email o date
+  "public.birthdays_today",
   "public.authorize_password_reset",
   "public.create_invitation",
   // sola lettura, SECURITY INVOKER: rispetta la RLS di chi chiama (quote per partita)
   "public.latest_odds_for_matches",
+  "public.match_comment_feed",
+  "public.moderate_match_comment",
   "public.retry_dead_agent_job",
   "public.revoke_invitation",
   "public.set_account_status",
@@ -48,9 +53,11 @@ const AUTHENTICATED_WRITABLE = [
   "bankroll_movements",
   "bankrolls",
   "bets",
+  "match_comments",
   "personal_limits",
   "user_bet_slip_selections",
   "user_bet_slips",
+  "user_birthdays",
   "user_dashboard_settings",
   "user_follows",
   "user_preferences",
@@ -141,7 +148,7 @@ describe("revisione di sicurezza del database", () => {
     }
   });
 
-  it("aggiornamenti per colonna fuori dalle tabelle proprie: solo display_name e read_at", async () => {
+  it("aggiornamenti per colonna fuori dalle tabelle proprie: nome, stile del nome e read_at", async () => {
     const { rows } = await db.query<{ t: string; c: string }>(
       `select table_name t, column_name c from information_schema.column_privileges
        where grantee = 'authenticated' and privilege_type = 'UPDATE' and table_schema = 'public'
@@ -151,6 +158,8 @@ describe("revisione di sicurezza del database", () => {
     expect(rows.map((r) => `${r.t}.${r.c}`).sort()).toEqual([
       "notifications.read_at",
       "profiles.display_name",
+      "profiles.name_color",
+      "profiles.name_style",
     ]);
   });
 });
