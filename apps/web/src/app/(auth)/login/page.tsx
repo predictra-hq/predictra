@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { KeepInput } from "@/components/ui/keep-input";
 import { Alert, Card, Field, Input } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 import { login } from "./actions";
@@ -21,7 +22,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       ) : null}
       <ActionForm action={login}>
         <Field label={m.common.email} htmlFor="email">
-          <Input id="email" name="email" type="email" autoComplete="email" required />
+          <KeepInput id="email" name="email" type="email" autoComplete="email" required />
         </Field>
         <Field label={m.common.password} htmlFor="password">
           <Input
