@@ -5,7 +5,8 @@ import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
-import { parseTheme, THEME_COOKIE, THEMES } from "@/lib/theme";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
+import { ThemePicker } from "@/components/shell/theme-picker";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { ALERT_COOKIE, ALERT_THRESHOLDS, parseAlertThreshold } from "@/lib/alerts";
@@ -15,7 +16,7 @@ import { StyledName } from "@/components/community/styled-name";
 import { getOwnCommunityProfile } from "@/lib/community/queries";
 import { todayInRome } from "@/lib/community/community";
 import { removeBirthday, saveBirthday, saveNameStyle } from "./actions";
-import { savePreferences, setAlertThreshold, setTheme } from "./actions";
+import { savePreferences, setAlertThreshold } from "./actions";
 
 export const metadata: Metadata = { title: "Preferenze" };
 
@@ -41,25 +42,7 @@ export default async function PreferencesPage() {
       <Card className="mb-4 max-w-lg">
         <CardTitle>{m.preferences.theme}</CardTitle>
         <p className="mb-3 mt-1 text-sm text-muted">{m.preferences.themeHint}</p>
-        <form action={setTheme} className="flex flex-wrap gap-2">
-          {THEMES.map((t) => (
-            <button
-              key={t}
-              type="submit"
-              name="theme"
-              value={t}
-              aria-pressed={theme === t}
-              className={cn(
-                "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",
-                theme === t
-                  ? "border-positive/40 bg-positive-soft text-positive-strong"
-                  : "border-border text-muted hover:text-fg",
-              )}
-            >
-              {m.preferences.themes[t]}
-            </button>
-          ))}
-        </form>
+        <ThemePicker initial={theme} labels={m.preferences.themes} />
       </Card>
       <Card className="mb-4 max-w-lg">
         <CardTitle>{m.preferences.alerts}</CardTitle>
