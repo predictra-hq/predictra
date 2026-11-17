@@ -17,7 +17,7 @@ Le **impostazioni** del modello (ξ, prudenza L2, peso dell'Elo) invece erano fi
 
 ## Decisione
 
-1. **Ogni settimana**, quando il motore rifà i backtest (o quando cambia il codice), prova **sei varianti** vicine alle impostazioni attuali: ξ a metà e al doppio, L2 a ¾ e a 4/3, peso dell'Elo ±0,1, entro limiti fissi (`autotune.py`).
+1. **Ogni settimana**, quando il motore rifà i backtest (o quando cambia il codice), prova **due varianti** vicine alle impostazioni attuali, su un'impostazione per volta a rotazione settimanale: ξ (a metà e al doppio), L2 (a ¾ e a 4/3), peso dell'Elo (±0,1), entro limiti fissi (`autotune.py`). Con sei varianti insieme la prova sui dati reali durava 12 minuti invece di 3,5: troppo vicino al limite di 15 minuti del job.
 2. Ogni variante prevede le **partite degli ultimi sei mesi** (circa 1.500) come se fossero da giocare, con le sole partite precedenti, e si confronta con i risultati reali.
 3. Una variante si adotta solo se:
    - sulle partite recenti ha un Log Loss più basso di almeno **0,001** (lo stesso margine del cambio di modello, ADR 0023);
@@ -34,9 +34,13 @@ Le **impostazioni** del modello (ξ, prudenza L2, peso dell'Elo) invece erano fi
 
 ## Costi
 
-Circa 3–5 minuti di GitHub Actions in più, una volta a settimana, dentro il ciclo dell'agente (lease di 15 minuti). Nessun servizio nuovo.
+Circa 4 minuti di GitHub Actions in più, una volta a settimana (7 se una variante viene adottata), dentro il ciclo dell'agente (lease di 15 minuti). Nessun servizio nuovo.
 
 ## Alternative scartate
 
-- **Griglia completa ogni settimana:** decine di backtest, troppi minuti.
+- **Griglia completa ogni settimana:** decine di backtest, troppi minuti. Anche le sei varianti insieme sono troppe (12 minuti nella prova).
 - **Correzioni dirette sugli errori recenti** (pareggi, trasferte): già provate il 14/11/2026, peggiorano le giornate mai viste (`docs/operations/prediction-engine.md`).
+
+## Prima prova sui dati reali (17/11/2026, sola lettura)
+
+778 partite degli ultimi sei mesi. Impostazioni attuali (ξ 0,001, L2 3, peso Elo 0,4): Log Loss 0,9545. La variante migliore (peso Elo 0,5) arriva a 0,9538: 0,0007 in meno, sotto la soglia di 0,001, quindi **nessun cambio**. Le altre varianti sono uguali o peggiori. Le impostazioni scelte a mano il 14–15/11 restano le migliori; la taratura le ricontrollerà ogni settimana man mano che arrivano partite nuove.
