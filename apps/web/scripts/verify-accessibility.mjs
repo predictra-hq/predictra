@@ -59,6 +59,8 @@ const PAGES = [
   "/markets",
   "/statistics",
   "/leagues",
+  "/teams",
+  "/affidabilita",
   "/models",
   "/bet-builder",
   "/bet-builder/builder",
@@ -413,6 +415,9 @@ async function main() {
     if (proposal) await audit(page, proposal, "/bet-builder/[id]");
     const slip = await firstDetailLink(page, "/bet-builder/slips", /^\/bet-builder\/slips\/\d+$/);
     if (slip) await audit(page, slip, "/bet-builder/slips/[id]");
+    // La classifica di Campionati ha sempre i link alle squadre (Squadre mostra solo le seguite).
+    const team = await firstDetailLink(page, "/leagues", /^\/teams\/\d+$/);
+    if (team) await audit(page, team, "/teams/[id]");
 
     // Larghezza mobile: menu chiuso fuori dalla tabulazione, menu aperto accessibile.
     await page.setViewportSize({ width: 375, height: 812 });
@@ -422,6 +427,7 @@ async function main() {
     }
     if (match) await audit(page, match, "/match-center/[id] (mobile)");
     if (slip) await audit(page, slip, "/bet-builder/slips/[id] (mobile)");
+    if (team) await audit(page, team, "/teams/[id] (mobile)");
     await audit(page, "/dashboard", "/dashboard (mobile)");
     await page.click('button[aria-controls="sidebar"]');
     const { violations } = await new AxeBuilder({ page }).withTags(WCAG).analyze();
