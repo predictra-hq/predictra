@@ -137,3 +137,15 @@ describe("dispatchIfMissed", () => {
     expect(await dispatchIfMissed(deps({ fetchImpl: f.impl }))).toBe("failed");
   });
 });
+
+describe("branch avviato dall'avvio di riserva", () => {
+  it("dev di base, main solo se indicato (PROD)", () => {
+    expect(dispatchConfigFromEnv({ GITHUB_DISPATCH_TOKEN: "x" })?.ref).toBe("dev");
+    expect(
+      dispatchConfigFromEnv({ GITHUB_DISPATCH_TOKEN: "x", GITHUB_DISPATCH_REF: "main" })?.ref,
+    ).toBe("main");
+    expect(
+      dispatchConfigFromEnv({ GITHUB_DISPATCH_TOKEN: "x", GITHUB_DISPATCH_REF: "feature/x" })?.ref,
+    ).toBe("dev");
+  });
+});

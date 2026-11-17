@@ -68,13 +68,14 @@ jobs:
         run: uv run pytest
 
   run:
-    name: Previsioni (DEV)
+    name: Previsioni (${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && 'PROD' || 'DEV' }})
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
-      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      SUPABASE_PROJECT_ID: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_PROJECT_ID || ((vars.DATA_TARGET != 'prod' || github.ref_name != 'main') && secrets.DEV_SUPABASE_PROJECT_ID || '') }}
+      SUPABASE_SECRET_KEY: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_SECRET_KEY || ((vars.DATA_TARGET != 'prod' || github.ref_name != 'main') && secrets.DEV_SUPABASE_SECRET_KEY || '') }}
+      DATA_ENV: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && 'PROD' || 'DEV' }}
     steps:
       - name: Verifica segreti
         id: secrets

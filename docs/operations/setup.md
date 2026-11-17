@@ -134,14 +134,9 @@ Il sito si può aggiungere alla schermata Home e aprire a schermo intero; funzio
 
 Tema chiaro o scuro: _Impostazioni → Preferenze_ (vale per il browser in uso). Dettagli in [interfaccia.md](interfaccia.md).
 
-## 7. Produzione (più avanti)
+## 7. Produzione
 
-Quando servirà l'ambiente PROD:
-
-1. ripeti i passi 1 e 2 con un nuovo progetto Supabase e un nuovo progetto Vercel (es. `predictra-prod`);
-2. aggiungi i segreti `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_SUPABASE_SECRET_KEY`, `PROD_APP_BASE_URL` e `PROD_VERCEL_PROJECT_ID` (e lo scope del token Supabase sul nuovo progetto);
-3. fai il merge di `dev` in `main` (tramite Pull Request): il job _Deploy PROD_ parte da solo;
-4. esegui il workflow **Bootstrap Super Admin** con ambiente `prod`.
+Passi completi e semplici: [produzione.md](produzione.md). In breve: progetti `predictra-prod` su Supabase e Vercel, segreti `PROD_*`, merge di `dev` in `main`, copia iniziale dei dati da DEV (workflow _Copia dati tra ambienti_, `dev-to-prod`), variabile `DATA_TARGET=prod`, schedule QStash su PROD, workflow **Bootstrap Super Admin** con ambiente `prod`. Solo PROD raccoglie dati; DEV ne riceve una copia ogni giorno (ADR 0054).
 
 ## 8. Protezione dei branch
 
