@@ -139,7 +139,7 @@ export default async function DataCenterPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noRuns}</p>
         ) : (
-          <Limited total={runs.length}>
+          <Limited total={runs.length} limit={5}>
             <table className="w-full min-w-[760px] text-left text-sm">
               <caption className="sr-only">{d.recentRuns}</caption>
               <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">

@@ -218,7 +218,7 @@ export default async function ModelsPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noRuns}</p>
         ) : (
-          <Limited total={runs.length}>
+          <Limited total={runs.length} limit={5}>
             <table className="w-full min-w-[640px] text-left text-sm">
               <caption className="sr-only">{mi.recentRuns}</caption>
               <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
