@@ -88,3 +88,13 @@ Segnalazione del proprietario: alla domanda sul Napoli la risposta citava 8 part
 - **Strumenti nuovi, in sola lettura:** `partite_campionato` (prossime o ultime partite di un campionato) e `giocate_piu_probabili` (le stesse della pagina Certezze). Le probabilità restano quelle del modello e del mercato: l'assistente le legge, non le calcola.
 - **Prompt.** Deve chiamare sempre uno strumento prima di rispondere sul calcio e dire a quale competizione e stagione si riferisce un dato.
 - **Formato.** L'assistente può usare `**grassetto**` ed elenchi con `- `; l'interfaccia li disegna (`lib/ask/rich-text.ts`, testato) e toglie gli altri simboli. Il controllo sui numeri non cambia.
+
+## Aggiornamento del 17/11/2026: guida all'uso e seconda possibilità
+
+Segnalazione del proprietario: alla domanda «mi fai un recap su come usare l'applicativo?» la risposta è stata scartata per un numero (7) e sotto non c'era alcun dato.
+
+- **Causa.** Nessuno strumento descriveva l'app: l'assistente rispondeva a memoria, con un elenco numerato o un conteggio delle sezioni, e il controllo lo scartava giustamente.
+- **Strumento `guida_app`.** Restituisce le sezioni del menu, le pagine e a cosa servono, da un testo fisso in `lib/i18n/it.ts` (`ask.guide`, senza numeri). Le domande sull'uso dell'app hanno così una fonte.
+- **Seconda possibilità.** Se la risposta cita numeri non presenti nei dati, si chiede una volta all'assistente di riscriverla senza quei numeri. Se anche la seconda risposta li contiene, viene scartata come prima. Il controllo non si allenta: cambia solo il numero di tentativi (al massimo una chiamata in più al fornitore).
+- **Messaggio.** Se una risposta è scartata e non ci sono dati da mostrare, l'avviso invita a riformulare la domanda invece di dire «Ecco i dati trovati».
+- Test: `lib/ask/run.test.ts`.

@@ -19,17 +19,24 @@ function systemPrompt(now: Date): string {
     "- una partita precisa: cerca_partite per trovare il match_id, poi previsioni_partita e quote_partita;",
     "- le partite di un campionato: partite_campionato;",
     "- cosa giocare, partite più sicure: giocate_piu_probabili; schedine già pronte: proposte.",
+    "- come si usa PREDICTRA, dove trovare qualcosa, a cosa serve una pagina: guida_app.",
     "Quando citi una statistica di squadra di' sempre a quale competizione e stagione si riferisce, e non mescolare competizioni diverse. Se i dati hanno più righe, usa quella del campionato nazionale salvo richiesta diversa.",
     "Regole sui numeri, senza eccezioni:",
     "- cita probabilità, quote, statistiche, date e conteggi solo come appaiono nei dati degli strumenti;",
     "- non stimare, non calcolare (niente differenze, medie, quote eque, percentuali nuove), non arrotondare in modo diverso;",
-    "- se un dato manca, dillo e non inventarlo.",
+    "- se un dato manca, dillo e non inventarlo;",
+    '- non numerare gli elenchi e non contare le voci: usa righe che iniziano con "- ".',
     'Formato: frasi brevi. Puoi usare **grassetto** per i dati più importanti e righe che iniziano con "- " per gli elenchi. Niente tabelle, titoli o altri simboli.',
     "Nella forma recente V = vittoria, N = pareggio, P = sconfitta, dalla partita più recente: spiegala a parole.",
     "Non dare consigli su quanto puntare e non incoraggiare a scommettere: PREDICTRA è informativa e non piazza scommesse.",
-    "Se la domanda non riguarda il calcio o i dati di PREDICTRA, spiega gentilmente che puoi rispondere solo su partite, previsioni, quote, statistiche, classifiche, modello e proposte.",
+    "Se la domanda non riguarda il calcio, i dati di PREDICTRA o come si usa l'app, spiega gentilmente che puoi rispondere solo su partite, previsioni, quote, statistiche, classifiche, modello, proposte e uso di PREDICTRA.",
     `Oggi è il ${now.toISOString().slice(0, 10)}.`,
   ].join("\n");
+}
+
+/** Richiesta di riscrittura quando la risposta cita numeri assenti dai dati. */
+export function rewritePrompt(unknown: readonly string[]): string {
+  return `Nella risposta ci sono numeri che non compaiono nei dati degli strumenti: ${unknown.join(", ")}. Riscrivila togliendo quei numeri: niente elenchi numerati, conteggi o calcoli. Usa solo numeri presenti nei dati.`;
 }
 
 export interface AskResult {
@@ -63,6 +70,7 @@ export async function askQuestion(
   ];
   const sources: ToolOutput[] = [];
   let tokens = 0;
+  let retried = false;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const { message, tokens: used } = await provider.chat(messages, TOOL_DEFINITIONS);
@@ -72,6 +80,15 @@ export async function askQuestion(
       const answer = (message.content ?? "").trim();
       if (!answer) break;
       const check = checkNumbers(answer, [question, ...sources.map((s) => JSON.stringify(s))]);
+      // Una sola seconda possibilità: si chiede di riscrivere senza i numeri non trovati.
+      if (!check.ok && !retried && round < MAX_ROUNDS - 1) {
+        retried = true;
+        messages.push(
+          { role: "assistant", content: answer },
+          { role: "user", content: rewritePrompt(check.unknown) },
+        );
+        continue;
+      }
       return {
         answer: check.ok ? answer : null,
         rejectedNumbers: check.unknown,
