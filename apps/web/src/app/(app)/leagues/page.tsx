@@ -19,6 +19,7 @@ import {
   listLeagueSeasonStats,
 } from "@/lib/odds/queries";
 import { homeAdvantage } from "@/lib/odds/stats";
+import { hasPermission } from "@predictra/shared-types";
 
 export const metadata: Metadata = { title: "Campionati" };
 
@@ -57,7 +58,8 @@ function groupStandings(
 }
 
 export default async function LeaguesPage({ searchParams }: PageProps<"/leagues">) {
-  await requireUser();
+  const user = await requireUser();
+  const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().leagueIntelligence;
   const params = await searchParams;
 
@@ -122,7 +124,15 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                 <tr key={c.competitionId} className="border-b border-border last:border-0">
                   <td className="whitespace-nowrap px-3 py-2">
                     {c.code ? (
-                      <Link href={`/leagues?c=${c.code}`} className="hover:text-positive">
+                      <Link
+                        href={`/leagues?c=${c.code}#campionato`}
+                        aria-current={c.code === competition.code ? "true" : undefined}
+                        className={
+                          c.code === competition.code
+                            ? "font-semibold text-positive-strong hover:underline"
+                            : "hover:text-positive"
+                        }
+                      >
                         {c.name}
                       </Link>
                     ) : (
@@ -173,6 +183,8 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
         </table>
       </Card>
 
+      {/* Ancora del campionato aperto: cliccando una riga della tabella si scende qui. */}
+      <div id="campionato" className="scroll-mt-24" />
       <CompetitionFilter
         competitions={competitions}
         selected={competition.code}
@@ -200,11 +212,13 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
       <h2 className="mb-1 mt-8 text-lg font-semibold">{m.standingsTitle}</h2>
       {firstStanding ? (
         <p className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted sm:text-sm">
-          {fillTemplate(m.standingsSource, {
-            provider: footballSource?.name ?? firstStanding.provider,
-            observedAt: formatDateTime(firstStanding.observed_at),
-          })}
-          <FreshnessBadge freshness={firstStanding.freshness} />
+          {technical
+            ? fillTemplate(m.standingsSource, {
+                provider: footballSource?.name ?? firstStanding.provider,
+                observedAt: formatDateTime(firstStanding.observed_at),
+              })
+            : fillTemplate(m.standingsUpdated, { at: formatDateTime(firstStanding.observed_at) })}
+          {technical ? <FreshnessBadge freshness={firstStanding.freshness} /> : null}
         </p>
       ) : null}
       {standingGroups.length === 0 ? (
@@ -238,7 +252,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                     <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
                     <Th className="text-right">{m.goalDifference}</Th>
                     <Th className="text-right">{m.points}</Th>
-                    <Th className="sm-secondary">{m.quality}</Th>
+                    {technical ? <Th className="sm-secondary">{m.quality}</Th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -262,9 +276,11 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                         {formatSigned(r.goal_difference, 0)}
                       </td>
                       <td className="px-3 py-2 text-right font-mono font-semibold">{r.points}</td>
-                      <td className="px-3 py-2 sm-secondary">
-                        <QualityBadge quality={r.quality} />
-                      </td>
+                      {technical ? (
+                        <td className="px-3 py-2 sm-secondary">
+                          <QualityBadge quality={r.quality} />
+                        </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ChevronDown } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
@@ -23,12 +24,14 @@ import {
   certaintyMultiples,
   DEFAULT_THRESHOLD,
   flatReturn,
+  groupByCompetition,
   groupByMatch,
   pastValueMultiples,
   selectPicks,
   type BandStat,
   type Pick,
 } from "@/lib/certainties/logic";
+import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
@@ -183,7 +186,11 @@ function Reliability({
 /** Multiple e partite: la parte principale, caricata appena possibile. */
 async function CertaintiesContent() {
   const c = getMessages().certainties;
-  const [upcoming, site] = await Promise.all([loadUpcoming(), userBookmaker()]);
+  const [upcoming, site, competitions] = await Promise.all([
+    loadUpcoming(),
+    userBookmaker(),
+    listCompetitions(),
+  ]);
   const picks = selectPicks(upcoming.rows, DEFAULT_THRESHOLD, upcoming.market);
   const matches = groupByMatch(picks);
   const prices = upcoming.prices;
@@ -223,30 +230,56 @@ async function CertaintiesContent() {
       {matches.length === 0 ? (
         <EmptyState>{c.empty}</EmptyState>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {matches.map((match) => (
-            <li key={match.matchId}>
-              <Card className="h-full">
-                <Link
-                  href={`/match-center/${match.matchId}`}
-                  className="block font-medium hover:underline"
-                >
-                  {match.home} – {match.away}
-                </Link>
-                <p className="text-xs text-muted">{formatDateTime(match.kickoffAt)}</p>
-                <ul className="mt-2 divide-y divide-border">
-                  {match.picks.map((p) => (
-                    <PickRow
-                      key={`${p.market}|${p.line ?? ""}|${p.selection}`}
-                      pick={p}
-                      prices={prices}
-                    />
-                  ))}
-                </ul>
-              </Card>
-            </li>
+        <div className="flex flex-col gap-3">
+          {groupByCompetition(
+            matches,
+            competitions.map((x) => x.id),
+          ).map((group, index) => (
+            <details
+              key={group.competitionId ?? "altro"}
+              open={index === 0}
+              className="group rounded-[var(--radius-card)] border border-border bg-surface/40 p-3 sm:p-4"
+            >
+              <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted hover:text-fg [&::-webkit-details-marker]:hidden">
+                <ChevronDown
+                  size={16}
+                  aria-hidden="true"
+                  className="shrink-0 transition-transform group-open:rotate-180"
+                />
+                {competitions.find((x) => x.id === group.competitionId)?.name ?? c.otherCompetition}
+                <span className="font-normal normal-case tracking-normal text-subtle">
+                  {group.matches.length === 1
+                    ? c.competitionCountOne
+                    : fillTemplate(c.competitionCount, { count: String(group.matches.length) })}
+                </span>
+              </summary>
+              <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {group.matches.map((match) => (
+                  <li key={match.matchId}>
+                    <Card className="h-full">
+                      <Link
+                        href={`/match-center/${match.matchId}`}
+                        className="block font-medium hover:underline"
+                      >
+                        {match.home} – {match.away}
+                      </Link>
+                      <p className="text-xs text-muted">{formatDateTime(match.kickoffAt)}</p>
+                      <ul className="mt-2 divide-y divide-border">
+                        {match.picks.map((p) => (
+                          <PickRow
+                            key={`${p.market}|${p.line ?? ""}|${p.selection}`}
+                            pick={p}
+                            prices={prices}
+                          />
+                        ))}
+                      </ul>
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            </details>
           ))}
-        </ul>
+        </div>
       )}
     </>
   );

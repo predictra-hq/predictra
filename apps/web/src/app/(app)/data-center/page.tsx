@@ -13,6 +13,7 @@ import {
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Dati" };
 
@@ -106,28 +107,30 @@ export default async function DataCenterPage() {
         {coverage.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noCoverage}</p>
         ) : (
-          <table className="compact-sm w-full text-left text-sm sm:min-w-[560px]">
-            <caption className="sr-only">{d.coverage}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{m.matchCenter.competition}</Th>
-                <Th>{d.seasonCol}</Th>
-                <Th className="text-right">{d.matches}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {coverage.map((c) => (
-                <tr key={c.competitionId} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    {c.name}
-                    {c.areaName ? <span className="text-muted"> · {c.areaName}</span> : null}
-                  </td>
-                  <td className="px-4 py-3">{c.seasonLabel ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono">{c.matches}</td>
+          <Limited total={coverage.length}>
+            <table className="compact-sm w-full text-left text-sm sm:min-w-[560px]">
+              <caption className="sr-only">{d.coverage}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{m.matchCenter.competition}</Th>
+                  <Th>{d.seasonCol}</Th>
+                  <Th className="text-right">{d.matches}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {coverage.map((c) => (
+                  <tr key={c.competitionId} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3">
+                      {c.name}
+                      {c.areaName ? <span className="text-muted"> · {c.areaName}</span> : null}
+                    </td>
+                    <td className="px-4 py-3">{c.seasonLabel ?? "—"}</td>
+                    <td className="px-4 py-3 text-right font-mono">{c.matches}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
@@ -136,45 +139,44 @@ export default async function DataCenterPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noRuns}</p>
         ) : (
-          <table
-            className="limit-sm w-full min-w-[760px] text-left text-sm"
-            data-more={getMessages().common.moreOnDesktop}
-          >
-            <caption className="sr-only">{d.recentRuns}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{d.started}</Th>
-                <Th>{d.window}</Th>
-                <Th>{d.health}</Th>
-                <Th className="text-right">{d.requests}</Th>
-                <Th className="text-right">{d.rows}</Th>
-                <Th className="text-right">{d.errors}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {runs.map((r) => (
-                <tr key={r.id} className="border-b border-border last:border-0 align-top">
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(r.started_at)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-xs">{r.window_key}</span>
-                    {r.error_summary ? (
-                      <span className="mt-1 block text-xs text-negative-strong">
-                        {r.error_summary}
-                      </span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={runStatusTone(r.status)}>{d.runStatus[r.status]}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">{r.requests_used}</td>
-                  <td className="px-4 py-3 text-right font-mono">{r.rows_upserted}</td>
-                  <td className="px-4 py-3 text-right font-mono">{r.error_count}</td>
+          <Limited total={runs.length}>
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <caption className="sr-only">{d.recentRuns}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{d.started}</Th>
+                  <Th>{d.window}</Th>
+                  <Th>{d.health}</Th>
+                  <Th className="text-right">{d.requests}</Th>
+                  <Th className="text-right">{d.rows}</Th>
+                  <Th className="text-right">{d.errors}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {runs.map((r) => (
+                  <tr key={r.id} className="border-b border-border last:border-0 align-top">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(r.started_at)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs">{r.window_key}</span>
+                      {r.error_summary ? (
+                        <span className="mt-1 block text-xs text-negative-strong">
+                          {r.error_summary}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={runStatusTone(r.status)}>{d.runStatus[r.status]}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono">{r.requests_used}</td>
+                    <td className="px-4 py-3 text-right font-mono">{r.rows_upserted}</td>
+                    <td className="px-4 py-3 text-right font-mono">{r.error_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
@@ -183,42 +185,41 @@ export default async function DataCenterPage() {
         {issues.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noOpenIssues}</p>
         ) : (
-          <table
-            className="limit-sm w-full min-w-[640px] text-left text-sm"
-            data-more={getMessages().common.moreOnDesktop}
-          >
-            <caption className="sr-only">{d.issues}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{d.severity}</Th>
-                <Th>{d.check}</Th>
-                <Th>{d.entity}</Th>
-                <Th>{d.lastSeen}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {issues.map((i) => (
-                <tr key={i.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3">
-                    <Badge tone={severityTone(i.severity)}>{d.issueSeverity[i.severity]}</Badge>
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs">{i.check_code}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">
-                    {i.entity_type === "match" && i.entity_id ? (
-                      <Link href={`/match-center/${i.entity_id}`} className="hover:text-fg">
-                        {i.entity_type}:{i.provider_entity_id ?? i.entity_id}
-                      </Link>
-                    ) : (
-                      `${i.entity_type ?? "—"}:${i.provider_entity_id ?? i.entity_id ?? "—"}`
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(i.last_seen_at)}
-                  </td>
+          <Limited total={issues.length}>
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <caption className="sr-only">{d.issues}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{d.severity}</Th>
+                  <Th>{d.check}</Th>
+                  <Th>{d.entity}</Th>
+                  <Th>{d.lastSeen}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {issues.map((i) => (
+                  <tr key={i.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3">
+                      <Badge tone={severityTone(i.severity)}>{d.issueSeverity[i.severity]}</Badge>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs">{i.check_code}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted">
+                      {i.entity_type === "match" && i.entity_id ? (
+                        <Link href={`/match-center/${i.entity_id}`} className="hover:text-fg">
+                          {i.entity_type}:{i.provider_entity_id ?? i.entity_id}
+                        </Link>
+                      ) : (
+                        `${i.entity_type ?? "—"}:${i.provider_entity_id ?? i.entity_id ?? "—"}`
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(i.last_seen_at)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 

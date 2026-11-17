@@ -13,6 +13,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Audit" };
 
@@ -87,47 +88,49 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.admin.noAudit}</p>
         ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <caption className="sr-only">{m.admin.auditTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.when}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.action}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.actor}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.admin.target}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b border-border align-top last:border-0">
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(r.occurred_at)}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs">{r.action}</td>
-                  <td className="px-4 py-3">{r.actor?.email ?? m.admin.system}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted">
-                    {r.target_type}:{r.target_id}
-                    {r.metadata && Object.keys(r.metadata).length > 0 ? (
-                      <details className="mt-1">
-                        <summary className="cursor-pointer">{m.admin.details}</summary>
-                        <pre className="mt-1 whitespace-pre-wrap break-all">
-                          {JSON.stringify(r.metadata, null, 2)}
-                        </pre>
-                      </details>
-                    ) : null}
-                  </td>
+          <Limited total={rows.length}>
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <caption className="sr-only">{m.admin.auditTitle}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.when}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.action}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.actor}
+                  </th>
+                  <th scope="col" className="px-4 py-3">
+                    {m.admin.target}
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id} className="border-b border-border align-top last:border-0">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(r.occurred_at)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs">{r.action}</td>
+                    <td className="px-4 py-3">{r.actor?.email ?? m.admin.system}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted">
+                      {r.target_type}:{r.target_id}
+                      {r.metadata && Object.keys(r.metadata).length > 0 ? (
+                        <details className="mt-1">
+                          <summary className="cursor-pointer">{m.admin.details}</summary>
+                          <pre className="mt-1 whitespace-pre-wrap break-all">
+                            {JSON.stringify(r.metadata, null, 2)}
+                          </pre>
+                        </details>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 

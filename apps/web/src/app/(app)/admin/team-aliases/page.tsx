@@ -16,6 +16,7 @@ import { buildAliasIndex, namesToMap, suggestTeam, type NameToMap } from "@/lib/
 import { fillTemplate } from "@/lib/odds/format";
 import { addTeamAlias } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Alias squadre" };
 
@@ -119,51 +120,53 @@ export default async function TeamAliasesPage() {
         {names.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noIssues}</p>
         ) : (
-          <table className="w-full min-w-[880px] text-left text-sm">
-            <caption className="sr-only">{m.namesTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{m.receivedName}</Th>
-                <Th>{m.competitions}</Th>
-                <Th className="text-right">{m.events}</Th>
-                <Th>{m.status}</Th>
-                <Th>{m.team}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {names.map((entry, i) => (
-                <tr
-                  key={entry.normalized}
-                  className="border-b border-border align-top last:border-0"
-                >
-                  <td className="px-4 py-3 font-mono text-xs">{entry.name}</td>
-                  <td className="px-4 py-3 text-muted">
-                    {entry.competitionCodes.join(", ") || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono">{entry.events}</td>
-                  <td className="px-4 py-3">
-                    <Badge tone={resolutionTone(entry.resolution.status)}>
-                      {m.resolution[entry.resolution.status]}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    {entry.resolution.status === "missing" ? (
-                      <AliasForm
-                        entry={entry}
-                        groups={teams.groups}
-                        others={teams.others}
-                        index={i}
-                      />
-                    ) : (
-                      <p className="max-w-sm text-xs text-muted">
-                        {entry.resolution.status === "known" ? m.knownHint : m.ambiguousHint}
-                      </p>
-                    )}
-                  </td>
+          <Limited total={names.length}>
+            <table className="w-full min-w-[880px] text-left text-sm">
+              <caption className="sr-only">{m.namesTitle}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{m.receivedName}</Th>
+                  <Th>{m.competitions}</Th>
+                  <Th className="text-right">{m.events}</Th>
+                  <Th>{m.status}</Th>
+                  <Th>{m.team}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {names.map((entry, i) => (
+                  <tr
+                    key={entry.normalized}
+                    className="border-b border-border align-top last:border-0"
+                  >
+                    <td className="px-4 py-3 font-mono text-xs">{entry.name}</td>
+                    <td className="px-4 py-3 text-muted">
+                      {entry.competitionCodes.join(", ") || "—"}
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono">{entry.events}</td>
+                    <td className="px-4 py-3">
+                      <Badge tone={resolutionTone(entry.resolution.status)}>
+                        {m.resolution[entry.resolution.status]}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      {entry.resolution.status === "missing" ? (
+                        <AliasForm
+                          entry={entry}
+                          groups={teams.groups}
+                          others={teams.others}
+                          index={i}
+                        />
+                      ) : (
+                        <p className="max-w-sm text-xs text-muted">
+                          {entry.resolution.status === "known" ? m.knownHint : m.ambiguousHint}
+                        </p>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
@@ -173,33 +176,35 @@ export default async function TeamAliasesPage() {
         {events.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noIssues}</p>
         ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
-            <caption className="sr-only">{m.eventsTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{m.kickoff}</Th>
-                <Th>{m.competition}</Th>
-                <Th>{m.homeTeam}</Th>
-                <Th>{m.awayTeam}</Th>
-                <Th>{m.lastSeen}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.map((e) => (
-                <tr key={e.issueId} className="border-b border-border last:border-0">
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {e.commenceTime ? formatDateTime(e.commenceTime) : "—"}
-                  </td>
-                  <td className="px-4 py-3">{e.competitionCode ?? "—"}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{e.homeTeam}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{e.awayTeam}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(e.lastSeenAt)}
-                  </td>
+          <Limited total={events.length}>
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <caption className="sr-only">{m.eventsTitle}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{m.kickoff}</Th>
+                  <Th>{m.competition}</Th>
+                  <Th>{m.homeTeam}</Th>
+                  <Th>{m.awayTeam}</Th>
+                  <Th>{m.lastSeen}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {events.map((e) => (
+                  <tr key={e.issueId} className="border-b border-border last:border-0">
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {e.commenceTime ? formatDateTime(e.commenceTime) : "—"}
+                    </td>
+                    <td className="px-4 py-3">{e.competitionCode ?? "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{e.homeTeam}</td>
+                    <td className="px-4 py-3 font-mono text-xs">{e.awayTeam}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(e.lastSeenAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
 
@@ -208,27 +213,29 @@ export default async function TeamAliasesPage() {
         {manual.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noManual}</p>
         ) : (
-          <table className="w-full min-w-[560px] text-left text-sm">
-            <caption className="sr-only">{m.manualTitle}</caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>{m.alias}</Th>
-                <Th>{m.team}</Th>
-                <Th>{m.createdAt}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {manual.map((a) => (
-                <tr key={a.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs">{a.alias}</td>
-                  <td className="px-4 py-3">{a.teamName}</td>
-                  <td className="whitespace-nowrap px-4 py-3 text-muted">
-                    {formatDateTime(a.createdAt)}
-                  </td>
+          <Limited total={manual.length}>
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <caption className="sr-only">{m.manualTitle}</caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>{m.alias}</Th>
+                  <Th>{m.team}</Th>
+                  <Th>{m.createdAt}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {manual.map((a) => (
+                  <tr key={a.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-mono text-xs">{a.alias}</td>
+                    <td className="px-4 py-3">{a.teamName}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-muted">
+                      {formatDateTime(a.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
     </>

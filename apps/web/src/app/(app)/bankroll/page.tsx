@@ -32,6 +32,9 @@ import {
   setBookmaker,
 } from "./actions";
 
+import { SITE_PREFIX, untrackedSites } from "@/lib/bankroll/sites";
+import { Limited } from "@/components/ui/limited";
+
 export const metadata: Metadata = { title: "Bankroll" };
 
 /**
@@ -50,16 +53,33 @@ function BookmakerFields({
   name?: string | null;
 }) {
   const m = getMessages().bankroll;
+  const others = untrackedSites(bookmakers);
+  const listed = !code && name ? others.find((s) => s === name) : undefined;
   return (
     <>
       <Field label={m.bookmaker} htmlFor={`${idPrefix}-bookmaker`} hint={m.bookmakerHint}>
-        <Select id={`${idPrefix}-bookmaker`} name="bookmakerCode" defaultValue={code ?? ""}>
-          <option value="">{bookmakers.length > 0 ? m.bookmakerOther : m.bookmakerChoose}</option>
-          {bookmakers.map((b) => (
-            <option key={b.code} value={b.code}>
-              {b.title}
-            </option>
-          ))}
+        <Select
+          id={`${idPrefix}-bookmaker`}
+          name="bookmakerCode"
+          defaultValue={code ?? (listed ? `${SITE_PREFIX}${listed}` : "")}
+        >
+          <option value="">{m.bookmakerOther}</option>
+          {bookmakers.length > 0 ? (
+            <optgroup label={m.bookmakerGroupTracked}>
+              {bookmakers.map((b) => (
+                <option key={b.code} value={b.code}>
+                  {b.title}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
+          <optgroup label={m.bookmakerGroupUntracked}>
+            {others.map((s) => (
+              <option key={s} value={`${SITE_PREFIX}${s}`}>
+                {s}
+              </option>
+            ))}
+          </optgroup>
         </Select>
       </Field>
       <Field
@@ -71,7 +91,7 @@ function BookmakerFields({
           id={`${idPrefix}-bookmaker-name`}
           name="bookmakerName"
           maxLength={60}
-          defaultValue={name ?? ""}
+          defaultValue={listed ? "" : (name ?? "")}
         />
       </Field>
     </>
@@ -187,49 +207,51 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
               <p className="mt-4 text-sm text-muted">{m.noMovements}</p>
             ) : (
               <ScrollRegion label={`${m.movements} · ${selected.name}`} className="mt-4">
-                <table className="w-full min-w-[420px] text-left text-sm">
-                  <caption className="sr-only">{`${m.movements} · ${selected.name}`}</caption>
-                  <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                    <tr>
-                      <Th>{m.date}</Th>
-                      <Th>{m.movementKind}</Th>
-                      <Th className="text-right">{m.amount}</Th>
-                      <Th>
-                        <span className="sr-only">{c.actions}</span>
-                      </Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movements.map((mv) => (
-                      <tr key={mv.id} className="border-b border-border align-top last:border-0">
-                        <td className="whitespace-nowrap px-3 py-2 text-muted">
-                          {formatDateTime(mv.occurred_at)}
-                        </td>
-                        <td className="px-3 py-2">
-                          {m.movementKinds[mv.kind]}
-                          {mv.note ? (
-                            <span className="block text-xs text-muted">{mv.note}</span>
-                          ) : null}
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono">
-                          <SignedEuro value={mv.kind === "WITHDRAWAL" ? -mv.amount : mv.amount} />
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <ActionForm action={deleteMovement} className="inline">
-                            <input type="hidden" name="movementId" value={mv.id} />
-                            <SubmitButton
-                              variant="ghost"
-                              className="h-7 px-2 text-xs hover:text-negative-strong"
-                              confirmMessage={c.confirmDelete}
-                            >
-                              {m.deleteMovement}
-                            </SubmitButton>
-                          </ActionForm>
-                        </td>
+                <Limited total={movements.length}>
+                  <table className="w-full min-w-[420px] text-left text-sm">
+                    <caption className="sr-only">{`${m.movements} · ${selected.name}`}</caption>
+                    <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                      <tr>
+                        <Th>{m.date}</Th>
+                        <Th>{m.movementKind}</Th>
+                        <Th className="text-right">{m.amount}</Th>
+                        <Th>
+                          <span className="sr-only">{c.actions}</span>
+                        </Th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {movements.map((mv) => (
+                        <tr key={mv.id} className="border-b border-border align-top last:border-0">
+                          <td className="whitespace-nowrap px-3 py-2 text-muted">
+                            {formatDateTime(mv.occurred_at)}
+                          </td>
+                          <td className="px-3 py-2">
+                            {m.movementKinds[mv.kind]}
+                            {mv.note ? (
+                              <span className="block text-xs text-muted">{mv.note}</span>
+                            ) : null}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            <SignedEuro value={mv.kind === "WITHDRAWAL" ? -mv.amount : mv.amount} />
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <ActionForm action={deleteMovement} className="inline">
+                              <input type="hidden" name="movementId" value={mv.id} />
+                              <SubmitButton
+                                variant="ghost"
+                                className="h-7 px-2 text-xs hover:text-negative-strong"
+                                confirmMessage={c.confirmDelete}
+                              >
+                                {m.deleteMovement}
+                              </SubmitButton>
+                            </ActionForm>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </Limited>
               </ScrollRegion>
             )}
           </Card>

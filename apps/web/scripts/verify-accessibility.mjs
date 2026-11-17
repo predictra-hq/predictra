@@ -40,8 +40,8 @@ if (!url || !secret) {
 const SCREENSHOTS = new Set([
   "/dashboard",
   "/dashboard (mobile)",
-  "/certezze",
-  "/certezze (mobile)",
+  "/certainties",
+  "/certainties (mobile)",
   "/match-center (mobile)",
   "/match-center/[id] (mobile)",
   "/leagues (mobile)",
@@ -53,14 +53,14 @@ const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 const PAGES = [
   "/dashboard",
-  "/certezze",
+  "/certainties",
   "/match-center",
   "/data-center",
   "/markets",
   "/statistics",
   "/leagues",
   "/teams",
-  "/affidabilita",
+  "/reliability",
   "/models",
   "/bet-builder",
   "/bet-builder/builder",
@@ -236,7 +236,7 @@ function watchRuntime(page) {
  * Pagine di cui stampare il testo visibile nel log (PRINT_TEXT=1): serve a controllare
  * cosa mostrano davvero, senza scaricare gli screenshot. Solo pagine senza dati personali.
  */
-const PRINT_TEXT = new Set(["/dashboard", "/certezze", "/match-center", "/match-center/[id]"]);
+const PRINT_TEXT = new Set(["/dashboard", "/certainties", "/match-center", "/match-center/[id]"]);
 
 async function printText(page, label) {
   if (process.env.PRINT_TEXT !== "1" || !PRINT_TEXT.has(label)) return;
@@ -383,7 +383,7 @@ async function formAlert(page) {
  * - uscita: si torna all'accesso e le pagine non si aprono più.
  * L'utente invitato (`verifica-invito-…@example.com`) viene sempre cancellato.
  */
-async function authFlows(browser, account) {
+async function authFlows(browser, account, matchPath) {
   // 1. Accesso con password sbagliata.
   {
     const context = await browser.newContext({
@@ -515,6 +515,13 @@ async function authFlows(browser, account) {
       welcome,
     );
 
+    // Un utente normale non vede i dettagli tecnici della partita (fonte, ID, qualità).
+    if (matchPath) {
+      await page.goto(`${appUrl}${matchPath}`);
+      const technical = await page.getByText("Dettagli tecnici").count();
+      check("utente: nessun dettaglio tecnico nella partita", technical === 0, `${technical}`);
+    }
+
     // 3. Uscita dal Profilo.
     await page.goto(`${appUrl}/settings`);
     await Promise.all([
@@ -643,8 +650,47 @@ async function main() {
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
 
+    // Indirizzi in inglese: i vecchi indirizzi in italiano portano ai nuovi.
+    for (const [from, to] of [
+      ["/certezze", "/certainties"],
+      ["/affidabilita", "/reliability"],
+    ]) {
+      await page.goto(`${appUrl}${from}`);
+      check(`indirizzi: ${from} porta a ${to}`, new URL(page.url()).pathname === to, page.url());
+    }
+
+    // Azioni di amministrazione in una finestra modale: si apre, sta nello schermo, Esc la
+    // chiude. Prova con un invito temporaneo, revocabile da chiunque gestisca gli inviti.
+    const { data: tempInvite } = await admin
+      .from("invitations")
+      .insert({ email: `verifica-finestra-${run}@example.com`, role: "USER", invited_by: null })
+      .select("id")
+      .single();
+    try {
+      await page.goto(`${appUrl}/admin/invitations`);
+      await page.getByRole("button", { name: "Revoca" }).first().click();
+      const box = await page
+        .locator("dialog[open]")
+        .boundingBox({ timeout: 5000 })
+        .catch(() => null);
+      check(
+        "amministrazione: «Revoca» apre una finestra dentro lo schermo",
+        box !== null && box.x >= 0 && box.x + box.width <= 375,
+        JSON.stringify(box),
+      );
+      await page.keyboard.press("Escape");
+      check(
+        "amministrazione: Esc chiude la finestra",
+        (await page.locator("dialog[open]").count()) === 0,
+      );
+    } catch (e) {
+      check("amministrazione: finestra", false, e instanceof Error ? e.message : String(e));
+    } finally {
+      if (tempInvite) await admin.from("invitations").delete().eq("id", tempInvite.id);
+    }
+
     await page.setViewportSize({ width: 375, height: 812 });
-    await authFlows(browser, account);
+    await authFlows(browser, account, match);
   } finally {
     await browser.close();
     if (account) {

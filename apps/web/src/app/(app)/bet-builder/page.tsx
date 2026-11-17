@@ -41,6 +41,7 @@ import { LikelySection } from "@/components/bet-builder/likely";
 import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { hasPermission } from "@predictra/shared-types";
 
 export const metadata: Metadata = { title: "Schedine" };
 
@@ -48,10 +49,13 @@ function ProposalCard({
   p,
   legs,
   stake,
+  technical,
 }: {
   p: ActiveBetProposalRow;
   legs: BetProposalLegRow[];
   stake: number | null;
+  /** Modello e versione: solo per chi gestisce il sistema. */
+  technical: boolean;
 }) {
   const m = getMessages().betBuilder;
   return (
@@ -104,8 +108,8 @@ function ProposalCard({
         <Alert>{fillTemplate(m.priceChangedWarning, { n: p.legs_price_changed })}</Alert>
       ) : null}
       <p className="text-xs text-muted">
-        {m.model}: {p.model_key} {p.model_version} · {m.oddsObservedAt}{" "}
-        {formatDateTime(p.odds_observed_at)}
+        {fillTemplate(m.oddsUpdated, { at: formatDateTime(p.odds_observed_at) })}
+        {technical ? ` · ${m.model}: ${p.model_key} ${p.model_version}` : ""}
       </p>
     </Card>
   );
@@ -119,7 +123,8 @@ function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
 }
 
 export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
-  await requireUser();
+  const user = await requireUser();
+  const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().betBuilder;
   const params = await searchParams;
   const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
@@ -155,26 +160,28 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       {proposals.length > 0 ? (
         <>
           <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
-          <details className="mb-4 text-xs text-muted">
-            <summary className="cursor-pointer">{m.technicalDetails}</summary>
-            <p className="mb-1 mt-2 text-xs text-muted">
-              {fillTemplate(m.thresholds, {
-                ev: formatPercent(rules.min_expected_value, 0),
-                p: formatPercent(rules.min_probability, 0),
-                c: String(rules.min_confidence_score).replace(".", ","),
-                legs: rules.max_legs,
-              })}
-            </p>
-            {run ? (
-              <p className="mb-4 text-xs text-muted">
-                {fillTemplate(m.lastRun, {
-                  at: formatDateTime(run.finished_at ?? run.started_at),
-                  candidates: run.candidates_evaluated,
-                  proposals: run.proposals_written,
+          {technical ? (
+            <details className="mb-4 text-xs text-muted">
+              <summary className="cursor-pointer">{m.technicalDetails}</summary>
+              <p className="mb-1 mt-2 text-xs text-muted">
+                {fillTemplate(m.thresholds, {
+                  ev: formatPercent(rules.min_expected_value, 0),
+                  p: formatPercent(rules.min_probability, 0),
+                  c: String(rules.min_confidence_score).replace(".", ","),
+                  legs: rules.max_legs,
                 })}
               </p>
-            ) : null}
-          </details>
+              {run ? (
+                <p className="mb-4 text-xs text-muted">
+                  {fillTemplate(m.lastRun, {
+                    at: formatDateTime(run.finished_at ?? run.started_at),
+                    candidates: run.candidates_evaluated,
+                    proposals: run.proposals_written,
+                  })}
+                </p>
+              ) : null}
+            </details>
+          ) : null}
         </>
       ) : null}
 
@@ -247,6 +254,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                               p={p}
                               legs={legsBy.get(p.proposal_id) ?? []}
                               stake={stake}
+                              technical={technical}
                             />
                           ))}
                         </div>

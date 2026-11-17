@@ -29,6 +29,7 @@ import {
   ODDS_PROVIDER,
 } from "@/lib/odds/queries";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Quote" };
 
@@ -228,48 +229,50 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
             {coverage.every((c) => c.events === 0) ? (
               <p className="p-5 text-sm text-muted">{m.noCoverage}</p>
             ) : (
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <caption className="sr-only">{m.coverageTitle}</caption>
-                <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-                  <tr>
-                    <Th>{m.competition}</Th>
-                    <Th className="text-right">{m.events}</Th>
-                    <Th className="text-right">{m.matchedEvents}</Th>
-                    <Th className="text-right">{m.bookmakers}</Th>
-                    <Th className="text-right">{m.italianBookmakers}</Th>
-                    <Th>{m.lastObservation}</Th>
-                    <Th>{m.freshness}</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coverage.map((c) => (
-                    <tr key={c.competition_id} className="border-b border-border last:border-0">
-                      <td className="whitespace-nowrap px-4 py-3">
-                        {c.competition_code ? (
-                          <Link
-                            href={`/markets?c=${c.competition_code}`}
-                            className="hover:text-positive"
-                          >
-                            {c.competition_name}
-                          </Link>
-                        ) : (
-                          c.competition_name
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono">{c.events}</td>
-                      <td className="px-4 py-3 text-right font-mono">{c.matched_events}</td>
-                      <td className="px-4 py-3 text-right font-mono">{c.bookmakers}</td>
-                      <td className="px-4 py-3 text-right font-mono">{c.italian_bookmakers}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-muted">
-                        {c.last_observed_at ? formatDateTime(c.last_observed_at) : "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <FreshnessBadge freshness={freshnessAt(c.last_observed_at, maxAge)} />
-                      </td>
+              <Limited total={coverage.length}>
+                <table className="w-full min-w-[760px] text-left text-sm">
+                  <caption className="sr-only">{m.coverageTitle}</caption>
+                  <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                    <tr>
+                      <Th>{m.competition}</Th>
+                      <Th className="text-right">{m.events}</Th>
+                      <Th className="text-right">{m.matchedEvents}</Th>
+                      <Th className="text-right">{m.bookmakers}</Th>
+                      <Th className="text-right">{m.italianBookmakers}</Th>
+                      <Th>{m.lastObservation}</Th>
+                      <Th>{m.freshness}</Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {coverage.map((c) => (
+                      <tr key={c.competition_id} className="border-b border-border last:border-0">
+                        <td className="whitespace-nowrap px-4 py-3">
+                          {c.competition_code ? (
+                            <Link
+                              href={`/markets?c=${c.competition_code}`}
+                              className="hover:text-positive"
+                            >
+                              {c.competition_name}
+                            </Link>
+                          ) : (
+                            c.competition_name
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">{c.events}</td>
+                        <td className="px-4 py-3 text-right font-mono">{c.matched_events}</td>
+                        <td className="px-4 py-3 text-right font-mono">{c.bookmakers}</td>
+                        <td className="px-4 py-3 text-right font-mono">{c.italian_bookmakers}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-muted">
+                          {c.last_observed_at ? formatDateTime(c.last_observed_at) : "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <FreshnessBadge freshness={freshnessAt(c.last_observed_at, maxAge)} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Limited>
             )}
           </Card>
 

@@ -9,7 +9,9 @@ import {
   CertaintiesCard,
   SchedineCard,
   SystemStatusCard,
+  UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
+import { LeaguesCard, ModelHitsCard } from "@/components/dashboard/charts";
 import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -65,6 +67,21 @@ export default async function DashboardPage() {
       <Suspense fallback={null}>
         <FollowedMatchesCard />
       </Suspense>
+
+      {/* Calendario con le probabilità e due grafici: resa del modello e campionati. */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Suspense fallback={<CardSkeleton />}>
+          <UpcomingMatchesCard />
+        </Suspense>
+        <div className="flex flex-col gap-4">
+          <Suspense fallback={<CardSkeleton />}>
+            <ModelHitsCard />
+          </Suspense>
+          <Suspense fallback={<CardSkeleton />}>
+            <LeaguesCard />
+          </Suspense>
+        </div>
+      </div>
 
       {/* Stato tecnico e avvisi dell'agente: solo per chi gestisce il sistema. */}
       {canMonitor ? (

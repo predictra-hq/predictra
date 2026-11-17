@@ -37,6 +37,7 @@ import { listNextMatches, listPredictions1x2 } from "@/lib/dashboard/queries";
 import { formatDateTime, getMessages, getRequestTimeZone } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatSigned } from "@/lib/odds/format";
 import { confidenceTone, formatPercent } from "@/lib/predictions/format";
+import { confidenceBand } from "@predictra/shared-types";
 import { hasActiveModel, listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 
@@ -237,7 +238,7 @@ export async function UpcomingMatchesCard() {
   const anyMissing = matches.some((x) => !x.prediction);
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <CardTitle className="flex items-center gap-2">
@@ -285,7 +286,7 @@ export async function UpcomingMatchesCard() {
                       <span>· {match.competitionName}</span>
                       {p ? (
                         <Badge tone={confidenceTone(p.confidence)}>
-                          {d.confidence} {p.confidence.toFixed(2).replace(".", ",")}
+                          {d.confidenceWords[confidenceBand(p.confidence)]}
                         </Badge>
                       ) : null}
                     </p>
@@ -633,7 +634,7 @@ export async function CertaintiesCard() {
   const best = picks?.[0];
 
   return (
-    <StatCard href="/certezze" title={d.certaintiesTitle}>
+    <StatCard href="/certainties" title={d.certaintiesTitle}>
       {picks === null ? (
         <p className="mt-2 text-sm text-muted">{d.noData}</p>
       ) : picks.length === 0 ? (

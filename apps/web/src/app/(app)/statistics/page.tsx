@@ -20,6 +20,7 @@ import {
 } from "@/lib/odds/queries";
 import { formPoints, parseForm, perMatch, rate, sortTeamStats } from "@/lib/odds/stats";
 import { SectionTabs } from "@/components/shell/section-tabs";
+import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Statistiche" };
 
@@ -119,96 +120,100 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noStats}</p>
         ) : (
-          <table className="compact-sm w-full text-left text-sm sm:min-w-[1180px]">
-            <caption className="sr-only">
-              {competition.name} {competition.seasonLabel ?? ""}
-            </caption>
-            <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <Th>#</Th>
-                <Th className="sticky left-0 z-10 bg-surface">{m.team}</Th>
-                <Th className="text-right">{m.played}</Th>
-                <Th className="sm-secondary text-right">{m.won}</Th>
-                <Th className="sm-secondary text-right">{m.drawn}</Th>
-                <Th className="sm-secondary text-right">{m.lost}</Th>
-                <Th className="sm-secondary text-right">{m.goalsFor}</Th>
-                <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
-                <Th className="text-right">{m.goalDifference}</Th>
-                <Th className="text-right">{m.points}</Th>
-                <Th className="sm-secondary text-right">{m.goalsPerMatch}</Th>
-                <Th className="sm-secondary text-right">{m.concededPerMatch}</Th>
-                <Th className="sm-secondary">{m.home}</Th>
-                <Th className="sm-secondary">{m.away}</Th>
-                <Th className="sm-secondary text-right">{m.cleanSheets}</Th>
-                <Th className="sm-secondary text-right">{m.bothScored}</Th>
-                <Th className="sm-secondary text-right">{m.over25}</Th>
-                <Th title={m.formHint}>{m.form}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={r.team_id} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 text-muted">{i + 1}</td>
-                  <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-2 font-medium">
-                    <Link href={`/teams/${r.team_id}`} className="hover:underline">
-                      {r.team_name}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono">{r.played}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.lost}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_for}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_against}</td>
-                  <td className="px-3 py-2 text-right font-mono">
-                    {formatSigned(r.goals_for - r.goals_against, 0)}
-                  </td>
-                  <td className="px-3 py-2 text-right font-mono font-semibold">{r.points}</td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">
-                    {formatDecimal(perMatch(r.goals_for, r.played))}
-                  </td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">
-                    {formatDecimal(perMatch(r.goals_against, r.played))}
-                  </td>
-                  <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
-                    {fillTemplate(m.homeAwayRecord, {
-                      won: r.home_won,
-                      played: r.home_played,
-                      gf: r.home_goals_for,
-                      ga: r.home_goals_against,
-                    })}
-                  </td>
-                  <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
-                    {fillTemplate(m.homeAwayRecord, {
-                      won: r.away_won,
-                      played: r.away_played,
-                      gf: r.away_goals_for,
-                      ga: r.away_goals_against,
-                    })}
-                  </td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">
-                    {formatPercent(rate(r.clean_sheets, r.played), 0)}
-                  </td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">
-                    {formatPercent(rate(r.both_scored, r.played), 0)}
-                  </td>
-                  <td className="sm-secondary px-3 py-2 text-right font-mono">
-                    {formatPercent(rate(r.over_2_5, r.played), 0)}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className="flex items-center gap-2">
-                      <FormBadges form={form.get(Number(r.team_id))?.form} />
-                      <span className="text-xs text-muted">
-                        {fillTemplate(m.formPoints, {
-                          points: formPoints(parseForm(form.get(Number(r.team_id))?.form)),
-                        })}
-                      </span>
-                    </span>
-                  </td>
+          <Limited total={rows.length}>
+            <table className="compact-sm w-full text-left text-sm sm:min-w-[1180px]">
+              <caption className="sr-only">
+                {competition.name} {competition.seasonLabel ?? ""}
+              </caption>
+              <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <Th>#</Th>
+                  <Th className="sticky left-0 z-10 bg-surface">{m.team}</Th>
+                  <Th className="text-right">{m.played}</Th>
+                  <Th className="sm-secondary text-right">{m.won}</Th>
+                  <Th className="sm-secondary text-right">{m.drawn}</Th>
+                  <Th className="sm-secondary text-right">{m.lost}</Th>
+                  <Th className="sm-secondary text-right">{m.goalsFor}</Th>
+                  <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
+                  <Th className="text-right">{m.goalDifference}</Th>
+                  <Th className="text-right">{m.points}</Th>
+                  <Th className="sm-secondary text-right">{m.goalsPerMatch}</Th>
+                  <Th className="sm-secondary text-right">{m.concededPerMatch}</Th>
+                  <Th className="sm-secondary">{m.home}</Th>
+                  <Th className="sm-secondary">{m.away}</Th>
+                  <Th className="sm-secondary text-right">{m.cleanSheets}</Th>
+                  <Th className="sm-secondary text-right">{m.bothScored}</Th>
+                  <Th className="sm-secondary text-right">{m.over25}</Th>
+                  <Th title={m.formHint}>{m.form}</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={r.team_id} className="border-b border-border last:border-0">
+                    <td className="px-3 py-2 text-muted">{i + 1}</td>
+                    <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-2 font-medium">
+                      <Link href={`/teams/${r.team_id}`} className="hover:underline">
+                        {r.team_name}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono">{r.played}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">{r.lost}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">{r.goals_for}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {r.goals_against}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono">
+                      {formatSigned(r.goals_for - r.goals_against, 0)}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono font-semibold">{r.points}</td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {formatDecimal(perMatch(r.goals_for, r.played))}
+                    </td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {formatDecimal(perMatch(r.goals_against, r.played))}
+                    </td>
+                    <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
+                      {fillTemplate(m.homeAwayRecord, {
+                        won: r.home_won,
+                        played: r.home_played,
+                        gf: r.home_goals_for,
+                        ga: r.home_goals_against,
+                      })}
+                    </td>
+                    <td className="sm-secondary whitespace-nowrap px-3 py-2 text-xs text-muted">
+                      {fillTemplate(m.homeAwayRecord, {
+                        won: r.away_won,
+                        played: r.away_played,
+                        gf: r.away_goals_for,
+                        ga: r.away_goals_against,
+                      })}
+                    </td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {formatPercent(rate(r.clean_sheets, r.played), 0)}
+                    </td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {formatPercent(rate(r.both_scored, r.played), 0)}
+                    </td>
+                    <td className="sm-secondary px-3 py-2 text-right font-mono">
+                      {formatPercent(rate(r.over_2_5, r.played), 0)}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className="flex items-center gap-2">
+                        <FormBadges form={form.get(Number(r.team_id))?.form} />
+                        <span className="text-xs text-muted">
+                          {fillTemplate(m.formPoints, {
+                            points: formPoints(parseForm(form.get(Number(r.team_id))?.form)),
+                          })}
+                        </span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Limited>
         )}
       </Card>
       <p className="mt-3 text-xs text-muted">{m.legend}</p>

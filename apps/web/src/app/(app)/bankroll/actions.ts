@@ -9,6 +9,7 @@ import {
   movementSchema,
   toIsoDate,
 } from "@/lib/bankroll/validation";
+import { splitSiteChoice } from "@/lib/bankroll/sites";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -34,10 +35,9 @@ async function readBookmaker(
   supabase: Supabase,
   formData: FormData,
 ): Promise<{ bookmaker_code: string | null; bookmaker_name: string } | null> {
-  const parsed = bookmakerSchema.safeParse({
-    bookmakerCode: formData.get("bookmakerCode"),
-    bookmakerName: formData.get("bookmakerName"),
-  });
+  const parsed = bookmakerSchema.safeParse(
+    splitSiteChoice(formData.get("bookmakerCode"), formData.get("bookmakerName")),
+  );
   if (!parsed.success) return null;
   if (parsed.data.bookmakerCode) {
     const { data } = await supabase
@@ -62,7 +62,7 @@ export async function setBookmaker(_prev: ActionState, formData: FormData): Prom
   const { error } = await supabase.from("bankrolls").update(bookmaker).eq("id", id);
   if (error) return { ok: false, message: toUserMessage(error) };
   revalidatePath("/bet-builder");
-  revalidatePath("/certezze");
+  revalidatePath("/certainties");
   return done(m.bookmakerSaved);
 }
 

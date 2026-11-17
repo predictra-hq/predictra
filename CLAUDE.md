@@ -60,7 +60,7 @@ pnpm --filter web dev                   # app locale (richiede apps/web/.env.loc
   Il client con chiave segreta (`lib/supabase/admin.ts`) si usa solo dopo che una RPC ha autorizzato l'operazione.
 
 - Ruoli e permessi: `packages/shared-types/src/roles.ts`, specchiati in SQL. Le modifiche vanno fatte in entrambi i posti, con i relativi test.
-- Testi UI: solo in `src/lib/i18n/it.ts`.
+- Testi UI: solo in `src/lib/i18n/it.ts`. Gli **indirizzi delle pagine sono in inglese** (`/certainties`, `/reliability`); se uno cambia, il vecchio va reindirizzato in `apps/web/next.config.ts`.
 - **Database:**
   - una nuova migrazione è un **nuovo file** `supabase/migrations/<timestamp>_<nome>.sql`. Le migrazioni già applicate non si modificano;
   - ogni tabella con dati utente ha RLS e test in `supabase/tests/`;
