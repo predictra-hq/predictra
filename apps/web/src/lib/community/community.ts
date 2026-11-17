@@ -9,7 +9,7 @@ import {
 
 /**
  * Comunità (ADR 0058): maggiore età dichiarata, stile del nome, testo dei commenti.
- * Le stesse regole sono nel database (`20261117170000_community.sql`): qui servono per
+ * Le stesse regole sono nel database (`20261117190000_community.sql`): qui servono per
  * mostrare l'interfaccia giusta e messaggi chiari prima di scrivere.
  */
 

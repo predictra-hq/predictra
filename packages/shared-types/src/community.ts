@@ -1,7 +1,7 @@
 /**
  * Contratto M8 — comunità: data di nascita, stile del nome, commenti alle partite.
  *
- * Specchia `supabase/migrations/20261117170000_community.sql` (verificato da
+ * Specchia `supabase/migrations/20261117190000_community.sql` (verificato da
  * `supabase/tests/community.test.ts`). Dizionario: docs/data-dictionary/identity.md.
  */
 
