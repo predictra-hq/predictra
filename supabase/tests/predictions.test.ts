@@ -520,3 +520,76 @@ describe("previsioni prima del calcio d'inizio", () => {
     });
   });
 });
+
+describe("conservazione delle previsioni (ADR 0041)", () => {
+  it("cancella solo le previsioni superate e vecchie, mai l'ultima né quelle in una schedina", async () => {
+    let finished = 0;
+    let upcoming = 0;
+    let run = 0;
+    let mv = 0;
+    await asServiceRole(db, async (tx) => {
+      ({ upcoming } = await seedMatches(tx));
+      finished = await num(
+        tx,
+        "select id v from public.matches where status = 'FINISHED' order by kickoff_at limit 1",
+      );
+      mv = await register(tx, version("dixon_coles", "v1"));
+      run = await num(tx, "select public.start_prediction_run($1, $2, 'manual') v", [mv, COMMIT]);
+    });
+    // Righe con date di creazione nel passato: inserite dal proprietario del database.
+    const insert = (match: number, asOf: string, createdAt: string, probability = 0.45) =>
+      num(
+        db,
+        `insert into public.predictions (match_id, model_version_id, prediction_run_id, market, line,
+           selection, probability, confidence_score, features_hash, as_of, created_at)
+         values ($1, $2, $3, '1X2', null, 'HOME', $4, 0.4, $5, $6, $7) returning id v`,
+        [match, mv, run, probability, HASH, asOf, createdAt],
+      );
+    const finishedOld = await insert(finished, "2026-08-20T10:00:00Z", "2020-01-01T00:00:00Z");
+    const finishedLast = await insert(finished, "2026-08-30T10:00:00Z", "2020-01-02T00:00:00Z");
+    const upcomingOld = await insert(upcoming, "2026-11-10T10:00:00Z", "2020-01-01T00:00:00Z");
+    const upcomingInSlip = await insert(upcoming, "2026-11-11T10:00:00Z", "2020-01-01T00:00:00Z");
+    const upcomingRecent = await insert(upcoming, "2026-11-12T10:00:00Z", new Date().toISOString());
+    const upcomingLast = await insert(upcoming, "2026-11-13T10:00:00Z", "2020-01-03T00:00:00Z");
+
+    // Una schedina di Alice usa una previsione superata: deve restare.
+    await asUser(db, alice, async (tx) => {
+      const slip = await num(
+        tx,
+        "insert into public.user_bet_slips (name) values ('DEMO') returning id v",
+      );
+      await tx.query(
+        `insert into public.user_bet_slip_selections (slip_id, leg_no, match_id, market, selection, prediction_id)
+         values ($1, 1, $2, '1X2', 'HOME', $3)`,
+        [slip, upcoming, upcomingInSlip],
+      );
+    });
+
+    // Solo il motore può chiamarla.
+    await asUser(db, alice, async (tx) => {
+      expect(await attempt(tx, "select public.prune_predictions()")).toMatch(/permission denied/);
+    });
+
+    await asServiceRole(db, async (tx) => {
+      const r = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(r.r).toEqual({ predictions: 2, score_matrices: 0 });
+      const left = (
+        await tx.query<{ id: number }>("select id from public.predictions order by id")
+      ).rows.map((x) => Number(x.id));
+      expect(left).toEqual([finishedLast, upcomingInSlip, upcomingRecent, upcomingLast]);
+      expect(left).not.toContain(finishedOld);
+      expect(left).not.toContain(upcomingOld);
+      // Fuori dalla pulizia la tabella resta immutabile.
+      expect(await attempt(tx, "delete from public.predictions")).toMatch(/immutabile/);
+      // Seconda chiamata: niente da fare.
+      const again = await one<{ r: Record<string, number> }>(
+        tx,
+        "select public.prune_predictions(7) r",
+      );
+      expect(again.r).toEqual({ predictions: 0, score_matrices: 0 });
+    });
+  });
+});

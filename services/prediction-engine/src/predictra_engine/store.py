@@ -185,6 +185,9 @@ class SupabaseStore:
     def record_predictions(self, run_id: int, batch: dict[str, Any]) -> dict[str, int]:
         return self.rpc("record_predictions", {"p_run_id": run_id, "p_batch": batch})
 
+    def prune_predictions(self, keep_days: int) -> dict[str, int]:
+        return self.rpc("prune_predictions", {"p_keep_days": keep_days})
+
     def finish_run(self, run_id: int, status: str, matches: int, error: str | None) -> None:
         self.rpc(
             "finish_prediction_run",
