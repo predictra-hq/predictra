@@ -390,6 +390,7 @@ async function authFlows(browser, account, matchPath) {
       locale: "it-IT",
       viewport: { width: 375, height: 812 },
     });
+    await skipTour(context);
     const page = await context.newPage();
     await page.goto(`${appUrl}/login`);
     await page.fill("#email", account.email);
@@ -438,6 +439,8 @@ async function authFlows(browser, account, matchPath) {
       locale: "it-IT",
       viewport: { width: 375, height: 812 },
     });
+
+    await skipTour(context);
     const page = await context.newPage();
     // La pagina di conferma non consuma il link finché non si preme il bottone.
     await page.goto(confirm.toString());
@@ -548,6 +551,14 @@ async function authFlows(browser, account, matchPath) {
   }
 }
 
+/**
+ * Il tutorial si apre alla prima entrata e prende il focus: per le prove automatiche si
+ * segna come già visto (cookie `predictra-tour`, come dopo «Salta»).
+ */
+async function skipTour(context) {
+  await context.addCookies([{ name: "predictra-tour", value: "done", url: appUrl }]);
+}
+
 async function login(page, account) {
   await page.goto(`${appUrl}/login`);
   await page.fill("#email", account.email);
@@ -597,6 +608,7 @@ async function main() {
   let account = null;
   try {
     const context = await browser.newContext({ locale: "it-IT" });
+    await skipTour(context);
     const page = await context.newPage();
     watchRuntime(page);
     await audit(page, "/login");
