@@ -240,7 +240,11 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                   {g.rows.map((r) => (
                     <tr key={r.team_id} className="border-b border-border last:border-0">
                       <td className="px-3 py-2 text-muted">{r.position}</td>
-                      <td className="whitespace-nowrap px-3 py-2 font-medium">{r.team_name}</td>
+                      <td className="whitespace-nowrap px-3 py-2 font-medium">
+                        <Link href={`/teams/${r.team_id}`} className="hover:underline">
+                          {r.team_name}
+                        </Link>
+                      </td>
                       <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                       <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
                       <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TeamFormRow } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -149,7 +150,9 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                 <tr key={r.team_id} className="border-b border-border last:border-0">
                   <td className="px-3 py-2 text-muted">{i + 1}</td>
                   <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-2 font-medium">
-                    {r.team_name}
+                    <Link href={`/teams/${r.team_id}`} className="hover:underline">
+                      {r.team_name}
+                    </Link>
                   </td>
                   <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                   <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
