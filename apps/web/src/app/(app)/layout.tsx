@@ -4,8 +4,11 @@ import { AskLauncher } from "@/components/ask/ask-launcher";
 import { BottomNav } from "@/components/shell/bottom-nav";
 import { SectionNav } from "@/components/shell/section-nav";
 import { Sidebar } from "@/components/shell/sidebar";
+import { Tour } from "@/components/shell/tour";
 import { UpdateNotice } from "@/components/shell/update-notice";
 import { askProvider } from "@/lib/ask/provider";
+import { cookies } from "next/headers";
+import { isTourDone, TOUR_COOKIE } from "@/lib/tour";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 
@@ -44,6 +47,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </main>
       <BottomNav messages={m} />
       <AskLauncher enabled={askProvider() !== null} />
+      <Tour messages={m.tour} done={isTourDone((await cookies()).get(TOUR_COOKIE)?.value)} />
       <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />
     </div>
   );
