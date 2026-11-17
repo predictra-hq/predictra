@@ -18,7 +18,7 @@
 - **`invitations`:** gli inviti scaduti (`EXPIRED`, o `PENDING` oltre la scadenza) e quelli `REVOKED` si conservano **12 mesi**, poi si cancellano. Quelli `ACCEPTED` restano finché esiste l'account: sono la prova di chi ha invitato chi.
 - **Contatori del rate limit:** invariati (un giorno).
 - **Code dell'agente:** `agent_jobs` conclusi (`done`) e `agent_runs` si conservano **90 giorni**; i job `dead` restano finché un amministratore non li riprende o li archivia. Le notifiche lette si conservano **90 giorni**.
-- **Dati calcistici, quote, previsioni e proposte:** nessuna cancellazione. Servono a backtest, riproducibilità ([ADR 0020](0020-versioning-previsioni.md)) e CLV; le proposte sono immutabili per contratto.
+- **Dati calcistici, quote, previsioni e proposte:** nessuna cancellazione, salvo le previsioni superate (aggiornamento del 17/11/2026, sotto). Servono a backtest, riproducibilità ([ADR 0020](0020-versioning-previsioni.md)) e CLV; le proposte sono immutabili per contratto.
 - **Dati personali (bankroll, movimenti, giocate, limiti, schedine, preferenze):** restano finché esiste l'account. Li cancella solo il proprietario dei dati dall'app.
 - **Ask PREDICTRA:** nessun testo salvato ([ADR 0042](0042-ask-predictra.md)); i contatori giornalieri della quota si conservano **30 giorni**.
 
@@ -41,3 +41,17 @@ Un job giornaliero dell'agente (`maintenance.retention`) che chiama una funzione
 1. Confermare le durate: 12 mesi per gli inviti non accettati, 90 giorni per code e notifiche.
 2. Audit illimitato oppure con un limite (per esempio 24 mesi): un limite richiede di allentare il trigger append-only per il solo job di pulizia.
 3. Verificare con un test PGlite, e poi su DEV con un account di prova, che la cancellazione di un account riesca: quali tabelle si cancellano a cascata (`ON DELETE`) e se il trigger append-only di `audit_logs` lascia passare l'azzeramento di `actor_id`. Solo dopo si scrive la procedura della sezione 2.
+
+## Aggiornamento del 17/11/2026: previsioni superate (deciso dal proprietario)
+
+**Stato di questa parte: accettata.**
+
+Misura del 17/11/2026: database a 91 MB, di cui 49 MB di previsioni, che crescevano di circa 12.000 righe (5 MB) al giorno, perché il motore riscrive le previsioni delle partite in programma due volte al giorno. Con il limite di 500 MB del piano Free il database si sarebbe riempito verso febbraio 2027.
+
+Decisione: a fine giro il motore chiama `prune_predictions` (migrazione `20261117120000`), che cancella le previsioni e le matrici dei risultati esatti **più vecchie di 7 giorni e superate**. Restano sempre:
+
+- l'ultima previsione di ogni partita, versione del modello, mercato, linea ed esito: per una partita giocata è quella prima del calcio d'inizio, usata da Certezze, Affidabilità, verifica del peso del mercato e controlli del modello;
+- le previsioni degli ultimi 7 giorni;
+- quelle usate da una proposta del Bet Builder o da una schedina di un utente.
+
+La riproducibilità resta: una versione del modello è immutabile e i dati di addestramento sono conservati, quindi ogni previsione cancellata si può ricalcolare. Le cancellate restano anche nei backup per 12 mesi (ADR 0040). Fuori da questa funzione le previsioni restano immutabili (test in `supabase/tests/predictions.test.ts`).

@@ -101,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
     if summary.retired:
         print(f"  versioni superate ritirate: {summary.retired}")
+    if summary.pruned:
+        print(f"  previsioni superate cancellate: {summary.pruned} (ADR 0041)")
     print("  in gara: poisson, dixon_coles · interni: baseline (riferimento), elo (secondo parere)")
     if summary.refreshed_backtests:
         print("  confronto settimanale: backtest rifatti per tutti i modelli con i dati aggiornati")

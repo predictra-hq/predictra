@@ -42,6 +42,7 @@ class Store(Protocol):
     def start_run(self, model_version_id: int, code_commit: str, triggered_by: str) -> int: ...
     def record_predictions(self, run_id: int, batch: dict[str, Any]) -> dict[str, int]: ...
     def finish_run(self, run_id: int, status: str, matches: int, error: str | None) -> None: ...
+    def prune_predictions(self, keep_days: int) -> dict[str, int]: ...
 
 
 @dataclass
@@ -66,6 +67,7 @@ class RunSummary:
     model_code: str = ""
     refreshed_backtests: bool = False
     retired: int = 0
+    pruned: int = 0
     selection: Decision | None = None
     active_before: int | None = None
 
@@ -359,4 +361,23 @@ def run(
             s.error = f"{type(exc).__name__}: {exc}"[:500]
             with contextlib.suppress(Exception):
                 store.finish_run(run_id, "FAILED", scored, s.error)
+    if not dry_run and not summary.failed:
+        summary.pruned = prune(store)
     return summary
+
+
+# Conservazione (ADR 0041, 17/11/2026): previsioni superate da più di una settimana.
+PRUNE_KEEP_DAYS = 7
+PRUNE_MAX_ROUNDS = 50
+
+
+def prune(store: Store) -> int:
+    """Cancella a blocchi le previsioni superate; un errore non fa fallire il giro."""
+    total = 0
+    with contextlib.suppress(Exception):
+        for _ in range(PRUNE_MAX_ROUNDS):
+            done = store.prune_predictions(PRUNE_KEEP_DAYS)
+            total += int(done.get("predictions", 0))
+            if not done.get("predictions") and not done.get("score_matrices"):
+                break
+    return total
