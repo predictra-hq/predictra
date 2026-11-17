@@ -60,14 +60,19 @@ export async function ask(_prev: AskState | null, formData: FormData): Promise<A
   try {
     const result = await askQuestion(provider, question);
     const rejected = result.answer === null && result.rejectedNumbers.length > 0;
+    const hasData = result.sources.length > 0;
     await supabase.rpc("ask_record", { p_tokens: result.tokens, p_rejected: rejected });
     return {
       question,
       answer: result.answer,
       notice: rejected
-        ? fillTemplate(m.rejected, { numbers: result.rejectedNumbers.join(", ") })
+        ? fillTemplate(hasData ? m.rejected : m.rejectedNoData, {
+            numbers: result.rejectedNumbers.join(", "),
+          })
         : result.answer === null
-          ? m.noAnswer
+          ? hasData
+            ? m.noAnswer
+            : m.noAnswerNoData
           : null,
       tone: rejected ? "warning" : "neutral",
       sources: result.sources,

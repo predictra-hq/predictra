@@ -163,6 +163,15 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "guida_app",
+      description:
+        "Guida all'uso di PREDICTRA: le sezioni del menu, le pagine e a cosa servono. Per domande su come usare l'app o dove trovare qualcosa.",
+      parameters: { type: "object", properties: {}, additionalProperties: false },
+    },
+  },
 ];
 
 /**
@@ -513,6 +522,17 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
       };
     }
 
+    case "guida_app":
+      return {
+        tool: name,
+        title: t.guide,
+        source: t.guideSource,
+        rows: m.ask.guide.map((g) => ({
+          [t.guideSection]: g.section,
+          [t.guidePage]: g.page,
+          [t.guideWhat]: g.what,
+        })),
+      };
     default:
       return empty(t.unknown);
   }

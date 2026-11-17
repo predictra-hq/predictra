@@ -1395,8 +1395,11 @@ export const it = {
     unavailable: "Il fornitore non risponde. Riprova più tardi.",
     invalid: "Scrivi una domanda tra 3 e 500 caratteri.",
     noAnswer: "Non sono riuscito a formulare una risposta. Guarda i dati trovati qui sotto.",
+    noAnswerNoData: "Non sono riuscito a formulare una risposta. Prova a riformulare la domanda.",
     rejected:
       "La risposta conteneva numeri che non compaiono nei dati ({numbers}), quindi è stata scartata. Ecco i dati trovati:",
+    rejectedNoData:
+      "La risposta conteneva numeri che non compaiono nei dati ({numbers}), quindi è stata scartata. Prova a riformulare la domanda.",
     sources: "Dati usati",
     noSources: "Nessun dato consultato per questa domanda.",
     history: "Domande di questa sessione",
@@ -1453,7 +1456,75 @@ export const it = {
       category: "Categoria",
       legs: "Selezioni",
       expectedValue: "Valore atteso",
+      guide: "Guida di PREDICTRA",
+      guideSource: "pagine e menu di PREDICTRA",
+      guideSection: "Sezione del menu",
+      guidePage: "Pagina",
+      guideWhat: "A cosa serve",
     },
+    /** Guida all'uso per lo strumento guida_app: niente numeri, solo pagine e funzioni. */
+    guide: [
+      {
+        section: "Home",
+        page: "Home",
+        what: "Il riassunto della giornata: le prossime partite, le giocate più probabili, gli avvisi sulle tue giocate e come sta andando il bankroll.",
+      },
+      {
+        section: "Home",
+        page: "Chiedi a PREDICTRA",
+        what: "Domande a parole su partite, previsioni, quote, statistiche e classifiche. Risponde solo con i dati già presenti in PREDICTRA.",
+      },
+      {
+        section: "Pronostici",
+        page: "Certezze",
+        what: "Le giocate singole più probabili secondo il modello, con la quota migliore trovata. Utile per partire da esiti molto probabili.",
+      },
+      {
+        section: "Pronostici",
+        page: "Schedine",
+        what: "Le schedine pronte del Bet Builder, divise per livello di rischio, con probabilità, quota e valore atteso. Puoi anche comporre una schedina tua.",
+      },
+      {
+        section: "Pronostici",
+        page: "Affidabilità",
+        what: "Quanto ci ha preso il modello sulle partite già giocate: serve a capire quanto fidarsi delle previsioni.",
+      },
+      {
+        section: "Calcio",
+        page: "Partite",
+        what: "Il calendario con risultati, previsioni del modello e quote. Aprendo una partita vedi probabilità, mercati e quote dei bookmaker.",
+      },
+      {
+        section: "Calcio",
+        page: "Campionati",
+        what: "Classifiche e andamento dei campionati seguiti.",
+      },
+      {
+        section: "Calcio",
+        page: "Squadre",
+        what: "La scheda di ogni squadra: forma recente, gol fatti e subiti, partite in casa e in trasferta.",
+      },
+      {
+        section: "Soldi",
+        page: "Bankroll",
+        what: "Il tuo budget per le giocate, collegato al bookmaker dove giochi: le quote mostrate privilegiano quel sito. Lo vedi solo tu.",
+      },
+      {
+        section: "Soldi",
+        page: "Giocate fatte",
+        what: "Le giocate registrate con «L'ho giocata»: si chiudono da sole a partita finita e mostrano vincite, perdite e come stai andando. Le vedi solo tu.",
+      },
+      {
+        section: "Profilo",
+        page: "Profilo",
+        what: "Account, sicurezza (password e codice di verifica 2FA) e preferenze (nome, tema chiaro o scuro, formato delle quote, soglia degli avvisi), più il pulsante Esci.",
+      },
+      {
+        section: "Consigli",
+        page: "Come iniziare",
+        what: "Imposta il bankroll e il tuo bookmaker, guarda Certezze o Schedine, apri la partita per i dettagli e, se giochi, registra la giocata con «L'ho giocata» per seguirla in Giocate fatte. PREDICTRA dà stime, non certezze, e non piazza scommesse.",
+      },
+    ],
   },
   roles: {
     SUPER_ADMIN: "Super Admin",
