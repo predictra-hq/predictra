@@ -34,6 +34,74 @@ export const it = {
     notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
     backToDashboard: "Torna alla dashboard",
   },
+  landing: {
+    login: "Accedi",
+    heroTitle: "Il calcio letto con i numeri",
+    heroText:
+      "PREDICTRA raccoglie partite, statistiche e quote da fonti con licenza e le passa a modelli matematici. Tu vedi le probabilità, le giocate più solide e come vanno le tue.",
+    inviteOnly: "Accesso solo su invito: se l'hai ricevuto, usa il link che ti è stato inviato.",
+    videoLabel: "Presentazione animata di PREDICTRA",
+    play: "Riproduci",
+    pause: "Pausa",
+    sceneOf: "Scena {n} di {total}",
+    demo: "DEMO",
+    demoNote: "Dati di esempio, non reali.",
+    scenes: {
+      matches: {
+        title: "Le partite",
+        text: "Calendario, risultati e quote, aggiornati in automatico.",
+      },
+      model: {
+        title: "Il modello calcola",
+        text: "Le probabilità vengono da modelli statistici, mai da un'intelligenza artificiale che indovina.",
+      },
+      certainties: {
+        title: "Le Certezze",
+        text: "Le giocate che i modelli danno più probabili, con la percentuale accanto.",
+      },
+      bankroll: {
+        title: "Il tuo bankroll",
+        text: "Registri le tue giocate e vedi l'andamento. Questi dati li vedi solo tu.",
+      },
+    },
+    demoMatches: ["Squadra A – Squadra B", "Squadra C – Squadra D", "Squadra E – Squadra F"],
+    demoBet: "Almeno un gol nella partita",
+    demoBalance: "Andamento del bankroll",
+    featuresTitle: "Cosa trovi dentro",
+    features: [
+      {
+        title: "Partite e campionati",
+        text: "Classifiche, forma delle squadre, statistiche di stagione e movimento delle quote.",
+      },
+      {
+        title: "Previsioni",
+        text: "Probabilità di 1X2, gol, risultati esatti: ogni previsione è versionata e riproducibile.",
+      },
+      {
+        title: "Certezze e Schedine",
+        text: "Le giocate più solide e combinazioni già calcolate, con il loro valore atteso.",
+      },
+      {
+        title: "Affidabilità",
+        text: "Quante giocate date per probabili sono uscite davvero: i numeri del modello, senza filtri.",
+      },
+      {
+        title: "Bankroll e giocate",
+        text: "Un registro privato delle tue giocate, con limiti di spesa che scegli tu.",
+      },
+      {
+        title: "Chiedi a PREDICTRA",
+        text: "Domande a parole sui dati della piattaforma, da qualunque pagina.",
+      },
+    ],
+    rulesTitle: "Cosa PREDICTRA non fa",
+    rules: [
+      "Non piazza scommesse e non ti chiede di farlo.",
+      "Non inventa numeri: ogni dato viene da una fonte con licenza.",
+      "Non garantisce vincite: le previsioni sono stime con la loro incertezza.",
+    ],
+    about: "Cos'è PREDICTRA",
+  },
   auth: {
     loginTitle: "Accesso riservato",
     loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
@@ -119,8 +187,14 @@ export const it = {
     agent: "Agente",
     quickNav: "Pagine principali",
     refresh: "Aggiorna i dati",
+    refreshed: "Dati aggiornati",
     openMenu: "Apri menu",
     closeMenu: "Chiudi menu",
+  },
+  offline: {
+    title: "Sei offline",
+    text: "PREDICTRA ha bisogno della connessione per mostrare dati aggiornati. Controlla la rete e riprova.",
+    retry: "Riprova",
   },
   profile: {
     title: "Profilo",
@@ -129,6 +203,45 @@ export const it = {
     preferencesHint: "Nome, tema chiaro o scuro, formato quote",
     mfaOn: "2FA attiva",
     mfaOff: "2FA da attivare",
+    restartTour: "Rivedi il tutorial",
+  },
+  tour: {
+    stepOf: "Passo {n} di {total}",
+    next: "Avanti",
+    back: "Indietro",
+    skip: "Salta",
+    done: "Ho capito",
+    steps: {
+      welcome: {
+        title: "Benvenuto in PREDICTRA",
+        text: "In un minuto ti mostro dove trovare le cose. Puoi saltare quando vuoi e rivedere il tutorial dal Profilo.",
+      },
+      home: {
+        title: "Home",
+        text: "Il riassunto della giornata: partite da non perdere, Certezze in arrivo e le tue giocate aperte.",
+      },
+      bets: {
+        title: "Pronostici",
+        text: "Certezze sono le giocate che i modelli danno più probabili; Schedine propone combinazioni già calcolate. Le probabilità vengono sempre da modelli matematici.",
+      },
+      football: {
+        title: "Calcio",
+        text: "Partite, campionati e squadre: classifiche, statistiche, quote e previsioni di ogni partita.",
+      },
+      money: {
+        title: "Soldi",
+        text: "Bankroll e giocate fatte: registri tu le giocate e vedi come vanno. PREDICTRA non piazza scommesse. Questi dati li vedi solo tu.",
+      },
+      ask: {
+        title: "Chiedi a PREDICTRA",
+        text: "Fai una domanda a parole sui dati di PREDICTRA, da qualunque pagina.",
+      },
+      profile: {
+        title: "Profilo",
+        text:
+          "Tema chiaro o scuro, sicurezza dell’" + "account e questo tutorial, se vuoi rivederlo.",
+      },
+    },
   },
   dashboard: {
     title: "Home",
@@ -242,6 +355,29 @@ export const it = {
     passwordSection: "Password",
     passwordUpdated: "Password aggiornata.",
   },
+  comments: {
+    title: "Commenti",
+    rules:
+      "Visibili a tutti gli iscritti maggiorenni, con il tuo nome visualizzato (mai l’" +
+      "email). Niente insulti, niente dati personali. Gli amministratori possono cancellare i commenti.",
+    label: "Il tuo commento",
+    placeholder: "Scrivi cosa ne pensi della partita…",
+    publish: "Pubblica",
+    published: "Commento pubblicato.",
+    invalid: "Scrivi un commento tra 1 e 500 caratteri.",
+    rateLimited: "Hai scritto molti commenti di seguito. Riprova tra qualche minuto.",
+    adultsOnly: "I commenti sono riservati a chi ha dichiarato almeno 18 anni.",
+    empty: "Ancora nessun commento: scrivi il primo.",
+    delete: "Elimina",
+    deleteConfirm: "Eliminare il tuo commento?",
+    moderate: "Rimuovi",
+    moderateConfirm: "Rimuovere questo commento? Resta traccia nel registro.",
+    locked:
+      "I commenti sono riservati agli iscritti maggiorenni. Indica la tua data di nascita nelle Preferenze per sbloccarli.",
+    underAge: "I commenti sono riservati a chi ha almeno 18 anni.",
+    unlock: "Indica la data di nascita",
+    birthdaysToday: "Oggi compie gli anni:",
+  },
   preferences: {
     title: "Preferenze",
     displayName: "Nome visualizzato",
@@ -254,6 +390,38 @@ export const it = {
     theme: "Tema",
     themeHint: "Vale per questo browser e si applica subito.",
     themes: { dark: "Scuro", light: "Chiaro" },
+    birthday: "Data di nascita",
+    birthdayHint:
+      "La vedi solo tu: nemmeno gli amministratori. Serve a sbloccare i commenti (almeno 18 anni). L’" +
+      "età è dichiarata da te, non verificata.",
+    birthdayShow: "Mostra agli altri iscritti che oggi è il mio compleanno (senza data né età)",
+    birthdaySaved: "Data di nascita salvata.",
+    birthdayInvalid: "Indica una data valida, non nel futuro.",
+    birthdayRemove: "Cancella la data",
+    birthdayRemoved: "Data di nascita cancellata.",
+    nameStyle: "Stile del nome",
+    nameStyleHint: "Come gli altri vedono il tuo nome nei commenti e nei compleanni.",
+    nameColor: "Colore",
+    nameFont: "Scritta",
+    nameDefault: "Normale",
+    nameColors: {
+      green: "Verde",
+      teal: "Verde acqua",
+      blue: "Blu",
+      violet: "Viola",
+      pink: "Rosa",
+      orange: "Arancio",
+      amber: "Ambra",
+      red: "Rosso",
+    },
+    nameStyles: {
+      bold: "Grassetto",
+      italic: "Corsivo",
+      mono: "Macchina da scrivere",
+      caps: "Maiuscolo",
+    },
+    namePreview: "Anteprima",
+    nameStyleSaved: "Stile del nome salvato.",
     alerts: "Avvisi in Home",
     alertsHint:
       "In Home vedi le giocate che iniziano a breve sopra questa probabilità. Vale per questo browser.",
@@ -1141,6 +1309,32 @@ export const it = {
     expected: "Erano date in media al {predicted} (la tacca sulla barra).",
     empty: "Ancora nessuna partita giocata da controllare.",
     note: "Se le uscite sono vicine alla percentuale con cui erano date, le probabilità sono affidabili. Con poche giocate il caso pesa molto: i risultati passati non garantiscono quelli futuri.",
+    historyTitle: "Il modello su tutto lo storico",
+    historyIntro:
+      "PREDICTRA ha rigiocato {matches} partite dal {from} al {to}: ogni settimana il modello ha previsto le partite vedendo solo quelle giocate prima, poi le previsioni sono state confrontate con i risultati veri.",
+    historyMatches: "Partite rigiocate",
+    historyFavourite: "Vince la favorita",
+    historyFavouriteHint: "data in media al {predicted}",
+    historyPicks: "Giocate dal 70% uscite",
+    historyPicksHint: "{wins} su {count}, date al {predicted}",
+    historyExact: "Risultato esatto",
+    historyExactHint: "il più probabile, dato al {predicted}",
+    calibrationTitle: "Le probabilità sono giuste?",
+    calibrationIntro:
+      "Per ogni fascia di probabilità: quante volte l'esito è uscito davvero (barra) rispetto a quanto era dato (tacca). Più barra e tacca coincidono, più ci si può fidare dei numeri.",
+    band: "dal {from} al {to}",
+    bandLast: "dal {from} in su",
+    bySeason: "Per stagione",
+    weeklyTitle: "Settimana per settimana",
+    weeklyIntro: "Giocate dal 70% uscite nelle ultime settimane dello storico.",
+    weeklyNote:
+      "Barra verde: uscite più di quanto previsto; gialla: meno. La linea è la probabilità data.",
+    week: "Settimana del {week}: {wins} uscite su {count}",
+    historyNote:
+      "Verifica del solo modello: per le stagioni passate non ci sono quote raccolte. Aggiornata ogni settimana, l'ultima il {date}.",
+    liveTitle: "Sulle partite di queste settimane",
+    liveIntro:
+      "Le giocate davvero proposte da PREDICTRA prima delle partite, con modello e quote insieme.",
   },
   bankroll: {
     title: "Bankroll",
@@ -1454,6 +1648,8 @@ export const it = {
     sources: "Dati usati",
     noSources: "Nessun dato consultato per questa domanda.",
     history: "Domande di questa sessione",
+    openFull: "Apri a pagina intera",
+    close: "Chiudi",
     you: "Tu",
     assistant: "PREDICTRA",
     privacy:

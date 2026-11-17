@@ -5,12 +5,18 @@ import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
-import { parseTheme, THEME_COOKIE, THEMES } from "@/lib/theme";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
+import { ThemePicker } from "@/components/shell/theme-picker";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { ALERT_COOKIE, ALERT_THRESHOLDS, parseAlertThreshold } from "@/lib/alerts";
 import { fillTemplate } from "@/lib/odds/format";
-import { savePreferences, setAlertThreshold, setTheme } from "./actions";
+import { NAME_COLORS, NAME_STYLES } from "@predictra/shared-types";
+import { StyledName } from "@/components/community/styled-name";
+import { getOwnCommunityProfile } from "@/lib/community/queries";
+import { todayInRome } from "@/lib/community/community";
+import { removeBirthday, saveBirthday, saveNameStyle } from "./actions";
+import { savePreferences, setAlertThreshold } from "./actions";
 
 export const metadata: Metadata = { title: "Preferenze" };
 
@@ -26,6 +32,8 @@ export default async function PreferencesPage() {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   const alertThreshold = parseAlertThreshold((await cookies()).get(ALERT_COOKIE)?.value);
   const timezones = Intl.supportedValuesOf("timeZone");
+  const community = await getOwnCommunityProfile(user.id);
+  const p = m.preferences;
 
   return (
     <>
@@ -34,25 +42,7 @@ export default async function PreferencesPage() {
       <Card className="mb-4 max-w-lg">
         <CardTitle>{m.preferences.theme}</CardTitle>
         <p className="mb-3 mt-1 text-sm text-muted">{m.preferences.themeHint}</p>
-        <form action={setTheme} className="flex flex-wrap gap-2">
-          {THEMES.map((t) => (
-            <button
-              key={t}
-              type="submit"
-              name="theme"
-              value={t}
-              aria-pressed={theme === t}
-              className={cn(
-                "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",
-                theme === t
-                  ? "border-positive/40 bg-positive-soft text-positive-strong"
-                  : "border-border text-muted hover:text-fg",
-              )}
-            >
-              {m.preferences.themes[t]}
-            </button>
-          ))}
-        </form>
+        <ThemePicker initial={theme} labels={m.preferences.themes} />
       </Card>
       <Card className="mb-4 max-w-lg">
         <CardTitle>{m.preferences.alerts}</CardTitle>
@@ -107,6 +97,95 @@ export default async function PreferencesPage() {
               <option value="decimal">{m.preferences.decimal}</option>
             </Select>
           </Field>
+          <SubmitButton>{m.common.save}</SubmitButton>
+        </ActionForm>
+      </Card>
+
+      <Card id="birthday" className="mt-4 max-w-lg scroll-mt-24">
+        <CardTitle>{p.birthday}</CardTitle>
+        <p className="mb-3 mt-1 text-sm text-muted">{p.birthdayHint}</p>
+        <ActionForm action={saveBirthday}>
+          <Field label={p.birthday} htmlFor="birthDate">
+            <Input
+              id="birthDate"
+              name="birthDate"
+              type="date"
+              min="1900-01-01"
+              max={todayInRome()}
+              defaultValue={community.birthDate ?? ""}
+              required
+            />
+          </Field>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="showBirthday"
+              defaultChecked={community.showBirthday}
+              className="mt-0.5 size-4"
+            />
+            {p.birthdayShow}
+          </label>
+          <SubmitButton>{m.common.save}</SubmitButton>
+        </ActionForm>
+        {community.birthDate ? (
+          <ActionForm action={removeBirthday} className="mt-2">
+            <SubmitButton variant="ghost">{p.birthdayRemove}</SubmitButton>
+          </ActionForm>
+        ) : null}
+      </Card>
+
+      <Card className="mt-4 max-w-lg">
+        <CardTitle>{p.nameStyle}</CardTitle>
+        <p className="mb-3 mt-1 text-sm text-muted">{p.nameStyleHint}</p>
+        <p className="mb-4 text-sm">
+          <span className="text-muted">{p.namePreview}: </span>
+          <StyledName
+            name={user.displayName ?? user.email.split("@")[0]!}
+            color={community.nameColor}
+            style={community.nameStyle}
+          />
+        </p>
+        <ActionForm action={saveNameStyle}>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">{p.nameColor}</legend>
+            <div className="flex flex-wrap gap-2">
+              {[null, ...NAME_COLORS].map((c) => (
+                <label
+                  key={c ?? "default"}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm has-[:checked]:border-positive has-[:checked]:bg-positive-soft"
+                >
+                  <input
+                    type="radio"
+                    name="nameColor"
+                    value={c ?? "default"}
+                    defaultChecked={community.nameColor === c}
+                    className="sr-only"
+                  />
+                  <StyledName name={c ? p.nameColors[c] : p.nameDefault} color={c} style={null} />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium">{p.nameFont}</legend>
+            <div className="flex flex-wrap gap-2">
+              {[null, ...NAME_STYLES].map((s) => (
+                <label
+                  key={s ?? "default"}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm has-[:checked]:border-positive has-[:checked]:bg-positive-soft"
+                >
+                  <input
+                    type="radio"
+                    name="nameStyle"
+                    value={s ?? "default"}
+                    defaultChecked={community.nameStyle === s}
+                    className="sr-only"
+                  />
+                  <StyledName name={s ? p.nameStyles[s] : p.nameDefault} color={null} style={s} />
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <SubmitButton>{m.common.save}</SubmitButton>
         </ActionForm>
       </Card>

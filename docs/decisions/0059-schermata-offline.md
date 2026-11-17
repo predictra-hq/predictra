@@ -1,4 +1,4 @@
-# ADR 0057 — Schermata «Sei offline» con un service worker minimo
+# ADR 0059 — Schermata «Sei offline» con un service worker minimo
 
 - **Stato:** proposto (17/11/2026, richiesta di `Alfry1299`); accettato con il merge della PR.
 - **Milestone:** M8 (corsia B)

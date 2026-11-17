@@ -105,6 +105,26 @@ def main(argv: list[str] | None = None) -> int:
         if m.error:
             line += f" errore={m.error}"
         print(line)
+        r = m.reliability
+        if r and r.get("matches"):
+
+            def pct(t: dict) -> str:
+                return (
+                    f"{t['wins']}/{t['count']} ({t['wins'] / t['count']:.1%})"
+                    if t["count"]
+                    else "–"
+                )
+
+            print(
+                f"    verifica storica su {r['matches']} partite: favorita {pct(r['favourite'])}"
+                f" · risultato esatto {pct(r['exact_score'])}"
+                f" · giocate dal 70% {pct(r['picks'])}"
+            )
+            for t in r["markets"]:
+                print(
+                    f"      {t['market']:<16} {pct(t)} "
+                    f"(date in media al {t['predicted'] / t['count']:.1%})"
+                )
     print(f"  codice dei modelli: {summary.model_code[:12]} (ADR 0023)")
     if summary.retired:
         print(f"  versioni superate ritirate: {summary.retired}")

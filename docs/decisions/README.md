@@ -49,5 +49,6 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0054](0054-notifiche-sul-telefono.md)              | Notifiche sul telefono (Web Push)                                        | Proposta  |
 | [0055](0055-una-sola-raccolta-prod-copia-su-dev.md) | Una sola raccolta dati: PROD raccoglie, DEV riceve una copia             | Accettata |
 | [0056](0056-taratura-automatica-del-modello.md)     | Taratura automatica del modello sui risultati reali                      | Accettata |
-| [0057](0057-schermata-offline.md)                   | Schermata «Sei offline» con un service worker minimo                     | Proposta  |
+| [0057](0057-verifica-storica-su-tutti-i-mercati.md) | Verifica storica del modello su tutti i mercati                          | Accettata |
 | [0058](0058-comunita-commenti-e-maggiore-eta.md)    | Comunità: commenti alle partite, maggiore età dichiarata, stile del nome | Proposta  |
+| [0059](0059-schermata-offline.md)                   | Schermata «Sei offline» con un service worker minimo                     | Proposta  |

@@ -30,6 +30,7 @@ from .data import Fixture, MatchResult, parse_ts, sha256_json, training_data_has
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
 from .models.blend import EloBlendModel
+from .reliability import Reliability
 from .selection import CONTENDERS, Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
@@ -62,6 +63,7 @@ class ModelSummary:
     model_version_id: int | None = None
     backtest: BacktestResult | None = None
     backtest_recorded: bool = False
+    reliability: dict[str, Any] | None = None
     predictions: int = 0
     matches: int = 0
     error: str | None = None
@@ -265,6 +267,11 @@ def run(
         "created_at" in r and as_of - parse_ts(str(r["created_at"])) > BACKTEST_MAX_AGE
         for r in recorded.values()
     )
+    # Backtest registrati prima della verifica storica (ADR 0057): si rifanno subito, così
+    # la pagina Affidabilità ha i numeri senza aspettare il confronto settimanale.
+    stale = stale or any(
+        "reliability_matches" in r and r["reliability_matches"] is None for r in recorded.values()
+    )
     if stale or (needs_backtest and recorded):
         needs_backtest = [m.key for m in contenders]
     summary.refreshed_backtests = stale
@@ -272,7 +279,11 @@ def run(
     # Backtest delle versioni nuove (o di tutte, nel confronto settimanale), tutti sulle
     # stesse partite della baseline.
     if needs_backtest:
-        backtests = backtest_models(models, results)
+        # Verifica storica su tutti i mercati principali per i modelli in gara (ADR 0057).
+        checks = {key: Reliability() for key in needs_backtest}
+        backtests = backtest_models(
+            models, results, observers={k: r.add for k, r in checks.items()}
+        )
         base = backtests.get("baseline")
         for key, bt in backtests.items():
             if key not in CONTENDERS:
@@ -281,6 +292,7 @@ def run(
             bt = backtests.get(key)
             s = summaries[key]
             s.backtest = bt
+            s.reliability = checks[key].to_json()
             if bt is None:
                 continue
             ece[key] = bt.ece
@@ -298,6 +310,7 @@ def run(
                         "baseline_brier": round(base.brier, 6) if base else None,
                         "baseline_log_loss": round(base.log_loss, 6) if base else None,
                         "calibration": bt.calibration,
+                        "reliability": checks[key].to_json(),
                         "code_commit": code_commit,
                     }
                 )
@@ -483,7 +496,12 @@ def _autotune_step(
         return
     candidate = with_settings(target, tuning.best.settings)
     baseline = next((m for m in models if m.key == "baseline"), None)
-    full = backtest_models([m for m in (baseline, candidate) if m is not None], results)
+    check = Reliability()
+    full = backtest_models(
+        [m for m in (baseline, candidate) if m is not None],
+        results,
+        observers={candidate.key: check.add},
+    )
     bt = full.get(candidate.key)
     # Sull'intero storico la variante non deve essere peggiore delle impostazioni attuali.
     if bt is None or bt.log_loss > current_bt.log_loss:
@@ -495,7 +513,7 @@ def _autotune_step(
     contenders[contenders.index(target)] = candidate
     fitted[candidate.key] = candidate.fit(results, as_of)
     labels[candidate.key] = version_label(candidate, code_id)
-    s = ModelSummary(candidate.key, labels[candidate.key], backtest=bt)
+    s = ModelSummary(candidate.key, labels[candidate.key], backtest=bt, reliability=check.to_json())
     summaries[candidate.key] = s
     summary.models = list(summaries.values())
     ece[candidate.key] = bt.ece
@@ -538,6 +556,7 @@ def _autotune_step(
             "baseline_brier": round(base.brier, 6) if base else None,
             "baseline_log_loss": round(base.log_loss, 6) if base else None,
             "calibration": bt.calibration,
+            "reliability": check.to_json(),
             "code_commit": code_commit,
         }
     )

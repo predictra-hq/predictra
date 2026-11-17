@@ -4,9 +4,11 @@ import { ChevronRight, LogOut } from "lucide-react";
 import { hasPermission, highestRole } from "@predictra/shared-types";
 import { ADMIN_NAV, type NavItem } from "@/components/shell/nav-config";
 import { NAV_ICONS } from "@/components/shell/nav-icons";
+import { TourRestartButton } from "@/components/shell/tour";
 import { Badge } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export const metadata: Metadata = { title: "Profilo" };
 
@@ -15,16 +17,6 @@ interface Row {
   href: string;
   hint?: string;
   badge?: { text: string; tone: "positive" | "warning" };
-}
-
-/** Iniziali per il cerchio del profilo: dal nome, altrimenti dall'email. */
-function initials(label: string): string {
-  const words = label
-    .split("@")[0]!
-    .split(/[\s._-]+/)
-    .filter(Boolean);
-  const letters = words.length > 1 ? words[0]![0]! + words[1]![0]! : (words[0] ?? "?").slice(0, 2);
-  return letters.toUpperCase();
 }
 
 /** Gruppo di voci in stile app: una card, una riga per voce, tutta la riga si tocca. */
@@ -82,12 +74,7 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-xl">
       <h1 className="sr-only">{p.title}</h1>
       <div className="flex items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-4">
-        <span
-          aria-hidden="true"
-          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-positive-soft text-lg font-semibold text-positive-strong"
-        >
-          {initials(name)}
-        </span>
+        <UserAvatar userId={user.id} className="size-14" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-semibold leading-tight">{name}</p>
           {user.displayName ? <p className="truncate text-sm text-muted">{user.email}</p> : null}
@@ -115,6 +102,8 @@ export default async function ProfilePage() {
           rows={admin.map((item) => ({ key: item.key, href: item.href }))}
         />
       ) : null}
+
+      <TourRestartButton label={p.restartTour} />
 
       <form action="/auth/signout" method="post" className="mt-6">
         <button

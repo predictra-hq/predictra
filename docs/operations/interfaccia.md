@@ -1,4 +1,4 @@
-# Interfaccia: navigazione, app sul telefono, tema e fluidità (M8, corsia B)
+| in `dev` | #121 || in `dev` | #120 || in `dev` | #119 || in `dev` | #118 || in `dev` | #117 || in `dev` | #116 || in `dev` | #115 || in `dev` | #114 |# Interfaccia: navigazione, app sul telefono, tema e fluidità (M8, corsia B)
 
 Cosa c'è nell'interfaccia oltre alle singole pagine, dove sta nel codice e cosa resta da verificare. **Aggiornato:** 16/11/2026 (pagina Profilo e rifinitura da telefono).
 
@@ -31,7 +31,7 @@ Le scelte dell'utente descritte qui restano in cookie del browser, tranne seguit
 
 ## App sul telefono
 
-PREDICTRA si può aggiungere alla schermata Home e aprire a schermo intero. Non c'è un'app negli store: **funziona solo online** e non riceve notifiche. Un service worker minimo mostra la schermata «Sei offline» quando manca la rete, senza conservare dati ([ADR 0057](../decisions/0057-schermata-offline.md)).
+PREDICTRA si può aggiungere alla schermata Home e aprire a schermo intero. Non c'è un'app negli store: **funziona solo online** e non riceve notifiche. Un service worker minimo mostra la schermata «Sei offline» quando manca la rete, senza conservare dati ([ADR 0059](../decisions/0059-schermata-offline.md)).
 
 - `app/manifest.ts` genera `/manifest.webmanifest` (nome, colori, `display: standalone`, avvio da `/dashboard`).
 - Icone in `apps/web/public/icons/` (192, 512 e 512 con maschera) e `app/apple-icon.png` (180). Sono generate da `app/icon.svg`, lo stesso disegno di `components/shell/logo.tsx`: **se cambia il logo vanno rigenerate tutte**.
@@ -116,24 +116,22 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 
 ## Presentazione, tutorial, comunità (17/11/2026, sera)
 
-| Funzione                                              | Stato               | Branch                            |
-| ----------------------------------------------------- | ------------------- | --------------------------------- |
-| Tema applicato nel browser, senza chiamate al server  | PR aperta, da unire | `feature/m8-b-tema-istantaneo`    |
-| Chiedi a PREDICTRA in un pannello, non più nel menu   | PR aperta, da unire | `feature/m8-b-chiedi-popup`       |
-| Tutorial interattivo (contiene il pannello di Chiedi) | PR aperta, da unire | `feature/m8-b-tutorial`           |
-| Avatar predefinito con il logo (stile A)              | PR aperta, da unire | `feature/m8-b-avatar-logo`        |
-| Schermata «Sei offline»                               | PR aperta, da unire | `feature/m8-b-pagina-offline`     |
-| Presentazione prima del login                         | PR aperta, da unire | `feature/m8-b-presentazione`      |
-| Contratto della comunità                              | PR aperta, da unire | `feature/m8-0-profilo-e-commenti` |
-| Compleanno, stile del nome, commenti (interfaccia)    | PR aperta, da unire | `feature/m8-b-comunita`           |
-
-Ordine di merge: Chiedi prima del tutorial; tema e contratto prima dell'interfaccia della comunità, che li contiene. Le altre sono indipendenti.
+| Funzione                                              | Stato    | PR   |
+| ----------------------------------------------------- | -------- | ---- |
+| Tema applicato nel browser, senza chiamate al server  | in `dev` | #114 |
+| Chiedi a PREDICTRA in un pannello, non più nel menu   | in `dev` | #115 |
+| Tutorial interattivo (contiene il pannello di Chiedi) | in `dev` | #116 |
+| Avatar predefinito con il logo (stile A)              | in `dev` | #117 |
+| Schermata «Sei offline»                               | in `dev` | #118 |
+| Presentazione prima del login                         | in `dev` | #119 |
+| Contratto della comunità                              | in `dev` | #120 |
+| Compleanno, stile del nome, commenti (interfaccia)    | in `dev` | #121 |
 
 - **Tema** (`components/shell/theme-picker.tsx`): vedi «Tema chiaro e scuro». Nessuna chiamata al server quando si cambia.
 - **Chiedi a PREDICTRA** (`components/ask/ask-launcher.tsx`): pulsante tondo in basso a destra, sopra la barra sul telefono. Apre la chat in un pannello (dal basso sul telefono, al centro su schermi larghi); la conversazione resta finché non si ricarica la pagina. Il pannello ha il collegamento alla pagina intera `/ask`, dove il pulsante non compare. La voce è uscita dal menu.
 - **Tutorial** (`components/shell/tour.tsx`, passi in `lib/tour.ts`): sette passi alla prima entrata (benvenuto, Home, Pronostici, Calcio, Soldi, Chiedi, Profilo). Evidenzia il primo elemento visibile del passo (barra in basso sul telefono, menu laterale su schermi larghi); se non c'è, la scheda sta al centro. Esc o «Salta» lo chiudono; il cookie `predictra-tour=done` lo ricorda in quel browser; «Rivedi il tutorial» nel Profilo lo riapre.
 - **Avatar** (`components/ui/user-avatar.tsx`, colore in `lib/profile/avatar.ts`): simbolo di PREDICTRA in bianco su un cerchio colorato; il colore viene dall'id dell'utente (6 colori, contrasto ≥ 3:1 con il bianco). Nel menu laterale, nel Profilo e nell'elenco utenti dell'amministrazione. Nessun dato salvato.
-- **Sei offline** (`public/sw.js`, `app/offline/route.ts`): [ADR 0057](../decisions/0057-schermata-offline.md).
+- **Sei offline** (`public/sw.js`, `app/offline/route.ts`): [ADR 0059](../decisions/0059-schermata-offline.md).
 - **Presentazione** (`app/page.tsx`): chi non ha una sessione e apre `/` vede la presentazione; chi è dentro va in Home. Impaginazione a F: riga in alto con nome e «Accedi», titolo e frase, poi le funzioni in colonna a sinistra, infine «Cosa PREDICTRA non fa». Il «video» (`components/landing/demo-video.tsx`) sono quattro scene animate scritte nel codice, con pausa e scelta della scena, **solo dati di esempio etichettati DEMO**: nessun file video e nessun servizio a pagamento. Con «riduci movimento» attivo non scorre da solo. Le altre pagine senza sessione continuano a portare al login, che ha il collegamento «Cos'è PREDICTRA».
 - **Comunità** ([ADR 0058](../decisions/0058-comunita-commenti-e-maggiore-eta.md)): in _Preferenze_ data di nascita (la vede solo l'utente) e stile del nome; commenti in fondo al dettaglio partita per chi ha dichiarato almeno 18 anni; in Home chi compie gli anni oggi, se lo ha permesso. Colori del nome: token `name-*` in `globals.css`, verificati dal test dei contrasti.
 

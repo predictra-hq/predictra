@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { connection } from "next/server";
+import { ServiceWorkerRegister } from "@/components/shell/service-worker";
 import { DEFAULT_LOCALE, getMessages } from "@/lib/i18n";
 import { parseTheme, THEME_COLOR, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
@@ -34,7 +35,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       data-theme={theme}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <ServiceWorkerRegister />
+      </body>
     </html>
   );
 }
