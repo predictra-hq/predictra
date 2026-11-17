@@ -31,3 +31,7 @@ Con l'ambiente PROD i dati delle fonti (partite, classifiche, quote, statistiche
 - Le previsioni e le schedine su DEV sono quelle di PROD: per provare un modello nuovo si avvia il motore a mano su `dev`, e la copia del giorno dopo le riallinea.
 - Il backup programmato salva PROD (`ENVIRONMENT=prod` nel nome del file); DEV si ricostruisce dalla copia.
 - La copia giornaliera costa pochi minuti di GitHub Actions e tiene attivo il progetto Supabase di DEV (sul piano gratuito i progetti inattivi vengono sospesi dopo una settimana).
+
+## Aggiornamento del 17/11/2026: progetto Vercel senza collegamento Git
+
+Il piano Hobby di Vercel non importa i repository di un'organizzazione GitHub. Non serve: la pipeline pubblica con la CLI e `VERCEL_TOKEN` (`deploy-target.yml`), e `vercel.json` disattiva già i deploy Git. Il workflow manuale _Prepara Vercel PROD_ crea il progetto `predictra-prod` tramite l'API di Vercel, con le impostazioni di build di DEV, l'indirizzo `.vercel.app` e le variabili ricavabili dai segreti. Prova della copia con i dati veri di DEV (17/11/2026, verso un database temporaneo): 23 tabelle, tra cui 10.446 partite, 30.502 quote e 112.520 previsioni, stessi conteggi.
