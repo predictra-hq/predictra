@@ -68,6 +68,7 @@ class RunSummary:
     refreshed_backtests: bool = False
     retired: int = 0
     pruned: int = 0
+    prune_error: str | None = None
     selection: Decision | None = None
     active_before: int | None = None
 
@@ -362,7 +363,7 @@ def run(
             with contextlib.suppress(Exception):
                 store.finish_run(run_id, "FAILED", scored, s.error)
     if not dry_run and not summary.failed:
-        summary.pruned = prune(store)
+        summary.pruned, summary.prune_error = prune(store)
     return summary
 
 
@@ -371,13 +372,16 @@ PRUNE_KEEP_DAYS = 7
 PRUNE_MAX_ROUNDS = 50
 
 
-def prune(store: Store) -> int:
-    """Cancella a blocchi le previsioni superate; un errore non fa fallire il giro."""
+def prune(store: Store) -> tuple[int, str | None]:
+    """Cancella a blocchi le previsioni superate. Un errore non fa fallire il giro: si
+    riporta nel riepilogo e si riprova al giro successivo."""
     total = 0
-    with contextlib.suppress(Exception):
+    try:
         for _ in range(PRUNE_MAX_ROUNDS):
             done = store.prune_predictions(PRUNE_KEEP_DAYS)
             total += int(done.get("predictions", 0))
             if not done.get("predictions") and not done.get("score_matrices"):
                 break
-    return total
+    except Exception as exc:
+        return total, f"{type(exc).__name__}: {exc}"[:300]
+    return total, None

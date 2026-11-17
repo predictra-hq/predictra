@@ -214,11 +214,11 @@ def test_pulizia_delle_previsioni_superate_a_fine_giro():
         {"predictions": 20000, "score_matrices": 10},
         {"predictions": 500, "score_matrices": 0},
     ]
-    assert prune(store) == 20500
+    assert prune(store) == (20500, None)
     assert store.prune_calls == 3
 
     class Broken(FakeStore):
         def prune_predictions(self, keep_days):
             raise RuntimeError("rete")
 
-    assert prune(Broken([], [])) == 0
+    assert prune(Broken([], [])) == (0, "RuntimeError: rete")
