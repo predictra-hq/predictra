@@ -1020,6 +1020,13 @@ export const it = {
     },
   },
   predictions: {
+    verdictTitle: "Cosa diceva il modello",
+    verdictSummary: "Prima del calcio d'inizio: {hits} esiti su {count} indovinati.",
+    verdictGiven: "dato al {p}",
+    verdictWon: "Uscito",
+    verdictLost: "Non uscito",
+    verdictNote:
+      "Per ogni mercato l'esito che il modello riteneva più probabile, con l'ultima previsione prima della partita.",
     title: "Previsioni",
     reliabilityBadge: "affidabilità {band}",
     noPredictions:
