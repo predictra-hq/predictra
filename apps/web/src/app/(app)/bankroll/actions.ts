@@ -62,7 +62,7 @@ export async function setBookmaker(_prev: ActionState, formData: FormData): Prom
   const { error } = await supabase.from("bankrolls").update(bookmaker).eq("id", id);
   if (error) return { ok: false, message: toUserMessage(error) };
   revalidatePath("/bet-builder");
-  revalidatePath("/certezze");
+  revalidatePath("/certainties");
   return done(m.bookmakerSaved);
 }
 

@@ -55,7 +55,7 @@ export async function ModelHitsCard() {
           <Target size={18} aria-hidden="true" className="text-positive" />
           {d.hitsTitle}
         </CardTitle>
-        <Link href="/affidabilita" className="text-sm text-muted hover:text-fg">
+        <Link href="/reliability" className="text-sm text-muted hover:text-fg">
           {d.hitsMore} →
         </Link>
       </div>

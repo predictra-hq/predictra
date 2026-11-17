@@ -40,8 +40,8 @@ if (!url || !secret) {
 const SCREENSHOTS = new Set([
   "/dashboard",
   "/dashboard (mobile)",
-  "/certezze",
-  "/certezze (mobile)",
+  "/certainties",
+  "/certainties (mobile)",
   "/match-center (mobile)",
   "/match-center/[id] (mobile)",
   "/leagues (mobile)",
@@ -53,14 +53,14 @@ const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
 const PAGES = [
   "/dashboard",
-  "/certezze",
+  "/certainties",
   "/match-center",
   "/data-center",
   "/markets",
   "/statistics",
   "/leagues",
   "/teams",
-  "/affidabilita",
+  "/reliability",
   "/models",
   "/bet-builder",
   "/bet-builder/builder",
@@ -236,7 +236,7 @@ function watchRuntime(page) {
  * Pagine di cui stampare il testo visibile nel log (PRINT_TEXT=1): serve a controllare
  * cosa mostrano davvero, senza scaricare gli screenshot. Solo pagine senza dati personali.
  */
-const PRINT_TEXT = new Set(["/dashboard", "/certezze", "/match-center", "/match-center/[id]"]);
+const PRINT_TEXT = new Set(["/dashboard", "/certainties", "/match-center", "/match-center/[id]"]);
 
 async function printText(page, label) {
   if (process.env.PRINT_TEXT !== "1" || !PRINT_TEXT.has(label)) return;
@@ -649,6 +649,15 @@ async function main() {
       skipLink: null,
     });
     console.log(`${escOk ? "OK" : "KO"} menu mobile: Esc chiude`);
+
+    // Indirizzi in inglese: i vecchi indirizzi in italiano portano ai nuovi.
+    for (const [from, to] of [
+      ["/certezze", "/certainties"],
+      ["/affidabilita", "/reliability"],
+    ]) {
+      await page.goto(`${appUrl}${from}`);
+      check(`indirizzi: ${from} porta a ${to}`, new URL(page.url()).pathname === to, page.url());
+    }
 
     // Azioni di amministrazione in una finestra modale: si apre, sta nello schermo, Esc la
     // chiude. Prova con un invito temporaneo, revocabile da chiunque gestisca gli inviti.

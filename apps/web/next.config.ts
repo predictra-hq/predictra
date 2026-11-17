@@ -29,6 +29,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Indirizzi in inglese: i vecchi indirizzi in italiano portano ai nuovi.
+  async redirects() {
+    return [
+      { source: "/certezze", destination: "/certainties", permanent: true },
+      { source: "/affidabilita", destination: "/reliability", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
