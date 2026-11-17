@@ -11,6 +11,7 @@ import { cookies } from "next/headers";
 import { isTourDone, TOUR_COOKIE } from "@/lib/tour";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
+import { formatRelease } from "@/lib/version";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -35,6 +36,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         settings={SETTINGS_NAV}
         userId={user.id}
         userLabel={user.displayName ?? user.email}
+        release={formatRelease()}
         roleLabel={role ? m.roles[role] : ""}
       />
       <main

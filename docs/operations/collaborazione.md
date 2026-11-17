@@ -41,6 +41,7 @@ Anche **milestone indipendenti possono andare in parallelo** (per esempio M3 e M
 - `gennpalm` può fare push direttamente su `dev` (dal 14/11/2026), solo con tutti i controlli della CI verdi in locale. Il collega passa sempre da una PR. Su `main` si arriva solo con una PR da `dev`.
 - Dopo il merge GitHub **cancella da solo il branch** (impostazione _Automatically delete head branches_). Per altro lavoro si riparte da `dev` aggiornato con un branch nuovo: mai continuare su un branch già unito.
 - La descrizione della PR segue il modello in `.github/pull_request_template.md`.
+- **Versione dell’app:** la PR che porta una novità alza `version` in `apps/web/package.json` (regole in [interfaccia.md](interfaccia.md#versione-dellapp-17112026)).
 
 ## 4. Restare allineati
 

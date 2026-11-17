@@ -20,6 +20,8 @@ interface SidebarProps {
   settings: readonly NavItem[];
   userId: string;
   userLabel: string;
+  /** Versione mostrata (es. «v1.0.0»). */
+  release: string;
   roleLabel: string;
 }
 
@@ -200,6 +202,7 @@ export function Sidebar({
   settings,
   userId,
   userLabel,
+  release,
   roleLabel,
 }: SidebarProps) {
   const [open, setOpen] = useState(false);
@@ -308,6 +311,7 @@ export function Sidebar({
               {messages.common.signOut}
             </button>
           </form>
+          <p className="mt-2 text-xs text-subtle">{release}</p>
         </div>
       </aside>
 

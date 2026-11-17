@@ -159,3 +159,15 @@ Non verificato con dati reali da chi le ha scritte: le quote del proprio sito e 
 
 - Tutti gli indirizzi delle pagine sono in inglese. `/certezze` è diventato `/certainties` e `/affidabilita` è diventato `/reliability`; i vecchi indirizzi reindirizzano ai nuovi (`next.config.ts`, redirect permanente), così i link salvati continuano a funzionare. La Verifica DEV lo controlla.
 - I nomi mostrati restano in italiano. Chiedi a PREDICTRA indica le pagine solo con i nomi del menu (es. «Pronostici › Schedine › Costruisci»), presi dalla guida `guida_app`, mai con nomi interni come «Bet Builder».
+
+## Versione dell'app (17/11/2026)
+
+Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il commit. Compare in fondo al Profilo, sotto «Esci» nel menu laterale e in fondo alla presentazione.
+
+- Il numero sta nel campo `version` di `apps/web/package.json`. `next.config.ts` lo fissa alla build (`APP_RELEASE`); `formatRelease()` in `lib/version.ts` aggiunge la «v» e mostra `v0.0.0` se il valore non è valido.
+- Il commit (`APP_VERSION`, da `GITHUB_SHA`) resta solo per l'avviso «nuova versione disponibile» e non si mostra.
+- **Come si aggiorna** (versionamento semantico, maggiore.minore.correzione): nella PR che porta la novità si cambia `version` in `apps/web/package.json`.
+  - correzione di un errore: `1.0.0` → `1.0.1`;
+  - funzione nuova: `1.0.1` → `1.1.0`;
+  - cambiamento grande, che cambia il modo di usare l'app: `1.1.0` → `2.0.0`.
+- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, tenendo il numero più alto.
