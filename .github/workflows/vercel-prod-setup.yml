@@ -97,10 +97,17 @@ jobs:
           [ -n "$url" ] || { echo "::error::Nessun indirizzo .vercel.app libero: aggiungine uno a mano in Vercel → Settings → Domains"; exit 1; }
 
           # Chiave publishable di PROD dalla Management API di Supabase (non è segreta).
-          publishable="$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            "https://api.supabase.com/v1/projects/$PROD_SUPABASE_PROJECT_ID/api-keys" \
-            | jq -r '[.[] | select(.type == "publishable")][0].api_key // empty')"
-          [ -n "$publishable" ] || { echo "::error::Chiave publishable di PROD non trovata"; exit 1; }
+          keys="$(curl -sS -w '\n%{http_code}' -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$PROD_SUPABASE_PROJECT_ID/api-keys")"
+          case "$(code "$keys")" in
+            200) ;;
+            401|403|404)
+              echo "::error title=Supabase::Il token SUPABASE_ACCESS_TOKEN non vede il progetto PROD ($PROD_SUPABASE_PROJECT_ID, HTTP $(code "$keys")). Controlla che PROD_SUPABASE_PROJECT_ID sia giusto e che il token abbia accesso al progetto (docs/operations/produzione.md, passo 4)."
+              exit 1 ;;
+            *) echo "::error::Supabase non risponde (HTTP $(code "$keys"))"; exit 1 ;;
+          esac
+          publishable="$(body "$keys" | jq -r '[.[] | select(.type == "publishable")][0].api_key // empty')"
+          [ -n "$publishable" ] || { echo "::error::Nessuna chiave publishable nel progetto PROD: creala in Supabase → Project Settings → API Keys"; exit 1; }
 
           # Variabili di produzione. Quelle usate dalla build restano leggibili ("plain"):
           # `vercel pull` non scarica le "sensitive". La chiave secret resta "sensitive".
