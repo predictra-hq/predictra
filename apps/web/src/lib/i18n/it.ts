@@ -34,6 +34,74 @@ export const it = {
     notFoundDescription: "L'indirizzo non esiste oppure l'elemento non è più disponibile.",
     backToDashboard: "Torna alla dashboard",
   },
+  landing: {
+    login: "Accedi",
+    heroTitle: "Il calcio letto con i numeri",
+    heroText:
+      "PREDICTRA raccoglie partite, statistiche e quote da fonti con licenza e le passa a modelli matematici. Tu vedi le probabilità, le giocate più solide e come vanno le tue.",
+    inviteOnly: "Accesso solo su invito: se l'hai ricevuto, usa il link che ti è stato inviato.",
+    videoLabel: "Presentazione animata di PREDICTRA",
+    play: "Riproduci",
+    pause: "Pausa",
+    sceneOf: "Scena {n} di {total}",
+    demo: "DEMO",
+    demoNote: "Dati di esempio, non reali.",
+    scenes: {
+      matches: {
+        title: "Le partite",
+        text: "Calendario, risultati e quote, aggiornati in automatico.",
+      },
+      model: {
+        title: "Il modello calcola",
+        text: "Le probabilità vengono da modelli statistici, mai da un'intelligenza artificiale che indovina.",
+      },
+      certainties: {
+        title: "Le Certezze",
+        text: "Le giocate che i modelli danno più probabili, con la percentuale accanto.",
+      },
+      bankroll: {
+        title: "Il tuo bankroll",
+        text: "Registri le tue giocate e vedi l'andamento. Questi dati li vedi solo tu.",
+      },
+    },
+    demoMatches: ["Squadra A – Squadra B", "Squadra C – Squadra D", "Squadra E – Squadra F"],
+    demoBet: "Almeno un gol nella partita",
+    demoBalance: "Andamento del bankroll",
+    featuresTitle: "Cosa trovi dentro",
+    features: [
+      {
+        title: "Partite e campionati",
+        text: "Classifiche, forma delle squadre, statistiche di stagione e movimento delle quote.",
+      },
+      {
+        title: "Previsioni",
+        text: "Probabilità di 1X2, gol, risultati esatti: ogni previsione è versionata e riproducibile.",
+      },
+      {
+        title: "Certezze e Schedine",
+        text: "Le giocate più solide e combinazioni già calcolate, con il loro valore atteso.",
+      },
+      {
+        title: "Affidabilità",
+        text: "Quante giocate date per probabili sono uscite davvero: i numeri del modello, senza filtri.",
+      },
+      {
+        title: "Bankroll e giocate",
+        text: "Un registro privato delle tue giocate, con limiti di spesa che scegli tu.",
+      },
+      {
+        title: "Chiedi a PREDICTRA",
+        text: "Domande a parole sui dati della piattaforma, da qualunque pagina.",
+      },
+    ],
+    rulesTitle: "Cosa PREDICTRA non fa",
+    rules: [
+      "Non piazza scommesse e non ti chiede di farlo.",
+      "Non inventa numeri: ogni dato viene da una fonte con licenza.",
+      "Non garantisce vincite: le previsioni sono stime con la loro incertezza.",
+    ],
+    about: "Cos'è PREDICTRA",
+  },
   auth: {
     loginTitle: "Accesso riservato",
     loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
