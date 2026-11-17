@@ -71,7 +71,8 @@ export function parseThreshold(value: unknown): number {
   return (THRESHOLDS as readonly number[]).find((t) => Math.abs(t - n) < 1e-9) ?? DEFAULT_THRESHOLD;
 }
 
-function isEligible(row: ActivePredictionRow): boolean {
+/** Giocate ammesse tra le certezze: mercati scelti, linee dei gol previste. */
+export function isEligible(row: ActivePredictionRow): boolean {
   if (!CERTAINTY_MARKETS.includes(row.market)) return false;
   if (row.market === "TOTAL_GOALS") return TOTAL_LINES.includes(Number(row.line));
   return row.line === null;
