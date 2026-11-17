@@ -12,6 +12,15 @@
  */
 @theme {
   --color-bg: #0a0b0d;
+  /* Colori del nome utente (ADR 0058): leggibili su tutti gli sfondi in entrambi i temi. */
+  --color-name-green: #4ade80;
+  --color-name-teal: #2dd4bf;
+  --color-name-blue: #60a5fa;
+  --color-name-violet: #a78bfa;
+  --color-name-pink: #f472b6;
+  --color-name-orange: #fb923c;
+  --color-name-amber: #fbbf24;
+  --color-name-red: #f87171;
   --color-surface: #121418;
   --color-surface-2: #181b21;
   --color-border: #262a33;
@@ -48,6 +57,14 @@
 :root[data-theme="light"] {
   color-scheme: light;
   --color-bg: #f6f7f9;
+  --color-name-green: #166534;
+  --color-name-teal: #0f766e;
+  --color-name-blue: #1d4ed8;
+  --color-name-violet: #6d28d9;
+  --color-name-pink: #be185d;
+  --color-name-orange: #c2410c;
+  --color-name-amber: #854d0e;
+  --color-name-red: #b91c1c;
   --color-surface: #ffffff;
   --color-surface-2: #eef0f4;
   --color-border: #d9dde5;
