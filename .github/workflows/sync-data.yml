@@ -1,0 +1,115 @@
+name: Copia dati tra ambienti
+
+# ADR 0055. Solo PROD parla con le fonti esterne (partite, quote, statistiche); DEV
+# riceve ogni giorno una copia dei dati calcistici e calcolati, da database a database,
+# senza nessuna chiamata alle fonti. Account e dati personali non si copiano mai.
+#
+# - Programmato: ogni giorno da PROD a DEV, solo quando la variabile del repository
+#   DATA_TARGET vale `prod`.
+# - A mano: `prod-to-dev` (come il programmato) oppure `dev-to-prod` (avvio di PROD,
+#   una volta sola: rifiutato quando DATA_TARGET vale già `prod`).
+# - Push su dev che tocca la copia: prova in sola lettura, da DEV a un database
+#   temporaneo nel runner. PROD non viene toccato.
+# Elenco delle tabelle: scripts/sync/tables.sh (controllato da supabase/tests).
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+    inputs:
+      direction:
+        description: "Direzione"
+        type: choice
+        options: [prod-to-dev, dev-to-prod]
+        default: prod-to-dev
+  push:
+    branches: [dev]
+    paths:
+      - "scripts/sync/**"
+      - "supabase/tests/supabase-stub.sql"
+      - ".github/workflows/sync-data.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-data
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Prova (DEV → database temporaneo)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SRC_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      SRC_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
+      DST_DB_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v6
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+      - name: Database temporaneo con le migrazioni
+        run: bash scripts/sync/local-db.sh "$DST_DB_URL"
+      - name: Copia da DEV
+        run: bash scripts/sync/copy-data.sh
+
+  copy:
+    name: Copia (${{ github.event_name == 'workflow_dispatch' && inputs.direction || 'prod-to-dev' }})
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'schedule' && vars.DATA_TARGET == 'prod')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DIRECTION: ${{ github.event_name == 'workflow_dispatch' && inputs.direction || 'prod-to-dev' }}
+      DATA_TARGET: ${{ vars.DATA_TARGET }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      DEV_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
+      DEV_PW: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
+      PROD_ID: ${{ secrets.PROD_SUPABASE_PROJECT_ID }}
+      PROD_PW: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}
+    steps:
+      - name: Controlli
+        run: |
+          missing=""
+          for v in SUPABASE_ACCESS_TOKEN DEV_ID DEV_PW PROD_ID PROD_PW; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Copia dati::Segreti mancanti:$missing (docs/operations/produzione.md)"
+            exit 1
+          fi
+          if [ "$DIRECTION" = "dev-to-prod" ] && [ "$DATA_TARGET" = "prod" ]; then
+            echo "::error title=Copia dati::PROD è già in servizio (DATA_TARGET=prod): la copia da DEV sovrascriverebbe dati veri."
+            exit 1
+          fi
+          if [ "$DIRECTION" = "prod-to-dev" ] && [ "$DATA_TARGET" != "prod" ]; then
+            echo "::error title=Copia dati::PROD non è ancora in servizio (DATA_TARGET non vale prod): DEV ha i dati più aggiornati."
+            exit 1
+          fi
+          if [ "$DIRECTION" = "dev-to-prod" ]; then
+            { echo "SRC_PROJECT_ID=$DEV_ID"; echo "SRC_DB_PASSWORD=$DEV_PW"
+              echo "DST_PROJECT_ID=$PROD_ID"; echo "DST_DB_PASSWORD=$PROD_PW"
+              echo "WITH_SEED_TABLES=1"; } >> "$GITHUB_ENV"
+          else
+            { echo "SRC_PROJECT_ID=$PROD_ID"; echo "SRC_DB_PASSWORD=$PROD_PW"
+              echo "DST_PROJECT_ID=$DEV_ID"; echo "DST_DB_PASSWORD=$DEV_PW"; } >> "$GITHUB_ENV"
+          fi
+      - uses: actions/checkout@v6
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 3.0.0
+      - name: Copia
+        run: bash scripts/sync/copy-data.sh

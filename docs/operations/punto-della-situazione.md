@@ -37,6 +37,14 @@
 
 ## Lavoro in corso (per chi riprende)
 
+**17/11/2026, ampliamenti dell'interfaccia (`Alfry1299` con Claude Code).** PR aperte verso `dev`: correzione dell'avviso di nuova versione su iPhone (#102), pagina squadra e ricerca (#103), risultati esatti e movimento delle quote nel dettaglio partita (#104), pagina Affidabilità (#105), contratto dei seguiti `user_follows` (#106) e sua interfaccia (#107, da unire dopo #103 e #106). Notifiche sul telefono: solo proposta ([ADR 0054](../decisions/0054-notifiche-sul-telefono.md)), servono decisioni e una chiave del proprietario. Nulla è stato provato nell'app in esecuzione: cosa guardare è in [interfaccia.md](interfaccia.md).
+
+**16/11/2026, inviti (M1, `Alfry1299` con Claude Code).** Segnalazione su DEV: link di invito «scaduto» dopo dieci minuti, revoca che non rimuove l'utente, nuovo invito senza link. Causa ricostruita dal codice: il link si consumava all'apertura dell'indirizzo, quindi anche con l'anteprima di una chat. Correzione nell'[ADR 0052](../decisions/0052-link-monouso-consumati-al-tocco.md): pagina con «Continua», revoca e nuovo invito che rimuovono l'utente mai attivato. Nessuna migrazione. Da provare su DEV con un invito inviato in chat.
+
+**16/11/2026, rifinitura dell'interfaccia (corsia B, `Alfry1299` con Claude Code).** In `dev`: logo, menu a gruppi, app installabile sul telefono con barra in basso, tema chiaro, puntata consigliata e «L'ho giocata» sulle schedine, campionato preferito (#84, #86, #93–#96). PR aperte da unire: avviso di nuova versione (#97), fluidità su telefono (#98), striscia dell'esito e andamento in Home (#99). Nessuna migrazione: le scelte dell'utente restano in cookie. Nulla è stato provato nell'app in esecuzione da chi l'ha scritto: cosa guardare su DEV, cosa è stato escluso e perché sono in [interfaccia.md](interfaccia.md). Da decidere dal proprietario: tenere in memoria previsioni e quote per velocizzare la navigazione (tocca l'ADR 0006).
+
+**15/11/2026, pagina Certezze (`/certezze`).** Giocate del modello attivo sopra una soglia scelta (70–90%) su 1X2, doppia chance, under/over a linea mezza, gol/no gol e gol di una squadra, senza doppioni implicati; verifica per fascia sulle partite finite degli ultimi 120 giorni (quante volte la fascia è uscita rispetto al previsto). Solo letture su `v_active_predictions` e `v_match_results`: nessuna migrazione.
+
 M2 fase A3: risultati storici completi; statistiche e formazioni si scaricano da sole ogni giorno (job `api-football.details`).
 
 **Analisi del 14/11/2026 (cosa manca per chiudere).** Preparati, da unire con una PR verso `dev`:
@@ -66,3 +74,5 @@ Restano, in ordine: approvazione della checklist e dell'ADR 0041 (`gennpalm`); s
 - Raccolte manuali: _Actions → Data collector → Run workflow_, branch `dev`, campo `job` (`football-data`, `odds-daily`, `odds-prematch`).
   - Con `dry_run` non scrive nulla.
   - Le quote consumano comunque crediti: circa 1 per competizione, su 500 al mese.
+
+**16/11/2026, sera (`gennpalm` con Claude Code, direttamente su `dev`).** Telefono: navigazione coerente (barra in basso = sezioni del menu, viste come schede in alto), pagina Profilo, pagine di tutti i giorni ridisegnate, verifica di ogni pagina a 375 px ([interfaccia.md](interfaccia.md), [accessibilita.md](accessibilita.md)). Bankroll collegato al sito dove si gioca e quota modificabile in «L'ho giocata» (ADR 0051). Ask PREDICTRA: stagione in corso, due strumenti nuovi, grassetto ed elenchi (ADR 0042, aggiornamento). Prestazioni: le policy di lettura controllano l'utente attivo una volta per istruzione (migrazione `20261116160000`); il giro completo della _Verifica DEV_ è sceso da circa 4,5 a 2,5 minuti e i timeout sulle quote non si sono più visti. Modello: giorni di riposo provati e non adottati ([prediction-engine.md](prediction-engine.md)).

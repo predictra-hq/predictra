@@ -37,6 +37,35 @@ def _over_under(dist: np.ndarray, line: float) -> tuple[float, float, float | No
     return over, under, push
 
 
+# Tarature per mercato (ADR 0053): su «entrambe segnano» e sull'under/over 1,5 la matrice
+# dei risultati è troppo sicura. La taratura σ(a·logit p + b) migliora il Log Loss sul banco
+# di prova in tutte e due le stagioni di verifica e in tutti i campionati:
+# - entrambe segnano: 0,6870 → 0,6844 (2024-25) e 0,6897 → 0,6870 (2025-26);
+# - over 1,5:         0,5234 → 0,5213 (2024-25) e 0,5396 → 0,5374 (2025-26).
+# Sulle altre linee dei gol il guadagno non si ripete: restano quelle della matrice.
+BTTS_SLOPE = 0.6
+BTTS_SHIFT = 0.05
+OVER_15_SLOPE = 0.7
+OVER_15_SHIFT = 0.4
+CALIBRATED_TOTAL_LINE = 1.5
+
+
+def _calibrate(p: float, slope: float, shift: float) -> float:
+    p = min(max(p, 1e-9), 1 - 1e-9)
+    z = slope * float(np.log(p / (1 - p))) + shift
+    return float(1 / (1 + np.exp(-z)))
+
+
+def calibrate_btts(p: float) -> float:
+    """Probabilità di «entrambe segnano» tarata: più vicina al 50% di quella della matrice."""
+    return _calibrate(p, BTTS_SLOPE, BTTS_SHIFT)
+
+
+def calibrate_over_15(p: float) -> float:
+    """Probabilità di over 1,5 tarata: meno estrema di quella della matrice."""
+    return _calibrate(p, OVER_15_SLOPE, OVER_15_SHIFT)
+
+
 def derive_markets(m: np.ndarray) -> list[MarketPrice]:
     h, d, a = (float(x) for x in outcome_probabilities(m))
     out = [
@@ -55,12 +84,17 @@ def derive_markets(m: np.ndarray) -> list[MarketPrice]:
     total = np.bincount((hg + ag).ravel(), weights=m.ravel(), minlength=2 * n - 1)
     for line in TOTAL_LINES:
         over, under, push = _over_under(total, line)
+        if line == CALIBRATED_TOTAL_LINE:
+            # Mai sotto l'over 2,5 della matrice: le linee restano coerenti tra loro.
+            floor = _over_under(total, 2.5)[0]
+            over = max(calibrate_over_15(over), floor)
+            under = 1 - over
         out += [
             MarketPrice("TOTAL_GOALS", line, "OVER", over, push),
             MarketPrice("TOTAL_GOALS", line, "UNDER", under, push),
         ]
 
-    btts = float(m[1:, 1:].sum())
+    btts = calibrate_btts(float(m[1:, 1:].sum()))
     out += [
         MarketPrice("BTTS", None, "YES", btts, None),
         MarketPrice("BTTS", None, "NO", 1 - btts, None),

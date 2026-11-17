@@ -12,6 +12,7 @@ import {
 } from "@/lib/audit/filters";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Audit" };
 
@@ -54,9 +55,10 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
 
   return (
     <>
+      <SectionTabs section="people" current="/admin/audit" />
       <PageHeader title={m.admin.auditTitle} description={m.admin.auditDescription} />
 
-      <FilterForm className="mb-4 grid gap-3 sm:grid-cols-[1fr_10rem_10rem_auto_auto] sm:items-end">
+      <FilterForm className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_10rem_10rem_auto_auto] sm:items-end">
         <Field label={m.admin.action} htmlFor="action">
           <Select id="action" name="action" defaultValue={filters.action ?? ""}>
             <option value="">{m.admin.allActions}</option>

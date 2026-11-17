@@ -6,6 +6,9 @@
  * grigi per informazioni secondarie. Contrasti verificati (M8, B1) su bg, surface e
  * surface-2: testo ≥ 4.5:1 (anche `subtle`), bordo dei campi (`input`) ≥ 3:1.
  * Test: src/lib/theme-contrast.test.ts.
+ *
+ * Tema chiaro: stessi nomi, valori ridefiniti più sotto in `:root[data-theme="light"]`
+ * (scelta dell'utente nelle Preferenze, letta dal layout). Stessi contrasti, stesso test.
  */
 @theme {
   --color-bg: #0a0b0d;
@@ -27,34 +30,114 @@
   --color-warning: #f59e0b;
   --color-warning-soft: rgb(245 158 11 / 0.12);
   --color-info: #60a5fa;
+  /* Testo sopra `positive` pieno (pulsante principale). */
+  --color-on-positive: #000000;
+  /* Velo per intestazioni e righe evidenziate delle tabelle. */
+  --color-veil: rgb(255 255 255 / 0.025);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius-card: 0.875rem;
+  --radius-card: 1rem;
 }
 
 :root {
   color-scheme: dark;
 }
 
-html,
-body {
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef0f4;
+  --color-border: #d9dde5;
+  --color-border-strong: #c3c9d4;
+  --color-fg: #14171c;
+  --color-muted: #4b5563;
+  --color-subtle: #5b6472;
+  --color-input: #7a8494;
+
+  --color-positive: #047857;
+  --color-positive-strong: #065f46;
+  --color-positive-soft: rgb(4 120 87 / 0.1);
+  --color-negative: #b91c1c;
+  --color-negative-strong: #991b1b;
+  --color-negative-soft: rgb(185 28 28 / 0.08);
+  --color-warning: #92400e;
+  --color-warning-soft: rgb(146 64 14 / 0.1);
+  --color-info: #1d4ed8;
+  --color-on-positive: #ffffff;
+  --color-veil: rgb(0 0 0 / 0.03);
+}
+
+html {
   background: var(--color-bg);
-  color: var(--color-fg);
+  /* Su telefono il riscontro al tocco lo danno gli stati `active`, non il velo grigio del browser. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
+  color: var(--color-fg);
   font-family: var(--font-sans);
   font-feature-settings: "tnum" 1;
-  /* Alone smeraldo appena accennato in alto: dà profondità senza togliere contrasto. */
+  /* Caselle di spunta e radio nel colore del tema. */
+  accent-color: var(--color-positive);
+}
+
+/*
+ * Alone appena accennato in alto: dà profondità senza togliere contrasto. Sta su un livello
+ * fisso a parte e non su `background-attachment: fixed`, che su telefono fa ridisegnare
+ * tutta la pagina a ogni scorrimento.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(56rem 28rem at 78% -8rem, rgb(16 185 129 / 0.08), transparent 70%),
     radial-gradient(40rem 24rem at 8% -10rem, rgb(96 165 250 / 0.05), transparent 70%);
   background-repeat: no-repeat;
-  background-attachment: fixed;
-  /* Caselle di spunta e radio nel colore del tema. */
-  accent-color: var(--color-positive);
+}
+
+/*
+ * Telefono: i campi sotto i 16 px fanno ingrandire la pagina su iPhone quando ci si
+ * scrive, e la pagina resta ingrandita. Sotto i 640 px i campi sono sempre a 16 px.
+ */
+@media (max-width: 639.98px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* App sul telefono: niente rimbalzo che trascina tutta la pagina oltre i bordi. */
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Niente attesa del doppio tocco: link e controlli rispondono subito. */
+a,
+button,
+summary,
+label,
+select,
+input,
+textarea {
+  touch-action: manipulation;
+}
+
+/* Ingresso della pagina a ogni cambio di sezione (app/(app)/template.tsx). */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.page-enter {
+  animation: page-enter 180ms ease-out;
 }
 
 ::selection {
@@ -70,7 +153,7 @@ body {
 @layer base {
   /* Intestazioni delle tabelle leggermente in rilievo rispetto alle righe. */
   thead:not(.sr-only) {
-    background-color: rgb(255 255 255 / 0.025);
+    background-color: var(--color-veil);
   }
 
   /* Le righe delle tabelle si evidenziano al passaggio: più facile seguire i numeri. */
@@ -78,7 +161,7 @@ body {
     transition: background-color 120ms;
   }
   tbody tr:hover {
-    background-color: rgb(255 255 255 / 0.025);
+    background-color: var(--color-veil);
   }
 
   /* Il triangolo nativo di <details> è sostituito da un'icona dove serve. */
@@ -111,16 +194,17 @@ body {
  * le tabelle dentro `Card scrollLabel` e `ScrollRegion`. Le tabelle nascoste su schermo
  * piccolo (`hidden sm:table`) restano nascoste. Regole fuori dai layer di Tailwind: così
  * prevalgono su `min-w-[…]`, `whitespace-nowrap` e sui padding delle celle.
+ * Le tabelle compatte (`compact-sm`) sono escluse: vedi sotto.
  */
 @media (max-width: 639.98px) {
-  .stack-sm {
+  .stack-sm:not(:has(table.compact-sm)) {
     overflow-x: visible;
   }
-  .stack-sm table:not(.hidden) {
+  .stack-sm table:not(.hidden, .compact-sm) {
     display: block;
     min-width: 0;
   }
-  .stack-sm table:not(.hidden) thead {
+  .stack-sm table:not(.hidden, .compact-sm) thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -128,39 +212,156 @@ body {
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .stack-sm table:not(.hidden) tbody,
-  .stack-sm table:not(.hidden) tr {
+  .stack-sm table:not(.hidden, .compact-sm) tbody {
     display: block;
   }
-  .stack-sm table:not(.hidden) tbody tr {
-    padding: 0.625rem 1rem;
+  /* Ogni riga è una scheda a due colonne: etichetta piccola sopra, valore sotto. */
+  .stack-sm table:not(.hidden, .compact-sm) tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 1rem;
   }
-  .stack-sm table:not(.hidden) tbody td,
-  .stack-sm table:not(.hidden) tbody th {
+  .stack-sm table:not(.hidden, .compact-sm) tbody tr {
+    padding: 0.75rem 1rem;
+  }
+  .stack-sm table:not(.hidden, .compact-sm) tbody td,
+  .stack-sm table:not(.hidden, .compact-sm) tbody th {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.2rem 0;
-    text-align: right;
-    white-space: normal;
-  }
-  .stack-sm table:not(.hidden) tbody td[data-label]::before,
-  .stack-sm table:not(.hidden) tbody th[data-label]::before {
-    content: attr(data-label);
-    flex-shrink: 0;
-    max-width: 50%;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    font-weight: 400;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    min-width: 0;
+    padding: 0;
     text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* Celle che occupano tutta la riga: quelle su più colonne e quelle marcate `sm-wide`. */
+  .stack-sm table:not(.hidden, .compact-sm) tbody :is(td, th):is([colspan], .sm-wide) {
+    grid-column: 1 / -1;
+  }
+  .stack-sm table:not(.hidden, .compact-sm) tbody td[data-label]::before,
+  .stack-sm table:not(.hidden, .compact-sm) tbody th[data-label]::before {
+    content: attr(data-label);
+    color: var(--color-muted);
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  /* Elenchi lunghi (`limit-sm`): sul telefono solo le prime righe, il resto da computer. */
+  .stack-sm table.limit-sm:not(.hidden) tbody tr:nth-child(n + 9) {
+    display: none;
+  }
+  .stack-sm table.limit-sm:not(.hidden):has(tbody tr:nth-child(9))::after {
+    content: attr(data-more);
+    display: block;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--color-border);
+    color: var(--color-subtle);
+    font-size: 0.75rem;
+  }
+  .stack-sm table:not(.hidden) .sm-secondary {
+    display: none;
   }
 }
 
-/* Sul telefono si nascondono le colonne secondarie (`sm-secondary`): la scheda resta corta. */
+/*
+ * Tabelle compatte (`compact-sm`, es. classifiche): sul telefono restano tabelle vere,
+ * larghe quanto lo schermo, con le colonne secondarie (`sm-secondary`) nascoste,
+ * intestazioni che vanno a capo e celle più strette. Se restano più larghe dello schermo
+ * scorrono dentro la loro card, mai la pagina.
+ */
 @media (max-width: 639.98px) {
-  .stack-sm table:not(.hidden) tbody td.sm-secondary,
-  .stack-sm table:not(.hidden) tbody th.sm-secondary {
+  .stack-sm table.compact-sm:not(.hidden) {
+    min-width: 0;
+    width: 100%;
+  }
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th) {
+    padding: 0.5rem 0.4rem;
+  }
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):first-child {
+    padding-left: 0.75rem;
+  }
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):last-child {
+    padding-right: 0.75rem;
+  }
+  .stack-sm table.compact-sm:not(.hidden) thead th {
+    white-space: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.02em;
+  }
+  .stack-sm table.compact-sm:not(.hidden) :is(td, th):first-child,
+  .stack-sm table.compact-sm:not(.hidden) td[colspan] {
+    white-space: normal;
+  }
+}
+
+/*
+ * Schede interne (Schedine, Profilo, Amministrazione): pillole su una riga. Sul telefono
+ * la riga scorre di lato da bordo a bordo invece di andare a capo, come in un'app.
+ */
+.tab-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.tab-strip > a {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  padding: 0.25rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+.tab-strip > a:hover {
+  color: var(--color-fg);
+}
+.tab-strip > a[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--color-positive) 40%, transparent);
+  background: var(--color-positive-soft);
+  color: var(--color-positive-strong);
+  font-weight: 500;
+}
+@media (max-width: 639.98px) {
+  .tab-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    scrollbar-width: none;
+  }
+  .tab-strip::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Schede di sezione: solo sul telefono e sul tablet, dove non c'è il menu laterale. */
+@media (min-width: 1024px) {
+  .tab-strip.tab-strip-mobile {
+    display: none;
+  }
+}
+
+/*
+ * iPhone: i campi data hanno una larghezza minima propria e uscivano dalla card. Così
+ * stanno nella colonna come gli altri campi.
+ */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+}
+input::-webkit-date-and-time-value {
+  text-align: left;
 }

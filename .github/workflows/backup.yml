@@ -39,7 +39,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  ENVIRONMENT: dev
+  # ADR 0055: con PROD in servizio si salva PROD (DEV ne è una copia).
+  ENVIRONMENT: ${{ vars.DATA_TARGET == 'prod' && 'prod' || 'dev' }}
   ACTION: >-
     ${{ github.event_name == 'workflow_dispatch' && inputs.action
     || github.event.schedule == '30 3 1 * *' && 'restore-test'
@@ -62,9 +63,9 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
-      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      SUPABASE_PROJECT_ID: ${{ vars.DATA_TARGET == 'prod' && secrets.PROD_SUPABASE_PROJECT_ID || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_PROJECT_ID || '') }}
+      SUPABASE_DB_PASSWORD: ${{ vars.DATA_TARGET == 'prod' && secrets.PROD_SUPABASE_DB_PASSWORD || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_DB_PASSWORD || '') }}
+      SUPABASE_SECRET_KEY: ${{ vars.DATA_TARGET == 'prod' && secrets.PROD_SUPABASE_SECRET_KEY || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_SECRET_KEY || '') }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
       B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
       B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}

@@ -48,7 +48,6 @@ export default async function ProposalPage({
         title={`${m.categories[proposal.category]} · ${m.kinds[proposal.kind]}`}
         description={`${formatSlateDate(proposal.slate_date)} · ${m.rank} ${proposal.rank}`}
       />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
       <Link
         href={stake !== null ? `/bet-builder?s=${stake}` : "/bet-builder"}
@@ -170,6 +169,7 @@ export default async function ProposalPage({
           <SubmitButton>{m.saveSlip}</SubmitButton>
         </ActionForm>
       </Card>
+      <BetBuilderDisclaimer />
     </>
   );
 }

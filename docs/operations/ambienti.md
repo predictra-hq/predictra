@@ -4,10 +4,10 @@ Fotografia di cosa è in servizio e di chi lo gestisce. Qui **non** vanno mai va
 
 ## Ambienti
 
-| Ambiente | App                              | Supabase                 | Vercel                                    | Branch | Stato                            |
-| -------- | -------------------------------- | ------------------------ | ----------------------------------------- | ------ | -------------------------------- |
-| DEV      | https://predictra-dev.vercel.app | progetto `predictra-dev` | progetto `predictra-dev` (team Predictra) | `dev`  | in servizio dal 7/11/2026        |
-| PROD     | —                                | —                        | —                                         | `main` | da creare (M8, vedi setup.md §7) |
+| Ambiente | App                              | Supabase                 | Vercel                                    | Branch | Stato                                                                                                                                         |
+| -------- | -------------------------------- | ------------------------ | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| DEV      | https://predictra-dev.vercel.app | progetto `predictra-dev` | progetto `predictra-dev` (team Predictra) | `dev`  | in servizio dal 7/11/2026                                                                                                                     |
+| PROD     | —                                | —                        | —                                         | `main` | da creare: [produzione.md](produzione.md). Unica a raccogliere dati quando `DATA_TARGET=prod`; DEV ne riceve una copia ogni giorno (ADR 0055) |
 
 ## Regioni dei servizi
 

@@ -12,6 +12,7 @@ import {
   listRecentRuns,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Dati" };
 
@@ -46,10 +47,11 @@ export default async function DataCenterPage() {
 
   return (
     <>
+      <SectionTabs section="system" current="/data-center" />
       <PageHeader title={d.title} description={d.description} />
 
       <h2 className="mb-3 text-lg font-semibold">{d.sources}</h2>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {sources.map((s) => (
           <Card key={s.provider}>
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -104,7 +106,7 @@ export default async function DataCenterPage() {
         {coverage.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noCoverage}</p>
         ) : (
-          <table className="w-full min-w-[560px] text-left text-sm">
+          <table className="compact-sm w-full text-left text-sm sm:min-w-[560px]">
             <caption className="sr-only">{d.coverage}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -134,7 +136,10 @@ export default async function DataCenterPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noRuns}</p>
         ) : (
-          <table className="w-full min-w-[760px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[760px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{d.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>
@@ -178,7 +183,10 @@ export default async function DataCenterPage() {
         {issues.length === 0 ? (
           <p className="p-5 text-sm text-muted">{d.noOpenIssues}</p>
         ) : (
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[640px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{d.issues}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>

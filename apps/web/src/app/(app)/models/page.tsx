@@ -10,6 +10,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatPercent, modelStatusTone, relativeDelta } from "@/lib/predictions/format";
 import { listModelVersions, listPredictionRuns } from "@/lib/predictions/queries";
 import { activateModelVersion } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Modello" };
 
@@ -63,9 +64,10 @@ export default async function ModelsPage() {
 
   return (
     <>
+      <SectionTabs section="system" current="/models" />
       <PageHeader title={mi.title} description={mi.description} />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardTitle>{mi.activeModel}</CardTitle>
           {active ? (
@@ -213,7 +215,10 @@ export default async function ModelsPage() {
         {runs.length === 0 ? (
           <p className="p-5 text-sm text-muted">{mi.noRuns}</p>
         ) : (
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table
+            className="limit-sm w-full min-w-[640px] text-left text-sm"
+            data-more={getMessages().common.moreOnDesktop}
+          >
             <caption className="sr-only">{mi.recentRuns}</caption>
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
               <tr>

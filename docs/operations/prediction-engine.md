@@ -128,8 +128,107 @@ Richiesta del proprietario: rigiocare tutte le partite passate con i modelli att
 - **Esito: nessuna correzione adottata.** I pareggi previsti diventano uguali a quelli reali, ma sulle giornate mai viste il Log Loss di Dixon-Coles + Elo peggiora (da 0,9845 fino a 0,9856). Per Poisson il guadagno massimo è 0,0006, e resta peggiore di Dixon-Coles + Elo senza correzione. Il fattore per le squadre con poco storico, stimato su 2022–24, è 1,02 e migliora 2024–26 di 0,0001. Gli scarti visti a posteriori sono soprattutto caso: l'addestramento sulle partite passate ne incorpora già la parte ripetibile.
 - **Cosa può ancora migliorare la precisione:** dati che i modelli oggi non vedono, come statistiche di partita, formazioni e quote di chiusura. Si misurano allo stesso modo prima di adottarli.
 
+## Prove sull'Elo (15/11/2026)
+
+Banco di prova dell'[ADR 0038](../decisions/0038-modello-gol-tempo-e-neopromosse.md) (openfootball, 3.483 partite valutate dal 1/7/2024). Riferimento: Dixon-Coles + Elo (peso 0,4), Log Loss 1X2 **0,9881**; Dixon-Coles da solo 0,9897.
+
+- **Provato:** scarto gol nell'aggiornamento (fattore 1 + m·ln(scarto), m 0,5 e 1), neopromosse più deboli (−60, −100, −150 punti), ritorno verso la media tra le stagioni (20%), K 15–30, vantaggio casa 40–80, peso dell'Elo 0,3–0,6.
+- **Elo da solo:** migliora da 0,9950 a 0,9923 (scarto gol 0,5 e neopromosse −100).
+- **Nella combinazione:** al massimo 0,9877 (K 25, scarto gol 0,5, neopromosse −100), cioè 0,0004 in meno. È dentro il rumore su 3.483 partite: **nessuna modifica adottata**. Il ritorno verso la media peggiora sempre.
+- **Conclusione:** con i soli gol il modello è al suo limite. L'informazione in più viene dalle quote: dal 15/11/2026 la pagina _Certezze_ usa la probabilità combinata modello/mercato (peso 0,5, come il Bet Builder, ADR 0028) e la verifica per fascia sulle partite finite.
+
+## Probabilità alte: calibrazione e sharpening (15/11/2026)
+
+Stesso banco (3.483 partite), Dixon-Coles + Elo, selezioni 1X2 e doppia chance:
+
+| Fascia    | Selezioni | Previsto | Uscito |
+| --------- | --------- | -------- | ------ |
+| 70–75%    | 2.524     | 72,6%    | 73,2%  |
+| 75–80%    | 1.850     | 77,2%    | 75,4%  |
+| 80–85%    | 1.006     | 82,3%    | 81,7%  |
+| 85–90%    | 616       | 87,1%    | 88,6%  |
+| 90% e più | 280       | 92,5%    | 93,6%  |
+
+- Le probabilità alte sono ben tarate: il modello non è troppo prudente.
+- Sharpening con temperatura (p^a normalizzato): esponente stimato su 2024-25 = 0,987, cioè nessun cambiamento; su 2025-26 (mai vista) il Log Loss resta 0,9926. **Non adottato**: non c'è prudenza da togliere.
+
+## Multiple delle certezze rigiocate (15/11/2026)
+
+Stesso banco, stagioni 2024-26 settimana per settimana: per ogni settimana la giocata più forte di ogni partita (1X2 o doppia chance, dal 75%), dalla più probabile, finché la multipla resta sopra il traguardo (regola della pagina _Certezze_).
+
+| Traguardo  | Multiple | Partite in media | Prevista | Uscite |
+| ---------- | -------- | ---------------- | -------- | ------ |
+| almeno 70% | 74       | 3,7              | 73,9%    | 82,4%  |
+| almeno 50% | 74       | 6,3              | 53,6%    | 66,2%  |
+
+- Le multiple escono più del previsto: le giocate più forti (soprattutto doppie chance oltre il 90%) sono un po' sottostimate e lo scarto si somma. Con 74 multiple il margine è circa ±5 punti: **nessuna correzione**, ma le multiple delle certezze sono prudenti.
+
+## Tiri e xG nel modello gol (15/11/2026)
+
+Comando `stats` (sola lettura, _Actions → Prediction engine → Run workflow_ con `command = stats`): copertura di `match_team_statistics` e backtest settimanale dal 1/7/2024 del Poisson allenato su `(1 − a)·gol + a·attesi` (xG del provider, altrimenti tiri in porta × conversione della competizione calcolata sulle sole partite passate), valutato sui risultati veri.
+
+Prima esecuzione ([run 44](https://github.com/predictra-hq/predictra/actions/runs/43722908436)): **125 partite su 8.716** con statistiche, tutte della competizione 1.
+
+| Modello                    | Log Loss 1X2 (3.442 partite) | Sulle 125 con statistiche |
+| -------------------------- | ---------------------------- | ------------------------- |
+| Poisson (gol)              | 0,9772                       | 0,9755                    |
+| Poisson, attesi 0,3        | 0,9770                       | 0,9749                    |
+| Poisson, attesi 0,5        | 0,9769                       | 0,9750                    |
+| Poisson, attesi 0,7        | 0,9768                       | 0,9754                    |
+| Dixon-Coles + Elo (attivo) | 0,9757                       | 0,9719                    |
+
+- Campione troppo piccolo: **nessuna modifica**. Da rilanciare quando il job `api-football.details` avrà coperto qualche migliaio di partite (circa 44 al giorno).
+
+## Under/over e taratura per mercato (15/11/2026)
+
+Banco di prova, Dixon-Coles walk-forward (λ casa, λ ospite, ρ), stima su 2024-25 e verifica su 2025-26 (1.751 partite).
+
+| Mercato  | Frequenza fissa | Dixon-Coles | Binomiale negativa, parametri per linea | Binomiale negativa, parametri comuni |
+| -------- | --------------- | ----------- | --------------------------------------- | ------------------------------------ |
+| Over 1,5 | 0,5446          | 0,5396      | 0,5376                                  | 0,5391                               |
+| Over 2,5 | 0,6913          | 0,6853      | 0,6831                                  | 0,6846                               |
+| Over 3,5 | 0,6094          | 0,5983      | 0,5980                                  | 0,5992                               |
+
+- Con parametri diversi per linea il guadagno è in parte adattamento; con parametri comuni (k 1,027, r 59,7) quasi sparisce e l'Over 3,5 peggiora. **Non adottato.**
+- Taratura per famiglia di mercato, p′ = σ(a·logit p + b), stimata su 2024-25: doppia chance a 0,984, 1X2 a 0,984, under/over a 0,973 (nessun guadagno sul 2025-26); gol/no gol a 0,707 (Log Loss da 0,6897 a 0,6880: il modello è troppo sicuro, ma queste giocate quasi mai superano il 70%). **Non adottata**: le differenze sulle fasce alte del 2025-26 (under/over 85–90%: 86,9% previsto, 84,0% uscito) non si ripetono sul 2024-25.
+
+## Peso del mercato (15/11/2026)
+
+Comando `market` (sola lettura): partite finite degli ultimi 60 giorni con l'ultima previsione fatta prima del calcio d'inizio (vista `v_pre_kickoff_predictions`, stessa famiglia del modello attivo) e quote 1X2 osservate prima del via, senza margine e mediate tra i bookmaker.
+
+Prima misura ([run 48](https://github.com/predictra-hq/predictra/actions/runs/43728372630)), **19 partite**: modello 0,8136, mercato 0,8072, combinata con peso 0,5 (in uso) 0,8063, con peso 0,6–0,7 0,8057. La combinazione batte modello e mercato da soli; tra 0,5 e 0,7 la differenza è rumore su 19 partite: **peso invariato a 0,5**. Da rilanciare quando le partite saranno qualche centinaio.
+
+## Combinazione Dixon-Coles + Elo: stacking (16/11/2026)
+
+Banco di prova, stima su 2024-25 e verifica su 2025-26 (1.751 partite). Combinazione attuale (media 0,6/0,4): Log Loss 0,9926; media geometrica con gli stessi pesi 0,9927; stacking (regressione multinomiale sui logaritmi delle due previsioni, pesi per esito) 0,9945 sul 2025-26, pur migliorando la stagione di stima (0,9836 → 0,9821). È adattamento: **non adottato**, la media fissa resta la scelta più solida.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
 - Squadre senza partite nella competizione (per esempio all'inizio della Champions League) hanno forza media.
 - Elo (K = 20, vantaggio casalingo 60) non è ancora tarato.
+
+### Controllo del 16/11/2026
+
+- `market`: ancora solo 19 partite finite con quote e previsione. LogLoss modello 0,8136, mercato 0,8072, combinata al 50% 0,8063, al 70% 0,8057: differenze sotto il rumore, il peso resta 0,5.
+- `stats`: tiri in porta e xG solo su 168 partite (una competizione). Sulle partite con statistiche Dixon-Coles (0,9638) resta meglio di Poisson corretto con gli xG (0,9653): nessun cambio. Da ripetere quando le statistiche coprono più campionati.
+
+### Giorni di riposo (16/11/2026)
+
+Banco di prova, stima su 2024-25 (1.732 partite) e verifica su 2025-26 (1.751). Correzione della previsione attuale con i giorni di riposo calcolati dalle sole partite di campionato (le coppe non sono nei dati del banco):
+
+| Variante                               | Log Loss stima | Log Loss verifica |
+| -------------------------------------- | -------------- | ----------------- |
+| Previsione attuale                     | 0,9836         | 0,9926            |
+| Differenza di riposo casa − ospite     | 0,9831         | 0,9929            |
+| Riposo corto (≤ 3 giorni) casa, ospite | 0,9826         | 0,9955            |
+
+Migliora la stagione di stima e peggiora quella mai vista: è adattamento. **Non adottato.** Da riprovare solo con il calendario completo di coppe nazionali ed europee.
+
+### Entrambe segnano: taratura adottata (16/11/2026, ADR 0053)
+
+La prova del 15/11 aveva mostrato che su «entrambe segnano» il modello è troppo sicuro, senza adottare nulla. Ripetuta nei due versi (stima su una stagione, verifica sull'altra) e campionato per campionato, il guadagno si ripete sempre: Log Loss da 0,6870 a 0,6844 sul 2024-25 e da 0,6897 a 0,6870 sul 2025-26. **Adottata** la taratura `σ(0,6 · logit p + 0,05)` solo per questo mercato.
+
+### Under/over 1,5: taratura adottata (16/11/2026, ADR 0053)
+
+Stesso metodo dell'«entrambe segnano», linea per linea: solo sulla linea 1,5 il guadagno si ripete nei due versi (0,5396 → 0,5375 e 0,5234 → 0,5215) e in tutti i campionati. **Adottata** `σ(0,7 · logit p + 0,4)` per l'over 1,5. Linee 2,5 e 3,5: guadagno in un verso solo, **non adottate**.

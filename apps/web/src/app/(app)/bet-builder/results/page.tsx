@@ -68,7 +68,6 @@ export default async function BetBuilderResultsPage() {
   return (
     <>
       <PageHeader title={r.title} description={r.description} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="results" />
 
       {settled.length === 0 ? (
@@ -133,7 +132,7 @@ export default async function BetBuilderResultsPage() {
           {closed.length === 0 ? (
             <EmptyState>{r.noneClosed}</EmptyState>
           ) : (
-            <ul className="grid gap-3 lg:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               {closed.slice(0, LIST_LIMIT).map((p) => {
                 const category = parseCategory(p.category);
                 const legs = fillTemplate(r.legs, { n: p.legs.length });
@@ -165,6 +164,7 @@ export default async function BetBuilderResultsPage() {
           )}
         </>
       )}
+      <BetBuilderDisclaimer />
     </>
   );
 }

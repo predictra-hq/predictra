@@ -6,6 +6,8 @@ import { FreshnessBadge, ProviderAttribution, QualityBadge } from "@/components/
 import { CompetitionFilter } from "@/components/odds/competition-filter";
 import { Card, CardTitle, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { chooseCompetition } from "@/lib/football/favorite";
+import { readFavoriteCompetitionAnywhere } from "@/lib/football/follows";
 import { parseCompetitionCode } from "@/lib/football/format";
 import { getSourceHealth } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -69,7 +71,11 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
     );
   }
   const requested = parseCompetitionCode(params.c);
-  const competition = competitions.find((c) => c.code === requested) ?? competitions[0]!;
+  const competition = chooseCompetition(
+    competitions,
+    requested,
+    await readFavoriteCompetitionAnywhere(),
+  )!;
   const seasonIds = competitions.map((c) => c.seasonId).filter((id): id is number => id !== null);
 
   const [leagueStats, standings, sources] = await Promise.all([
@@ -88,24 +94,24 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
       <PageHeader title={m.title} description={m.description} />
 
       <h2 className="mb-1 text-lg font-semibold">{m.overviewTitle}</h2>
-      <p className="mb-3 text-sm text-muted">{m.overviewDescription}</p>
+      <p className="mb-3 hidden text-sm text-muted sm:block">{m.overviewDescription}</p>
       <Card scrollLabel={m.overviewTitle} className="mb-8 p-0">
-        <table className="w-full min-w-[1040px] text-left text-sm">
+        <table className="compact-sm w-full text-left text-sm sm:min-w-[1040px]">
           <caption className="sr-only">{m.overviewTitle}</caption>
           <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
             <tr>
               <Th>{m.competition}</Th>
-              <Th>{m.season}</Th>
-              <Th className="text-right">{m.matches}</Th>
+              <Th className="sm-secondary">{m.season}</Th>
+              <Th className="sm-secondary text-right">{m.matches}</Th>
               <Th className="text-right">{m.avgGoals}</Th>
-              <Th className="text-right">{m.avgHome}</Th>
-              <Th className="text-right">{m.avgAway}</Th>
-              <Th className="text-right">{m.homeWin}</Th>
-              <Th className="text-right">{m.draw}</Th>
-              <Th className="text-right">{m.awayWin}</Th>
+              <Th className="sm-secondary text-right">{m.avgHome}</Th>
+              <Th className="sm-secondary text-right">{m.avgAway}</Th>
+              <Th className="sm-secondary text-right">{m.homeWin}</Th>
+              <Th className="sm-secondary text-right">{m.draw}</Th>
+              <Th className="sm-secondary text-right">{m.awayWin}</Th>
               <Th className="text-right">{m.over25}</Th>
               <Th className="text-right">{m.bothScored}</Th>
-              <Th className="text-right">{m.homeAdvantage}</Th>
+              <Th className="sm-secondary text-right">{m.homeAdvantage}</Th>
             </tr>
           </thead>
           <tbody>
@@ -126,7 +132,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                   <td className="sm-secondary px-3 py-2 text-muted">{c.seasonLabel ?? "—"}</td>
                   {s ? (
                     <>
-                      <td className="px-3 py-2 text-right font-mono">{s.matches}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">{s.matches}</td>
                       <td className="px-3 py-2 text-right font-mono">
                         {formatDecimal(Number(s.avg_goals))}
                       </td>
@@ -151,7 +157,9 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                       <td className="px-3 py-2 text-right font-mono">
                         {formatPercent(Number(s.both_scored_rate), 0)}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono">{formatSigned(adv?.goals)}</td>
+                      <td className="sm-secondary px-3 py-2 text-right font-mono">
+                        {formatSigned(adv?.goals)}
+                      </td>
                     </>
                   ) : (
                     <td colSpan={10} className="px-3 py-2 text-muted">
@@ -191,7 +199,7 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
 
       <h2 className="mb-1 mt-8 text-lg font-semibold">{m.standingsTitle}</h2>
       {firstStanding ? (
-        <p className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted sm:text-sm">
           {fillTemplate(m.standingsSource, {
             provider: footballSource?.name ?? firstStanding.provider,
             observedAt: formatDateTime(firstStanding.observed_at),
@@ -209,12 +217,12 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
               scrollLabel={`${m.standingsTitle} ${competition.name} ${g.title ?? ""}`.trim()}
               className="p-0"
             >
-              {g.title ? (
+              {g.title && standingGroups.length > 1 ? (
                 <h3 className="px-4 pt-4 text-sm font-semibold">
                   {m.group}: {g.title}
                 </h3>
               ) : null}
-              <table className="w-full min-w-[760px] text-left text-sm">
+              <table className="compact-sm w-full text-left text-sm sm:min-w-[760px]">
                 <caption className="sr-only">
                   {m.standingsTitle} {competition.name} {g.title}
                 </caption>
@@ -223,21 +231,25 @@ export default async function LeaguesPage({ searchParams }: PageProps<"/leagues"
                     <Th>{m.position}</Th>
                     <Th>{m.team}</Th>
                     <Th className="text-right">{m.played}</Th>
-                    <Th className="text-right">{m.won}</Th>
-                    <Th className="text-right">{m.drawn}</Th>
-                    <Th className="text-right">{m.lost}</Th>
-                    <Th className="text-right">{m.goalsFor}</Th>
-                    <Th className="text-right">{m.goalsAgainst}</Th>
+                    <Th className="sm-secondary text-right">{m.won}</Th>
+                    <Th className="sm-secondary text-right">{m.drawn}</Th>
+                    <Th className="sm-secondary text-right">{m.lost}</Th>
+                    <Th className="sm-secondary text-right">{m.goalsFor}</Th>
+                    <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
                     <Th className="text-right">{m.goalDifference}</Th>
                     <Th className="text-right">{m.points}</Th>
-                    <Th>{m.quality}</Th>
+                    <Th className="sm-secondary">{m.quality}</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {g.rows.map((r) => (
                     <tr key={r.team_id} className="border-b border-border last:border-0">
                       <td className="px-3 py-2 text-muted">{r.position}</td>
-                      <td className="whitespace-nowrap px-3 py-2 font-medium">{r.team_name}</td>
+                      <td className="whitespace-nowrap px-3 py-2 font-medium">
+                        <Link href={`/teams/${r.team_id}`} className="hover:underline">
+                          {r.team_name}
+                        </Link>
+                      </td>
                       <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                       <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>
                       <td className="sm-secondary px-3 py-2 text-right font-mono">{r.draw}</td>

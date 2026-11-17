@@ -8,14 +8,24 @@ import {
   formatLine,
   formatPercent,
   groupPredictions,
-  PRIMARY_MARKETS,
+  isPrimaryGroup,
   sortSelections,
+  topScores,
   type PredictionGroup,
 } from "@/lib/predictions/format";
 import { getMatchPredictions, hasActiveModel } from "@/lib/predictions/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { fillTemplate } from "@/lib/odds/format";
 
-type Components = Partial<Record<"sample" | "calibration" | "agreement" | "data", number>>;
+/** Barra decorativa: la probabilità si legge a colpo d'occhio, il numero resta accanto. */
+function ProbabilityBar({ value }: { value: number }) {
+  const pct = Math.min(100, Math.max(0, value * 100));
+  return (
+    <span aria-hidden="true" className="mt-1 block h-1 overflow-hidden rounded-full bg-border">
+      <span className="block h-full rounded-full bg-positive" style={{ width: `${pct}%` }} />
+    </span>
+  );
+}
 
 function GroupTable({ group }: { group: PredictionGroup }) {
   const m = getMessages().predictions;
@@ -38,8 +48,9 @@ function GroupTable({ group }: { group: PredictionGroup }) {
       <tbody>
         {sortSelections(group).map((r) => (
           <tr key={r.selection} className="border-b border-border last:border-0">
-            <th scope="row" className="py-1 pr-2 font-medium">
+            <th scope="row" className="w-full py-1.5 pr-2 font-medium">
               {selections[r.selection] ?? r.selection}
+              <ProbabilityBar value={Number(r.probability)} />
             </th>
             <td className="py-1 pr-2 text-right font-mono">{formatPercent(r.probability)}</td>
             {hasPush ? (
@@ -88,45 +99,50 @@ export async function MatchPredictions({
   const first = rows[0]!;
   const score = Number(first.confidence_score);
   const band: ConfidenceBand = confidenceBand(score);
-  const oneXTwo = rows.find((r) => r.market === "1X2");
-  const components = ((oneXTwo?.explanation?.confidence ?? {}) as Components) || {};
   const groups = groupPredictions(rows);
-  const primary = groups.filter((g) => PRIMARY_MARKETS.includes(g.market));
-  const others = groups.filter((g) => !PRIMARY_MARKETS.includes(g.market));
+  const primary = groups.filter(isPrimaryGroup);
+  const others = groups.filter((g) => !isPrimaryGroup(g));
+  const scores = topScores(rows);
 
   return (
     <Card className="mt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <CardTitle>{p.title}</CardTitle>
         <Badge tone={confidenceTone(score)}>
-          {p.confidence}: {score.toFixed(2).replace(".", ",")} ({p.confidenceBand[band]})
+          {fillTemplate(p.reliabilityBadge, { band: p.confidenceBand[band] })}
         </Badge>
       </div>
       <p className="mt-1 text-xs text-muted">
-        {p.modelVersion}: {m.modelIntelligence.modelNames[first.model_key]} ({first.model_version})
-        · {p.asOf} {formatDateTime(first.as_of)}
+        {p.asOf} {formatDateTime(first.as_of)}
       </p>
-      <dl className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        {(Object.keys(p.components) as (keyof typeof p.components)[]).map((k) => (
-          <div key={k} className="flex gap-1">
-            <dt>{p.components[k]}</dt>
-            <dd className="font-mono">
-              {components[k] === undefined ? "–" : Number(components[k]).toFixed(2)}
-            </dd>
-          </div>
-        ))}
-      </dl>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {primary.map((g) => (
           <GroupTable key={`${g.market}-${g.line}`} group={g} />
         ))}
       </div>
 
+      {scores.length > 0 ? (
+        <section className="mt-4">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted">{p.topScores}</h3>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {scores.map((s) => (
+              <li
+                key={s.score}
+                className="flex min-w-16 flex-col items-center rounded-xl border border-border bg-surface-2 px-3 py-1.5"
+              >
+                <span className="font-mono text-base font-semibold">{s.score}</span>
+                <span className="font-mono text-xs text-muted">{formatPercent(s.probability)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {others.length > 0 ? (
         <details className="mt-4">
           <summary className="cursor-pointer text-sm font-medium">{p.otherMarkets}</summary>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {others.map((g) => (
               <GroupTable key={`${g.market}-${g.line}`} group={g} />
             ))}

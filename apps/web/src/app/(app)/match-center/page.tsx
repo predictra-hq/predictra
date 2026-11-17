@@ -1,23 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cache, Suspense } from "react";
 import { ChevronRight } from "lucide-react";
-import {
-  FreshnessBadge,
-  MatchStatusBadge,
-  ProviderAttribution,
-  QualityBadge,
-} from "@/components/football/badges";
+import { pickLabel } from "@/components/bet-builder/likely";
+import { MatchStatusBadge, ProviderAttribution } from "@/components/football/badges";
 import { FilterForm } from "@/components/ui/filter-form";
-import {
-  Alert,
-  Button,
-  Card,
-  EmptyState,
-  Field,
-  PageHeader,
-  Select,
-} from "@/components/ui/primitives";
+import { Button, Card, EmptyState, Field, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { strongestPicks } from "@/lib/certainties/load";
+import type { Pick } from "@/lib/certainties/logic";
+import { FavoriteCompetitionButton } from "@/components/football/favorite-button";
+import { chooseCompetition } from "@/lib/football/favorite";
+import { readFavoriteCompetitionAnywhere } from "@/lib/football/follows";
 import { formatScore, parseCompetitionCode, parseId, parseMatchday } from "@/lib/football/format";
 import {
   getCurrentSeason,
@@ -27,8 +21,42 @@ import {
   listSeasons,
 } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { fillTemplate } from "@/lib/odds/format";
+import { formatPercent } from "@/lib/predictions/format";
 
 export const metadata: Metadata = { title: "Partite" };
+
+/** Una sola lettura per tutte le righe della pagina (React `cache` per richiesta). */
+const strongestFor = cache((idsKey: string) =>
+  strongestPicks(idsKey ? idsKey.split(",").map(Number) : []).catch(() => new Map<number, Pick>()),
+);
+
+async function StrongestCell({ idsKey, matchId }: { idsKey: string; matchId: number }) {
+  const map = await strongestFor(idsKey);
+  return <StrongestPick pick={map.get(matchId)} />;
+}
+
+async function StrongestLine({ idsKey, matchId }: { idsKey: string; matchId: number }) {
+  const pick = (await strongestFor(idsKey)).get(matchId);
+  if (!pick) return null;
+  return (
+    <span className="mt-1 block text-xs text-muted">
+      <StrongestPick pick={pick} />
+    </span>
+  );
+}
+
+function StrongestPick({ pick }: { pick: Pick | undefined }) {
+  if (!pick) return <span className="text-subtle">–</span>;
+  return (
+    <span className="whitespace-nowrap">
+      {pickLabel(pick)}{" "}
+      <span className="font-mono font-semibold text-positive-strong">
+        {formatPercent(pick.probability, 0)}
+      </span>
+    </span>
+  );
+}
 
 export default async function MatchCenterPage({ searchParams }: PageProps<"/match-center">) {
   await requireUser();
@@ -46,7 +74,8 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
   }
 
   const requestedCode = parseCompetitionCode(params.c);
-  const competition = competitions.find((c) => c.code === requestedCode) ?? competitions[0]!;
+  const favorite = await readFavoriteCompetitionAnywhere();
+  const competition = chooseCompetition(competitions, requestedCode, favorite)!;
   const requestedSeason = typeof params.s === "string" ? parseId(params.s) : null;
   const [season, seasons] = await Promise.all([
     getCurrentSeason(competition.id, requestedSeason),
@@ -63,6 +92,8 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
     season ? listMatches(season.id, matchday) : Promise.resolve([]),
     getSourceHealth(),
   ]);
+  // Giocata più forte (dal 70%): caricata a parte, la tabella compare subito.
+  const idsKey = matches.map((r) => r.match_id).join(",");
   const matchdays = season?.maxMatchday
     ? Array.from({ length: season.maxMatchday }, (_, i) => i + 1)
     : [];
@@ -73,19 +104,21 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
 
       <FilterForm
         resets={{ c: ["s", "g"], s: ["g"] }}
-        className="mb-4 grid gap-3 sm:grid-cols-[1fr_9rem_10rem_auto] sm:items-end"
+        className="mb-3 grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_9rem_10rem_auto]"
       >
-        <Field label={m.matchCenter.competition} htmlFor="c">
-          <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
-            {competitions.map((c) =>
-              c.code ? (
-                <option key={c.id} value={c.code}>
-                  {c.name}
-                </option>
-              ) : null,
-            )}
-          </Select>
-        </Field>
+        <div className="col-span-2 sm:col-span-1">
+          <Field label={m.matchCenter.competition} htmlFor="c">
+            <Select id="c" name="c" defaultValue={competition.code ?? undefined}>
+              {competitions.map((c) =>
+                c.code ? (
+                  <option key={c.id} value={c.code}>
+                    {c.name}
+                  </option>
+                ) : null,
+              )}
+            </Select>
+          </Field>
+        </div>
         <Field label={m.matchCenter.season} htmlFor="s">
           <Select id="s" name="s" defaultValue={season ? String(season.id) : undefined}>
             {seasons.map((x) => (
@@ -100,17 +133,23 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
             <option value="all">{m.matchCenter.allMatchdays}</option>
             {matchdays.map((d) => (
               <option key={d} value={d}>
-                {d}
+                {isLatest && d === season?.currentMatchday
+                  ? fillTemplate(m.matchCenter.currentMatchday, { n: d })
+                  : d}
               </option>
             ))}
           </Select>
         </Field>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="col-span-2 sm:col-span-1">
           {m.matchCenter.show}
         </Button>
       </FilterForm>
-
-      <Alert className="mb-4">{m.matchCenter.delayedNote}</Alert>
+      {competition.code ? (
+        <FavoriteCompetitionButton
+          code={competition.code}
+          isFavorite={competition.code === favorite}
+        />
+      ) : null}
 
       <Card scrollLabel={`${competition.name} ${season?.label ?? ""}`.trim()} className="p-0">
         {matches.length === 0 ? (
@@ -126,17 +165,26 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                   className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-2 text-xs text-muted">
+                    <span className="flex items-center gap-2 text-xs text-muted">
                       {formatDateTime(r.kickoff_at)}
-                      <MatchStatusBadge status={r.status} />
+                      {r.status === "SCHEDULED" ? null : <MatchStatusBadge status={r.status} />}
                     </span>
-                    <span className="mt-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
-                      <span className="truncate text-right">
-                        {r.home_team_short_name ?? r.home_team_name}
+                    {(
+                      [
+                        [r.home_team_short_name ?? r.home_team_name, r.home_score],
+                        [r.away_team_short_name ?? r.away_team_name, r.away_score],
+                      ] as const
+                    ).map(([name, score], i) => (
+                      <span key={i} className="mt-0.5 flex items-center justify-between gap-3">
+                        <span className="truncate font-medium">{name}</span>
+                        {score !== null && score !== undefined ? (
+                          <span className="font-mono font-semibold">{score}</span>
+                        ) : null}
                       </span>
-                      <span className="font-mono">{formatScore(r.home_score, r.away_score)}</span>
-                      <span className="truncate">{r.away_team_short_name ?? r.away_team_name}</span>
-                    </span>
+                    ))}
+                    <Suspense fallback={null}>
+                      <StrongestLine idsKey={idsKey} matchId={r.match_id} />
+                    </Suspense>
                   </span>
                   <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-muted" />
                 </Link>
@@ -168,10 +216,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                   {m.matchCenter.status}
                 </th>
                 <th scope="col" className="px-4 py-3">
-                  {m.matchCenter.freshness}
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  {m.matchCenter.quality}
+                  {m.matchCenter.strongestPick}
                 </th>
               </tr>
             </thead>
@@ -202,10 +247,9 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
                     <MatchStatusBadge status={r.status} />
                   </td>
                   <td className="px-4 py-3">
-                    <FreshnessBadge freshness={r.freshness} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <QualityBadge quality={r.quality} />
+                    <Suspense fallback={<span className="text-subtle">…</span>}>
+                      <StrongestCell idsKey={idsKey} matchId={r.match_id} />
+                    </Suspense>
                   </td>
                 </tr>
               ))}
@@ -214,6 +258,7 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
         )}
       </Card>
 
+      <p className="mt-4 text-xs text-subtle">{m.matchCenter.delayedNote}</p>
       <ProviderAttribution texts={sources.map((s) => s.attribution)} />
     </>
   );

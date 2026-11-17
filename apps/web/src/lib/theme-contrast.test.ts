@@ -4,12 +4,18 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const css = readFileSync(join(__dirname, "../app/globals.css"), "utf8");
 
+const LIGHT_START = css.indexOf(':root[data-theme="light"] {');
+if (LIGHT_START === -1) throw new Error("tema chiaro non trovato in globals.css");
+const SOURCES = { dark: css.slice(0, LIGHT_START), light: css.slice(LIGHT_START) } as const;
+type ThemeName = keyof typeof SOURCES;
+let current: ThemeName = "dark";
+
 function token(name: string): [number, number, number] {
-  const hex = css.match(new RegExp(`--color-${name}: *(#[0-9a-f]{6});`, "i"))?.[1];
+  const hex = SOURCES[current].match(new RegExp(`--color-${name}: *(#[0-9a-f]{6});`, "i"))?.[1];
   if (!hex) throw new Error(`colore --color-${name} non trovato`);
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 }
@@ -29,7 +35,11 @@ export function contrast(a: [number, number, number], b: [number, number, number
 
 const BACKGROUNDS = ["bg", "surface", "surface-2"];
 
-describe("contrasti del tema", () => {
+describe.each(["dark", "light"] as const)("contrasti del tema %s", (theme) => {
+  beforeEach(() => {
+    current = theme;
+  });
+
   it.each([
     "fg",
     "muted",
@@ -52,7 +62,7 @@ describe("contrasti del tema", () => {
     }
   });
 
-  it("testo nero sul pulsante principale ≥ 4.5:1", () => {
-    expect(contrast([0, 0, 0], token("positive"))).toBeGreaterThanOrEqual(4.5);
+  it("testo sul pulsante principale ≥ 4.5:1", () => {
+    expect(contrast(token("on-positive"), token("positive"))).toBeGreaterThanOrEqual(4.5);
   });
 });

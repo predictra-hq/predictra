@@ -4,11 +4,13 @@ import { Suspense } from "react";
 import { hasPermission } from "@predictra/shared-types";
 import { NotificationsCard } from "@/components/agent/notifications-card";
 import {
+  AlertsCard,
   BankrollCard,
+  CertaintiesCard,
   SchedineCard,
   SystemStatusCard,
-  UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
+import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -16,18 +18,19 @@ import { getMessages } from "@/lib/i18n";
 export const metadata: Metadata = { title: "Home" };
 
 /**
- * Home: in alto bankroll, schedine consigliate e stato del sistema; sotto le prossime
- * partite. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
+ * Home: in alto le certezze delle prossimi 7 giorni, sotto bankroll, schedine consigliate
+ * e stato del sistema. Le partite hanno la loro pagina. Solo dati reali: ogni riquadro degrada da solo con un messaggio se il suo
  * dato non è disponibile. Le notifiche compaiono solo quando ce ne sono.
  */
 export default async function DashboardPage() {
   const user = await requireUser();
   const m = getMessages();
   const d = m.dashboard;
+  const canMonitor = hasPermission(user.roles, "agents.monitor");
 
   return (
     <>
-      <PageHeader title={`${d.welcome}, ${user.displayName ?? user.email}`} />
+      <PageHeader title={`${d.welcome}, ${user.displayName ?? user.email.split("@")[0]}`} />
 
       {!user.hasMfa ? (
         <Alert tone="warning" className="mb-6">
@@ -40,27 +43,42 @@ export default async function DashboardPage() {
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Ciò che richiede attenzione adesso; senza nulla da dire non compare. */}
+      <Suspense fallback={null}>
+        <AlertsCard />
+      </Suspense>
+
+      {/* Tre riquadri di sintesi: ognuno porta alla sua sezione e si carica da solo. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
-          <BankrollCard />
+          <CertaintiesCard />
         </Suspense>
         <Suspense fallback={<CardSkeleton />}>
           <SchedineCard />
         </Suspense>
         <Suspense fallback={<CardSkeleton />}>
-          <SystemStatusCard canMonitor={hasPermission(user.roles, "agents.monitor")} />
+          <BankrollCard />
         </Suspense>
       </div>
 
+      {/* Prossime partite delle squadre seguite; senza seguiti non compare. */}
       <Suspense fallback={null}>
-        <NotificationsCard />
+        <FollowedMatchesCard />
       </Suspense>
 
-      <div className="mt-6">
-        <Suspense fallback={<CardSkeleton className="h-96" />}>
-          <UpcomingMatchesCard />
-        </Suspense>
-      </div>
+      {/* Stato tecnico e avvisi dell'agente: solo per chi gestisce il sistema. */}
+      {canMonitor ? (
+        <>
+          <div className="mt-4">
+            <Suspense fallback={<CardSkeleton />}>
+              <SystemStatusCard canMonitor />
+            </Suspense>
+          </div>
+          <Suspense fallback={null}>
+            <NotificationsCard />
+          </Suspense>
+        </>
+      ) : null}
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>
     </>

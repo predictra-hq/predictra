@@ -127,7 +127,7 @@ Resta spento finché non esiste il token. Costo zero: i minuti sono quelli del c
    - scadenza a scelta, da annotare in [ambienti.md](ambienti.md);
    - _Repository access_: solo `predictra-hq/predictra`;
    - _Permissions → Repository permissions → Actions: Read and write_, nient'altro.
-2. Vercel → progetto DEV → _Settings → Environment Variables_: `GITHUB_DISPATCH_TOKEN`, tipo _Secret_, ambiente _Production_. Non scriverlo in chat, issue o file.
+2. Vercel → progetto DEV → _Settings → Environment Variables_: `GITHUB_DISPATCH_TOKEN`, tipo _Secret_, ambiente _Production_. Non scriverlo in chat, issue o file. Su PROD aggiungi anche `GITHUB_DISPATCH_REF=main` (tipo _Config_): con PROD in servizio solo `main` raccoglie dati (ADR 0055).
 3. Fai un nuovo deploy di DEV: il prossimo merge su `dev`, oppure _Re-run_ dell'ultimo run CI su `dev`.
 
 ## Verifica del worker Python su DEV (dopo il merge in `main`)

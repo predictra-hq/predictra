@@ -37,6 +37,20 @@ export const bankrollSchema = z.object({
     .transform((v) => (v === undefined ? 0.01 : Math.round(v * 100) / 10000)),
 });
 
+/** Sito del bankroll: uno dei bookmaker raccolti (codice) oppure un nome scritto a mano. */
+export const bookmakerSchema = z
+  .object({
+    bookmakerCode: z.preprocess(
+      (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : undefined),
+      z
+        .string()
+        .regex(/^[a-z0-9_]{2,40}$/)
+        .optional(),
+    ),
+    bookmakerName: optionalText(60),
+  })
+  .refine((v) => v.bookmakerCode !== undefined || v.bookmakerName !== undefined);
+
 export const movementSchema = z
   .object({
     bankrollId: id,
@@ -71,6 +85,7 @@ export const betSchema = z.object({
   bookmaker: optionalText(60),
   placedAt: optionalText(30),
   closingOdds: z.preprocess(parseDecimal, z.number().gt(1).max(10000).optional()),
+  legs: optionalText(600),
 });
 
 export const settleSchema = z

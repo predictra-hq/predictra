@@ -34,7 +34,6 @@ export default async function SlipPage({ params }: PageProps<"/bet-builder/slips
         title={slip.name}
         description={fillTemplate(m.savedAt, { date: formatDateTime(slip.created_at) })}
       />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="slips" />
       <Link
         href="/bet-builder/slips"
@@ -87,6 +86,7 @@ export default async function SlipPage({ params }: PageProps<"/bet-builder/slips
           </SubmitButton>
         </form>
       </Card>
+      <BetBuilderDisclaimer />
     </>
   );
 }

@@ -15,6 +15,7 @@ import {
 import { buildAliasIndex, namesToMap, suggestTeam, type NameToMap } from "@/lib/odds/aliases";
 import { fillTemplate } from "@/lib/odds/format";
 import { addTeamAlias } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Alias squadre" };
 
@@ -106,6 +107,7 @@ export default async function TeamAliasesPage() {
 
   return (
     <>
+      <SectionTabs section="football" current="/admin/team-aliases" />
       <PageHeader title={m.title} description={m.description} />
       <Alert className="mb-3">{m.rules}</Alert>
       <Alert tone="warning" className="mb-6">

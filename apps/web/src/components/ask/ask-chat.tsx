@@ -7,6 +7,7 @@ import { ask, type AskState } from "@/app/(app)/ask/actions";
 import { Alert, Button, Card, CardTitle, Label, ScrollRegion } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
+import { parseRichText, type RichSpan } from "@/lib/ask/rich-text";
 import type { ToolOutput } from "@/lib/ask/tools";
 
 const m = getMessages().ask;
@@ -55,10 +56,45 @@ function SourceTable({ source }: { source: ToolOutput }) {
   );
 }
 
+function Spans({ spans }: { spans: readonly RichSpan[] }) {
+  return spans.map((span, i) =>
+    span.bold ? (
+      <strong key={i} className="font-semibold">
+        {span.text}
+      </strong>
+    ) : (
+      <span key={i}>{span.text}</span>
+    ),
+  );
+}
+
+/** Risposta con grassetto ed elenchi veri, non asterischi a vista. */
+function Answer({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col gap-2 text-[0.9375rem] leading-relaxed text-fg">
+      {parseRichText(text).map((block, i) =>
+        block.type === "list" ? (
+          <ul key={i} className="flex list-disc flex-col gap-1 pl-5 marker:text-positive">
+            {block.items.map((item, j) => (
+              <li key={j}>
+                <Spans spans={item} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i}>
+            <Spans spans={block.spans} />
+          </p>
+        ),
+      )}
+    </div>
+  );
+}
+
 function Exchange({ item }: { item: AskState }) {
   return (
     <li className="flex flex-col gap-2">
-      <p className="self-end rounded-lg bg-surface-2 px-3 py-2 text-sm text-fg">
+      <p className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-positive-soft px-3.5 py-2 text-sm text-fg">
         <span className="sr-only">{m.you}: </span>
         {item.question}
       </p>
@@ -67,7 +103,7 @@ function Exchange({ item }: { item: AskState }) {
           <Sparkles className="size-3.5" aria-hidden />
           {m.assistant}
         </p>
-        {item.answer ? <p className="whitespace-pre-line text-sm text-fg">{item.answer}</p> : null}
+        {item.answer ? <Answer text={item.answer} /> : null}
         {item.notice ? (
           <Alert tone={item.tone} className="mt-1">
             {item.notice}
@@ -119,17 +155,16 @@ export function AskChat() {
             <MessageCircleQuestion className="size-4" aria-hidden />
             {m.examples}
           </CardTitle>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="mt-3 flex flex-col gap-2">
             {m.exampleItems.map((example) => (
               <li key={example}>
-                <Button
+                <button
                   type="button"
-                  variant="secondary"
-                  className="h-auto px-3 py-1.5 text-left text-xs"
+                  className="w-full cursor-pointer rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-left text-sm text-fg transition-colors hover:border-positive/40 active:bg-border"
                   onClick={() => setQuestion(example)}
                 >
                   {example}
-                </Button>
+                </button>
               </li>
             ))}
           </ul>
@@ -148,7 +183,7 @@ export function AskChat() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder={m.placeholder}
-          className="w-full rounded-lg border border-input bg-bg px-3 py-2 text-sm text-fg placeholder:text-subtle"
+          className="w-full rounded-xl border border-input bg-bg px-3 py-2.5 text-sm text-fg placeholder:text-subtle focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30"
         />
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-muted" aria-live="polite">

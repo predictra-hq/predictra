@@ -14,6 +14,7 @@ import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { createInvitation, revokeInvitation } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Inviti" };
 
@@ -49,13 +50,14 @@ export default async function InvitationsPage() {
 
   return (
     <>
+      <SectionTabs section="people" current="/admin/invitations" />
       <PageHeader title={m.admin.invitationsTitle} description={m.admin.invitationsDescription} />
 
       <Card className="mb-6">
         <CardTitle>{m.admin.invite}</CardTitle>
         <ActionForm
           action={createInvitation}
-          className="mt-4 grid gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end"
+          className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_auto] sm:items-end"
         >
           <Field label={m.common.email} htmlFor="email">
             <Input id="email" name="email" type="email" autoComplete="off" required />

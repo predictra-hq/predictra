@@ -1,3 +1,4 @@
+import { settleOpenBets } from "@/lib/bankroll/settle";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
@@ -9,13 +10,19 @@ import {
   ListChecks,
   TrendingUp,
 } from "lucide-react";
+import { computeMetrics, profitCurve } from "@predictra/bankroll";
+import { ProfitCurve } from "@/components/bankroll/profit-curve";
 import { formatEuro } from "@/components/bankroll/shared";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
-import { listBankrolls } from "@/lib/bankroll/queries";
+import { listBankrolls, listBets } from "@/lib/bankroll/queries";
 import { healthTone, overallHealth } from "@/components/agent/status";
 import { FreshnessBadge } from "@/components/football/badges";
 import { getAgentStatus } from "@/lib/agent/queries";
-import { buildBollette } from "@/lib/bet-builder/bollette";
+import { pickLabel } from "@/components/bet-builder/likely";
+import { cookies } from "next/headers";
+import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
+import { buildBollette, oddsAreOld } from "@/lib/bet-builder/bollette";
+import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
 import { getSourceHealth } from "@/lib/football/queries";
 import {
@@ -115,9 +122,18 @@ export async function ActiveModelCard() {
 
 // --- Bankroll ------------------------------------------------------------------------
 
+/** Giorni considerati per andamento e giocate vinte nel riquadro della Home. */
+const BANKROLL_TREND_DAYS = 90;
+
 export async function BankrollCard() {
   const d = getMessages().dashboard;
-  const rows = await listBankrolls().catch(() => null);
+  // Chiude le giocate le cui partite sono finite, così saldo e andamento sono aggiornati.
+  await settleOpenBets();
+  // Le giocate servono solo al grafico: se la lettura fallisce il riquadro resta.
+  const [rows, bets] = await Promise.all([
+    listBankrolls().catch(() => null),
+    listBets(BANKROLL_TREND_DAYS).catch(() => []),
+  ]);
   if (!rows || rows.length === 0) {
     return (
       <StatCard href="/bankroll" title={d.yourBankroll}>
@@ -129,6 +145,7 @@ export async function BankrollCard() {
     );
   }
   const t = bankrollTotals(rows);
+  const hitRate = computeMetrics(bets).hitRate;
   return (
     <StatCard href="/bankroll" title={d.yourBankroll}>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{formatEuro(t.balance)}</p>
@@ -150,7 +167,15 @@ export async function BankrollCard() {
         >
           {t.roi === null ? "–" : formatPercent(t.roi)}
         </dd>
+        <dt>{fillTemplate(d.hitRateRecent, { days: BANKROLL_TREND_DAYS })}</dt>
+        <dd className="text-right font-mono text-fg">
+          {hitRate === null ? "–" : formatPercent(hitRate, 0)}
+        </dd>
       </dl>
+      <ProfitCurve
+        points={profitCurve(bets)}
+        label={fillTemplate(d.trendRecent, { days: BANKROLL_TREND_DAYS })}
+      />
       {t.count > 1 ? (
         <p className="mt-1 text-xs text-muted">{fillTemplate(d.bankrollsCount, { n: t.count })}</p>
       ) : null}
@@ -245,7 +270,7 @@ export async function UpcomingMatchesCard() {
               <li key={match.matchId}>
                 <Link
                   href={`/match-center/${match.matchId}`}
-                  className="-mx-2 grid gap-2 rounded-lg px-2 py-3 hover:bg-surface-2 sm:grid-cols-[1fr_14rem] sm:items-center"
+                  className="-mx-2 grid grid-cols-1 gap-2 rounded-lg px-2 py-3 hover:bg-surface-2 sm:grid-cols-[1fr_14rem] sm:items-center"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium">
@@ -387,7 +412,7 @@ export function ExploreGrid() {
       <h2 id="explore-title" className="mb-3 text-lg font-semibold">
         {m.dashboard.explore}
       </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {EXPLORE.map(({ key, href, icon: Icon }) => (
           <li key={key}>
             <Link
@@ -495,6 +520,143 @@ export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) 
           {d.lastUpdate}: {formatDateTime(latest.last_success_at)}
         </p>
       ) : null}
+    </StatCard>
+  );
+}
+
+// --- Avvisi --------------------------------------------------------------------------
+
+/**
+ * "Da non perdere": ciò che richiede attenzione adesso. Giocate sopra la soglia scelta
+ * nelle Preferenze che iniziano entro 36 ore, schedine con valore del prossimo turno,
+ * giocate appena chiuse dai risultati e giocate ancora aperte. Senza nulla da dire il
+ * riquadro non compare.
+ */
+export async function AlertsCard() {
+  const d = getMessages().dashboard;
+  const s = getMessages().betBuilder.bollette;
+  const threshold = parseAlertThreshold((await cookies()).get(ALERT_COOKIE)?.value);
+  const now = new Date();
+  const [picks, bollette, settled, bankrolls] = await Promise.all([
+    loadHomeCertainties().catch(() => []),
+    loadBollette().catch(() => []),
+    settleOpenBets(),
+    listBankrolls().catch(() => []),
+  ]);
+  const soon = soonPicks(picks, now, threshold).slice(0, 4);
+  const soonEnd = now.getTime() + 48 * 3_600_000;
+  const valuable = bollette
+    .filter(
+      (b) =>
+        b.expectedValue >= 0 &&
+        b.picks.some((p) => new Date(p.kickoffAt).getTime() <= soonEnd) &&
+        !oddsAreOld(b, now),
+    )
+    .sort((a, b) => b.probability - a.probability)[0];
+  const openBets = bankrolls.reduce((sum, b) => sum + Number(b.open_bets), 0);
+  const closed = settled.won + settled.lost;
+  if (soon.length === 0 && !valuable && openBets === 0 && closed === 0) return null;
+
+  const row = "flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm";
+  return (
+    <Card className="mb-4 border-positive/30">
+      <Kicker>{d.alertsTitle}</Kicker>
+      <ul className="mt-2 flex flex-col gap-2">
+        {closed > 0 ? (
+          <li>
+            <Link href="/tracker" className={cn(row, "hover:bg-border")}>
+              {fillTemplate(d.alertsSettled, { won: settled.won, lost: settled.lost })}
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+            </Link>
+          </li>
+        ) : null}
+        {soon.length > 0 ? (
+          <li>
+            <p className="mb-1 text-xs text-muted">
+              {fillTemplate(d.alertsSoon, { n: threshold })}
+            </p>
+            <ul className="flex flex-col gap-1.5">
+              {soon.map((p) => (
+                <li key={p.matchId}>
+                  <Link href={`/match-center/${p.matchId}`} className={cn(row, "hover:bg-border")}>
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">
+                        {p.home} – {p.away}
+                      </span>
+                      <span className="block truncate text-xs text-muted">
+                        {formatDateTime(p.kickoffAt)} · {pickLabel(p)}
+                      </span>
+                    </span>
+                    <span className="font-mono text-base font-semibold text-positive-strong">
+                      {formatPercent(p.probability, 0)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ) : null}
+        {valuable ? (
+          <li>
+            <Link href="/bet-builder" className={cn(row, "hover:bg-border")}>
+              <span className="min-w-0 truncate">
+                {fillTemplate(d.alertsSchedina, { profile: s.profiles[valuable.profile] })}
+              </span>
+              <span className="shrink-0 font-mono">
+                <span className="font-semibold text-positive-strong">
+                  {formatOdds(valuable.price)}
+                </span>{" "}
+                <span className="text-xs text-muted">{formatPercent(valuable.probability, 0)}</span>
+              </span>
+            </Link>
+          </li>
+        ) : null}
+        {openBets > 0 ? (
+          <li>
+            <Link href="/tracker" className={cn(row, "hover:bg-border")}>
+              {fillTemplate(d.alertsOpenBets, { n: openBets })}
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
+            </Link>
+          </li>
+        ) : null}
+      </ul>
+    </Card>
+  );
+}
+
+// --- Certezze ------------------------------------------------------------------------
+
+/** Le giocate più probabili delle prossimi 7 giorni (probabilità combinata modello/mercato). */
+export async function CertaintiesCard() {
+  const d = getMessages().dashboard;
+  const picks = await loadHomeCertainties().catch(() => null);
+  const best = picks?.[0];
+
+  return (
+    <StatCard href="/certezze" title={d.certaintiesTitle}>
+      {picks === null ? (
+        <p className="mt-2 text-sm text-muted">{d.noData}</p>
+      ) : picks.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">{d.certaintiesEmpty}</p>
+      ) : (
+        <>
+          <p className="mt-2 text-2xl font-semibold tabular-nums">{picks.length}</p>
+          <p className="text-xs text-muted">{d.certaintiesCount}</p>
+          {best ? (
+            <p className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3 py-2 text-sm">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">
+                  {best.home} – {best.away}
+                </span>
+                <span className="block truncate text-xs text-muted">{pickLabel(best)}</span>
+              </span>
+              <span className="font-mono text-base font-semibold text-positive-strong">
+                {formatPercent(best.probability, 0)}
+              </span>
+            </p>
+          ) : null}
+        </>
+      )}
     </StatCard>
   );
 }

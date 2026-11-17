@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import type {
   BankrollSummaryRow,
   BetRow,
@@ -6,6 +7,7 @@ import type {
   MovementKind,
   PersonalLimitsRow,
 } from "@predictra/shared-types";
+import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
 import { matchMarkets } from "@/lib/bet-builder/market";
 import { groupKellyMatches, type KellyMatch } from "./kelly";
@@ -20,6 +22,39 @@ export class BankrollUnavailable extends Error {
     super(`Lettura non riuscita: ${what}`, { cause });
   }
 }
+
+/** Bookmaker italiani di cui PREDICTRA raccoglie le quote: quelli collegabili a un bankroll. */
+export async function listItalianBookmakers(): Promise<{ code: string; title: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("bookmakers")
+    .select("code, title")
+    .eq("italian_market", true)
+    .order("title");
+  if (error) throw new BankrollUnavailable("bookmaker", error);
+  return (data ?? []).map((b) => ({ code: String(b.code), title: String(b.title) }));
+}
+
+/**
+ * Il sito del bankroll di riferimento (il primo reale, altrimenti il primo): `tracked` è
+ * il nome del bookmaker se PREDICTRA ne raccoglie le quote, `name` il nome scelto
+ * dall'utente. Letto una volta per richiesta; senza bankroll o in caso d'errore è null.
+ */
+export const userBookmaker = cache(
+  async (): Promise<{ name: string; tracked: string | null } | null> => {
+    try {
+      const bankrolls = await listBankrolls();
+      const chosen = bankrolls.find((b) => b.kind === "REAL") ?? bankrolls[0];
+      if (!chosen?.bookmaker_name) return null;
+      return {
+        name: chosen.bookmaker_name,
+        tracked: chosen.bookmaker_code ? chosen.bookmaker_name : null,
+      };
+    } catch {
+      return null;
+    }
+  },
+);
 
 export interface MovementRow {
   id: number;
@@ -83,12 +118,14 @@ export async function listBets(sinceDays?: number): Promise<BetRow[]> {
  */
 export async function listKellyMatches(now: Date = new Date()): Promise<KellyMatch[]> {
   const supabase = await createClient();
+  // Per partita, non per data: la vista usa l'indice (vedi upcomingMatchIds).
+  const ids = (await upcomingMatchIds(now)).slice(0, 200);
+  if (ids.length === 0) return [];
   const { data, error } = await supabase
     .from("v_active_predictions")
     .select("match_id, kickoff_at, home_team_name, away_team_name, selection, probability")
     .eq("market", "1X2")
-    .eq("match_status", "SCHEDULED")
-    .gte("kickoff_at", now.toISOString())
+    .in("match_id", ids)
     .order("kickoff_at")
     .limit(600);
   if (error) throw new BankrollUnavailable("previsioni del modello", error);

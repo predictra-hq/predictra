@@ -78,7 +78,7 @@ jobs:
         run: uv run pytest
 
   ingest:
-    name: Raccolta (DEV)
+    name: Raccolta (${{ vars.DATA_TARGET == 'prod' && (github.ref_name == 'main' && 'PROD' || 'nessuno') || 'DEV' }})
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -87,13 +87,21 @@ jobs:
       FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
-      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
-      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      SUPABASE_PROJECT_ID: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_PROJECT_ID || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_PROJECT_ID || '') }}
+      SUPABASE_SECRET_KEY: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_SECRET_KEY || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_SECRET_KEY || '') }}
+      DATA_ENV: ${{ vars.DATA_TARGET == 'prod' && (github.ref_name == 'main' && 'PROD' || 'nessuno') || 'DEV' }}
     steps:
       - name: Verifica segreti
         id: secrets
         working-directory: .
         run: |
+          # ADR 0055: con PROD in servizio solo `main` raccoglie dati (su PROD); DEV li
+          # riceve copiati da PROD, così ogni chiamata alle fonti si fa una volta sola.
+          if [ "$DATA_ENV" = "nessuno" ]; then
+            echo "::notice title=Raccolta saltata::DEV riceve i dati da PROD (workflow Copia dati tra ambienti, ADR 0055)"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           case "$JOB" in
             football-data) needed="FOOTBALL_DATA_API_KEY" ;;
             odds-*) needed="ODDS_API_KEY" ;;

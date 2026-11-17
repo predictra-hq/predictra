@@ -144,11 +144,13 @@ Note:
 ## FASE E — Verifica finale
 
 - [ ] Logout e nuovo login: viene chiesto il codice 2FA.
-- [ ] _Administration → Inviti → Crea invito_ per un `Utente`: compare il link e l'attivazione funziona.
+- [ ] _Amministrazione → Inviti → Crea invito_ per un `Utente`: compare il link e l'attivazione funziona.
+- [ ] Il link di invito incollato in una chat (WhatsApp o Telegram, con anteprima) funziona ancora quando il destinatario lo apre e preme _Continua_.
 - [ ] _Revoca_ di un invito: il link non funziona più.
-- [ ] _Administration → Utenti → Link reset password_: la nuova password funziona.
+- [ ] Invito aperto ma non completato → _Revoca_ → _Crea invito_ per la stessa email: compare un nuovo link.
+- [ ] _Amministrazione → Utenti → Link reset password_: la nuova password funziona.
 - [ ] _Sospendi_ un utente: viene bloccato. _Riattiva_.
-- [ ] _Administration → Audit_ mostra le azioni.
+- [ ] _Amministrazione → Audit_ mostra le azioni.
 
 ---
 

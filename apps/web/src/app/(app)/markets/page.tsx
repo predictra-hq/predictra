@@ -28,6 +28,7 @@ import {
   listOddsCoverage,
   ODDS_PROVIDER,
 } from "@/lib/odds/queries";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Quote" };
 
@@ -104,7 +105,7 @@ function EventCard({ group, best }: { group: OddsEventGroup; best: BestOddsH2hRo
         <section aria-label={m.bestOdds}>
           <h3 className="mb-2 text-sm font-semibold">{m.bestOdds}</h3>
           {best ? (
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <BestOdd
                 label={m.home}
                 price={best.best_home_price}
@@ -183,6 +184,7 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
 
   return (
     <>
+      <SectionTabs section="football" current="/markets" />
       <PageHeader title={m.title} description={m.description} />
 
       <Alert tone="warning" className="mb-6">

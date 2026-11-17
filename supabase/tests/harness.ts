@@ -15,37 +15,10 @@ import { randomUUID } from "node:crypto";
 
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
 
-const SUPABASE_STUB = /* sql */ `
-  create role anon nologin noinherit;
-  create role authenticated nologin noinherit;
-  create role service_role nologin noinherit bypassrls;
-
-  create schema auth;
-  grant usage on schema auth to anon, authenticated, service_role;
-
-  create table auth.users (
-    id uuid primary key,
-    email text,
-    created_at timestamptz not null default now()
-  );
-
-  -- Come in Supabase: i claim arrivano da request.jwt.claims (GUC).
-  create function auth.jwt() returns jsonb language sql stable as $$
-    select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
-  $$;
-  create function auth.uid() returns uuid language sql stable as $$
-    select nullif(auth.jwt() ->> 'sub', '')::uuid
-  $$;
-  create function auth.role() returns text language sql stable as $$
-    select auth.jwt() ->> 'role'
-  $$;
-
-  -- Privilegi predefiniti di Supabase sullo schema public.
-  grant usage on schema public to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-`;
+const SUPABASE_STUB = readFileSync(
+  join(dirname(fileURLToPath(import.meta.url)), "supabase-stub.sql"),
+  "utf8",
+);
 
 export function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS_DIR)

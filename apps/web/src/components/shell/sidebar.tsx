@@ -1,57 +1,16 @@
 "use client";
 
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  BarChart3,
-  Bot,
-  CalendarDays,
-  ChevronDown,
-  Database,
-  Layers,
-  LayoutDashboard,
-  LineChart,
-  ListChecks,
-  LogOut,
-  Mail,
-  Menu,
-  MessageCircleQuestion,
-  ScrollText,
-  Settings2,
-  Tags,
-  TrendingUp,
-  Trophy,
-  Users,
-  Wallet,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { ChevronDown, LogOut, Menu, RefreshCw, X } from "lucide-react";
 import { Logo } from "@/components/shell/logo";
 import type { Messages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, type NavGroup, type NavItem } from "./nav-config";
+import { NAV_ICONS } from "./nav-icons";
 
-/** Un'icona per voce: il menu si riconosce a colpo d'occhio, non solo leggendo. */
-const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
-  dashboard: LayoutDashboard,
-  matchCenter: CalendarDays,
-  statisticsCenter: BarChart3,
-  betBuilder: Layers,
-  marketIntelligence: TrendingUp,
-  leagueIntelligence: Trophy,
-  bankroll: Wallet,
-  tracker: ListChecks,
-  modelIntelligence: LineChart,
-  dataCenter: Database,
-  askPredictra: MessageCircleQuestion,
-  users: Users,
-  invitations: Mail,
-  audit: ScrollText,
-  teamAliases: Tags,
-  agent: Bot,
-  settings: Settings2,
-};
+export { NAV_ICONS };
 
 interface SidebarProps {
   messages: Messages;
@@ -104,7 +63,7 @@ function NavLinks({
                 "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                 active
                   ? "bg-positive-soft font-medium text-positive-strong shadow-[inset_2px_0_0_var(--color-positive)]"
-                  : "text-muted hover:bg-surface-2 hover:text-fg",
+                  : "text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2",
               )}
             >
               {icon}
@@ -115,6 +74,31 @@ function NavLinks({
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Ricarica i dati della pagina senza perdere la posizione: nell'app installata sul
+ * telefono non c'è il pulsante di ricarica del browser.
+ */
+function RefreshButton({ label }: { label: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  return (
+    <button
+      type="button"
+      onClick={() => startTransition(() => router.refresh())}
+      disabled={pending}
+      aria-busy={pending}
+      aria-label={label}
+      className="mr-auto cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg active:bg-surface-2"
+    >
+      <RefreshCw
+        size={20}
+        aria-hidden="true"
+        className={cn(pending && "motion-safe:animate-spin")}
+      />
+    </button>
   );
 }
 
@@ -216,60 +200,69 @@ export function Sidebar({ messages, groups, admin, settings, userLabel, roleLabe
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-bg/95 px-4 backdrop-blur lg:hidden">
-        <span className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
-          <Logo className="size-7 shrink-0" />
-          {messages.app.name}
-          <span className="text-positive">.</span>
-        </span>
+      {/* Telefono: menu a sinistra, logo a destra. */}
+      <div className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-border bg-bg px-4 pt-[env(safe-area-inset-top)] lg:hidden">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="sidebar"
           aria-label={open ? messages.nav.closeMenu : messages.nav.openMenu}
-          className="cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg"
+          className="-ml-2 cursor-pointer rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg"
         >
-          {open ? <X size={20} /> : <Menu size={20} />}
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
+        <RefreshButton label={messages.nav.refresh} />
+        <Link href="/dashboard" className="flex items-center gap-2.5 font-bold tracking-[0.2em]">
+          {messages.app.name}
+          <span className="-ml-2 text-positive" aria-hidden="true">
+            .
+          </span>
+          <span className="sr-only"> · {messages.nav.dashboard}</span>
+          <Logo className="size-7 shrink-0" />
+        </Link>
       </div>
 
       <aside
         id="sidebar"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface transition-[transform,visibility] lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-surface pt-[env(safe-area-inset-top)] transition-[transform,visibility] lg:translate-x-0",
           open ? "visible translate-x-0" : "invisible -translate-x-full lg:visible",
         )}
       >
-        <div className="hidden h-16 items-center gap-3 px-5 lg:flex">
+        <Link href="/dashboard" className="hidden h-16 items-center gap-3 px-5 lg:flex">
           <Logo className="size-8 shrink-0" />
           <div>
             <p className="font-bold tracking-[0.2em]">
               {messages.app.name}
-              <span className="text-positive">.</span>
+              <span className="text-positive" aria-hidden="true">
+                .
+              </span>
+              <span className="sr-only"> · {messages.nav.dashboard}</span>
             </p>
             <p className="text-[10px] uppercase tracking-widest text-subtle">
               {messages.app.tagline}
             </p>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3" aria-label="Navigazione principale">
           {groups.map((group) => (
             <NavGroupSection key={group.id} group={group} messages={messages} onNavigate={close} />
           ))}
           {admin.length > 0 ? (
-            <div className="mt-4">
-              <p className={cn(GROUP_TITLE, "mb-1")}>{messages.nav.administration}</p>
-              <NavLinks items={admin} messages={messages} onNavigate={close} />
-            </div>
+            <NavGroupSection
+              group={{ id: "admin", label: "administration", collapsible: true, items: admin }}
+              messages={messages}
+              onNavigate={close}
+            />
           ) : null}
           <div className="mt-4 border-t border-border pt-3">
             <NavLinks items={settings} messages={messages} onNavigate={close} />
           </div>
         </nav>
 
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
           <p className="truncate text-sm font-medium" title={userLabel}>
             {userLabel}
           </p>

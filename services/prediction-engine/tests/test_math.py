@@ -94,3 +94,33 @@ def test_esiti_dalla_matrice():
     m = np.zeros((3, 3))
     m[1, 0], m[1, 1], m[0, 2] = 0.5, 0.3, 0.2
     assert outcome_probabilities(m) == pytest.approx([0.5, 0.3, 0.2])
+
+
+def test_btts_tarato_verso_il_50_per_cento():
+    """ADR 0053: stessa direzione della matrice, meno sicurezza; Sì e No sommano a 1."""
+    from predictra_engine.markets import calibrate_btts
+
+    assert 0.5 < calibrate_btts(0.7) < 0.7
+    assert 0.3 < calibrate_btts(0.3) < 0.5
+    assert calibrate_btts(0.6) > calibrate_btts(0.5) > calibrate_btts(0.4)
+    m = score_matrix(1.6, 1.0, rho=-0.05)
+    groups = {(p.market, p.selection): p.probability for p in derive_markets(m)}
+    yes, no = groups[("BTTS", "YES")], groups[("BTTS", "NO")]
+    assert abs(yes + no - 1) < 1e-12
+    assert abs(yes - calibrate_btts(float(m[1:, 1:].sum()))) < 1e-12
+
+
+def test_over_15_tarato_e_coerente_con_le_altre_linee():
+    """ADR 0053: over 1,5 meno estremo, under complementare, mai sotto l'over 2,5."""
+    from predictra_engine.markets import calibrate_over_15
+
+    assert calibrate_over_15(0.9) < 0.9
+    assert calibrate_over_15(0.6) > 0.6
+    for home, away in ((1.6, 1.0), (0.4, 0.3), (3.2, 2.4)):
+        prices = {
+            (p.market, p.line, p.selection): p.probability
+            for p in derive_markets(score_matrix(home, away, rho=-0.05))
+        }
+        over, under = prices[("TOTAL_GOALS", 1.5, "OVER")], prices[("TOTAL_GOALS", 1.5, "UNDER")]
+        assert abs(over + under - 1) < 1e-12
+        assert prices[("TOTAL_GOALS", 0.5, "OVER")] >= over >= prices[("TOTAL_GOALS", 2.5, "OVER")]

@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import type { ActionState } from "@/lib/errors";
 import { getMessages, LOCALES } from "@/lib/i18n";
+import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/server";
 
 const timezones = new Set(Intl.supportedValuesOf("timeZone"));
@@ -40,4 +43,34 @@ export async function savePreferences(
 
   revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.saved };
+}
+
+/**
+ * Tema dell'interfaccia: resta in un cookie di questo browser (non è un dato personale e
+ * non passa dal database). Il layout lo legge e lo applica a `<html>`.
+ */
+/** Soglia degli avvisi in Home: preferenza di questo browser, come il tema. */
+export async function setAlertThreshold(formData: FormData): Promise<void> {
+  await requireUser();
+  const threshold = parseAlertThreshold(formData.get("threshold"));
+  (await cookies()).set(ALERT_COOKIE, String(threshold), {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/settings/preferences");
+}
+
+export async function setTheme(formData: FormData): Promise<void> {
+  await requireUser();
+  const theme = parseTheme(formData.get("theme"));
+  (await cookies()).set(THEME_COOKIE, theme, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  revalidatePath("/", "layout");
 }

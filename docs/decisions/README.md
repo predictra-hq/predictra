@@ -43,3 +43,8 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0041](0041-retention.md)                           | Conservazione dei dati (retention)                                | Proposta  |
 | [0042](0042-ask-predictra.md)                       | Ask PREDICTRA con un LLM gratuito                                 | Accettata |
 | [0050](0050-deploy-solo-commit-del-proprietario.md) | Deploy solo da commit del proprietario (piano Vercel Hobby)       | Accettata |
+| [0051](0051-bankroll-collegato-al-sito.md)          | Bankroll collegato al sito dove si gioca                          | Accettata |
+| [0052](0052-link-monouso-consumati-al-tocco.md)     | Link monouso consumati solo al tocco di «Continua»                | Proposta  |
+| [0053](0053-taratura-entrambe-segnano.md)           | Taratura di «entrambe segnano» e dell'under/over 1,5              | Accettata |
+| [0054](0054-notifiche-sul-telefono.md)              | Notifiche sul telefono (Web Push)                                 | Proposta  |
+| [0055](0055-una-sola-raccolta-prod-copia-su-dev.md) | Una sola raccolta dati: PROD raccoglie, DEV riceve una copia      | Accettata |

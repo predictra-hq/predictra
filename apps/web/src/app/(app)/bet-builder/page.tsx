@@ -145,7 +145,6 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   return (
     <>
       <PageHeader title={m.title} description={m.description} />
-      <BetBuilderDisclaimer />
       <BetBuilderNav current="proposals" />
 
       <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
@@ -241,7 +240,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                           {m.categories[c]}{" "}
                           <span className="font-normal text-muted">({m.categoryHints[c]})</span>
                         </h3>
-                        <div className="grid gap-3 lg:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                           {group.map((p) => (
                             <ProposalCard
                               key={p.proposal_id}
@@ -266,6 +265,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
           <LikelySection stake={stake} />
         </Suspense>
       </details>
+      <BetBuilderDisclaimer />
     </>
   );
 }

@@ -105,32 +105,38 @@ Il primo accesso non può nascere da un invito in app. Lo crea il workflow **Boo
 2. il run esegue `apps/web/scripts/bootstrap-super-admin.mjs` con i segreti `DEV_SUPABASE_PROJECT_ID`, `DEV_SUPABASE_SECRET_KEY` e `DEV_APP_BASE_URL`;
 3. il **link di attivazione** compare solo nel riepilogo (_Summary_) del run, mai nel log. Consegnalo solo a quella persona, che poi:
    1. apre il link → _Attiva account_ (nome e password, minimo 12 caratteri);
-   2. va in _Impostazioni → Sicurezza_ → attiva la **2FA** (obbligatoria per l'area Administration);
+   2. va in _Impostazioni → Sicurezza_ → attiva la **2FA** (obbligatoria per l'area Amministrazione);
 4. dopo l'attivazione elimina il run (menu ⋯ → _Delete workflow run_).
 
 I workflow ad avvio manuale compaiono in _Actions_ solo se il file è sul branch di default (`main`).
 
 ## 6. Uso quotidiano degli account (nessuna email)
 
-| Operazione              | Dove                                            | Note                                                  |
-| ----------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| Invitare un utente      | _Administration → Inviti → Crea invito_         | appare un link da copiare e consegnare; scade in 24 h |
-| Annullare un invito     | _Inviti → Revoca_                               | il link smette di funzionare                          |
-| Password dimenticata    | _Administration → Utenti → Link reset password_ | link da consegnare; vale 24 h                         |
-| Sospendere / riattivare | _Utenti → Sospendi / Riattiva_                  | la sospensione blocca subito l'accesso                |
-| Cambiare ruolo          | _Utenti → Applica ruolo_                        | un Admin gestisce solo utenti `USER`                  |
-| Storico azioni          | _Administration → Audit_                        | registro non modificabile                             |
+| Operazione              | Dove                                             | Note                                                  |
+| ----------------------- | ------------------------------------------------ | ----------------------------------------------------- |
+| Invitare un utente      | _Amministrazione → Inviti → Crea invito_         | appare un link da copiare e consegnare; scade in 24 h |
+| Annullare un invito     | _Inviti → Revoca_                                | il link smette di funzionare                          |
+| Password dimenticata    | _Amministrazione → Utenti → Link reset password_ | link da consegnare; vale 24 h                         |
+| Sospendere / riattivare | _Utenti → Sospendi / Riattiva_                   | la sospensione blocca subito l'accesso                |
+| Cambiare ruolo          | _Utenti → Applica ruolo_                         | un Admin gestisce solo utenti `USER`                  |
+| Storico azioni          | _Amministrazione → Audit_                        | registro non modificabile                             |
 
 Se un invito scade (24 h) senza essere usato: _Revoca_ e poi _Crea invito_ di nuovo.
 
-## 7. Produzione (più avanti)
+Chi riceve il link lo apre e preme **Continua**: il link vale una sola volta e si consuma a quel tocco, non all'apertura (così l'anteprima della chat non lo usa al posto suo). La revoca rimuove anche l'utente che ha aperto il link senza completare l'attivazione, quindi si può invitare di nuovo la stessa email.
 
-Quando servirà l'ambiente PROD:
+### Usare PREDICTRA come app sul telefono
 
-1. ripeti i passi 1 e 2 con un nuovo progetto Supabase e un nuovo progetto Vercel (es. `predictra-prod`);
-2. aggiungi i segreti `PROD_SUPABASE_PROJECT_ID`, `PROD_SUPABASE_DB_PASSWORD`, `PROD_SUPABASE_SECRET_KEY`, `PROD_APP_BASE_URL` e `PROD_VERCEL_PROJECT_ID` (e lo scope del token Supabase sul nuovo progetto);
-3. fai il merge di `dev` in `main` (tramite Pull Request): il job _Deploy PROD_ parte da solo;
-4. esegui il workflow **Bootstrap Super Admin** con ambiente `prod`.
+Il sito si può aggiungere alla schermata Home e aprire a schermo intero; funziona solo online.
+
+- **iPhone:** aprire il sito in Safari e accedere → _Condividi_ → _Aggiungi alla schermata Home_ → lasciare attivo _Apri come app web_ → _Aggiungi_.
+- **Android (Chrome):** menu ⋮ → _Aggiungi a schermata Home_ (o _Installa app_).
+
+Tema chiaro o scuro: _Impostazioni → Preferenze_ (vale per il browser in uso). Dettagli in [interfaccia.md](interfaccia.md).
+
+## 7. Produzione
+
+Passi completi e semplici: [produzione.md](produzione.md). In breve: progetti `predictra-prod` su Supabase e Vercel, segreti `PROD_*`, merge di `dev` in `main`, copia iniziale dei dati da DEV (workflow _Copia dati tra ambienti_, `dev-to-prod`), variabile `DATA_TARGET=prod`, schedule QStash su PROD, workflow **Bootstrap Super Admin** con ambiente `prod`. Solo PROD raccoglie dati; DEV ne riceve una copia ogni giorno (ADR 0055).
 
 ## 8. Protezione dei branch
 
@@ -150,11 +156,11 @@ Per la protezione vera il proprietario del repo (`gennpalm`) può passare a GitH
 - [ ] Job _Deploy DEV_ verde su GitHub Actions.
 - [ ] `APP_BASE_URL` apre la pagina di login.
 - [ ] Super Admin: attivazione da link, attivazione 2FA, logout e nuovo login con codice.
-- [ ] Invito di un `USER` → link → attivazione → l'utente non vede _Administration_.
+- [ ] Invito di un `USER` → link → attivazione → l'utente non vede _Amministrazione_.
 - [ ] Revoca di un invito: il link non funziona più.
 - [ ] Link reset password generato da un Super Admin → nuova password funzionante.
 - [ ] Sospensione: l'utente viene bloccato. Riattivazione.
-- [ ] _Administration → Audit_ mostra le azioni.
+- [ ] _Amministrazione → Audit_ mostra le azioni.
 
 ## Sviluppo locale (facoltativo, non necessario)
 

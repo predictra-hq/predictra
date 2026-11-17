@@ -293,6 +293,41 @@ describe("scrittura e abbinamento", () => {
     });
   });
 
+  it("latest_odds_for_matches: stesse ultime quote della vista, solo per chi può leggerle", async () => {
+    await asServiceRole(db, async (tx) => {
+      await seedFootball(tx);
+      await ingestOdds(tx, oddsBatch("DEMO Casa"));
+      await ingestOdds(
+        tx,
+        oddsBatch("DEMO Casa", [1.9, 3.5, 4.2], "2026-01-07T15:00:00Z", "2026-01-07T15:05:00Z"),
+      );
+      const matchId = (
+        await one<{ id: number }>(tx, "select match_id id from public.v_latest_odds limit 1")
+      ).id;
+      const fromView = (
+        await tx.query<{ k: string }>(
+          `select bookmaker || market || selection || price::text k from public.v_latest_odds
+           where match_id = $1 order by 1`,
+          [matchId],
+        )
+      ).rows.map((r) => r.k);
+      const fromFunction = (
+        await tx.query<{ k: string }>(
+          `select bookmaker || market || selection || price::text k
+           from public.latest_odds_for_matches(array[$1]::bigint[]) order by 1`,
+          [matchId],
+        )
+      ).rows.map((r) => r.k);
+      expect(fromFunction).toEqual(fromView);
+      expect(fromFunction).toContain("demo_ith2hHOME1.900");
+    });
+    await asAnon(db, async (tx) => {
+      expect(
+        await attempt(tx, "select * from public.latest_odds_for_matches(array[1]::bigint[])"),
+      ).toMatch(/permission denied/);
+    });
+  });
+
   it("un evento non abbinato apre un problema, chiuso quando l'alias viene aggiunto", async () => {
     await asServiceRole(db, async (tx) => {
       await seedFootball(tx);

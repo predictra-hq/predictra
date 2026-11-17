@@ -34,10 +34,13 @@ import {
  * - per ogni partita, tra le selezioni che rispettano probabilità e quota minime del
  *   profilo, si sceglie quella con il valore più alto: "sicura" per la soglia, con il
  *   margine migliore tra quelle sicure. Tra le partite, prima quelle con più valore;
+ * - il valore dell'intera schedina non scende sotto `MIN_SLIP_VALUE` (zero): una selezione
+ *   che lo porterebbe sotto non entra. Meglio una schedina in meno che una che in media
+ *   fa perdere;
  * - se le selezioni valide sono meno di `MIN_LEGS`, quel profilo non viene proposto.
  */
 
-export const BOLLETTA_PROFILES = ["SOLID", "BALANCED", "HIGH"] as const;
+export const BOLLETTA_PROFILES = ["DOUBLE", "SOLID", "BALANCED", "LONG", "HIGH"] as const;
 export type BollettaProfile = (typeof BOLLETTA_PROFILES)[number];
 
 export interface BollettaRule {
@@ -50,8 +53,10 @@ export interface BollettaRule {
 }
 
 export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
+  DOUBLE: { minProbability: 0.72, minPrice: 1.2, legs: 2 },
   SOLID: { minProbability: 0.65, minPrice: 1.25, legs: 3 },
   BALANCED: { minProbability: 0.55, minPrice: 1.45, legs: 4 },
+  LONG: { minProbability: 0.55, minPrice: 1.3, legs: 6 },
   HIGH: { minProbability: 0.42, minPrice: 1.8, legs: 4 },
 };
 
@@ -61,6 +66,11 @@ export const MAX_EDGE = 0.15;
 /** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
 export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
 export const MIN_LEGS = 2;
+/**
+ * Valore atteso minimo dell'intera schedina (probabilità × quota totale − 1). Zero: non si
+ * consiglia una schedina che in media fa perdere, anche se ogni selezione è "sicura".
+ */
+export const MIN_SLIP_VALUE = 0;
 
 export interface BollettaPick extends LikelyPick {
   /** Probabilità del solo modello; `probability` è quella prudente usata per le scelte. */
@@ -69,6 +79,8 @@ export interface BollettaPick extends LikelyPick {
   marketProbability: number | null;
   price: number;
   bookmaker: string;
+  /** Quota più alta su un altro bookmaker italiano, se quella mostrata è del sito dell'utente. */
+  better?: { price: number; bookmaker: string } | null;
   /** Quando è stata letta la quota. */
   observedAt: string;
   /** probabilità × quota − 1. */
@@ -144,7 +156,7 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
   return out;
 }
 
-function consensusFor(
+export function consensusFor(
   consensus: ReadonlyMap<string, number>,
   pick: Pick<LikelyPick, "matchId" | "market" | "line" | "selection">,
 ): number | null {
@@ -210,6 +222,7 @@ export function playablePicks(
       marketProbability: market,
       price: it.price,
       bookmaker: it.bookmaker,
+      better: it.better ?? null,
       observedAt: it.observedAt,
       edge,
     });
@@ -238,10 +251,15 @@ function buildOne(
     if (!current || byValue(p, current) < 0) perMatch.set(p.matchId, p);
   }
   const chosen: BollettaPick[] = [];
+  let value = 0;
   const teams = new Set<string>();
   for (const p of [...perMatch.values()].sort(byValue)) {
     if (chosen.length >= rule.legs) break;
     if (teams.has(p.home) || teams.has(p.away)) continue;
+    // Una schedina consigliata non deve perdere in media: una selezione che porterebbe il
+    // valore complessivo sotto zero non entra (le più convenienti vengono prima).
+    if ((1 + value) * (1 + p.edge) - 1 < MIN_SLIP_VALUE) continue;
+    value = (1 + value) * (1 + p.edge) - 1;
     teams.add(p.home).add(p.away);
     chosen.push(p);
   }

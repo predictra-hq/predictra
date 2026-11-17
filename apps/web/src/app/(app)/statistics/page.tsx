@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TeamFormRow } from "@predictra/shared-types";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -18,6 +19,7 @@ import {
   listTeamSeasonStats,
 } from "@/lib/odds/queries";
 import { formPoints, parseForm, perMatch, rate, sortTeamStats } from "@/lib/odds/stats";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Statistiche" };
 
@@ -55,6 +57,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
   if (competitions.length === 0) {
     return (
       <>
+        <SectionTabs section="football" current="/statistics" />
         <PageHeader title={m.title} description={m.description} />
         <EmptyState>{m.noData}</EmptyState>
       </>
@@ -76,6 +79,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
 
   return (
     <>
+      <SectionTabs section="football" current="/statistics" />
       <PageHeader title={m.title} description={m.description} />
 
       <CompetitionFilter
@@ -115,7 +119,7 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
         {rows.length === 0 ? (
           <p className="p-5 text-sm text-muted">{m.noStats}</p>
         ) : (
-          <table className="w-full min-w-[1180px] text-left text-sm">
+          <table className="compact-sm w-full text-left text-sm sm:min-w-[1180px]">
             <caption className="sr-only">
               {competition.name} {competition.seasonLabel ?? ""}
             </caption>
@@ -124,20 +128,20 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                 <Th>#</Th>
                 <Th className="sticky left-0 z-10 bg-surface">{m.team}</Th>
                 <Th className="text-right">{m.played}</Th>
-                <Th className="text-right">{m.won}</Th>
-                <Th className="text-right">{m.drawn}</Th>
-                <Th className="text-right">{m.lost}</Th>
-                <Th className="text-right">{m.goalsFor}</Th>
-                <Th className="text-right">{m.goalsAgainst}</Th>
+                <Th className="sm-secondary text-right">{m.won}</Th>
+                <Th className="sm-secondary text-right">{m.drawn}</Th>
+                <Th className="sm-secondary text-right">{m.lost}</Th>
+                <Th className="sm-secondary text-right">{m.goalsFor}</Th>
+                <Th className="sm-secondary text-right">{m.goalsAgainst}</Th>
                 <Th className="text-right">{m.goalDifference}</Th>
                 <Th className="text-right">{m.points}</Th>
-                <Th className="text-right">{m.goalsPerMatch}</Th>
-                <Th className="text-right">{m.concededPerMatch}</Th>
-                <Th>{m.home}</Th>
-                <Th>{m.away}</Th>
-                <Th className="text-right">{m.cleanSheets}</Th>
-                <Th className="text-right">{m.bothScored}</Th>
-                <Th className="text-right">{m.over25}</Th>
+                <Th className="sm-secondary text-right">{m.goalsPerMatch}</Th>
+                <Th className="sm-secondary text-right">{m.concededPerMatch}</Th>
+                <Th className="sm-secondary">{m.home}</Th>
+                <Th className="sm-secondary">{m.away}</Th>
+                <Th className="sm-secondary text-right">{m.cleanSheets}</Th>
+                <Th className="sm-secondary text-right">{m.bothScored}</Th>
+                <Th className="sm-secondary text-right">{m.over25}</Th>
                 <Th title={m.formHint}>{m.form}</Th>
               </tr>
             </thead>
@@ -146,7 +150,9 @@ export default async function StatisticsPage({ searchParams }: PageProps<"/stati
                 <tr key={r.team_id} className="border-b border-border last:border-0">
                   <td className="px-3 py-2 text-muted">{i + 1}</td>
                   <td className="sticky left-0 z-10 whitespace-nowrap bg-surface px-3 py-2 font-medium">
-                    {r.team_name}
+                    <Link href={`/teams/${r.team_id}`} className="hover:underline">
+                      {r.team_name}
+                    </Link>
                   </td>
                   <td className="px-3 py-2 text-right font-mono">{r.played}</td>
                   <td className="sm-secondary px-3 py-2 text-right font-mono">{r.won}</td>

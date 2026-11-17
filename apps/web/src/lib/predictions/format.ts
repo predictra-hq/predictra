@@ -9,6 +9,16 @@ import {
 
 export type Tone = "neutral" | "positive" | "negative" | "warning";
 
+/** Linee del totale gol mostrate subito; le altre (estreme o con rimborso) sono in "Altri mercati". */
+export const PRIMARY_TOTAL_LINES: readonly number[] = [1.5, 2.5, 3.5];
+
+/** Vero se il gruppo va mostrato subito e non in "Altri mercati". */
+export function isPrimaryGroup(group: { market: PredictionMarket; line: number | null }): boolean {
+  if (!PRIMARY_MARKETS.includes(group.market)) return false;
+  if (group.market === "TOTAL_GOALS") return PRIMARY_TOTAL_LINES.includes(group.line ?? -1);
+  return group.market !== "DNB";
+}
+
 /** Mercati mostrati subito; gli altri finiscono in "Altri mercati". */
 export const PRIMARY_MARKETS: readonly PredictionMarket[] = [
   "1X2",
@@ -75,9 +85,32 @@ export function formatLine(line: number | null, market: PredictionMarket): strin
   return `${line > 0 ? "+" : "−"}${abs}`;
 }
 
-/** Ordina le selezioni del risultato esatto per probabilità decrescente (OTHER in fondo). */
+/** Ordine naturale di lettura: 1, X, 2 e Over prima di Under. */
+const SELECTION_ORDER = [
+  "HOME",
+  "DRAW",
+  "AWAY",
+  "HOME_DRAW",
+  "HOME_AWAY",
+  "DRAW_AWAY",
+  "OVER",
+  "UNDER",
+  "YES",
+  "NO",
+];
+
+/**
+ * Ordina le selezioni: 1-X-2 e simili nell'ordine in cui si leggono su una schedina,
+ * il risultato esatto per probabilità decrescente (OTHER in fondo).
+ */
 export function sortSelections(group: PredictionGroup): ActivePredictionRow[] {
-  if (group.market !== "CORRECT_SCORE") return group.rows;
+  if (group.market !== "CORRECT_SCORE") {
+    const rank = (sel: string) => {
+      const i = SELECTION_ORDER.indexOf(sel);
+      return i === -1 ? SELECTION_ORDER.length : i;
+    };
+    return [...group.rows].sort((a, b) => rank(a.selection) - rank(b.selection));
+  }
   return [...group.rows].sort((a, b) =>
     a.selection === "OTHER"
       ? 1
@@ -115,4 +148,20 @@ export function emptyPredictionsReason(input: {
   const now = input.now ?? new Date();
   if (input.status !== "SCHEDULED" || new Date(input.kickoffAt) <= now) return "NOT_UPCOMING";
   return "NOT_YET_EVALUATED";
+}
+
+/**
+ * I risultati esatti più probabili secondo il modello attivo (righe `CORRECT_SCORE`, senza
+ * "Altro"), dal più probabile. Sono già calcolati dal motore: qui si ordinano soltanto.
+ */
+export function topScores(
+  rows: readonly ActivePredictionRow[],
+  n = 5,
+): { score: string; probability: number }[] {
+  return rows
+    .filter((r) => r.market === "CORRECT_SCORE" && /^\d+-\d+$/.test(r.selection))
+    .map((r) => ({ score: r.selection, probability: Number(r.probability) }))
+    .filter((r) => Number.isFinite(r.probability))
+    .sort((a, b) => b.probability - a.probability || a.score.localeCompare(b.score))
+    .slice(0, n);
 }

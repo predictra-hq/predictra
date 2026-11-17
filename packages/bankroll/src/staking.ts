@@ -42,6 +42,21 @@ export function kellyStake(
   return floorCents(available * Math.min(fraction * f, cap));
 }
 
+/** Puntata minima abituale dei bookmaker italiani: sotto non ha senso suggerire. */
+export const MIN_PLAYABLE_STAKE = 2;
+
+/**
+ * Puntata giocabile: euro interi per difetto, almeno `MIN_PLAYABLE_STAKE` se il calcolo
+ * dà qualcosa di positivo; 0 se non si può giocare (calcolo nullo, disponibile o
+ * limite personale sotto il minimo).
+ */
+export function playableStake(stake: number, available: number, maxStake: number | null): number {
+  if (!(stake > 0)) return 0;
+  const ceiling = Math.min(available, maxStake ?? Infinity);
+  if (ceiling < MIN_PLAYABLE_STAKE) return 0;
+  return Math.min(Math.max(Math.floor(stake), MIN_PLAYABLE_STAKE), Math.floor(ceiling));
+}
+
 export interface StakeSuggestion {
   flat: number;
   /** null se manca la probabilità del modello o la quota. */
@@ -69,14 +84,16 @@ export function suggestStake(input: {
     return stake;
   };
 
-  const flat = cap(flatStake(input.available, input.flatPct));
+  // Suggerimenti giocabili: euro interi, minimo 2 € (mai 0,97 € su una schedina).
+  const playable = (stake: number) => playableStake(cap(stake), input.available, maxStake);
+  const flat = playable(flatStake(input.available, input.flatPct));
   if (input.probability === null || input.probability === undefined || !input.odds) {
     return { flat, kelly: null, kellyNote: "NO_PROBABILITY", cappedByLimit: capped };
   }
   const raw = kellyStake(input.available, input.probability, input.odds);
   return {
     flat,
-    kelly: cap(raw),
+    kelly: playable(raw),
     kellyNote: raw === 0 ? "NON_POSITIVE_EV" : null,
     cappedByLimit: capped,
   };

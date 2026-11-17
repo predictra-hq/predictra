@@ -31,6 +31,7 @@ import {
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { retryDeadJob } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Agente" };
 
@@ -63,7 +64,7 @@ function Td({ children, className }: { children: ReactNode; className?: string }
 function Table({ label, head, children }: { label: string; head: ReactNode; children: ReactNode }) {
   return (
     <ScrollRegion label={label} className="mt-3">
-      <table className="w-full text-sm">
+      <table className="limit-sm w-full text-sm" data-more={getMessages().common.moreOnDesktop}>
         <caption className="sr-only">{label}</caption>
         <thead className="text-xs uppercase tracking-wide text-muted">
           <tr className="border-b border-border">{head}</tr>
@@ -102,6 +103,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
 
   return (
     <>
+      <SectionTabs section="system" current="/admin/agent" />
       <PageHeader title={a.title} description={a.description} />
       {unavailable ? <Alert tone="negative">{a.unavailable}</Alert> : null}
 
@@ -147,7 +149,7 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
         </Table>
       </Card>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardTitle>{a.queueTitle}</CardTitle>
           {queue && queue.length === 0 ? (

@@ -14,19 +14,82 @@ import {
   Select,
 } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { listBankrolls, listLimits, listMovements } from "@/lib/bankroll/queries";
+import {
+  listBankrolls,
+  listItalianBookmakers,
+  listLimits,
+  listMovements,
+} from "@/lib/bankroll/queries";
+import { settleOpenBets } from "@/lib/bankroll/settle";
 import { parseId } from "@/lib/football/format";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { addMovement, createBankroll, deleteBankroll, deleteMovement, saveLimits } from "./actions";
+import {
+  addMovement,
+  createBankroll,
+  deleteBankroll,
+  deleteMovement,
+  saveLimits,
+  setBookmaker,
+} from "./actions";
 
 export const metadata: Metadata = { title: "Bankroll" };
+
+/**
+ * Sito dove si gioca: uno dei bookmaker di cui raccogliamo le quote, oppure il nome
+ * scritto a mano. Serve almeno uno dei due (controllo nell'azione sul server).
+ */
+function BookmakerFields({
+  idPrefix,
+  bookmakers,
+  code = null,
+  name = null,
+}: {
+  idPrefix: string;
+  bookmakers: readonly { code: string; title: string }[];
+  code?: string | null;
+  name?: string | null;
+}) {
+  const m = getMessages().bankroll;
+  return (
+    <>
+      <Field label={m.bookmaker} htmlFor={`${idPrefix}-bookmaker`} hint={m.bookmakerHint}>
+        <Select id={`${idPrefix}-bookmaker`} name="bookmakerCode" defaultValue={code ?? ""}>
+          <option value="">{bookmakers.length > 0 ? m.bookmakerOther : m.bookmakerChoose}</option>
+          {bookmakers.map((b) => (
+            <option key={b.code} value={b.code}>
+              {b.title}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field
+        label={m.bookmakerOtherLabel}
+        htmlFor={`${idPrefix}-bookmaker-name`}
+        hint={m.bookmakerOtherHint}
+      >
+        <Input
+          id={`${idPrefix}-bookmaker-name`}
+          name="bookmakerName"
+          maxLength={60}
+          defaultValue={name ?? ""}
+        />
+      </Field>
+    </>
+  );
+}
 
 export default async function BankrollPage({ searchParams }: PageProps<"/bankroll">) {
   await requireUser();
   const m = getMessages().bankroll;
   const c = getMessages().common;
   const params = await searchParams;
-  const [bankrolls, limits] = await Promise.all([listBankrolls(), listLimits()]);
+  await settleOpenBets();
+  const [bankrolls, limits, bookmakers] = await Promise.all([
+    listBankrolls(),
+    listLimits(),
+    // Senza elenco si può comunque scrivere il nome del sito a mano.
+    listItalianBookmakers().catch(() => []),
+  ]);
   const requested = typeof params.b === "string" ? parseId(params.b) : null;
   const selected = bankrolls.find((b) => b.bankroll_id === requested) ?? bankrolls[0] ?? null;
   const movements = selected ? await listMovements(selected.bankroll_id) : [];
@@ -42,7 +105,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
       {bankrolls.length === 0 ? (
         <EmptyState className="mb-6">{m.none}</EmptyState>
       ) : (
-        <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {bankrolls.map((b) => (
             <Card
               key={b.bankroll_id}
@@ -56,6 +119,19 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
                 <CardTitle>{b.name}</CardTitle>
                 <KindBadge kind={b.kind} />
               </div>
+              <p className="mt-1 text-sm text-muted">
+                {b.bookmaker_name ? (
+                  <>
+                    {b.bookmaker_name}
+                    <span className="text-xs text-subtle">
+                      {" · "}
+                      {b.bookmaker_code ? m.bookmakerTracked : m.bookmakerUntracked}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-warning">{m.bookmakerMissing}</span>
+                )}
+              </p>
               <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <Stat label={m.balance}>{formatEuro(b.balance)}</Stat>
                 <Stat label={m.available}>{formatEuro(b.available)}</Stat>
@@ -82,12 +158,10 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
       )}
 
       {selected ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card>
-            <CardTitle>
-              {m.movements} · {selected.name}
-            </CardTitle>
-            <ActionForm action={addMovement} className="mt-4 grid gap-3 sm:grid-cols-2">
+            <CardTitle>{m.movements}</CardTitle>
+            <ActionForm action={addMovement} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
               <Field label={m.movementKind} htmlFor="mv-kind">
                 <Select id="mv-kind" name="kind" defaultValue="DEPOSIT">
@@ -161,12 +235,13 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
           </Card>
 
           <div className="flex flex-col gap-4">
-            <Card>
-              <CardTitle>
-                {m.limits} · {selected.name}
-              </CardTitle>
+            <details className="rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5">
+              <summary className="cursor-pointer text-base font-semibold">{m.limits}</summary>
               <p className="mt-1 text-xs text-muted">{m.limitsHint}</p>
-              <ActionForm action={saveLimits} className="mt-4 grid gap-3 sm:grid-cols-2">
+              <ActionForm
+                action={saveLimits}
+                className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2"
+              >
                 <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
                 <Field label={m.maxStake} htmlFor="lim-stake">
                   <Input
@@ -204,7 +279,26 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
                   {m.saveLimits}
                 </SubmitButton>
               </ActionForm>
-            </Card>
+            </details>
+
+            <details
+              open={!selected.bookmaker_name}
+              className="rounded-[var(--radius-card)] border border-border bg-surface p-4 sm:p-5"
+            >
+              <summary className="cursor-pointer text-base font-semibold">
+                {selected.bookmaker_name ? m.bookmakerChange : m.bookmakerSet}
+              </summary>
+              <ActionForm action={setBookmaker} className="mt-4 grid grid-cols-1 gap-3">
+                <input type="hidden" name="bankrollId" value={selected.bankroll_id} />
+                <BookmakerFields
+                  idPrefix="bk"
+                  bookmakers={bookmakers}
+                  code={selected.bookmaker_code}
+                  name={selected.bookmaker_code ? null : selected.bookmaker_name}
+                />
+                <SubmitButton variant="secondary">{m.bookmakerSave}</SubmitButton>
+              </ActionForm>
+            </details>
 
             {/* Azione irreversibile: chiusa finché non la si apre. */}
             <details className="rounded-[var(--radius-card)] border border-border bg-surface p-5">
@@ -232,7 +326,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
         <summary className="cursor-pointer">
           <CardTitle className="inline">{m.create}</CardTitle>
         </summary>
-        <ActionForm action={createBankroll} className="mt-4 grid gap-3 sm:grid-cols-3">
+        <ActionForm action={createBankroll} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Field label={m.name} htmlFor="br-name">
             <Input id="br-name" name="name" maxLength={60} required />
           </Field>
@@ -248,6 +342,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
           <Field label={m.flatPct} htmlFor="br-flat" hint={m.flatPctHint}>
             <Input id="br-flat" name="flatPct" inputMode="decimal" placeholder="1" />
           </Field>
+          <BookmakerFields idPrefix="br" bookmakers={bookmakers} />
           <SubmitButton className="sm:col-span-3">{m.createButton}</SubmitButton>
         </ActionForm>
       </details>

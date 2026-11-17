@@ -14,6 +14,7 @@ import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { createPasswordResetLink, setAccountStatus, setUserRole } from "./actions";
+import { SectionTabs } from "@/components/shell/section-tabs";
 
 export const metadata: Metadata = { title: "Utenti" };
 
@@ -42,6 +43,7 @@ export default async function UsersPage() {
 
   return (
     <>
+      <SectionTabs section="people" current="/admin/users" />
       <PageHeader title={m.admin.usersTitle} description={m.admin.usersDescription} />
       {error ? (
         <Alert tone="negative" className="mb-4">

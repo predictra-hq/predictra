@@ -89,6 +89,30 @@ class SupabaseStore:
             )
         )
 
+    def select_all(self, relation: str, query: dict[str, str]) -> list[dict[str, Any]]:
+        """Tutte le righe di una lettura, a pagine da ``PAGE``."""
+        return self._paged(
+            lambda offset: self.select(
+                relation, {**query, "limit": str(PAGE), "offset": str(offset)}
+            )
+        )
+
+    def match_statistics(self, stats: tuple[str, ...]) -> list[dict[str, Any]]:
+        """Righe di ``match_team_statistics`` per le voci indicate (sola lettura)."""
+        return self._paged(
+            lambda offset: self.select(
+                "match_team_statistics",
+                {
+                    "select": "match_id,team_id,stat,value",
+                    "stat": f"in.({','.join(stats)})",
+                    "quality": "neq.ERROR",
+                    "order": "match_id,team_id,stat",
+                    "limit": str(PAGE),
+                    "offset": str(offset),
+                },
+            )
+        )
+
     def upcoming_fixtures(self, start: datetime, end: datetime) -> list[dict[str, Any]]:
         return self._paged(
             lambda offset: self.select(

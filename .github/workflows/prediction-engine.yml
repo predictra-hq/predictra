@@ -21,9 +21,9 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: "run = previsioni; tune = taratura; diagnose = verifica (entrambi in sola lettura)"
+        description: "run = previsioni; tune = taratura; diagnose = verifica; stats = tiri e xG; market = peso del mercato (tutti tranne run in sola lettura)"
         type: choice
-        options: [run, tune, diagnose]
+        options: [run, tune, diagnose, stats, market]
         default: run
       tune_args:
         description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
@@ -68,13 +68,14 @@ jobs:
         run: uv run pytest
 
   run:
-    name: Previsioni (DEV)
+    name: Previsioni (${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && 'PROD' || 'DEV' }})
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      SUPABASE_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
-      SUPABASE_SECRET_KEY: ${{ secrets.DEV_SUPABASE_SECRET_KEY }}
+      SUPABASE_PROJECT_ID: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_PROJECT_ID || ((vars.DATA_TARGET != 'prod' || github.ref_name != 'main') && secrets.DEV_SUPABASE_PROJECT_ID || '') }}
+      SUPABASE_SECRET_KEY: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && secrets.PROD_SUPABASE_SECRET_KEY || ((vars.DATA_TARGET != 'prod' || github.ref_name != 'main') && secrets.DEV_SUPABASE_SECRET_KEY || '') }}
+      DATA_ENV: ${{ (vars.DATA_TARGET == 'prod' && github.ref_name == 'main') && 'PROD' || 'DEV' }}
     steps:
       - name: Verifica segreti
         id: secrets
@@ -118,6 +119,14 @@ jobs:
           export CODE_COMMIT="$(git log -1 --format=%H -- .)"
           if [ "$COMMAND" = "diagnose" ]; then
             uv run python -m predictra_engine diagnose
+            exit 0
+          fi
+          if [ "$COMMAND" = "market" ]; then
+            uv run python -m predictra_engine market
+            exit 0
+          fi
+          if [ "$COMMAND" = "stats" ]; then
+            uv run python -m predictra_engine stats
             exit 0
           fi
           if [ "$COMMAND" = "tune" ]; then

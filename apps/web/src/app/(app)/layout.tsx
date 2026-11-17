@@ -1,6 +1,9 @@
 import { hasPermission, highestRole } from "@predictra/shared-types";
 import { ADMIN_NAV, MAIN_NAV_GROUPS, SETTINGS_NAV } from "@/components/shell/nav-config";
+import { BottomNav } from "@/components/shell/bottom-nav";
+import { SectionNav } from "@/components/shell/section-nav";
 import { Sidebar } from "@/components/shell/sidebar";
+import { UpdateNotice } from "@/components/shell/update-notice";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 
@@ -13,10 +16,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-clip">
       <a
         href="#content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-1/2 focus:top-2 focus:z-50 focus:-translate-x-1/2 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2"
       >
         {m.common.skipToContent}
       </a>
@@ -28,9 +31,17 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         userLabel={user.displayName ?? user.email}
         roleLabel={role ? m.roles[role] : ""}
       />
-      <main id="content" className="px-4 py-6 sm:px-8 lg:ml-64 lg:py-10">
-        <div className="mx-auto max-w-6xl">{children}</div>
+      <main
+        id="content"
+        className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:pt-6 lg:ml-64 lg:py-10"
+      >
+        <div className="mx-auto max-w-6xl">
+          <SectionNav messages={m} />
+          {children}
+        </div>
       </main>
+      <BottomNav messages={m} />
+      <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />
     </div>
   );
 }

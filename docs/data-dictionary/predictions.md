@@ -22,10 +22,11 @@ Regole comuni:
 
 ## Viste
 
-| Vista                      | Contenuto                                                                                                                                                         | Usata da                            |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `v_active_predictions`     | ultima previsione del **modello attivo** per partita, mercato, linea e selezione, con calcio d'inizio, squadre, Confidence Score, spiegazione, `as_of` e versione | M4 corsia B (dettaglio partita), M5 |
-| `v_model_versions_summary` | ogni versione con l'ultimo backtest: Brier, Log Loss, ECE, valori della baseline, `beats_baseline`, curva di calibrazione                                         | M4 corsia B (Model Intelligence)    |
+| Vista                       | Contenuto                                                                                                                                                                                                                                                                                              | Usata da                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `v_active_predictions`      | ultima previsione del **modello attivo** per partita, mercato, linea e selezione, con calcio d'inizio, squadre, Confidence Score, spiegazione, `as_of` e versione                                                                                                                                      | M4 corsia B (dettaglio partita), M5                     |
+| `v_pre_kickoff_predictions` | per partita, mercato, linea e selezione, l'ultima previsione fatta prima del calcio d'inizio dalla **stessa famiglia del modello attivo**, di qualunque versione (stesse colonne di `v_active_predictions`). Serve alle verifiche sulle partite giocate, che non si svuotano a ogni cambio di versione | pagina Certezze (verifica), comando `market` del motore |
+| `v_model_versions_summary`  | ogni versione con l'ultimo backtest: Brier, Log Loss, ECE, valori della baseline, `beats_baseline`, curva di calibrazione                                                                                                                                                                              | M4 corsia B (Model Intelligence)                        |
 
 ## Funzioni
 

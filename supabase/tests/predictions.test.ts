@@ -478,3 +478,45 @@ describe("modello attivo", () => {
     ).toBe(1);
   });
 });
+
+describe("previsioni prima del calcio d'inizio", () => {
+  it("restano visibili dopo il cambio di versione dello stesso modello, solo per chi è attivo", async () => {
+    const { v1, v2 } = await asServiceRole(db, async (tx) => {
+      const { upcoming } = await seedMatches(tx);
+      const v1 = await register(tx, version("dixon_coles", "v1"));
+      const v2 = await register(tx, version("dixon_coles", "v2", HASH2));
+      const elo = await register(tx, version("elo", "v1"));
+      for (const id of [v1, v2, elo]) {
+        await tx.query("select public.record_backtest($1)", [
+          JSON.stringify(backtest(id, 0.6, 1.0)),
+        ]);
+      }
+      for (const id of [v1, elo]) {
+        const run = await num(tx, "select public.start_prediction_run($1, $2) v", [id, COMMIT]);
+        await tx.query("select public.record_predictions($1, $2)", [
+          run,
+          JSON.stringify({ predictions: [prediction(upcoming)] }),
+        ]);
+      }
+      return { v1, v2 };
+    });
+    await asUser(db, superAdmin, async (tx) => {
+      await tx.query("select public.set_active_model_version($1)", [v1]);
+      await tx.query("select public.set_active_model_version($1)", [v2]);
+    });
+    await asUser(db, alice, async (tx) => {
+      expect(await num(tx, "select count(*)::int v from public.v_active_predictions")).toBe(0);
+      const rows = (
+        await tx.query<{ model_key: string; model_version: string }>(
+          "select model_key, model_version from public.v_pre_kickoff_predictions",
+        )
+      ).rows;
+      expect(rows).toEqual([{ model_key: "dixon_coles", model_version: "v1" }]);
+    });
+    await asAnon(db, async (tx) => {
+      expect(await attempt(tx, "select * from public.v_pre_kickoff_predictions")).toMatch(
+        /permission denied/,
+      );
+    });
+  });
+});

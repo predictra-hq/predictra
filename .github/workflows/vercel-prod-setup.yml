@@ -1,0 +1,135 @@
+name: Prepara Vercel PROD
+
+# Crea il progetto Vercel di PROD senza collegarlo a Git (ADR 0055, produzione.md).
+# La pipeline non usa l'integrazione Git di Vercel: costruisce e pubblica il sito da
+# GitHub Actions con VERCEL_TOKEN (deploy-target.yml). Per questo il progetto non deve
+# importare il repository, e il limite del piano Hobby sui repository delle
+# organizzazioni non si applica.
+#
+# Cosa fa, una volta sola (rilanciarlo non crea doppioni, aggiorna le variabili):
+# - crea il progetto `predictra-prod` con le stesse impostazioni di build di DEV;
+# - gli assegna l'indirizzo pubblico `predictra-prod.vercel.app` (o un'alternativa libera);
+# - imposta le variabili che si possono ricavare dai segreti già presenti;
+# - scrive nel riepilogo del run il Project ID e l'indirizzo da salvare nei segreti.
+# Le chiavi che vivono solo su Vercel (Groq, QStash, token di avvio) si aggiungono a mano.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: Progetto Vercel PROD
+    if: github.actor == 'gennpalm'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      DEV_VERCEL_PROJECT_ID: ${{ secrets.DEV_VERCEL_PROJECT_ID }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROD_SUPABASE_PROJECT_ID: ${{ secrets.PROD_SUPABASE_PROJECT_ID }}
+      PROD_SUPABASE_SECRET_KEY: ${{ secrets.PROD_SUPABASE_SECRET_KEY }}
+      PROJECT_NAME: predictra-prod
+    steps:
+      - name: Controlli
+        run: |
+          missing=""
+          for v in VERCEL_TOKEN VERCEL_ORG_ID DEV_VERCEL_PROJECT_ID SUPABASE_ACCESS_TOKEN PROD_SUPABASE_PROJECT_ID PROD_SUPABASE_SECRET_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Prepara Vercel PROD::Segreti mancanti:$missing (docs/operations/produzione.md)"
+            exit 1
+          fi
+
+      - name: Progetto, indirizzo e variabili
+        run: |
+          set -euo pipefail
+          # Account del team (team_…) o personale: solo il primo vuole il parametro teamId.
+          team=""; case "$VERCEL_ORG_ID" in team_*) team="teamId=$VERCEL_ORG_ID" ;; esac
+          api() { # api METODO PERCORSO [JSON]
+            local sep="?"; case "$2" in *\?*) sep="&" ;; esac
+            curl -sS -X "$1" "https://api.vercel.com$2${team:+$sep$team}" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+              ${3:+--data "$3"} -w '\n%{http_code}'
+          }
+          body() { sed '$d' <<<"$1"; }
+          code() { tail -n1 <<<"$1"; }
+
+          # Impostazioni di build di DEV, da copiare.
+          r="$(api GET "/v9/projects/$DEV_VERCEL_PROJECT_ID")"
+          [ "$(code "$r")" = 200 ] || { echo "::error::Progetto DEV non leggibile (HTTP $(code "$r")): controlla VERCEL_TOKEN e VERCEL_ORG_ID"; exit 1; }
+          settings="$(body "$r" | jq -c --arg name "$PROJECT_NAME" '{name: $name, framework, rootDirectory, installCommand, buildCommand, outputDirectory} | with_entries(select(.value != null))')"
+          node_version="$(body "$r" | jq -r '.nodeVersion // empty')"
+          echo "Impostazioni copiate da DEV: $(jq -c 'del(.name)' <<<"$settings"), Node ${node_version:-predefinito}"
+
+          # Progetto: lo si crea solo se manca.
+          r="$(api GET "/v9/projects/$PROJECT_NAME")"
+          if [ "$(code "$r")" = 200 ]; then
+            echo "Il progetto $PROJECT_NAME esiste già: lo riuso."
+          else
+            r="$(api POST "/v11/projects" "$settings")"
+            [ "$(code "$r")" = 200 ] || { echo "::error::Creazione del progetto non riuscita (HTTP $(code "$r")): $(body "$r" | jq -r '.error.message // .')"; exit 1; }
+            echo "Progetto $PROJECT_NAME creato (senza collegamento a Git)."
+          fi
+          project_id="$(body "$r" | jq -r '.id')"
+          # Versione di Node come DEV (si imposta dopo la creazione).
+          if [ -n "$node_version" ]; then
+            r2="$(api PATCH "/v9/projects/$project_id" "{\"nodeVersion\":\"$node_version\"}")"
+            [ "$(code "$r2")" = 200 ] || echo "::warning::Versione di Node non impostata (HTTP $(code "$r2")): resta quella predefinita di Vercel"
+          fi
+
+          # Indirizzo pubblico: il primo libero tra i nomi proposti.
+          url=""
+          domains="$(body "$(api GET "/v9/projects/$project_id/domains")" | jq -r '.domains[]?.name' | grep '\.vercel\.app$' || true)"
+          if [ -n "$domains" ]; then
+            url="https://$(head -n1 <<<"$domains")"
+          else
+            for name in predictra-prod predictra-app predictra-hq-prod; do
+              r="$(api POST "/v10/projects/$project_id/domains" "{\"name\":\"$name.vercel.app\"}")"
+              if [ "$(code "$r")" = 200 ]; then url="https://$name.vercel.app"; break; fi
+              echo "$name.vercel.app non disponibile (HTTP $(code "$r"))."
+            done
+          fi
+          [ -n "$url" ] || { echo "::error::Nessun indirizzo .vercel.app libero: aggiungine uno a mano in Vercel → Settings → Domains"; exit 1; }
+
+          # Chiave publishable di PROD dalla Management API di Supabase (non è segreta).
+          publishable="$(curl -fsS -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$PROD_SUPABASE_PROJECT_ID/api-keys" \
+            | jq -r '[.[] | select(.type == "publishable")][0].api_key // empty')"
+          [ -n "$publishable" ] || { echo "::error::Chiave publishable di PROD non trovata"; exit 1; }
+
+          # Variabili di produzione. Quelle usate dalla build restano leggibili ("plain"):
+          # `vercel pull` non scarica le "sensitive". La chiave secret resta "sensitive".
+          vars="$(jq -n \
+            --arg url "https://$PROD_SUPABASE_PROJECT_ID.supabase.co" \
+            --arg pub "$publishable" \
+            --arg secret "$PROD_SUPABASE_SECRET_KEY" \
+            --arg app "$url" \
+            '[
+              {key: "NEXT_PUBLIC_SUPABASE_URL", value: $url, type: "plain"},
+              {key: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", value: $pub, type: "plain"},
+              {key: "APP_BASE_URL", value: $app, type: "plain"},
+              {key: "GITHUB_DISPATCH_REF", value: "main", type: "plain"},
+              {key: "SUPABASE_SECRET_KEY", value: $secret, type: "sensitive"}
+            ] | map(. + {target: ["production"]})')"
+          r="$(api POST "/v10/projects/$project_id/env?upsert=true" "$vars")"
+          [ "$(code "$r")" = 201 ] || [ "$(code "$r")" = 200 ] || { echo "::error::Variabili non salvate (HTTP $(code "$r")): $(body "$r" | jq -r '.error.message // .')"; exit 1; }
+          echo "Variabili impostate: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, APP_BASE_URL, GITHUB_DISPATCH_REF, SUPABASE_SECRET_KEY."
+
+          {
+            echo "### Progetto Vercel PROD pronto"
+            echo ""
+            echo "Salva questi due valori nei segreti di GitHub (Settings → Secrets and variables → Actions):"
+            echo ""
+            echo "| Segreto | Valore |"
+            echo "| --- | --- |"
+            echo "| \`PROD_VERCEL_PROJECT_ID\` | \`$project_id\` |"
+            echo "| \`PROD_APP_BASE_URL\` | \`$url\` |"
+            echo ""
+            echo "Poi in Vercel → $PROJECT_NAME → Settings → Environment Variables (Production) aggiungi a mano:"
+            echo "\`GROQ_API_KEY\`, \`QSTASH_CURRENT_SIGNING_KEY\`, \`QSTASH_NEXT_SIGNING_KEY\`, \`GITHUB_DISPATCH_TOKEN\` (tipo Sensitive)."
+          } >> "$GITHUB_STEP_SUMMARY"

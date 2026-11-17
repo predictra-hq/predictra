@@ -33,6 +33,8 @@ const AUTHENTICATED_FUNCTIONS = [
   "public.ask_record",
   "public.authorize_password_reset",
   "public.create_invitation",
+  // sola lettura, SECURITY INVOKER: rispetta la RLS di chi chiama (quote per partita)
+  "public.latest_odds_for_matches",
   "public.retry_dead_agent_job",
   "public.revoke_invitation",
   "public.set_account_status",
@@ -50,6 +52,7 @@ const AUTHENTICATED_WRITABLE = [
   "user_bet_slip_selections",
   "user_bet_slips",
   "user_dashboard_settings",
+  "user_follows",
   "user_preferences",
 ].sort();
 
@@ -60,6 +63,16 @@ describe("revisione di sicurezza del database", () => {
         join pg_namespace n on n.oid = c.relnamespace
         where n.nspname in ('public', 'app_private') and c.relkind = 'r' and not c.relrowsecurity`),
     ).toEqual([]);
+  });
+
+  it("le policy di lettura controllano l'utente attivo una volta per istruzione, non per riga", async () => {
+    // `using (app_private.is_active_user())` viene valutata a ogni riga: con le quote
+    // portava le pagine in timeout. Va scritta `using ((select app_private.is_active_user()))`.
+    const { rows } = await db.query<{ policyname: string }>(
+      `select policyname from pg_policies
+       where schemaname = 'public' and qual = 'app_private.is_active_user()'`,
+    );
+    expect(rows.map((r) => r.policyname)).toEqual([]);
   });
 
   it("tutte le viste di public applicano la RLS di chi le interroga (security_invoker)", async () => {

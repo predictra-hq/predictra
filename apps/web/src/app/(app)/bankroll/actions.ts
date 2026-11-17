@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/dal";
-import { bankrollSchema, limitsSchema, movementSchema, toIsoDate } from "@/lib/bankroll/validation";
+import {
+  bankrollSchema,
+  bookmakerSchema,
+  limitsSchema,
+  movementSchema,
+  toIsoDate,
+} from "@/lib/bankroll/validation";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +24,48 @@ const done = (message: string): ActionState => {
   return { ok: true, message };
 };
 
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Sito del bankroll dal modulo: un bookmaker raccolto (il nome viene dalla tabella, non
+ * dal modulo) oppure un nome scritto a mano. `null` se manca o non è valido.
+ */
+async function readBookmaker(
+  supabase: Supabase,
+  formData: FormData,
+): Promise<{ bookmaker_code: string | null; bookmaker_name: string } | null> {
+  const parsed = bookmakerSchema.safeParse({
+    bookmakerCode: formData.get("bookmakerCode"),
+    bookmakerName: formData.get("bookmakerName"),
+  });
+  if (!parsed.success) return null;
+  if (parsed.data.bookmakerCode) {
+    const { data } = await supabase
+      .from("bookmakers")
+      .select("code, title")
+      .eq("code", parsed.data.bookmakerCode)
+      .eq("italian_market", true)
+      .maybeSingle();
+    return data ? { bookmaker_code: String(data.code), bookmaker_name: String(data.title) } : null;
+  }
+  return { bookmaker_code: null, bookmaker_name: parsed.data.bookmakerName! };
+}
+
+export async function setBookmaker(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const m = getMessages().bankroll;
+  await requireUser();
+  const id = Number(formData.get("bankrollId"));
+  if (!Number.isSafeInteger(id) || id <= 0) return { ok: false, message: m.invalid };
+  const supabase = await createClient();
+  const bookmaker = await readBookmaker(supabase, formData);
+  if (!bookmaker) return { ok: false, message: m.bookmakerRequired };
+  const { error } = await supabase.from("bankrolls").update(bookmaker).eq("id", id);
+  if (error) return { ok: false, message: toUserMessage(error) };
+  revalidatePath("/bet-builder");
+  revalidatePath("/certezze");
+  return done(m.bookmakerSaved);
+}
+
 export async function createBankroll(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const m = getMessages().bankroll;
   await requireUser();
@@ -28,10 +76,14 @@ export async function createBankroll(_prev: ActionState, formData: FormData): Pr
   });
   if (!parsed.success) return { ok: false, message: m.invalid };
   const supabase = await createClient();
+  // Il sito è obbligatorio: serve a proporre le quote giuste su schedine e giocate.
+  const bookmaker = await readBookmaker(supabase, formData);
+  if (!bookmaker) return { ok: false, message: m.bookmakerRequired };
   const { error } = await supabase.from("bankrolls").insert({
     name: parsed.data.name,
     kind: parsed.data.kind,
     flat_stake_pct: parsed.data.flatPct,
+    ...bookmaker,
   });
   if (error) {
     if (error.code === "23505") return { ok: false, message: m.nameTaken };
