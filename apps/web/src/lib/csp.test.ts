@@ -7,6 +7,7 @@ describe("CSP con nonce", () => {
     const script = csp.split("; ").find((d) => d.startsWith("script-src"))!;
     expect(script).toBe("script-src 'self' 'nonce-abc123' 'strict-dynamic'");
     expect(csp).toContain("object-src 'none'");
+    expect(csp).toContain("worker-src 'self'");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("connect-src 'self' https://x.supabase.co");
     expect(csp).toContain("upgrade-insecure-requests");
