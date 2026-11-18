@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { THEME_COLOR, THEME_COOKIE, THEMES, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { playSound } from "@/lib/sounds";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -40,6 +41,7 @@ export function ThemePicker({
           onClick={() => {
             applyTheme(t);
             setTheme(t);
+            playSound("tap");
           }}
           className={cn(
             "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",

@@ -65,3 +65,22 @@ export interface BirthdayTodayRow {
   name_color: NameColor | null;
   name_style: NameStyle | null;
 }
+
+/**
+ * Colori del cerchio dell'avatar (`profiles.avatar_color`, migrazione
+ * `20261118090000_avatar_color_discussions.sql`). Vuoto = colore automatico dall'id.
+ */
+export const AVATAR_COLOR_KEYS = ["teal", "violet", "orange", "blue", "pink", "green"] as const;
+export type AvatarColorKey = (typeof AVATAR_COLOR_KEYS)[number];
+
+export function isAvatarColorKey(value: unknown): value is AvatarColorKey {
+  return typeof value === "string" && (AVATAR_COLOR_KEYS as readonly string[]).includes(value);
+}
+
+/** Riga di `public.recent_comment_feed(p_limit)`: ultimi commenti di tutte le partite. */
+export interface RecentCommentRow extends MatchCommentFeedRow {
+  match_id: number;
+  home_team: string;
+  away_team: string;
+  kickoff_at: string;
+}

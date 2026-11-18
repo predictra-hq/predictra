@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Maximize2, MessageCircleQuestion, X } from "lucide-react";
+import { BotMessageSquare, Maximize2, X } from "lucide-react";
 import { AskChat } from "@/components/ask/ask-chat";
 import { getMessages } from "@/lib/i18n";
 
@@ -48,7 +48,7 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
         // contenuti. Computer: pulsante tondo in basso a destra.
         className="fixed left-[5.75rem] top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 flex size-10 cursor-pointer items-center justify-center rounded-md text-positive transition-colors hover:bg-surface-2 lg:bottom-6 lg:left-auto lg:right-6 lg:top-auto lg:size-14 lg:rounded-full lg:border lg:border-positive/40 lg:bg-surface lg:shadow-lg lg:hover:bg-positive-soft"
       >
-        <MessageCircleQuestion className="size-[22px] lg:size-6" aria-hidden />
+        <BotMessageSquare className="size-[22px] lg:size-6" aria-hidden />
       </button>
       <dialog
         ref={ref}
