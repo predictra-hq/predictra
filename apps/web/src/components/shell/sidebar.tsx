@@ -20,12 +20,11 @@ interface SidebarProps {
   groups: readonly NavGroup[];
   admin: readonly NavItem[];
   settings: readonly NavItem[];
-  userId: string;
   userLabel: string;
   /** Stile del nome e colore dell'avatar scelti nelle Preferenze. */
   nameColor: string | null;
   nameStyle: string | null;
-  avatarColor: string | null;
+  avatarStyle: string | null;
   /** Versione mostrata (es. «v1.0.0»). */
   release: string;
   roleLabel: string;
@@ -207,11 +206,10 @@ export function Sidebar({
   groups,
   admin,
   settings,
-  userId,
   userLabel,
   nameColor,
   nameStyle,
-  avatarColor,
+  avatarStyle,
   release,
   roleLabel,
 }: SidebarProps) {
@@ -306,7 +304,7 @@ export function Sidebar({
 
         <div className="border-t border-border p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))]">
           <div className="flex items-center gap-3">
-            <UserAvatar userId={userId} color={avatarColor} className="size-9" />
+            <UserAvatar style={avatarStyle} name={userLabel} className="size-9" />
             <div className="min-w-0">
               <p className="truncate text-sm" title={userLabel}>
                 <StyledName name={userLabel} color={nameColor} style={nameStyle} />
