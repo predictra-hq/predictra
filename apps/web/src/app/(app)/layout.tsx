@@ -50,11 +50,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         groups={MAIN_NAV_GROUPS}
         admin={adminNav}
         settings={SETTINGS_NAV}
-        userId={user.id}
         userLabel={user.displayName ?? user.email}
         nameColor={user.nameColor}
         nameStyle={user.nameStyle}
-        avatarColor={user.avatarColor}
+        avatarStyle={user.avatarStyle}
         release={formatRelease()}
         roleLabel={role ? m.roles[role] : ""}
       />

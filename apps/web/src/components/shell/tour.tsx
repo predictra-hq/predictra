@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { GraduationCap } from "lucide-react";
 import type { Messages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { completeTour } from "@/app/(app)/tour-action";
@@ -158,15 +159,21 @@ export function Tour({ messages, done }: { messages: Messages["tour"]; done: boo
   );
 }
 
-/** Pulsante del Profilo: riapre il tutorial dall'inizio. */
-export function TourRestartButton({ label }: { label: string }) {
+/** Voce del Profilo (gruppo Aiuto): riapre il tutorial dall'inizio. */
+export function TourRestartRow({ label, hint }: { label: string; hint: string }) {
   return (
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(TOUR_RESTART_EVENT))}
-      className="mt-6 flex h-12 w-full cursor-pointer items-center justify-center rounded-[var(--radius-card)] border border-border bg-surface font-medium transition-colors hover:bg-surface-2"
+      className="flex min-h-14 w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-2 active:bg-surface-2"
     >
-      {label}
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-positive-soft text-positive-strong">
+        <GraduationCap size={18} aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{label}</span>
+        <span className="block text-xs text-muted">{hint}</span>
+      </span>
     </button>
   );
 }

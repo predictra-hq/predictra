@@ -35,7 +35,7 @@ export default async function DiscussionsPage() {
           </p>
           {!own.birthDate ? (
             <Link
-              href="/settings/preferences#birthday"
+              href="/settings/account#birthday"
               className="mt-3 inline-block text-sm font-medium text-positive-strong underline underline-offset-2"
             >
               {m.comments.unlock}
