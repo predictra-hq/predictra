@@ -10,6 +10,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { formatRelease } from "@/lib/version";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { StyledName } from "@/components/community/styled-name";
 
 export const metadata: Metadata = { title: "Profilo" };
 
@@ -75,9 +76,16 @@ export default async function ProfilePage() {
     <div className="mx-auto max-w-xl">
       <h1 className="sr-only">{p.title}</h1>
       <div className="flex items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-4">
-        <UserAvatar userId={user.id} className="size-14" />
+        <UserAvatar userId={user.id} color={user.avatarColor} className="size-14" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-semibold leading-tight">{name}</p>
+          <p className="truncate text-lg leading-tight">
+            <StyledName
+              name={name}
+              color={user.nameColor}
+              style={user.nameStyle}
+              className="font-semibold"
+            />
+          </p>
           {user.displayName ? <p className="truncate text-sm text-muted">{user.email}</p> : null}
           {role ? <p className="mt-0.5 text-xs text-subtle">{m.roles[role]}</p> : null}
         </div>

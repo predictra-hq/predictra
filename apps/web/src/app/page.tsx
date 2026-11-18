@@ -5,7 +5,7 @@ import {
   BarChart3,
   CircleSlash,
   Layers,
-  MessageCircleQuestion,
+  BotMessageSquare,
   ShieldCheck,
   Target,
   Wallet,
@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: { absolute: "PREDICTRA" } };
 
-const FEATURE_ICONS = [BarChart3, Target, Layers, ShieldCheck, Wallet, MessageCircleQuestion];
+const FEATURE_ICONS = [BarChart3, Target, Layers, ShieldCheck, Wallet, BotMessageSquare];
 
 /**
  * Presentazione prima del login, impaginata a F: chi legge scorre la riga in alto (nome e

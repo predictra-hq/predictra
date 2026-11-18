@@ -161,6 +161,7 @@ export const it = {
     marketIntelligence: "Quote",
     leagueIntelligence: "Campionati",
     teams: "Squadre",
+    discussions: "Discussioni",
     bankroll: "Bankroll",
     tracker: "Giocate fatte",
     modelIntelligence: "Modello",
@@ -355,6 +356,13 @@ export const it = {
     passwordSection: "Password",
     passwordUpdated: "Password aggiornata.",
   },
+  discussions: {
+    title: "Discussioni",
+    description:
+      "Gli ultimi commenti degli iscritti su tutte le partite. Per rispondere apri la partita.",
+    lockedTitle: "Riservato agli iscritti maggiorenni",
+    empty: "Ancora nessun commento. Apri una partita e scrivi il primo.",
+  },
   comments: {
     title: "Commenti",
     rules:
@@ -390,6 +398,11 @@ export const it = {
     theme: "Tema",
     themeHint: "Vale per questo browser e si applica subito.",
     themes: { dark: "Scuro", light: "Chiaro" },
+    sounds: "Suoni",
+    soundsHint:
+      "Brevi suoni quando salvi, quando qualcosa non va, quando arriva una risposta di Chiedi a PREDICTRA e alla fine del tutorial. Valgono per questo dispositivo; il volume e la modalità silenziosa del telefono restano decisivi.",
+    soundsOn: "Accesi",
+    soundsOff: "Spenti",
     birthday: "Data di nascita",
     birthdayHint:
       "La vedi solo tu: nemmeno gli amministratori. Serve a sbloccare i commenti (almeno 18 anni). L’" +
@@ -422,6 +435,24 @@ export const it = {
     },
     namePreview: "Anteprima",
     nameStyleSaved: "Stile del nome salvato.",
+    birthdaySavedUnlocked: "Data di nascita salvata: i commenti e le Discussioni sono sbloccati.",
+    commentsUnlocked: "Commenti sbloccati.",
+    commentsOpen: "Vai alle Discussioni",
+    commentsLocked:
+      "Commenti e Discussioni bloccati: si sbloccano con una data di nascita di almeno 18 anni fa.",
+    avatar: "Avatar",
+    avatarHint:
+      "Il simbolo di PREDICTRA sul colore che preferisci. «Automatico» usa un colore fisso scelto per te.",
+    avatarAuto: "Automatico",
+    avatarColors: {
+      teal: "Verde acqua",
+      violet: "Viola",
+      orange: "Arancio",
+      blue: "Blu",
+      pink: "Rosa",
+      green: "Verde",
+    },
+    avatarSaved: "Avatar salvato.",
     alerts: "Avvisi in Home",
     alertsHint:
       "In Home vedi le giocate che iniziano a breve sopra questa probabilità. Vale per questo browser.",

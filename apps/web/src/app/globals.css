@@ -132,7 +132,9 @@ body::before {
   }
 }
 
-/* App sul telefono: niente rimbalzo che trascina tutta la pagina oltre i bordi. */
+/* App sul telefono: niente rimbalzo che trascina tutta la pagina oltre i bordi (su iPhone
+   serve anche su `html`). */
+html,
 body {
   overscroll-behavior-y: none;
 }

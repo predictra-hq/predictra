@@ -45,7 +45,7 @@ export async function MatchComments({ matchId }: { matchId: number }) {
   const canModerate = (role === "ADMIN" || role === "SUPER_ADMIN") && user.aal2;
 
   return (
-    <Card className="mt-4">
+    <Card id="comments" className="mt-4 scroll-mt-24">
       <CardTitle>{m.title}</CardTitle>
       <p className="mt-1 text-xs text-subtle">{m.rules}</p>
 
