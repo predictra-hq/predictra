@@ -213,3 +213,21 @@ Tutto nella stessa PR (versione **1.1.0**).
 - **Icona di Chiedi a PREDICTRA**: `BotMessageSquare` (un fumetto con un assistente) al posto del punto di domanda, nel pulsante, nel menu e nella presentazione.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV: suoni su iPhone (prima il tocco su «Accesi»), barra fissa tirando giù la pagina, tutorial dopo uscita e nuovo accesso, Discussioni con un utente senza data di nascita.
+
+## 18/11/2026: presentazione riscritta per chi non conosce PREDICTRA
+
+Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `landing`) risponde, nell'ordine dello schema a F, alle domande di chi arriva:
+
+| Sezione                         | Domanda o dubbio a cui risponde                          |
+| ------------------------------- | -------------------------------------------------------- |
+| Titolo e tre punti in evidenza  | A cosa serve? È affidabile? Mi chiede soldi o scommesse? |
+| A cosa ti serve (tre casi)      | «Non vedo qualcosa che possa interessarmi»               |
+| Come funziona (tre passi)       | È facile?                                                |
+| Perché fidarsi dei numeri       | «Il solito sistema fake?»                                |
+| È sicuro?                       | Chi vede i miei dati, come si entra, pagamenti           |
+| Domande che ci si fa all'inizio | Fake, costi, cosa offre, se serve a chi gioca poco       |
+
+- Barra in alto fissa con «Come funziona», «Sicurezza», «Domande» (su computer) e «Accedi».
+- **Il video non cambia più dimensione:** le quattro scene stanno una sopra l'altra nella stessa cella e si vede solo quella attiva, quindi il riquadro ha sempre l'altezza della più alta. Prima ogni scena aveva la sua altezza e spostava tutta la pagina. Verificato in anteprima locale: altezza identica nelle quattro scene, su computer e su telefono.
+- Nessuna promessa di vincita e nessun numero reale: le scene restano con dati `DEMO`. Sul costo la pagina dice solo ciò che è vero oggi: dentro PREDICTRA non si compra nulla e l'accesso è su invito.
+- In fondo l'avvertenza sul gioco: vietato ai minori di 18 anni, il gioco può causare dipendenza.
