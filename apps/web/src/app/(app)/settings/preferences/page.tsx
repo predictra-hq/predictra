@@ -7,6 +7,8 @@ import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { ThemePicker } from "@/components/shell/theme-picker";
+import { SoundToggle } from "@/components/shell/sound-toggle";
+import { SOUND_COOKIE } from "@/lib/sounds";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { ALERT_COOKIE, ALERT_THRESHOLDS, parseAlertThreshold } from "@/lib/alerts";
@@ -15,7 +17,11 @@ import { NAME_COLORS, NAME_STYLES } from "@predictra/shared-types";
 import { StyledName } from "@/components/community/styled-name";
 import { getOwnCommunityProfile } from "@/lib/community/queries";
 import { todayInRome } from "@/lib/community/community";
-import { removeBirthday, saveBirthday, saveNameStyle } from "./actions";
+import { removeBirthday, saveAvatarColor, saveBirthday, saveNameStyle } from "./actions";
+import { AVATAR_COLOR_KEYS } from "@predictra/shared-types";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import Link from "next/link";
+import { isAdult } from "@/lib/community/community";
 import { savePreferences, setAlertThreshold } from "./actions";
 
 export const metadata: Metadata = { title: "Preferenze" };
@@ -43,6 +49,14 @@ export default async function PreferencesPage() {
         <CardTitle>{m.preferences.theme}</CardTitle>
         <p className="mb-3 mt-1 text-sm text-muted">{m.preferences.themeHint}</p>
         <ThemePicker initial={theme} labels={m.preferences.themes} />
+      </Card>
+      <Card className="mb-4 max-w-lg">
+        <CardTitle>{m.preferences.sounds}</CardTitle>
+        <p className="mb-3 mt-1 text-sm text-muted">{m.preferences.soundsHint}</p>
+        <SoundToggle
+          initial={(await cookies()).get(SOUND_COOKIE)?.value === "on"}
+          labels={{ on: m.preferences.soundsOn, off: m.preferences.soundsOff }}
+        />
       </Card>
       <Card className="mb-4 max-w-lg">
         <CardTitle>{m.preferences.alerts}</CardTitle>
@@ -104,6 +118,24 @@ export default async function PreferencesPage() {
       <Card id="birthday" className="mt-4 max-w-lg scroll-mt-24">
         <CardTitle>{p.birthday}</CardTitle>
         <p className="mb-3 mt-1 text-sm text-muted">{p.birthdayHint}</p>
+        <p
+          className={
+            isAdult(community.birthDate, todayInRome())
+              ? "mb-3 rounded-lg border border-positive/40 bg-positive-soft px-3 py-2 text-sm text-positive-strong"
+              : "mb-3 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-muted"
+          }
+        >
+          {isAdult(community.birthDate, todayInRome()) ? (
+            <>
+              {p.commentsUnlocked}{" "}
+              <Link href="/discussions" className="font-medium underline underline-offset-2">
+                {p.commentsOpen}
+              </Link>
+            </>
+          ) : (
+            p.commentsLocked
+          )}
+        </p>
         <ActionForm action={saveBirthday}>
           <Field label={p.birthday} htmlFor="birthDate">
             <Input
@@ -132,6 +164,35 @@ export default async function PreferencesPage() {
             <SubmitButton variant="ghost">{p.birthdayRemove}</SubmitButton>
           </ActionForm>
         ) : null}
+      </Card>
+
+      <Card className="mt-4 max-w-lg">
+        <CardTitle>{p.avatar}</CardTitle>
+        <p className="mb-3 mt-1 text-sm text-muted">{p.avatarHint}</p>
+        <ActionForm action={saveAvatarColor}>
+          <fieldset>
+            <legend className="sr-only">{p.avatar}</legend>
+            <div className="flex flex-wrap gap-2">
+              {[null, ...AVATAR_COLOR_KEYS].map((c) => (
+                <label
+                  key={c ?? "auto"}
+                  className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-border p-2 text-xs has-[:checked]:border-positive has-[:checked]:bg-positive-soft"
+                >
+                  <input
+                    type="radio"
+                    name="avatarColor"
+                    value={c ?? "auto"}
+                    defaultChecked={(user.avatarColor ?? null) === c}
+                    className="sr-only"
+                  />
+                  <UserAvatar userId={user.id} color={c} className="size-10" />
+                  {c ? p.avatarColors[c] : p.avatarAuto}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <SubmitButton>{m.common.save}</SubmitButton>
+        </ActionForm>
       </Card>
 
       <Card className="mt-4 max-w-lg">

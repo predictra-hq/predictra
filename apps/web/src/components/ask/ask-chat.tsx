@@ -8,6 +8,7 @@ import { Alert, Button, Card, CardTitle, Label, ScrollRegion } from "@/component
 import { RowLimitClient } from "@/components/ui/row-limit";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
+import { playSound } from "@/lib/sounds";
 import { parseRichText, type RichSpan } from "@/lib/ask/rich-text";
 import type { ToolOutput } from "@/lib/ask/tools";
 
@@ -136,6 +137,7 @@ export function AskChat() {
   const [question, setQuestion] = useState("");
   const [history, formAction] = useActionState(async (prev: AskState[], formData: FormData) => {
     const result = await ask(null, formData);
+    playSound(result.answer ? "notify" : "error");
     setQuestion("");
     return [...prev, result];
   }, []);

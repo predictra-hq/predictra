@@ -3,6 +3,7 @@
 import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/errors";
+import { playSound } from "@/lib/sounds";
 import { Modal } from "./modal";
 import { Alert, Button, Spinner } from "./primitives";
 
@@ -90,7 +91,12 @@ export function ActionForm({
   /** Esito in una finestra modale invece che sotto il modulo: titolo e testo di chiusura. */
   resultDialog?: { title: string; close: string };
 }) {
-  const [state, formAction] = useActionState(action, null);
+  // Esito con un suono breve (se acceso nelle Preferenze): salita se fatto, discesa se errore.
+  const [state, formAction] = useActionState(async (prev: ActionState, formData: FormData) => {
+    const result = await action(prev, formData);
+    if (result) playSound(result.ok ? "success" : "error");
+    return result;
+  }, null);
   // Ogni nuovo esito riapre la modale; chiuderla segna quell'esito come già visto.
   const [seen, setSeen] = useState<ActionState>(null);
   const result = state ? (

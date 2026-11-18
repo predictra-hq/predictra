@@ -40,6 +40,7 @@ const AUTHENTICATED_FUNCTIONS = [
   "public.latest_odds_for_matches",
   "public.match_comment_feed",
   "public.moderate_match_comment",
+  "public.recent_comment_feed",
   "public.retry_dead_agent_job",
   "public.revoke_invitation",
   "public.set_account_status",
@@ -157,6 +158,7 @@ describe("revisione di sicurezza del database", () => {
     );
     expect(rows.map((r) => `${r.t}.${r.c}`).sort()).toEqual([
       "notifications.read_at",
+      "profiles.avatar_color",
       "profiles.display_name",
       "profiles.name_color",
       "profiles.name_style",
