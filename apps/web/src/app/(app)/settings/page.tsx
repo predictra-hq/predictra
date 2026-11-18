@@ -33,7 +33,7 @@ import { isAdult, todayInRome } from "@/lib/community/community";
 import { getOwnCommunityProfile } from "@/lib/community/queries";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
-import { SOUND_COOKIE } from "@/lib/sounds";
+import { SOUND_COOKIE, soundsOnFromCookie } from "@/lib/sounds";
 import { createClient } from "@/lib/supabase/server";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { formatRelease } from "@/lib/version";
@@ -54,19 +54,20 @@ function RowIcon({ icon }: { icon: ProfileRow["icon"] }) {
   if (typeof icon === "function" || (typeof icon === "object" && icon && "render" in icon)) {
     const Icon = icon as LucideIcon;
     return (
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-positive-soft text-positive-strong">
-        <Icon size={18} aria-hidden="true" />
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-positive-soft text-positive-strong">
+        <Icon size={15} aria-hidden="true" />
       </span>
     );
   }
   return (
-    <span className="flex size-9 shrink-0 items-center justify-center">{icon as ReactNode}</span>
+    <span className="flex size-7 shrink-0 items-center justify-center">{icon as ReactNode}</span>
   );
 }
 
 /**
  * Gruppo di voci in stile app: un titolo che dice di che tipo sono, una card, una riga per
- * voce. Ogni riga dice cosa cambi e mostra il valore attuale; tutta la riga si tocca.
+ * voce. Ogni riga è compatta: cosa cambi a sinistra, valore attuale a destra sulla stessa
+ * riga; tutta la riga si tocca.
  */
 function Group({
   title,
@@ -78,8 +79,8 @@ function Group({
   children?: ReactNode;
 }) {
   return (
-    <section className="mt-6">
-      <h2 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-subtle">
+    <section className="mt-4">
+      <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wider text-subtle">
         {title}
       </h2>
       <ul className="divide-y divide-border overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface">
@@ -87,17 +88,15 @@ function Group({
           <li key={row.href}>
             <Link
               href={row.href}
-              className="flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-2 active:bg-surface-2"
+              className="flex min-h-11 items-center gap-2.5 px-3 py-1.5 text-sm transition-colors hover:bg-surface-2 active:bg-surface-2"
             >
               <RowIcon icon={row.icon} />
-              <span className="min-w-0 flex-1">
-                <span className="block font-medium">{row.label}</span>
-                {row.value ? (
-                  <span className="block truncate text-xs text-muted">{row.value}</span>
-                ) : null}
+              <span className="shrink-0 font-medium">{row.label}</span>
+              <span className="min-w-0 flex-1 truncate text-right text-xs text-muted">
+                {row.value}
               </span>
               {row.badge ? <Badge tone={row.badge.tone}>{row.badge.text}</Badge> : null}
-              <ChevronRight size={18} aria-hidden="true" className="shrink-0 text-subtle" />
+              <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-subtle" />
             </Link>
           </li>
         ))}
@@ -130,7 +129,7 @@ export default async function ProfilePage() {
     cookies(),
   ]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
-  const soundsOn = jar.get(SOUND_COOKIE)?.value === "on";
+  const soundsOn = soundsOnFromCookie(jar.get(SOUND_COOKIE)?.value);
   const alertThreshold = parseAlertThreshold(jar.get(ALERT_COOKIE)?.value);
   const birthday = !community.birthDate
     ? p.birthdayMissing
@@ -141,10 +140,10 @@ export default async function ProfilePage() {
   return (
     <div className="mx-auto max-w-xl">
       <h1 className="sr-only">{p.title}</h1>
-      <div className="flex items-center gap-4 rounded-[var(--radius-card)] border border-border bg-surface p-4">
-        <UserAvatar style={user.avatarStyle} name={name} className="size-14" />
+      <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-3">
+        <UserAvatar style={user.avatarStyle} name={name} className="size-12" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-lg leading-tight">
+          <p className="truncate text-base leading-tight">
             <StyledName
               name={name}
               color={user.nameColor}
@@ -152,8 +151,11 @@ export default async function ProfilePage() {
               className="font-semibold"
             />
           </p>
-          {user.displayName ? <p className="truncate text-sm text-muted">{user.email}</p> : null}
-          {role ? <p className="mt-0.5 text-xs text-subtle">{m.roles[role]}</p> : null}
+          <p className="truncate text-xs text-muted">
+            {user.displayName ? user.email : null}
+            {user.displayName && role ? " · " : null}
+            {role ? m.roles[role] : null}
+          </p>
         </div>
         <Link
           href="/settings/account"
@@ -176,7 +178,7 @@ export default async function ProfilePage() {
           },
           {
             href: "/settings/account#avatar",
-            icon: <UserAvatar style={user.avatarStyle} name={name} className="size-9" />,
+            icon: <UserAvatar style={user.avatarStyle} name={name} className="size-7" />,
             label: p.rowAvatar,
             value: pref.avatarStyles[avatarStyleOf(user.avatarStyle)],
           },
@@ -203,7 +205,6 @@ export default async function ProfilePage() {
             href: "/settings/security#mfa",
             icon: ShieldCheck,
             label: p.rowMfa,
-            value: p.rowMfaHint,
             badge: user.hasMfa
               ? { text: p.mfaOn, tone: "positive" }
               : { text: p.mfaOff, tone: "warning" },
@@ -212,13 +213,11 @@ export default async function ProfilePage() {
             href: "/settings/security#password",
             icon: KeyRound,
             label: p.rowPassword,
-            value: p.rowPasswordHint,
           },
           {
             href: "/settings/security#sessions",
             icon: MonitorSmartphone,
             label: p.rowSessions,
-            value: p.rowSessionsHint,
           },
         ]}
       />
@@ -250,15 +249,11 @@ export default async function ProfilePage() {
             label: p.rowRegion,
             value: `${pref.italian} · ${prefs?.timezone ?? "Europe/Rome"}`,
           },
+          { href: "/ask", icon: BotMessageSquare, label: p.rowAsk },
         ]}
-      />
-
-      <Group
-        title={p.groupHelp}
-        rows={[{ href: "/ask", icon: BotMessageSquare, label: p.rowAsk, value: p.rowAskHint }]}
       >
         <li>
-          <TourRestartRow label={p.restartTour} hint={p.restartTourHint} />
+          <TourRestartRow label={p.restartTour} />
         </li>
       </Group>
 
@@ -273,16 +268,16 @@ export default async function ProfilePage() {
         />
       ) : null}
 
-      <form action="/auth/signout" method="post" className="mt-6">
+      <form action="/auth/signout" method="post" className="mt-4">
         <button
           type="submit"
-          className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-card)] border border-negative/40 bg-negative-soft font-medium text-negative-strong transition-colors hover:bg-negative/20"
+          className="flex h-11 w-full text-sm cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-card)] border border-negative/40 bg-negative-soft font-medium text-negative-strong transition-colors hover:bg-negative/20"
         >
           <LogOut size={18} aria-hidden="true" />
           {m.common.signOut}
         </button>
       </form>
-      <p className="mt-4 text-center text-xs text-subtle">
+      <p className="mt-3 text-center text-xs text-subtle">
         {m.app.name} {formatRelease()}
       </p>
     </div>

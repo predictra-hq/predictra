@@ -44,9 +44,14 @@ export const SOUND_COOKIE = "predictra-sounds";
 /** Volume massimo di una nota (0–1): basso, un suono di conferma e non un allarme. */
 export const SOUND_VOLUME = 0.06;
 
-/** Vero se il cookie (intera stringa `document.cookie`) accende i suoni. */
+/** Vero se i suoni sono accesi (`document.cookie` intero): accesi di base, spenti solo se scelto. */
 export function soundsEnabled(cookieHeader: string): boolean {
-  return cookieHeader.split(";").some((part) => part.trim() === `${SOUND_COOKIE}=on`);
+  return !cookieHeader.split(";").some((part) => part.trim() === `${SOUND_COOKIE}=off`);
+}
+
+/** Lo stesso dal valore del solo cookie (lato server). */
+export function soundsOnFromCookie(value: string | undefined): boolean {
+  return value !== "off";
 }
 
 /** Durata totale di un suono in millisecondi. */
