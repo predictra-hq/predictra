@@ -30,7 +30,7 @@ export async function MatchComments({ matchId }: { matchId: number }) {
         <p className="mt-2 text-sm text-muted">{own.birthDate ? m.underAge : m.locked}</p>
         {!own.birthDate ? (
           <Link
-            href="/settings/preferences#birthday"
+            href="/settings/account#birthday"
             className="mt-3 inline-block text-sm font-medium text-positive-strong underline underline-offset-2"
           >
             {m.unlock}

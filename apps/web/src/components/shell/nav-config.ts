@@ -143,6 +143,7 @@ export const SETTINGS_NAV: readonly NavItem[] = [{ key: "profile", href: "/setti
 
 /** Schede della sezione Impostazioni. */
 export const SETTINGS_TABS = [
+  { key: "account", href: "/settings/account" },
   { key: "security", href: "/settings/security" },
   { key: "preferences", href: "/settings/preferences" },
 ] as const satisfies readonly NavItem[];
