@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { AVATAR_COLORS, avatarColor } from "./avatar";
+import { AVATAR_COLOR_KEYS } from "@predictra/shared-types";
+import { AVATAR_COLOR_BY_KEY, AVATAR_COLORS, avatarColor } from "./avatar";
 
 /** Contrasto WCAG tra due colori esadecimali. */
 function contrast(a: string, b: string): number {
@@ -22,10 +23,17 @@ describe("avatarColor", () => {
 
   it("usa più colori su utenti diversi", () => {
     const ids = Array.from({ length: 60 }, (_, i) => `utente-${i}`);
-    expect(new Set(ids.map(avatarColor)).size).toBe(AVATAR_COLORS.length);
+    expect(new Set(ids.map((id) => avatarColor(id))).size).toBe(AVATAR_COLORS.length);
   });
 
   it("ogni colore si legge con il simbolo bianco (contrasto ≥ 3:1)", () => {
     for (const c of AVATAR_COLORS) expect(contrast(c, "#ffffff")).toBeGreaterThanOrEqual(3);
+  });
+
+  it("usa il colore scelto; un valore sconosciuto torna al colore automatico", () => {
+    expect(avatarColor("x", "violet")).toBe("#534ab7");
+    expect(avatarColor("x", "nero")).toBe(avatarColor("x"));
+    expect(Object.keys(AVATAR_COLOR_BY_KEY).sort()).toEqual([...AVATAR_COLOR_KEYS].sort());
+    for (const c of Object.values(AVATAR_COLOR_BY_KEY)) expect(AVATAR_COLORS).toContain(c);
   });
 });

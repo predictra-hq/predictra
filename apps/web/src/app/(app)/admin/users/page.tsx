@@ -25,6 +25,7 @@ interface ProfileRow {
   id: string;
   email: string;
   display_name: string | null;
+  avatar_color: string | null;
   status: AccountStatus;
   created_at: string;
   user_roles: { role: string }[];
@@ -39,7 +40,9 @@ export default async function UsersPage() {
   // indicata, altrimenti PostgREST risponde con un errore di ambiguità (PGRST201).
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, display_name, status, created_at, user_roles!user_roles_user_id_fkey(role)")
+    .select(
+      "id, email, display_name, avatar_color, status, created_at, user_roles!user_roles_user_id_fkey(role)",
+    )
     .order("created_at", { ascending: true })
     .limit(500);
   const users = (data ?? []) as ProfileRow[];
@@ -90,7 +93,7 @@ export default async function UsersPage() {
                   <tr key={u.id} className="border-b border-border align-top last:border-0">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <UserAvatar userId={u.id} className="size-8" />
+                        <UserAvatar userId={u.id} color={u.avatar_color} className="size-8" />
                         <div className="min-w-0">
                           <p className="font-medium">
                             {u.display_name ?? "—"}{" "}

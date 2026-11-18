@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Messages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
+import { completeTour } from "@/app/(app)/tour-action";
+import { playSound } from "@/lib/sounds";
 import { cardTop, TOUR_COOKIE, TOUR_RESTART_EVENT, TOUR_STEPS, type Rect } from "@/lib/tour";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
@@ -23,8 +25,8 @@ function markDone(): void {
 }
 
 /**
- * Tutorial interattivo della prima entrata. Parte da solo se in questo browser non è mai
- * stato finito o saltato (`done` viene dal cookie, letto dal layout sul server); si riapre dal Profilo. Evidenzia una zona alla volta e la
+ * Tutorial interattivo della prima entrata. Parte da solo una sola volta per utente: `done`
+ * viene dal profilo (`user_dashboard_settings`) o, per non leggerlo ogni volta, dal cookie; si riapre dal Profilo. Evidenzia una zona alla volta e la
  * spiega in una scheda; Esc o «Salta» lo chiudono.
  */
 export function Tour({ messages, done }: { messages: Messages["tour"]; done: boolean }) {
@@ -43,6 +45,8 @@ export function Tour({ messages, done }: { messages: Messages["tour"]; done: boo
   const close = useCallback(() => {
     markDone();
     setStep(null);
+    // Anche nel profilo: un nuovo accesso o un altro dispositivo non lo ripropongono.
+    void completeTour().catch(() => {});
   }, []);
 
   // Misura la zona da evidenziare; si aggiorna se lo schermo cambia (rotazione, scorrimento).
@@ -134,7 +138,15 @@ export function Tour({ messages, done }: { messages: Messages["tour"]; done: boo
             <button
               ref={primaryRef}
               type="button"
-              onClick={() => (last ? close() : setStep(step + 1))}
+              onClick={() => {
+                if (last) {
+                  playSound("complete");
+                  close();
+                } else {
+                  playSound("tap");
+                  setStep(step + 1);
+                }
+              }}
               className="cursor-pointer rounded-lg bg-positive px-3 py-1.5 text-sm font-medium text-on-positive hover:bg-positive-strong"
             >
               {last ? messages.done : messages.next}

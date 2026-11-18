@@ -8,7 +8,8 @@ import type { ActionState } from "@/lib/errors";
 import { getMessages, LOCALES } from "@/lib/i18n";
 import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/server";
-import { parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
+import { isAvatarColorKey } from "@predictra/shared-types";
+import { isAdult, parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
 
 const timezones = new Set(Intl.supportedValuesOf("timeZone"));
 
@@ -72,9 +73,13 @@ export async function saveBirthday(_prev: ActionState, formData: FormData): Prom
     show_birthday: formData.get("showBirthday") === "on",
   });
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
-  revalidatePath("/dashboard");
-  return { ok: true, message: m.preferences.birthdaySaved };
+  revalidatePath("/", "layout");
+  return {
+    ok: true,
+    message: isAdult(birthDate, todayInRome())
+      ? m.preferences.birthdaySavedUnlocked
+      : m.preferences.birthdaySaved,
+  };
 }
 
 export async function removeBirthday(): Promise<ActionState> {
@@ -83,8 +88,7 @@ export async function removeBirthday(): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.from("user_birthdays").delete().eq("user_id", user.id);
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
-  revalidatePath("/dashboard");
+  revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.birthdayRemoved };
 }
 
@@ -96,6 +100,26 @@ export async function saveNameStyle(_prev: ActionState, formData: FormData): Pro
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update(style).eq("id", user.id);
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
+  // Tutto il layout: il nome compare anche nel menu laterale.
+  revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.nameStyleSaved };
+}
+
+/** Colore del cerchio dell'avatar, da un elenco chiuso; «automatico» lo toglie. */
+export async function saveAvatarColor(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const raw = formData.get("avatarColor");
+  const avatarColor = isAvatarColorKey(raw) ? raw : null;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_color: avatarColor })
+    .eq("id", user.id);
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/", "layout");
+  return { ok: true, message: m.preferences.avatarSaved };
 }

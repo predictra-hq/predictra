@@ -1,7 +1,9 @@
+import { isAvatarColorKey, type AvatarColorKey } from "@predictra/shared-types";
+
 /**
  * Avatar predefinito (stile A, scelto il 17/11/2026): il simbolo di PREDICTRA in bianco su
  * un cerchio colorato, come gli avatar predefiniti di Discord. Il colore si ricava dall'id
- * dell'utente: è sempre lo stesso per la stessa persona e non serve salvarlo.
+ * dell'utente, oppure è quello scelto nelle Preferenze (`profiles.avatar_color`).
  *
  * Ogni colore ha contrasto almeno 3:1 con il bianco (WCAG per gli elementi grafici).
  */
@@ -24,6 +26,22 @@ function hash(text: string): number {
   return h >>> 0;
 }
 
-export function avatarColor(userId: string): (typeof AVATAR_COLORS)[number] {
+/** Colore scelto nelle Preferenze (`profiles.avatar_color`), nello stesso ordine di `AVATAR_COLORS`. */
+export const AVATAR_COLOR_BY_KEY: Readonly<Record<AvatarColorKey, (typeof AVATAR_COLORS)[number]>> =
+  {
+    teal: "#0f766e",
+    violet: "#534ab7",
+    orange: "#c2410c",
+    blue: "#185fa5",
+    pink: "#993556",
+    green: "#3b6d11",
+  };
+
+/** Colore scelto dall'utente; senza scelta (o con un valore sconosciuto) quello ricavato dall'id. */
+export function avatarColor(
+  userId: string,
+  chosen?: string | null,
+): (typeof AVATAR_COLORS)[number] {
+  if (isAvatarColorKey(chosen)) return AVATAR_COLOR_BY_KEY[chosen];
   return AVATAR_COLORS[hash(userId) % AVATAR_COLORS.length]!;
 }
