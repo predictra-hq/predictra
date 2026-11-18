@@ -46,7 +46,8 @@ export function AskLauncher({ enabled }: { enabled: boolean }) {
         title={m.title}
         // Telefono: nella barra in alto, accanto ad «Aggiorna», così non copre mai bottoni e
         // contenuti. Computer: pulsante tondo in basso a destra.
-        className="fixed left-[5.75rem] top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 flex size-10 cursor-pointer items-center justify-center rounded-md text-positive transition-colors hover:bg-surface-2 lg:bottom-6 lg:left-auto lg:right-6 lg:top-auto lg:size-14 lg:rounded-full lg:border lg:border-positive/40 lg:bg-surface lg:shadow-lg lg:hover:bg-positive-soft"
+        // Verde pieno a riposo, più scuro quando lo tocchi o ci passi sopra: si vede subito.
+        className="fixed left-[5.75rem] top-[calc(env(safe-area-inset-top)+0.5rem)] z-30 flex size-10 cursor-pointer items-center justify-center rounded-md bg-positive text-on-positive shadow-sm transition-[filter,transform] hover:brightness-90 active:scale-95 active:brightness-75 lg:bottom-6 lg:left-auto lg:right-6 lg:top-auto lg:size-14 lg:rounded-full lg:shadow-lg"
       >
         <BotMessageSquare className="size-[22px] lg:size-6" aria-hidden />
       </button>
