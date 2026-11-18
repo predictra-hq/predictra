@@ -253,3 +253,7 @@ Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `land
 - **Il video non cambia più dimensione:** le quattro scene stanno una sopra l'altra nella stessa cella e si vede solo quella attiva, quindi il riquadro ha sempre l'altezza della più alta. Prima ogni scena aveva la sua altezza e spostava tutta la pagina. Verificato in anteprima locale: altezza identica nelle quattro scene, su computer e su telefono.
 - Nessuna promessa di vincita e nessun numero reale: le scene restano con dati `DEMO`. Sul costo la pagina dice solo ciò che è vero oggi: dentro PREDICTRA non si compra nulla e l'accesso è su invito.
 - In fondo l'avvertenza sul gioco: vietato ai minori di 18 anni, il gioco può causare dipendenza.
+
+### Dalla presentazione al primo accesso
+
+La presentazione apre con la scheda partita e la scena DEMO delle probabilità 1X2. Il modulo di accesso distingue chi ha già le credenziali da chi deve aprire il proprio invito. Accanto alla password si trovano il recupero e il comando per mostrarla o nasconderla. Il collegamento «Torna alla presentazione» riporta alla pagina pubblica.

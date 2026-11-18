@@ -38,15 +38,9 @@ export const it = {
     login: "Accedi",
     about: "Cos'è PREDICTRA",
     nav: { how: "Come funziona", safety: "Sicurezza", faq: "Domande" },
-    eyebrow: "Analisi del calcio con i numeri",
-    heroTitle: "Capisci una partita prima di giocarla.",
+    heroTitle: "Una partita, tutti i numeri per capirla.",
     heroText:
-      "PREDICTRA mette in una sola pagina probabilità, quote, forma delle squadre e statistiche, calcolate da modelli matematici su partite reali. Tu decidi; PREDICTRA ti dà i numeri per farlo con la testa.",
-    heroPoints: [
-      "Probabilità da modelli statistici, non da opinioni",
-      "Non piazza scommesse e non vende pronostici",
-      "I tuoi dati li vedi solo tu",
-    ],
+      "Confronta forma delle squadre, probabilità del modello e quote nella stessa scheda partita.",
     inviteOnly: "Accesso su invito: entra con il link che hai ricevuto.",
     videoLabel: "Dimostrazione animata di PREDICTRA",
     play: "Riproduci",
@@ -56,11 +50,11 @@ export const it = {
     demoNote: "Schermate semplificate con dati di esempio, non reali.",
     scenes: {
       matches: {
-        title: "1. Scegli la partita",
+        title: "2. Esplora il calendario",
         text: "Calendario, risultati e quote dei campionati, aggiornati da soli.",
       },
       model: {
-        title: "2. Leggi le probabilità",
+        title: "1. Leggi le probabilità",
         text: "Il modello calcola quanto è probabile ogni esito, con la percentuale accanto.",
       },
       certainties: {
@@ -144,8 +138,8 @@ export const it = {
     faqTitle: "Domande che ci si fa all'inizio",
     faq: [
       {
-        q: "È il solito sistema fake che promette vincite sicure?",
-        a: "No. Nessuno può garantire vincite e PREDICTRA non lo fa: dà probabilità, cioè quanto è verosimile un esito, con la loro incertezza. E mostra apertamente quante giocate date per probabili sono uscite davvero, anche quelle andate male.",
+        q: "Come posso verificare le previsioni?",
+        a: "Nella pagina Affidabilità puoi confrontare le previsioni con i risultati reali e vedere quante giocate date per probabili sono uscite davvero.",
       },
       {
         q: "Quanto costa?",
@@ -174,8 +168,11 @@ export const it = {
       "Vietato ai minori di 18 anni. Il gioco può causare dipendenza: gioca con moderazione.",
   },
   auth: {
-    loginTitle: "Accesso riservato",
-    loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
+    loginTitle: "Accedi a PREDICTRA",
+    loginSubtitle: "Al primo accesso, apri il link di invito che hai ricevuto.",
+    showPassword: "Mostra",
+    hidePassword: "Nascondi",
+    backToPresentation: "Torna alla presentazione",
     loginButton: "Accedi",
     invalidCredentials: "Credenziali non valide.",
     tooManyAttempts: "Troppi tentativi. Attendi qualche minuto e riprova.",

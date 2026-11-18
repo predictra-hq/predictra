@@ -109,7 +109,7 @@ Sono **8**: controlla che la lista li mostri tutti, con i nomi identici. `DEV_SU
    - _Vercel — build_
    - _Vercel — deploy_
 3. Se compare "Deploy dev saltato: segreti mancanti …", il messaggio dice quale segreto manca.
-4. Apri `APP_BASE_URL`: deve comparire la pagina **Accesso riservato**.
+4. Apri `APP_BASE_URL` senza sessione: dalla presentazione scegli **Accedi** e verifica che compaia il modulo **Accedi a PREDICTRA**.
 
 Da qui in poi ogni push su `dev` aggiorna da solo Supabase e Vercel.
 

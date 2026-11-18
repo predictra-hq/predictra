@@ -6,7 +6,7 @@ import type { Messages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { cn } from "@/lib/utils";
 
-const SCENES = ["matches", "model", "certainties", "bankroll"] as const;
+const SCENES = ["model", "matches", "certainties", "bankroll"] as const;
 type Scene = (typeof SCENES)[number];
 
 /** Durata di ogni scena. */
