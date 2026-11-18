@@ -36,71 +36,142 @@ export const it = {
   },
   landing: {
     login: "Accedi",
-    heroTitle: "Il calcio letto con i numeri",
+    about: "Cos'è PREDICTRA",
+    nav: { how: "Come funziona", safety: "Sicurezza", faq: "Domande" },
+    eyebrow: "Analisi del calcio con i numeri",
+    heroTitle: "Capisci una partita prima di giocarla.",
     heroText:
-      "PREDICTRA raccoglie partite, statistiche e quote da fonti con licenza e le passa a modelli matematici. Tu vedi le probabilità, le giocate più solide e come vanno le tue.",
-    inviteOnly: "Accesso solo su invito: se l'hai ricevuto, usa il link che ti è stato inviato.",
-    videoLabel: "Presentazione animata di PREDICTRA",
+      "PREDICTRA mette in una sola pagina probabilità, quote, forma delle squadre e statistiche, calcolate da modelli matematici su partite reali. Tu decidi; PREDICTRA ti dà i numeri per farlo con la testa.",
+    heroPoints: [
+      "Probabilità da modelli statistici, non da opinioni",
+      "Non piazza scommesse e non vende pronostici",
+      "I tuoi dati li vedi solo tu",
+    ],
+    inviteOnly: "Accesso su invito: entra con il link che hai ricevuto.",
+    videoLabel: "Dimostrazione animata di PREDICTRA",
     play: "Riproduci",
     pause: "Pausa",
     sceneOf: "Scena {n} di {total}",
     demo: "DEMO",
-    demoNote: "Dati di esempio, non reali.",
+    demoNote: "Schermate semplificate con dati di esempio, non reali.",
     scenes: {
       matches: {
-        title: "Le partite",
-        text: "Calendario, risultati e quote, aggiornati in automatico.",
+        title: "1. Scegli la partita",
+        text: "Calendario, risultati e quote dei campionati, aggiornati da soli.",
       },
       model: {
-        title: "Il modello calcola",
-        text: "Le probabilità vengono da modelli statistici, mai da un'intelligenza artificiale che indovina.",
+        title: "2. Leggi le probabilità",
+        text: "Il modello calcola quanto è probabile ogni esito, con la percentuale accanto.",
       },
       certainties: {
-        title: "Le Certezze",
-        text: "Le giocate che i modelli danno più probabili, con la percentuale accanto.",
+        title: "3. Trova le giocate solide",
+        text: "Le giocate che i numeri danno più probabili, già ordinate per te.",
       },
       bankroll: {
-        title: "Il tuo bankroll",
-        text: "Registri le tue giocate e vedi l'andamento. Questi dati li vedi solo tu.",
+        title: "4. Tieni i conti",
+        text: "Registri le tue giocate e vedi se stai andando bene. Lo vedi solo tu.",
       },
     },
     demoMatches: ["Squadra A – Squadra B", "Squadra C – Squadra D", "Squadra E – Squadra F"],
     demoBet: "Almeno un gol nella partita",
     demoBalance: "Andamento del bankroll",
-    featuresTitle: "Cosa trovi dentro",
-    features: [
+    forTitle: "A cosa ti serve",
+    forText: "Tre modi in cui chi lo usa ci trova qualcosa per sé. Ti basta il primo.",
+    forItems: [
       {
-        title: "Partite e campionati",
-        text: "Classifiche, forma delle squadre, statistiche di stagione e movimento delle quote.",
+        title: "Vuoi capire una partita",
+        text: "Apri la partita e trovi tutto insieme: probabilità di 1X2, gol e risultati esatti, forma delle squadre, classifica, come si sono mosse le quote.",
       },
       {
-        title: "Previsioni",
-        text: "Probabilità di 1X2, gol, risultati esatti: ogni previsione è versionata e riproducibile.",
+        title: "Vuoi giocate più solide",
+        text: "Certezze e Schedine ti propongono le giocate che i modelli danno più probabili e le combinazioni che in media non fanno perdere, con il perché in chiaro.",
       },
       {
-        title: "Certezze e Schedine",
-        text: "Le giocate più solide e combinazioni già calcolate, con il loro valore atteso.",
-      },
-      {
-        title: "Affidabilità",
-        text: "Quante giocate date per probabili sono uscite davvero: i numeri del modello, senza filtri.",
-      },
-      {
-        title: "Bankroll e giocate",
-        text: "Un registro privato delle tue giocate, con limiti di spesa che scegli tu.",
-      },
-      {
-        title: "Chiedi a PREDICTRA",
-        text: "Domande a parole sui dati della piattaforma, da qualunque pagina.",
+        title: "Vuoi tenere i conti",
+        text: "Un registro privato delle tue giocate con l'andamento del bankroll e limiti di spesa che scegli tu, per giocare con misura.",
       },
     ],
-    rulesTitle: "Cosa PREDICTRA non fa",
-    rules: [
-      "Non piazza scommesse e non ti chiede di farlo.",
-      "Non inventa numeri: ogni dato viene da una fonte con licenza.",
-      "Non garantisce vincite: le previsioni sono stime con la loro incertezza.",
+    howTitle: "Come funziona",
+    howText: "Non serve essere esperti di statistica: si parte in un minuto.",
+    howSteps: [
+      {
+        title: "Entri con l'invito",
+        text: "Imposti la password e, se vuoi, il codice di verifica sul telefono.",
+      },
+      {
+        title: "Un tutorial di un minuto",
+        text: "Alla prima entrata ti mostra dove si trova ogni cosa. Lo puoi saltare e rivedere quando vuoi.",
+      },
+      {
+        title: "Apri una partita",
+        text: "Numeri spiegati con parole semplici. Se hai un dubbio, lo chiedi a PREDICTRA a parole.",
+      },
     ],
-    about: "Cos'è PREDICTRA",
+    trustTitle: "Perché fidarsi dei numeri",
+    trustItems: [
+      {
+        title: "Dati veri, con la fonte",
+        text: "Partite, risultati e quote arrivano da fornitori con licenza. Nessun numero è inventato.",
+      },
+      {
+        title: "Modelli matematici",
+        text: "Le probabilità le calcolano modelli statistici addestrati sui risultati reali, non un'intelligenza artificiale che tira a indovinare.",
+      },
+      {
+        title: "Risultati verificabili",
+        text: "La pagina Affidabilità mostra quante giocate date per probabili sono uscite davvero, anche quando va male.",
+      },
+    ],
+    safetyTitle: "È sicuro?",
+    safetyItems: [
+      {
+        title: "Solo su invito",
+        text: "Non ci si iscrive da soli e il sito non compare sui motori di ricerca.",
+      },
+      {
+        title: "Accesso protetto",
+        text: "Password più codice di verifica sul telefono (2FA) per chi lo attiva.",
+      },
+      {
+        title: "Dati privati",
+        text: "Bankroll, giocate e data di nascita li vedi solo tu: nemmeno gli amministratori.",
+      },
+      {
+        title: "Niente soldi in gioco qui",
+        text: "PREDICTRA non chiede carte o pagamenti e non tocca il tuo conto di gioco.",
+      },
+    ],
+    faqTitle: "Domande che ci si fa all'inizio",
+    faq: [
+      {
+        q: "È il solito sistema fake che promette vincite sicure?",
+        a: "No. Nessuno può garantire vincite e PREDICTRA non lo fa: dà probabilità, cioè quanto è verosimile un esito, con la loro incertezza. E mostra apertamente quante giocate date per probabili sono uscite davvero, anche quelle andate male.",
+      },
+      {
+        q: "Quanto costa?",
+        a: "Dentro PREDICTRA non si compra nulla: niente pronostici a pagamento, niente abbonamenti premium, nessuna carta richiesta. L'accesso è su invito.",
+      },
+      {
+        q: "Cosa offre in concreto?",
+        a: "Per ogni partita: probabilità di 1X2, gol, entrambe segnano e risultati esatti, quote e loro movimento, forma e statistiche delle squadre. In più le giocate più solide (Certezze), schedine già calcolate, un registro privato delle tue giocate e risposte a parole su tutti questi dati.",
+      },
+      {
+        q: "Gioco poco, o non gioco: mi serve?",
+        a: "Sì, se ti piace capire il calcio: classifiche, forma e probabilità servono anche solo per seguire le partite. Il registro delle giocate lo usi solo se vuoi.",
+      },
+      {
+        q: "È difficile da usare?",
+        a: "No. Le pagine usano parole semplici, un tutorial alla prima entrata ti accompagna e puoi fare domande a PREDICTRA come in una chat.",
+      },
+      {
+        q: "Chi vede i miei dati?",
+        a: "Solo tu. Bankroll, giocate e data di nascita sono protetti nel database in modo che nessun altro, amministratori compresi, possa leggerli. La piattaforma non invia email.",
+      },
+    ],
+    finalTitle: "Hai ricevuto un invito?",
+    finalText: "Entra e apri la prima partita: in un minuto vedi se fa per te.",
+    responsible:
+      "Vietato ai minori di 18 anni. Il gioco può causare dipendenza: gioca con moderazione.",
   },
   auth: {
     loginTitle: "Accesso riservato",
