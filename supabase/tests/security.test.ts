@@ -158,7 +158,7 @@ describe("revisione di sicurezza del database", () => {
     );
     expect(rows.map((r) => `${r.t}.${r.c}`).sort()).toEqual([
       "notifications.read_at",
-      "profiles.avatar_color",
+      "profiles.avatar_style",
       "profiles.display_name",
       "profiles.name_color",
       "profiles.name_style",

@@ -233,19 +233,19 @@ describe("commenti alle partite", () => {
   });
 });
 
-describe("colore dell'avatar e ultimi commenti", () => {
-  it("il colore dell'avatar si sceglie dall'elenco, solo sul proprio profilo", async () => {
+describe("tipo di avatar e ultimi commenti", () => {
+  it("il tipo di avatar si sceglie dall'elenco, solo sul proprio profilo", async () => {
     await asUser(db, alice, async (tx) => {
-      await tx.query("update public.profiles set avatar_color = 'violet' where id = $1", [
+      await tx.query("update public.profiles set avatar_style = 'outline' where id = $1", [
         alice.id,
       ]);
       expect(
-        await attempt(tx, "update public.profiles set avatar_color = 'black' where id = $1", [
+        await attempt(tx, "update public.profiles set avatar_style = 'black' where id = $1", [
           alice.id,
         ]),
-      ).toMatch(/profiles_avatar_color_check/);
+      ).toMatch(/profiles_avatar_style_check/);
       const other = await tx.query(
-        "update public.profiles set avatar_color = 'pink' where id = $1 returning id",
+        "update public.profiles set avatar_style = 'ball' where id = $1 returning id",
         [bob.id],
       );
       expect(other.rows).toEqual([]);

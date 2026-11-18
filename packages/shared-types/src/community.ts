@@ -67,14 +67,14 @@ export interface BirthdayTodayRow {
 }
 
 /**
- * Colori del cerchio dell'avatar (`profiles.avatar_color`, migrazione
- * `20261118090000_avatar_color_discussions.sql`). Vuoto = colore automatico dall'id.
+ * Tipi di immagine del profilo (`profiles.avatar_style`, migrazione
+ * `20261118120000_avatar_style.sql`), tutti nel verde del sito. Vuoto = «classic».
  */
-export const AVATAR_COLOR_KEYS = ["teal", "violet", "orange", "blue", "pink", "green"] as const;
-export type AvatarColorKey = (typeof AVATAR_COLOR_KEYS)[number];
+export const AVATAR_STYLES = ["classic", "outline", "ball", "line", "initial"] as const;
+export type AvatarStyle = (typeof AVATAR_STYLES)[number];
 
-export function isAvatarColorKey(value: unknown): value is AvatarColorKey {
-  return typeof value === "string" && (AVATAR_COLOR_KEYS as readonly string[]).includes(value);
+export function isAvatarStyle(value: unknown): value is AvatarStyle {
+  return typeof value === "string" && (AVATAR_STYLES as readonly string[]).includes(value);
 }
 
 /** Riga di `public.recent_comment_feed(p_limit)`: ultimi commenti di tutte le partite. */
