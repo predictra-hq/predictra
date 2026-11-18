@@ -200,20 +200,6 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
   - cambiamento grande, che cambia il modo di usare l'app: `1.1.0` → `2.0.0`.
 - Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, tenendo il numero più alto.
 
-## 18/11/2026: suoni, Discussioni, avatar a scelta, barra fissa
-
-Tutto nella stessa PR (versione **1.1.0**).
-
-- **Suoni** (`lib/sounds.ts`, interruttore `components/shell/sound-toggle.tsx` in _Preferenze_): toni brevi generati con la Web Audio API, nessun file. Salita quando un modulo va a buon fine, discesa per un errore, due note all'arrivo di una risposta di Chiedi a PREDICTRA, un tocco per tema, «Aggiorna» e passi del tutorial, quattro note alla fine del tutorial. **Spenti per default**, valgono per il dispositivo (cookie `predictra-sounds`). Il messaggio scritto c'è sempre.
-- **Discussioni** (`/discussions`, gruppo Calcio): gli ultimi 50 commenti di tutte le partite, con il collegamento al riquadro Commenti della partita (`#comments`). Prima i commenti stavano solo in fondo a ogni partita e lo sblocco con la data di nascita non si vedeva. Senza una data di almeno 18 anni fa la pagina spiega come sbloccarla. In _Preferenze_, sotto la data di nascita, un riquadro dice se commenti e Discussioni sono sbloccati.
-- **Avatar a scelta** (_Preferenze → Avatar_): sei colori o «Automatico» (`profiles.avatar_color`). Sostituito lo stesso giorno dal tipo di immagine nel verde del sito: vedi la sezione «Profilo più chiaro».
-- **Nome con stile nel menu laterale e nel Profilo**: colore e scritta scelti in _Preferenze_ compaiono anche lì, non solo nei commenti. Salvando si aggiorna tutto il layout.
-- **Tutorial una sola volta per utente**: «già visto» sta nel profilo (`user_dashboard_settings.settings.tour_done`), quindi non ricompare dopo un nuovo accesso, nell'app installata (che ha cookie separati da Safari) o su un altro dispositivo. Il cookie resta per non leggere il database a ogni pagina.
-- **Barra in alto fissa sul telefono**: era `sticky` e seguiva il rimbalzo quando si tira giù la pagina, mentre il pulsante di Chiedi (fisso) restava fermo. Ora è `fixed` con uno spazio riservato sotto; niente rimbalzo anche su `html` (iPhone).
-- **Icona di Chiedi a PREDICTRA**: `BotMessageSquare` (un fumetto con un assistente) al posto del punto di domanda, nel pulsante, nel menu e nella presentazione.
-
-**Non provato nell'app in esecuzione.** Da guardare su DEV: suoni su iPhone (prima il tocco su «Accesi»), barra fissa tirando giù la pagina, tutorial dopo uscita e nuovo accesso, Discussioni con un utente senza data di nascita.
-
 ## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
 
 Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il valore attuale.
@@ -233,3 +219,17 @@ Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il 
 - **Immagine del profilo per tipo** (`components/ui/user-avatar.tsx`, migrazione `20261118120000_avatar_style.sql`): sempre nel verde del sito, con i colori del tema, quindi corretta in chiaro e in scuro. Cinque tipi: Classica (predefinita), Contorno, Pallone, Andamento, Iniziale. Nella scelta ci sono solo le immagini, senza scritte sotto; il nome del tipo è nel suggerimento e per i lettori di schermo. I colori scelti prima (`avatar_color`) tornano alla Classica.
 
 **Non provato nell'app in esecuzione:** le pagine richiedono l'accesso. Da guardare su DEV, su telefono: Profilo, le voci che aprono il riquadro giusto, la scelta dell'immagine.
+
+## 18/11/2026: suoni, Discussioni, avatar a scelta, barra fissa
+
+Tutto nella stessa PR (versione **1.1.0**).
+
+- **Suoni** (`lib/sounds.ts`, interruttore `components/shell/sound-toggle.tsx` in _Preferenze_): toni brevi generati con la Web Audio API, nessun file. Salita quando un modulo va a buon fine, discesa per un errore, due note all'arrivo di una risposta di Chiedi a PREDICTRA, un tocco per tema, «Aggiorna» e passi del tutorial, quattro note alla fine del tutorial. **Spenti per default**, valgono per il dispositivo (cookie `predictra-sounds`). Il messaggio scritto c'è sempre.
+- **Discussioni** (`/discussions`, gruppo Calcio): gli ultimi 50 commenti di tutte le partite, con il collegamento al riquadro Commenti della partita (`#comments`). Prima i commenti stavano solo in fondo a ogni partita e lo sblocco con la data di nascita non si vedeva. Senza una data di almeno 18 anni fa la pagina spiega come sbloccarla. In _Preferenze_, sotto la data di nascita, un riquadro dice se commenti e Discussioni sono sbloccati.
+- **Avatar a scelta** (_Preferenze → Avatar_): sei colori o «Automatico» (`profiles.avatar_color`). Sostituito lo stesso giorno dal tipo di immagine nel verde del sito: vedi la sezione «Profilo più chiaro».
+- **Nome con stile nel menu laterale e nel Profilo**: colore e scritta scelti in _Preferenze_ compaiono anche lì, non solo nei commenti. Salvando si aggiorna tutto il layout.
+- **Tutorial una sola volta per utente**: «già visto» sta nel profilo (`user_dashboard_settings.settings.tour_done`), quindi non ricompare dopo un nuovo accesso, nell'app installata (che ha cookie separati da Safari) o su un altro dispositivo. Il cookie resta per non leggere il database a ogni pagina.
+- **Barra in alto fissa sul telefono**: era `sticky` e seguiva il rimbalzo quando si tira giù la pagina, mentre il pulsante di Chiedi (fisso) restava fermo. Ora è `fixed` con uno spazio riservato sotto; niente rimbalzo anche su `html` (iPhone).
+- **Icona di Chiedi a PREDICTRA**: `BotMessageSquare` (un fumetto con un assistente) al posto del punto di domanda, nel pulsante, nel menu e nella presentazione.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: suoni su iPhone (prima il tocco su «Accesi»), barra fissa tirando giù la pagina, tutorial dopo uscita e nuovo accesso, Discussioni con un utente senza data di nascita.
