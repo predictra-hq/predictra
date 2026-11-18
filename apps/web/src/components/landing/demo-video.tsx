@@ -134,8 +134,6 @@ export function DemoVideo({ t }: { t: Texts }) {
   }, [playing, index]);
 
   const scene = SCENES[index]!;
-  const View = VIEWS[scene];
-  const text = t.scenes[scene];
 
   return (
     <figure
@@ -162,10 +160,23 @@ export function DemoVideo({ t }: { t: Texts }) {
           </button>
         ))}
       </div>
-      <div className="flex items-center justify-between gap-2 px-4 pt-2">
-        <div className="min-w-0" aria-live="polite">
-          <p className="font-semibold">{text.title}</p>
-          <p className="text-sm text-muted">{text.text}</p>
+      {/*
+        Tutte le scene stanno una sopra l’"+"altra nella stessa cella della griglia e si vede solo
+        quella attiva: il riquadro prende l’"+"altezza della più alta e non cambia mai, quindi
+        cambiando scena la pagina intorno non si muove.
+      */}
+      <div className="flex items-start justify-between gap-2 px-4 pt-2">
+        <div className="grid min-w-0 flex-1" aria-live="polite">
+          {SCENES.map((s) => (
+            <div
+              key={s}
+              aria-hidden={s !== scene}
+              className={cn("col-start-1 row-start-1", s !== scene && "invisible")}
+            >
+              <p className="font-semibold">{t.scenes[s].title}</p>
+              <p className="text-sm text-muted">{t.scenes[s].text}</p>
+            </div>
+          ))}
         </div>
         <button
           type="button"
@@ -179,8 +190,20 @@ export function DemoVideo({ t }: { t: Texts }) {
           {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
         </button>
       </div>
-      <div key={scene} className="min-h-48 px-4 py-4">
-        <View t={t} />
+      <div className="grid px-4 py-4">
+        {SCENES.map((s) => {
+          const SceneView = VIEWS[s];
+          return (
+            <div
+              // La scena attiva cambia chiave a ogni giro: le animazioni ripartono da capo.
+              key={s === scene ? `${s}-attiva` : s}
+              aria-hidden={s !== scene}
+              className={cn("col-start-1 row-start-1", s !== scene && "invisible")}
+            >
+              <SceneView t={t} />
+            </div>
+          );
+        })}
       </div>
       <figcaption className="flex items-center gap-2 border-t border-border px-4 py-2 text-xs text-subtle">
         <DemoBadge label={t.demo} />
