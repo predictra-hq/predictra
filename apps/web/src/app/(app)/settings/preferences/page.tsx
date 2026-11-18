@@ -9,7 +9,7 @@ import { ALERT_COOKIE, ALERT_THRESHOLDS, parseAlertThreshold } from "@/lib/alert
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
-import { SOUND_COOKIE } from "@/lib/sounds";
+import { SOUND_COOKIE, soundsOnFromCookie } from "@/lib/sounds";
 import { createClient } from "@/lib/supabase/server";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -30,9 +30,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <Card id={id} className="mb-4 max-w-lg scroll-mt-24">
-      <CardTitle>{title}</CardTitle>
-      <p className="mb-3 mt-1 text-sm text-muted">{hint}</p>
+    <Card id={id} className="mb-3 max-w-lg scroll-mt-24 p-4 sm:p-4">
+      <CardTitle className="text-sm">{title}</CardTitle>
+      <p className="mb-3 mt-0.5 text-xs text-muted">{hint}</p>
       {children}
     </Card>
   );
@@ -69,7 +69,7 @@ export default async function PreferencesPage() {
 
       <Section id="sounds" title={p.sounds} hint={p.soundsHint}>
         <SoundToggle
-          initial={jar.get(SOUND_COOKIE)?.value === "on"}
+          initial={soundsOnFromCookie(jar.get(SOUND_COOKIE)?.value)}
           labels={{ on: p.soundsOn, off: p.soundsOff }}
         />
       </Section>

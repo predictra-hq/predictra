@@ -202,21 +202,23 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
 
 ## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
 
-Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il valore attuale.
+Versione **1.3.0**. Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il valore attuale.
 
 - **Profilo** (`app/(app)/settings/page.tsx`): in alto immagine, nome con il suo stile, email e ruolo, con «Modifica profilo». Sotto, voci divise per tipo:
-  - _Il tuo profilo:_ Nome utente, Immagine del profilo, Colore e scritta del nome, Data di nascita (con lo stato dei commenti);
-  - _Accesso e sicurezza:_ Codice di verifica (2FA), Password, Dispositivi collegati;
-  - _Come funziona l'app:_ Tema, Suoni, Avvisi in Home, Lingua e fuso orario;
-  - _Aiuto:_ Chiedi a PREDICTRA, Rivedi il tutorial;
+  - _Il tuo profilo:_ Nome utente, Immagine del profilo, Stile del nome, Data di nascita (con lo stato dei commenti);
+  - _Accesso e sicurezza:_ Verifica in due passaggi, Password, Dispositivi;
+  - _App e aiuto:_ Tema, Suoni, Avvisi in Home, Lingua e orario, Chiedi a PREDICTRA, Rivedi il tutorial;
   - _Amministrazione_, per chi ne ha i permessi.
 
-  Ogni voce porta direttamente al riquadro giusto, tramite le ancore `#name`, `#avatar`, `#name-style`, `#birthday`, `#mfa`, `#password`, `#sessions`, `#theme`, `#sounds`, `#alerts` e `#region`.
+  Righe compatte: etichetta breve a sinistra e valore attuale a destra sulla stessa riga, icone piccole; i riquadri di _Il tuo profilo_ e _Preferenze dell'app_ hanno titoli e spiegazioni più brevi. Ogni voce porta direttamente al riquadro giusto, tramite le ancore `#name`, `#avatar`, `#name-style`, `#birthday`, `#mfa`, `#password`, `#sessions`, `#theme`, `#sounds`, `#alerts` e `#region`.
 
 - **Il tuo profilo** (`/settings/account`, pagina nuova): nome utente, immagine, stile del nome, data di nascita. Il nome ha ora un modulo suo (`saveDisplayName`), separato da lingua e fuso orario.
 - **Preferenze dell'app** (`/settings/preferences`): solo tema, suoni, avvisi, lingua e fuso orario.
 - Schede in alto: Profilo ‹, Il tuo profilo, Sicurezza, Preferenze dell'app.
 - **Immagine del profilo per tipo** (`components/ui/user-avatar.tsx`, migrazione `20261118120000_avatar_style.sql`): sempre nel verde del sito, con i colori del tema, quindi corretta in chiaro e in scuro. Cinque tipi: Classica (predefinita), Contorno, Pallone, Andamento, Iniziale. Nella scelta ci sono solo le immagini, senza scritte sotto; il nome del tipo è nel suggerimento e per i lettori di schermo. I colori scelti prima (`avatar_color`) tornano alla Classica.
+- **Data di nascita:** senza una data salvata il calendario parte da oggi.
+- **Suoni accesi di base:** spenti solo se si sceglie «Spenti» (cookie `predictra-sounds=off`).
+- **Pulsante di Chiedi a PREDICTRA:** verde pieno a riposo, più scuro al passaggio e quando si tocca (prima era trasparente e si colorava solo al passaggio).
 
 **Non provato nell'app in esecuzione:** le pagine richiedono l'accesso. Da guardare su DEV, su telefono: Profilo, le voci che aprono il riquadro giusto, la scelta dell'immagine.
 
@@ -224,7 +226,7 @@ Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il 
 
 Tutto nella stessa PR (versione **1.1.0**).
 
-- **Suoni** (`lib/sounds.ts`, interruttore `components/shell/sound-toggle.tsx` in _Preferenze_): toni brevi generati con la Web Audio API, nessun file. Salita quando un modulo va a buon fine, discesa per un errore, due note all'arrivo di una risposta di Chiedi a PREDICTRA, un tocco per tema, «Aggiorna» e passi del tutorial, quattro note alla fine del tutorial. **Spenti per default**, valgono per il dispositivo (cookie `predictra-sounds`). Il messaggio scritto c'è sempre.
+- **Suoni** (`lib/sounds.ts`, interruttore `components/shell/sound-toggle.tsx` in _Preferenze_): toni brevi generati con la Web Audio API, nessun file. Salita quando un modulo va a buon fine, discesa per un errore, due note all'arrivo di una risposta di Chiedi a PREDICTRA, un tocco per tema, «Aggiorna» e passi del tutorial, quattro note alla fine del tutorial. **Spenti per default** (accesi di base dal 18/11/2026, vedi «Profilo più chiaro»), valgono per il dispositivo (cookie `predictra-sounds`). Il messaggio scritto c'è sempre.
 - **Discussioni** (`/discussions`, gruppo Calcio): gli ultimi 50 commenti di tutte le partite, con il collegamento al riquadro Commenti della partita (`#comments`). Prima i commenti stavano solo in fondo a ogni partita e lo sblocco con la data di nascita non si vedeva. Senza una data di almeno 18 anni fa la pagina spiega come sbloccarla. In _Preferenze_, sotto la data di nascita, un riquadro dice se commenti e Discussioni sono sbloccati.
 - **Avatar a scelta** (_Preferenze → Avatar_): sei colori o «Automatico» (`profiles.avatar_color`). Sostituito lo stesso giorno dal tipo di immagine nel verde del sito: vedi la sezione «Profilo più chiaro».
 - **Nome con stile nel menu laterale e nel Profilo**: colore e scritta scelti in _Preferenze_ compaiono anche lì, non solo nei commenti. Salvando si aggiorna tutto il layout.

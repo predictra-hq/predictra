@@ -4,14 +4,17 @@ import {
   SOUND_VOLUME,
   soundDuration,
   soundsEnabled,
+  soundsOnFromCookie,
   type SoundKind,
 } from "./sounds";
 
 describe("suoni dell'interfaccia", () => {
-  it("spenti finché il cookie non li accende", () => {
-    expect(soundsEnabled("")).toBe(false);
+  it("accesi di base, spenti solo se il cookie li spegne", () => {
+    expect(soundsEnabled("")).toBe(true);
     expect(soundsEnabled("predictra-sounds=off")).toBe(false);
     expect(soundsEnabled("a=1; predictra-sounds=on")).toBe(true);
+    expect(soundsOnFromCookie(undefined)).toBe(true);
+    expect(soundsOnFromCookie("off")).toBe(false);
   });
 
   it("ogni suono è breve, con frequenze udibili e non fastidiose", () => {

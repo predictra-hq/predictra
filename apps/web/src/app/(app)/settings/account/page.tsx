@@ -34,9 +34,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <Card id={id} className="mb-4 max-w-lg scroll-mt-24">
-      <CardTitle>{title}</CardTitle>
-      <p className="mb-4 mt-1 text-sm text-muted">{hint}</p>
+    <Card id={id} className="mb-3 max-w-lg scroll-mt-24 p-4 sm:p-4">
+      <CardTitle className="text-sm">{title}</CardTitle>
+      <p className="mb-3 mt-0.5 text-xs text-muted">{hint}</p>
       {children}
     </Card>
   );
@@ -184,7 +184,7 @@ export default async function AccountPage() {
               type="date"
               min="1900-01-01"
               max={todayInRome()}
-              defaultValue={community.birthDate ?? ""}
+              defaultValue={community.birthDate ?? todayInRome()}
               required
             />
           </Field>
