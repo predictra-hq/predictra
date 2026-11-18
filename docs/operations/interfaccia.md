@@ -194,11 +194,12 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
 
 - Il numero sta nel campo `version` di `apps/web/package.json`. `next.config.ts` lo fissa alla build (`APP_RELEASE`); `formatRelease()` in `lib/version.ts` aggiunge la «v» e mostra `v0.0.0` se il valore non è valido.
 - Il commit (`APP_VERSION`, da `GITHUB_SHA`) resta solo per l'avviso «nuova versione disponibile» e non si mostra.
-- **Come si aggiorna** (versionamento semantico, maggiore.minore.correzione): nella PR che porta la novità si cambia `version` in `apps/web/package.json`.
-  - correzione di un errore: `1.0.0` → `1.0.1`;
-  - funzione nuova: `1.0.1` → `1.1.0`;
-  - cambiamento grande, che cambia il modo di usare l'app: `1.1.0` → `2.0.0`.
-- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, tenendo il numero più alto.
+- **Come si aggiorna** (maggiore.minore.correzione, campo `version` in `apps/web/package.json`), regola dal 18/11/2026:
+  - **ogni PR verso `dev` che cambia l'app** alza solo l'ultima cifra, qualunque sia la novità: `1.3.0` → `1.3.1` → `1.3.2`. Le PR di sola documentazione non la toccano;
+  - **solo il passaggio in produzione** (merge di `dev` su `main`) alza la cifra di mezzo e azzera l'ultima: `1.3.4` → `1.4.0`. La prima cifra (`2.0.0`) sale solo per un cambiamento grande, che cambia il modo di usare l'app, deciso dal proprietario;
+  - così un numero che finisce con `.0` è una versione arrivata in produzione, gli altri sono prove su DEV.
+- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, con la cifra successiva a quella già su `dev`.
+- Le versioni 1.1.0, 1.2.0 e 1.3.0 sono state alzate su `dev` prima di questa regola; da lì si prosegue con 1.3.1.
 
 ## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
 
