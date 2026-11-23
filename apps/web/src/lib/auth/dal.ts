@@ -15,6 +15,10 @@ export interface CurrentUser {
   id: string;
   email: string;
   displayName: string | null;
+  /** Stile del nome e colore dell'avatar scelti nelle Preferenze (null = predefiniti). */
+  nameColor: string | null;
+  nameStyle: string | null;
+  avatarStyle: string | null;
   status: AccountStatus;
   roles: Role[];
   /** La sessione corrente ha completato la 2FA. */
@@ -34,7 +38,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!sub) return null;
 
   const [{ data: profile }, { data: roleRows }, { data: aal }, { data: tz }] = await Promise.all([
-    supabase.from("profiles").select("id, email, display_name, status").eq("id", sub).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("id, email, display_name, status, name_color, name_style, avatar_style")
+      .eq("id", sub)
+      .maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", sub),
     supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
     supabase.from("user_preferences").select("timezone").eq("user_id", sub).maybeSingle(),
@@ -47,6 +55,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     id: String(profile.id),
     email: String(profile.email),
     displayName: (profile.display_name as string | null) ?? null,
+    nameColor: (profile.name_color as string | null) ?? null,
+    nameStyle: (profile.name_style as string | null) ?? null,
+    avatarStyle: (profile.avatar_style as string | null) ?? null,
     status: profile.status as AccountStatus,
     roles: (roleRows ?? []).map((r: { role: unknown }) => r.role).filter(isRole),
     aal2: aal?.currentLevel === "aal2",

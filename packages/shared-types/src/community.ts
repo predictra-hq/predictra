@@ -65,3 +65,22 @@ export interface BirthdayTodayRow {
   name_color: NameColor | null;
   name_style: NameStyle | null;
 }
+
+/**
+ * Tipi di immagine del profilo (`profiles.avatar_style`, migrazione
+ * `20261118120000_avatar_style.sql`), tutti nel verde del sito. Vuoto = «classic».
+ */
+export const AVATAR_STYLES = ["classic", "outline", "ball", "line", "initial"] as const;
+export type AvatarStyle = (typeof AVATAR_STYLES)[number];
+
+export function isAvatarStyle(value: unknown): value is AvatarStyle {
+  return typeof value === "string" && (AVATAR_STYLES as readonly string[]).includes(value);
+}
+
+/** Riga di `public.recent_comment_feed(p_limit)`: ultimi commenti di tutte le partite. */
+export interface RecentCommentRow extends MatchCommentFeedRow {
+  match_id: number;
+  home_team: string;
+  away_team: string;
+  kickoff_at: string;
+}

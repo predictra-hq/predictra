@@ -36,71 +36,142 @@ export const it = {
   },
   landing: {
     login: "Accedi",
-    heroTitle: "Il calcio letto con i numeri",
+    about: "Cos'è PREDICTRA",
+    nav: { how: "Come funziona", safety: "Sicurezza", faq: "Domande" },
+    eyebrow: "Analisi del calcio con i numeri",
+    heroTitle: "Capisci una partita prima di giocarla.",
     heroText:
-      "PREDICTRA raccoglie partite, statistiche e quote da fonti con licenza e le passa a modelli matematici. Tu vedi le probabilità, le giocate più solide e come vanno le tue.",
-    inviteOnly: "Accesso solo su invito: se l'hai ricevuto, usa il link che ti è stato inviato.",
-    videoLabel: "Presentazione animata di PREDICTRA",
+      "PREDICTRA mette in una sola pagina probabilità, quote, forma delle squadre e statistiche, calcolate da modelli matematici su partite reali. Tu decidi; PREDICTRA ti dà i numeri per farlo con la testa.",
+    heroPoints: [
+      "Probabilità da modelli statistici, non da opinioni",
+      "Non piazza scommesse e non vende pronostici",
+      "I tuoi dati li vedi solo tu",
+    ],
+    inviteOnly: "Accesso su invito: entra con il link che hai ricevuto.",
+    videoLabel: "Dimostrazione animata di PREDICTRA",
     play: "Riproduci",
     pause: "Pausa",
     sceneOf: "Scena {n} di {total}",
     demo: "DEMO",
-    demoNote: "Dati di esempio, non reali.",
+    demoNote: "Schermate semplificate con dati di esempio, non reali.",
     scenes: {
       matches: {
-        title: "Le partite",
-        text: "Calendario, risultati e quote, aggiornati in automatico.",
+        title: "1. Scegli la partita",
+        text: "Calendario, risultati e quote dei campionati, aggiornati da soli.",
       },
       model: {
-        title: "Il modello calcola",
-        text: "Le probabilità vengono da modelli statistici, mai da un'intelligenza artificiale che indovina.",
+        title: "2. Leggi le probabilità",
+        text: "Il modello calcola quanto è probabile ogni esito, con la percentuale accanto.",
       },
       certainties: {
-        title: "Le Certezze",
-        text: "Le giocate che i modelli danno più probabili, con la percentuale accanto.",
+        title: "3. Trova le giocate solide",
+        text: "Le giocate che i numeri danno più probabili, già ordinate per te.",
       },
       bankroll: {
-        title: "Il tuo bankroll",
-        text: "Registri le tue giocate e vedi l'andamento. Questi dati li vedi solo tu.",
+        title: "4. Tieni i conti",
+        text: "Registri le tue giocate e vedi se stai andando bene. Lo vedi solo tu.",
       },
     },
     demoMatches: ["Squadra A – Squadra B", "Squadra C – Squadra D", "Squadra E – Squadra F"],
     demoBet: "Almeno un gol nella partita",
     demoBalance: "Andamento del bankroll",
-    featuresTitle: "Cosa trovi dentro",
-    features: [
+    forTitle: "A cosa ti serve",
+    forText: "Tre modi in cui chi lo usa ci trova qualcosa per sé. Ti basta il primo.",
+    forItems: [
       {
-        title: "Partite e campionati",
-        text: "Classifiche, forma delle squadre, statistiche di stagione e movimento delle quote.",
+        title: "Vuoi capire una partita",
+        text: "Apri la partita e trovi tutto insieme: probabilità di 1X2, gol e risultati esatti, forma delle squadre, classifica, come si sono mosse le quote.",
       },
       {
-        title: "Previsioni",
-        text: "Probabilità di 1X2, gol, risultati esatti: ogni previsione è versionata e riproducibile.",
+        title: "Vuoi giocate più solide",
+        text: "Certezze e Schedine ti propongono le giocate che i modelli danno più probabili e le combinazioni che in media non fanno perdere, con il perché in chiaro.",
       },
       {
-        title: "Certezze e Schedine",
-        text: "Le giocate più solide e combinazioni già calcolate, con il loro valore atteso.",
-      },
-      {
-        title: "Affidabilità",
-        text: "Quante giocate date per probabili sono uscite davvero: i numeri del modello, senza filtri.",
-      },
-      {
-        title: "Bankroll e giocate",
-        text: "Un registro privato delle tue giocate, con limiti di spesa che scegli tu.",
-      },
-      {
-        title: "Chiedi a PREDICTRA",
-        text: "Domande a parole sui dati della piattaforma, da qualunque pagina.",
+        title: "Vuoi tenere i conti",
+        text: "Un registro privato delle tue giocate con l'andamento del bankroll e limiti di spesa che scegli tu, per giocare con misura.",
       },
     ],
-    rulesTitle: "Cosa PREDICTRA non fa",
-    rules: [
-      "Non piazza scommesse e non ti chiede di farlo.",
-      "Non inventa numeri: ogni dato viene da una fonte con licenza.",
-      "Non garantisce vincite: le previsioni sono stime con la loro incertezza.",
+    howTitle: "Come funziona",
+    howText: "Non serve essere esperti di statistica: si parte in un minuto.",
+    howSteps: [
+      {
+        title: "Entri con l'invito",
+        text: "Imposti la password e, se vuoi, il codice di verifica sul telefono.",
+      },
+      {
+        title: "Un tutorial di un minuto",
+        text: "Alla prima entrata ti mostra dove si trova ogni cosa. Lo puoi saltare e rivedere quando vuoi.",
+      },
+      {
+        title: "Apri una partita",
+        text: "Numeri spiegati con parole semplici. Se hai un dubbio, lo chiedi a PREDICTRA a parole.",
+      },
     ],
-    about: "Cos'è PREDICTRA",
+    trustTitle: "Perché fidarsi dei numeri",
+    trustItems: [
+      {
+        title: "Dati veri, con la fonte",
+        text: "Partite, risultati e quote arrivano da fornitori con licenza. Nessun numero è inventato.",
+      },
+      {
+        title: "Modelli matematici",
+        text: "Le probabilità le calcolano modelli statistici addestrati sui risultati reali, non un'intelligenza artificiale che tira a indovinare.",
+      },
+      {
+        title: "Risultati verificabili",
+        text: "La pagina Affidabilità mostra quante giocate date per probabili sono uscite davvero, anche quando va male.",
+      },
+    ],
+    safetyTitle: "È sicuro?",
+    safetyItems: [
+      {
+        title: "Solo su invito",
+        text: "Non ci si iscrive da soli e il sito non compare sui motori di ricerca.",
+      },
+      {
+        title: "Accesso protetto",
+        text: "Password più codice di verifica sul telefono (2FA) per chi lo attiva.",
+      },
+      {
+        title: "Dati privati",
+        text: "Bankroll, giocate e data di nascita li vedi solo tu: nemmeno gli amministratori.",
+      },
+      {
+        title: "Niente soldi in gioco qui",
+        text: "PREDICTRA non chiede carte o pagamenti e non tocca il tuo conto di gioco.",
+      },
+    ],
+    faqTitle: "Domande che ci si fa all'inizio",
+    faq: [
+      {
+        q: "È il solito sistema fake che promette vincite sicure?",
+        a: "No. Nessuno può garantire vincite e PREDICTRA non lo fa: dà probabilità, cioè quanto è verosimile un esito, con la loro incertezza. E mostra apertamente quante giocate date per probabili sono uscite davvero, anche quelle andate male.",
+      },
+      {
+        q: "Quanto costa?",
+        a: "Dentro PREDICTRA non si compra nulla: niente pronostici a pagamento, niente abbonamenti premium, nessuna carta richiesta. L'accesso è su invito.",
+      },
+      {
+        q: "Cosa offre in concreto?",
+        a: "Per ogni partita: probabilità di 1X2, gol, entrambe segnano e risultati esatti, quote e loro movimento, forma e statistiche delle squadre. In più le giocate più solide (Certezze), schedine già calcolate, un registro privato delle tue giocate e risposte a parole su tutti questi dati.",
+      },
+      {
+        q: "Gioco poco, o non gioco: mi serve?",
+        a: "Sì, se ti piace capire il calcio: classifiche, forma e probabilità servono anche solo per seguire le partite. Il registro delle giocate lo usi solo se vuoi.",
+      },
+      {
+        q: "È difficile da usare?",
+        a: "No. Le pagine usano parole semplici, un tutorial alla prima entrata ti accompagna e puoi fare domande a PREDICTRA come in una chat.",
+      },
+      {
+        q: "Chi vede i miei dati?",
+        a: "Solo tu. Bankroll, giocate e data di nascita sono protetti nel database in modo che nessun altro, amministratori compresi, possa leggerli. La piattaforma non invia email.",
+      },
+    ],
+    finalTitle: "Hai ricevuto un invito?",
+    finalText: "Entra e apri la prima partita: in un minuto vedi se fa per te.",
+    responsible:
+      "Vietato ai minori di 18 anni. Il gioco può causare dipendenza: gioca con moderazione.",
   },
   auth: {
     loginTitle: "Accesso riservato",
@@ -161,8 +232,10 @@ export const it = {
     marketIntelligence: "Quote",
     leagueIntelligence: "Campionati",
     teams: "Squadre",
+    discussions: "Discussioni",
     bankroll: "Bankroll",
     tracker: "Giocate fatte",
+    performance: "Andamento",
     modelIntelligence: "Modello",
     dataCenter: "Dati",
     askPredictra: "Chiedi a PREDICTRA",
@@ -179,7 +252,8 @@ export const it = {
     settings: "Impostazioni",
     profile: "Profilo",
     security: "Sicurezza",
-    preferences: "Preferenze",
+    preferences: "Preferenze dell'app",
+    account: "Il tuo profilo",
     users: "Utenti",
     invitations: "Inviti",
     audit: "Audit",
@@ -198,12 +272,40 @@ export const it = {
   },
   profile: {
     title: "Profilo",
-    account: "Account",
-    securityHint: "Password e codice di verifica",
-    preferencesHint: "Nome, tema chiaro o scuro, formato quote",
+    editProfile: "Modifica profilo",
+    groupProfile: "Il tuo profilo",
+    groupSecurity: "Accesso e sicurezza",
+    groupApp: "App e aiuto",
+    rowName: "Nome utente",
+    nameMissing: "Non impostato",
+    rowAvatar: "Immagine del profilo",
+    rowNameStyle: "Stile del nome",
+    rowBirthday: "Data di nascita",
+    birthdayMissing: "Da indicare",
+    birthdayUnlocked: "Commenti sbloccati",
+    birthdayUnderAge: "Commenti per maggiorenni",
+    rowMfa: "Verifica in due passaggi",
+    rowPassword: "Password",
+    rowSessions: "Dispositivi",
+    rowTheme: "Tema",
+    rowSounds: "Suoni",
+    rowAlerts: "Avvisi in Home",
+    rowRegion: "Lingua e orario",
+    rowAsk: "Chiedi a PREDICTRA",
     mfaOn: "2FA attiva",
     mfaOff: "2FA da attivare",
     restartTour: "Rivedi il tutorial",
+  },
+  account: {
+    title: "Il tuo profilo",
+    description: "Come ti vedono gli altri iscritti: nome, immagine, stile del nome e compleanno.",
+    nameTitle: "Nome utente",
+    nameHint:
+      "Il nome che vedono gli altri iscritti nei commenti e nei compleanni. Non è l'email: puoi usare un soprannome.",
+    nameLabel: "Nome utente",
+    nameSaved: "Nome utente salvato.",
+    nameInvalid: "Scrivi un nome tra 1 e 80 caratteri.",
+    avatarTitle: "Immagine del profilo",
   },
   tour: {
     stepOf: "Passo {n} di {total}",
@@ -288,6 +390,7 @@ export const it = {
     favourite: "Favorito",
     probabilitiesLabel: "Probabilità: 1 {home}, X {draw}, 2 {away}",
     confidence: "Confidenza",
+    bankrollLine: "Disponibile {available} · giocate aperte {open}",
     hitsTitle: "Come ci ha preso il modello",
     hitsMore: "Affidabilità",
     hitsSummary:
@@ -355,6 +458,13 @@ export const it = {
     passwordSection: "Password",
     passwordUpdated: "Password aggiornata.",
   },
+  discussions: {
+    title: "Discussioni",
+    description:
+      "Gli ultimi commenti degli iscritti su tutte le partite. Per rispondere apri la partita.",
+    lockedTitle: "Riservato agli iscritti maggiorenni",
+    empty: "Ancora nessun commento. Apri una partita e scrivi il primo.",
+  },
   comments: {
     title: "Commenti",
     rules:
@@ -380,6 +490,10 @@ export const it = {
   },
   preferences: {
     title: "Preferenze",
+    appTitle: "Preferenze dell'app",
+    appDescription: "Come si comporta PREDICTRA: tema, suoni, avvisi, lingua e orario.",
+    regionTitle: "Lingua e fuso orario",
+    regionHint: "Le date e gli orari delle partite si mostrano in questo fuso orario.",
     displayName: "Nome visualizzato",
     language: "Lingua",
     timezone: "Fuso orario",
@@ -390,6 +504,11 @@ export const it = {
     theme: "Tema",
     themeHint: "Vale per questo browser e si applica subito.",
     themes: { dark: "Scuro", light: "Chiaro" },
+    sounds: "Suoni",
+    soundsHint:
+      "Brevi suoni quando salvi, se qualcosa non va e alle risposte di Chiedi. Accesi di base, valgono per questo dispositivo.",
+    soundsOn: "Accesi",
+    soundsOff: "Spenti",
     birthday: "Data di nascita",
     birthdayHint:
       "La vedi solo tu: nemmeno gli amministratori. Serve a sbloccare i commenti (almeno 18 anni). L’" +
@@ -422,6 +541,22 @@ export const it = {
     },
     namePreview: "Anteprima",
     nameStyleSaved: "Stile del nome salvato.",
+    birthdaySavedUnlocked: "Data di nascita salvata: i commenti e le Discussioni sono sbloccati.",
+    commentsUnlocked: "Commenti sbloccati.",
+    commentsOpen: "Vai alle Discussioni",
+    commentsLocked:
+      "Commenti e Discussioni bloccati: si sbloccano con una data di nascita di almeno 18 anni fa.",
+    avatar: "Immagine del profilo",
+    avatarHint:
+      "Il simbolo di PREDICTRA nel verde del sito: scegli il tipo che preferisci toccandolo. La vedono gli altri accanto al tuo nome.",
+    avatarStyles: {
+      classic: "Classica",
+      outline: "Contorno",
+      ball: "Pallone",
+      line: "Andamento",
+      initial: "Iniziale",
+    },
+    avatarSaved: "Immagine del profilo salvata.",
     alerts: "Avvisi in Home",
     alertsHint:
       "In Home vedi le giocate che iniziano a breve sopra questa probabilità. Vale per questo browser.",
@@ -948,8 +1083,26 @@ export const it = {
       "Singole e multiple (fino a 4 partite dello stesso turno) in cui la quota di un bookmaker italiano è più alta di quella giusta secondo modello e mercato insieme. Sono le giocate con il miglior rapporto tra quota e probabilità: poche, e solo quando ci sono davvero.",
     technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
+    navPast: "Passate",
+    past: {
+      title: "Schedine passate",
+      description:
+        "Le schedine consigliate dei turni già iniziati e come sono andate, partita per partita.",
+      round: "Turno {round}",
+      summary: "{won} vinte su {settled} concluse",
+      summaryNone: "Nessuna schedina ancora conclusa",
+      outcome: { WON: "Vinta", LOST: "Persa", PENDING: "In corso" },
+      details: "Quota {price} · probabilità {p}",
+      legWon: "Uscita",
+      legLost: "Non uscita",
+      legPending: "Da giocare",
+      note: "Le schedine sono ricostruite con le stesse regole delle Proposte, usando l'ultima previsione e le quote raccolte prima di ogni partita.",
+      empty: "Nessun turno ancora iniziato con schedine consigliate.",
+      stats: "Statistiche delle proposte con valore",
+    },
     navBuilder: "Costruisci",
     navSlips: "Le mie schedine",
+    savedSlips: "Le tue schedine salvate",
     navResults: "Risultati",
     results: {
       title: "Risultati delle proposte",
@@ -1342,6 +1495,7 @@ export const it = {
     band: "dal {from} al {to}",
     bandLast: "dal {from} in su",
     bySeason: "Per stagione",
+    moreDetails: "Più dettagli: probabilità per fascia e per stagione",
     weeklyTitle: "Settimana per settimana",
     weeklyIntro: "Giocate dal 70% uscite nelle ultime settimane dello storico.",
     weeklyNote:
@@ -1424,6 +1578,10 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
+    seePerformance: "Come stanno andando le tue giocate",
+    performanceTitle: "Andamento",
+    performanceDescription:
+      "Profitto, giocate vinte e resa delle giocate registrate, mese per mese. Li vedi solo tu.",
     howAmIDoing: "Come sto andando",
     byMonth: "Per mese",
     byMarket: "Per tipo di giocata",

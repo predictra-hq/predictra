@@ -32,6 +32,27 @@ export function isTourDone(cookieValue: string | undefined): boolean {
   return cookieValue === "done";
 }
 
+/** Chiave in `user_dashboard_settings.settings`: tutorial visto da questo utente. */
+export const TOUR_SETTING = "tour_done";
+
+/** Vero se le impostazioni personali dicono che il tutorial è già stato visto. */
+export function isTourDoneInSettings(settings: unknown): boolean {
+  return (
+    typeof settings === "object" &&
+    settings !== null &&
+    (settings as Record<string, unknown>)[TOUR_SETTING] === true
+  );
+}
+
+/** Impostazioni con il tutorial segnato come visto, senza perdere le altre chiavi. */
+export function withTourDone(settings: unknown): Record<string, unknown> {
+  const base =
+    typeof settings === "object" && settings !== null && !Array.isArray(settings)
+      ? (settings as Record<string, unknown>)
+      : {};
+  return { ...base, [TOUR_SETTING]: true };
+}
+
 export interface Rect {
   top: number;
   left: number;

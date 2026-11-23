@@ -194,8 +194,63 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
 
 - Il numero sta nel campo `version` di `apps/web/package.json`. `next.config.ts` lo fissa alla build (`APP_RELEASE`); `formatRelease()` in `lib/version.ts` aggiunge la «v» e mostra `v0.0.0` se il valore non è valido.
 - Il commit (`APP_VERSION`, da `GITHUB_SHA`) resta solo per l'avviso «nuova versione disponibile» e non si mostra.
-- **Come si aggiorna** (versionamento semantico, maggiore.minore.correzione): nella PR che porta la novità si cambia `version` in `apps/web/package.json`.
-  - correzione di un errore: `1.0.0` → `1.0.1`;
-  - funzione nuova: `1.0.1` → `1.1.0`;
-  - cambiamento grande, che cambia il modo di usare l'app: `1.1.0` → `2.0.0`.
-- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, tenendo il numero più alto.
+- **Come si aggiorna** (maggiore.minore.correzione, campo `version` in `apps/web/package.json`), regola dal 18/11/2026:
+  - **ogni PR verso `dev` che cambia l'app** alza solo l'ultima cifra, qualunque sia la novità: `1.3.0` → `1.3.1` → `1.3.2`. Le PR di sola documentazione non la toccano;
+  - **solo il passaggio in produzione** (merge di `dev` su `main`) alza la cifra di mezzo e azzera l'ultima: `1.3.4` → `1.4.0`. La prima cifra (`2.0.0`) sale solo per un cambiamento grande, che cambia il modo di usare l'app, deciso dal proprietario;
+  - così un numero che finisce con `.0` è una versione arrivata in produzione, gli altri sono prove su DEV.
+- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, con la cifra successiva a quella già su `dev`.
+- Le versioni 1.1.0, 1.2.0 e 1.3.0 sono state alzate su `dev` prima di questa regola; da lì si prosegue con 1.3.1.
+
+## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
+
+Versione **1.3.0**. Pensato per chi non ha sviluppato l'app: ogni voce dice cosa cambia e mostra il valore attuale.
+
+- **Profilo** (`app/(app)/settings/page.tsx`): in alto immagine, nome con il suo stile, email e ruolo, con «Modifica profilo». Sotto, voci divise per tipo:
+  - _Il tuo profilo:_ Nome utente, Immagine del profilo, Stile del nome, Data di nascita (con lo stato dei commenti);
+  - _Accesso e sicurezza:_ Verifica in due passaggi, Password, Dispositivi;
+  - _App e aiuto:_ Tema, Suoni, Avvisi in Home, Lingua e orario, Chiedi a PREDICTRA, Rivedi il tutorial;
+  - _Amministrazione_, per chi ne ha i permessi.
+
+  Righe compatte: etichetta breve a sinistra e valore attuale a destra sulla stessa riga, icone piccole; i riquadri di _Il tuo profilo_ e _Preferenze dell'app_ hanno titoli e spiegazioni più brevi. Ogni voce porta direttamente al riquadro giusto, tramite le ancore `#name`, `#avatar`, `#name-style`, `#birthday`, `#mfa`, `#password`, `#sessions`, `#theme`, `#sounds`, `#alerts` e `#region`.
+
+- **Il tuo profilo** (`/settings/account`, pagina nuova): nome utente, immagine, stile del nome, data di nascita. Il nome ha ora un modulo suo (`saveDisplayName`), separato da lingua e fuso orario.
+- **Preferenze dell'app** (`/settings/preferences`): solo tema, suoni, avvisi, lingua e fuso orario.
+- Schede in alto: Profilo ‹, Il tuo profilo, Sicurezza, Preferenze dell'app.
+- **Immagine del profilo per tipo** (`components/ui/user-avatar.tsx`, migrazione `20261118120000_avatar_style.sql`): sempre nel verde del sito, con i colori del tema, quindi corretta in chiaro e in scuro. Cinque tipi: Classica (predefinita), Contorno, Pallone, Andamento, Iniziale. Nella scelta ci sono solo le immagini, senza scritte sotto; il nome del tipo è nel suggerimento e per i lettori di schermo. I colori scelti prima (`avatar_color`) tornano alla Classica.
+- **Data di nascita:** senza una data salvata il calendario parte da oggi.
+- **Suoni accesi di base:** spenti solo se si sceglie «Spenti» (cookie `predictra-sounds=off`).
+- **Pulsante di Chiedi a PREDICTRA:** verde pieno a riposo, più scuro al passaggio e quando si tocca (prima era trasparente e si colorava solo al passaggio).
+
+**Non provato nell'app in esecuzione:** le pagine richiedono l'accesso. Da guardare su DEV, su telefono: Profilo, le voci che aprono il riquadro giusto, la scelta dell'immagine.
+
+## 18/11/2026: suoni, Discussioni, avatar a scelta, barra fissa
+
+Tutto nella stessa PR (versione **1.1.0**).
+
+- **Suoni** (`lib/sounds.ts`, interruttore `components/shell/sound-toggle.tsx` in _Preferenze_): toni brevi generati con la Web Audio API, nessun file. Salita quando un modulo va a buon fine, discesa per un errore, due note all'arrivo di una risposta di Chiedi a PREDICTRA, un tocco per tema, «Aggiorna» e passi del tutorial, quattro note alla fine del tutorial. **Spenti per default** (accesi di base dal 18/11/2026, vedi «Profilo più chiaro»), valgono per il dispositivo (cookie `predictra-sounds`). Il messaggio scritto c'è sempre.
+- **Discussioni** (`/discussions`, gruppo Calcio): gli ultimi 50 commenti di tutte le partite, con il collegamento al riquadro Commenti della partita (`#comments`). Prima i commenti stavano solo in fondo a ogni partita e lo sblocco con la data di nascita non si vedeva. Senza una data di almeno 18 anni fa la pagina spiega come sbloccarla. In _Preferenze_, sotto la data di nascita, un riquadro dice se commenti e Discussioni sono sbloccati.
+- **Avatar a scelta** (_Preferenze → Avatar_): sei colori o «Automatico» (`profiles.avatar_color`). Sostituito lo stesso giorno dal tipo di immagine nel verde del sito: vedi la sezione «Profilo più chiaro».
+- **Nome con stile nel menu laterale e nel Profilo**: colore e scritta scelti in _Preferenze_ compaiono anche lì, non solo nei commenti. Salvando si aggiorna tutto il layout.
+- **Tutorial una sola volta per utente**: «già visto» sta nel profilo (`user_dashboard_settings.settings.tour_done`), quindi non ricompare dopo un nuovo accesso, nell'app installata (che ha cookie separati da Safari) o su un altro dispositivo. Il cookie resta per non leggere il database a ogni pagina.
+- **Barra in alto fissa sul telefono**: era `sticky` e seguiva il rimbalzo quando si tira giù la pagina, mentre il pulsante di Chiedi (fisso) restava fermo. Ora è `fixed` con uno spazio riservato sotto; niente rimbalzo anche su `html` (iPhone).
+- **Icona di Chiedi a PREDICTRA**: `BotMessageSquare` (un fumetto con un assistente) al posto del punto di domanda, nel pulsante, nel menu e nella presentazione.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: suoni su iPhone (prima il tocco su «Accesi»), barra fissa tirando giù la pagina, tutorial dopo uscita e nuovo accesso, Discussioni con un utente senza data di nascita.
+
+## 18/11/2026: presentazione riscritta per chi non conosce PREDICTRA
+
+Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `landing`) risponde, nell'ordine dello schema a F, alle domande di chi arriva:
+
+| Sezione                         | Domanda o dubbio a cui risponde                          |
+| ------------------------------- | -------------------------------------------------------- |
+| Titolo e tre punti in evidenza  | A cosa serve? È affidabile? Mi chiede soldi o scommesse? |
+| A cosa ti serve (tre casi)      | «Non vedo qualcosa che possa interessarmi»               |
+| Come funziona (tre passi)       | È facile?                                                |
+| Perché fidarsi dei numeri       | «Il solito sistema fake?»                                |
+| È sicuro?                       | Chi vede i miei dati, come si entra, pagamenti           |
+| Domande che ci si fa all'inizio | Fake, costi, cosa offre, se serve a chi gioca poco       |
+
+- Barra in alto fissa con «Come funziona», «Sicurezza», «Domande» (su computer) e «Accedi».
+- **Il video non cambia più dimensione:** le quattro scene stanno una sopra l'altra nella stessa cella e si vede solo quella attiva, quindi il riquadro ha sempre l'altezza della più alta. Prima ogni scena aveva la sua altezza e spostava tutta la pagina. Verificato in anteprima locale: altezza identica nelle quattro scene, su computer e su telefono.
+- Nessuna promessa di vincita e nessun numero reale: le scene restano con dati `DEMO`. Sul costo la pagina dice solo ciò che è vero oggi: dentro PREDICTRA non si compra nulla e l'accesso è su invito.
+- In fondo l'avvertenza sul gioco: vietato ai minori di 18 anni, il gioco può causare dipendenza.

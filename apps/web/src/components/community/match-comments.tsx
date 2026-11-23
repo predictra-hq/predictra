@@ -30,7 +30,7 @@ export async function MatchComments({ matchId }: { matchId: number }) {
         <p className="mt-2 text-sm text-muted">{own.birthDate ? m.underAge : m.locked}</p>
         {!own.birthDate ? (
           <Link
-            href="/settings/preferences#birthday"
+            href="/settings/account#birthday"
             className="mt-3 inline-block text-sm font-medium text-positive-strong underline underline-offset-2"
           >
             {m.unlock}
@@ -45,7 +45,7 @@ export async function MatchComments({ matchId }: { matchId: number }) {
   const canModerate = (role === "ADMIN" || role === "SUPER_ADMIN") && user.aal2;
 
   return (
-    <Card className="mt-4">
+    <Card id="comments" className="mt-4 scroll-mt-24">
       <CardTitle>{m.title}</CardTitle>
       <p className="mt-1 text-xs text-subtle">{m.rules}</p>
 

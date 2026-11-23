@@ -4,6 +4,7 @@ import type {
   MatchCommentFeedRow,
   NameColor,
   NameStyle,
+  RecentCommentRow,
 } from "@predictra/shared-types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -47,4 +48,11 @@ export async function listBirthdaysToday(): Promise<BirthdayTodayRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("birthdays_today");
   return error ? [] : ((data ?? []) as BirthdayTodayRow[]);
+}
+
+/** Ultimi commenti di tutte le partite (pagina Discussioni); null se la lettura fallisce. */
+export async function listRecentComments(limit = 50): Promise<RecentCommentRow[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("recent_comment_feed", { p_limit: limit });
+  return error ? null : ((data ?? []) as RecentCommentRow[]);
 }

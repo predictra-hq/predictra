@@ -1,29 +1,28 @@
+import { AVATAR_STYLES, isAvatarStyle, type AvatarStyle } from "@predictra/shared-types";
+
 /**
- * Avatar predefinito (stile A, scelto il 17/11/2026): il simbolo di PREDICTRA in bianco su
- * un cerchio colorato, come gli avatar predefiniti di Discord. Il colore si ricava dall'id
- * dell'utente: è sempre lo stesso per la stessa persona e non serve salvarlo.
+ * Immagine del profilo: sempre nel verde di PREDICTRA, cambia solo il tipo di disegno
+ * (scelta del proprietario, 18/11/2026). I colori sono token del tema (`positive`,
+ * `on-positive`, `fg`…), quindi l'immagine si adatta al tema chiaro e scuro e i contrasti
+ * sono quelli già verificati da `theme-contrast.test.ts`.
  *
- * Ogni colore ha contrasto almeno 3:1 con il bianco (WCAG per gli elementi grafici).
+ * - `classic`: simbolo sul cerchio verde (predefinito);
+ * - `outline`: cerchio scuro con il bordo verde e il simbolo verde;
+ * - `ball`: il pallone grande al centro, la linea di andamento sullo sfondo;
+ * - `line`: solo la linea di andamento, spessa;
+ * - `initial`: l'iniziale del nome con il pallone.
  */
-export const AVATAR_COLORS = [
-  "#0f766e", // verde acqua
-  "#534ab7", // viola
-  "#c2410c", // arancio
-  "#185fa5", // blu
-  "#993556", // rosa
-  "#3b6d11", // verde
-] as const;
+export const DEFAULT_AVATAR_STYLE: AvatarStyle = "classic";
 
-/** Hash FNV-1a a 32 bit: veloce, stabile tra server e browser. */
-function hash(text: string): number {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return h >>> 0;
+/** Tipo scelto, oppure il predefinito se manca o non è valido. */
+export function avatarStyleOf(chosen: string | null | undefined): AvatarStyle {
+  return isAvatarStyle(chosen) ? chosen : DEFAULT_AVATAR_STYLE;
 }
 
-export function avatarColor(userId: string): (typeof AVATAR_COLORS)[number] {
-  return AVATAR_COLORS[hash(userId) % AVATAR_COLORS.length]!;
+/** Iniziale per il tipo `initial`: prima lettera del nome (o dell'email), maiuscola. */
+export function avatarInitial(name: string | null | undefined): string {
+  const letter = (name ?? "").trim().match(/\p{L}|\p{N}/u)?.[0];
+  return letter ? letter.toLocaleUpperCase("it") : "P";
 }
+
+export { AVATAR_STYLES };

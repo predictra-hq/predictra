@@ -14,7 +14,8 @@ name: Copia dati tra ambienti
 
 on:
   schedule:
-    - cron: "23 5 * * *"
+    # Lunedì e giovedì (ADR 0061: minuti del piano gratuito); a mano quando serve.
+    - cron: "23 5 * * 1,4"
   workflow_dispatch:
     inputs:
       direction:

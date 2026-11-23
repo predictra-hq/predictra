@@ -53,3 +53,6 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0058](0058-comunita-commenti-e-maggiore-eta.md)    | Comunità: commenti alle partite, maggiore età dichiarata, stile del nome | Proposta  |
 | [0059](0059-schermata-offline.md)                   | Schermata «Sei offline» con un service worker minimo                     | Proposta  |
 | [0060](0060-taratura-gol-totali-dati-reali.md)      | Taratura dei gol totali sui dati reali                                   | Accettata |
+| [0061](0061-minuti-actions-ridotti.md)              | Meno minuti di GitHub Actions                                            | Accettata |
+| [0062](0062-sezioni-semplici-e-schedine-passate.md) | Sezioni a tre viste e schedine passate                                   | Accettata |
+| [0063](0063-taratura-under-3-5.md)                  | Taratura anche della linea 3,5 dei gol                                   | Accettata |

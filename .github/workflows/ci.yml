@@ -5,10 +5,10 @@ on:
     branches: [dev, main]
     # Le modifiche solo alla documentazione non fanno girare la CI (né il deploy):
     # risparmia minuti del piano gratuito (2.000/mese sui repo privati).
-    paths-ignore: ["docs/**"]
+    paths-ignore: ["docs/**", "**/*.md"]
   push:
     branches: [dev, main]
-    paths-ignore: ["docs/**"]
+    paths-ignore: ["docs/**", "**/*.md"]
 
 # Un solo run per PR o per branch: annulla quelli superati (risparmia minuti free tier).
 # PR e push hanno gruppi separati: un run di PR non può annullare un push (che fa
@@ -29,6 +29,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Scansione dei segreti nello stesso job (ADR 0061): un job a parte costava un
+      # minuto in più a ogni esecuzione, per l'arrotondamento al minuto.
+      - name: Scansione segreti (gitleaks)
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --redact --verbose
 
       - uses: pnpm/action-setup@v5
 
@@ -66,7 +73,10 @@ jobs:
       - name: Test (unit + migrazioni + RLS)
         run: pnpm test
 
+      # Sui push verso dev e main la build la rifà già il deploy (vercel build): qui solo
+      # sulle PR, per non pagarla due volte (ADR 0061).
       - name: Build
+        if: github.event_name == 'pull_request'
         run: pnpm build
         env:
           # Valori fittizi solo per la build: nessuna chiamata reale avviene in build.
@@ -77,18 +87,6 @@ jobs:
       - name: Dependency audit (produzione)
         run: pnpm audit --prod --audit-level=high
 
-  secrets:
-    name: Scansione segreti
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      # Immagine ufficiale gitleaks (nessuna licenza richiesta, a differenza della action per le org).
-      - name: gitleaks
-        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0 git /repo --redact --verbose
-
   # ---------------------------------------------------------------------------
   # Deploy automatico: solo su push (non sulle PR) e solo se i controlli sono verdi.
   # dev  → progetto Supabase DEV  + progetto Vercel DEV
@@ -96,7 +94,7 @@ jobs:
   # ---------------------------------------------------------------------------
   deploy-dev:
     name: Deploy DEV
-    needs: [checks, secrets]
+    needs: [checks]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     uses: ./.github/workflows/deploy-target.yml
     with:
@@ -113,7 +111,7 @@ jobs:
 
   deploy-prod:
     name: Deploy PROD
-    needs: [checks, secrets]
+    needs: [checks]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-target.yml
     with:

@@ -8,10 +8,26 @@ import { Tour } from "@/components/shell/tour";
 import { UpdateNotice } from "@/components/shell/update-notice";
 import { askProvider } from "@/lib/ask/provider";
 import { cookies } from "next/headers";
-import { isTourDone, TOUR_COOKIE } from "@/lib/tour";
+import { isTourDone, isTourDoneInSettings, TOUR_COOKIE } from "@/lib/tour";
+import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { formatRelease } from "@/lib/version";
+
+/**
+ * Tutorial già visto: prima il cookie di questo browser (nessuna lettura), poi il profilo,
+ * così non ricompare dopo un nuovo accesso o nell’app installata, che ha cookie separati.
+ */
+async function tourDone(userId: string): Promise<boolean> {
+  if (isTourDone((await cookies()).get(TOUR_COOKIE)?.value)) return true;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("user_dashboard_settings")
+    .select("settings")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return isTourDoneInSettings(data?.settings);
+}
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -34,8 +50,10 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         groups={MAIN_NAV_GROUPS}
         admin={adminNav}
         settings={SETTINGS_NAV}
-        userId={user.id}
         userLabel={user.displayName ?? user.email}
+        nameColor={user.nameColor}
+        nameStyle={user.nameStyle}
+        avatarStyle={user.avatarStyle}
         release={formatRelease()}
         roleLabel={role ? m.roles[role] : ""}
       />
@@ -50,7 +68,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </main>
       <BottomNav messages={m} />
       <AskLauncher enabled={askProvider() !== null} />
-      <Tour messages={m.tour} done={isTourDone((await cookies()).get(TOUR_COOKIE)?.value)} />
+      <Tour messages={m.tour} done={await tourDone(user.id)} />
       <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />
     </div>
   );

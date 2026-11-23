@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardTop, isTourDone, TOUR_STEPS } from "./tour";
+import { cardTop, isTourDone, isTourDoneInSettings, TOUR_STEPS, withTourDone } from "./tour";
 
 describe("tutorial", () => {
   it("riconosce il cookie del tutorial già visto", () => {
@@ -17,5 +17,13 @@ describe("tutorial", () => {
     expect(cardTop({ top: 100, left: 0, width: 50, height: 40 }, 200, 800)).toBe(152);
     expect(cardTop({ top: 740, left: 0, width: 50, height: 50 }, 200, 800)).toBe(528);
     expect(cardTop({ top: 20, left: 0, width: 50, height: 760 }, 200, 800)).toBe(12);
+  });
+
+  it("il tutorial visto resta nelle impostazioni personali senza toccare le altre", () => {
+    expect(isTourDoneInSettings({ tour_done: true })).toBe(true);
+    expect(isTourDoneInSettings({})).toBe(false);
+    expect(isTourDoneInSettings(null)).toBe(false);
+    expect(withTourDone({ widgets: [1] })).toEqual({ widgets: [1], tour_done: true });
+    expect(withTourDone([1])).toEqual({ tour_done: true });
   });
 });

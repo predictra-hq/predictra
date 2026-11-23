@@ -33,7 +33,7 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
       ) : null}
 
       <div className="grid grid-cols-1 gap-6">
-        <Card>
+        <Card id="mfa" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>{m.security.mfaSection}</CardTitle>
             <Badge tone={totp ? "positive" : "warning"}>
@@ -51,7 +51,7 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
           )}
         </Card>
 
-        <Card>
+        <Card id="password" className="scroll-mt-24">
           <CardTitle>{m.security.passwordSection}</CardTitle>
           <ActionForm action={changePassword} className="mt-4 flex flex-col gap-4 sm:max-w-sm">
             <NewPasswordFields labels={newPasswordLabels()} />
@@ -59,7 +59,7 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
           </ActionForm>
         </Card>
 
-        <Card>
+        <Card id="sessions" className="scroll-mt-24">
           <CardTitle>{m.security.sessionsSection}</CardTitle>
           <p className="mb-4 mt-1 text-sm text-muted">{m.security.sessionsDescription}</p>
           <ActionForm action={signOutOtherSessions} className="flex flex-col gap-3 sm:max-w-xs">

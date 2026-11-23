@@ -135,51 +135,6 @@ function CalibrationCard({ history }: { history: HistoryCheck }) {
   );
 }
 
-/** Uscite delle giocate dal 70%, una barra per settimana. */
-function WeeklyCard({ history }: { history: HistoryCheck }) {
-  const r = getMessages().reliability;
-  const weeks = history.weeks.slice(-16);
-  if (weeks.length === 0) return null;
-  const label = (iso: string) =>
-    new Intl.DateTimeFormat("it-IT", { day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
-    );
-  return (
-    <Card>
-      <CardTitle>{r.weeklyTitle}</CardTitle>
-      <p className="mt-1 text-sm text-muted">{r.weeklyIntro}</p>
-      <ul className="mt-4 flex h-40 items-end gap-1 sm:gap-1.5" aria-label={r.weeklyTitle}>
-        {weeks.map((w) => {
-          const rate = w.count ? w.wins / w.count : 0;
-          const predicted = w.count ? w.predicted / w.count : 0;
-          return (
-            <li key={w.week} className="flex h-full min-w-0 flex-1 flex-col items-center gap-1">
-              <span className="relative w-full flex-1 overflow-hidden rounded-sm bg-surface-2">
-                <span
-                  className={cn(
-                    "absolute inset-x-0 bottom-0 rounded-sm",
-                    rate >= predicted - TOLERANCE ? "bg-positive" : "bg-warning",
-                  )}
-                  style={{ height: `${Math.max(rate * 100, 3)}%` }}
-                />
-                <span
-                  className="absolute inset-x-0 h-0.5 bg-fg/70"
-                  style={{ bottom: `${predicted * 100}%` }}
-                />
-              </span>
-              <span className="hidden text-[10px] text-subtle sm:block">{label(w.week)}</span>
-              <span className="sr-only">
-                {fillTemplate(r.week, { week: label(w.week), wins: w.wins, count: w.count })}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-      <p className="mt-2 text-xs text-subtle">{r.weeklyNote}</p>
-    </Card>
-  );
-}
-
 const formatCount = (n: number) =>
   new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(n);
 
@@ -295,8 +250,6 @@ export default async function ReliabilityPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <CalibrationCard history={history} />
-            <WeeklyCard history={history} />
             <Card>
               <CardTitle>{r.byMarket}</CardTitle>
               <StatList stats={historyMarkets} label={marketLabel} />
@@ -308,11 +261,20 @@ export default async function ReliabilityPage() {
                 label={(key) => competitionName.get(key) ?? key}
               />
             </Card>
-            <Card>
-              <CardTitle>{r.bySeason}</CardTitle>
-              <StatList stats={historySeasons} label={(key) => key} />
-            </Card>
           </div>
+          {/* Il resto a richiesta: la pagina resta corta. */}
+          <details className="mt-4 rounded-[var(--radius-card)] border border-border bg-surface p-4">
+            <summary className="cursor-pointer text-sm font-medium text-muted hover:text-fg">
+              {r.moreDetails}
+            </summary>
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <CalibrationCard history={history} />
+              <Card>
+                <CardTitle>{r.bySeason}</CardTitle>
+                <StatList stats={historySeasons} label={(key) => key} />
+              </Card>
+            </div>
+          </details>
           <p className="mt-3 text-xs text-subtle">
             {fillTemplate(r.historyNote, { date: dateFmt(history.checkedAt) })}
           </p>

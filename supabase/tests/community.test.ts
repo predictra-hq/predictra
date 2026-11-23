@@ -232,3 +232,51 @@ describe("commenti alle partite", () => {
     expect(audit.rows).toEqual([{ action: "comment.moderated", target_id: alice.id }]);
   });
 });
+
+describe("tipo di avatar e ultimi commenti", () => {
+  it("il tipo di avatar si sceglie dall'elenco, solo sul proprio profilo", async () => {
+    await asUser(db, alice, async (tx) => {
+      await tx.query("update public.profiles set avatar_style = 'outline' where id = $1", [
+        alice.id,
+      ]);
+      expect(
+        await attempt(tx, "update public.profiles set avatar_style = 'black' where id = $1", [
+          alice.id,
+        ]),
+      ).toMatch(/profiles_avatar_style_check/);
+      const other = await tx.query(
+        "update public.profiles set avatar_style = 'ball' where id = $1 returning id",
+        [bob.id],
+      );
+      expect(other.rows).toEqual([]);
+    });
+  });
+
+  it("gli ultimi commenti di tutte le partite: solo maggiorenni, con le squadre, senza id autore", async () => {
+    await asUser(db, alice, (tx) =>
+      tx.query("insert into public.match_comments (match_id, body) values ($1, 'Che partita')", [
+        matchId,
+      ]),
+    );
+    const feed = (user: TestUser) =>
+      asUser(
+        db,
+        user,
+        async (tx) =>
+          (await tx.query<Record<string, unknown>>("select * from public.recent_comment_feed(10)"))
+            .rows,
+      );
+    const rows = await feed(bob);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      match_id: matchId,
+      home_team: "DEMO Squadra Uno",
+      away_team: "DEMO Squadra Due",
+      body: "Che partita",
+      author_name: "Alice",
+      is_own: false,
+    });
+    expect(Object.keys(rows[0]!)).not.toContain("user_id");
+    expect(await feed(young)).toEqual([]);
+  });
+});

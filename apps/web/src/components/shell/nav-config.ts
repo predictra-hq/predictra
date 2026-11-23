@@ -52,6 +52,7 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
       { key: "matchCenter", href: "/match-center" },
       { key: "leagueIntelligence", href: "/leagues" },
       { key: "teams", href: "/teams" },
+      { key: "discussions", href: "/discussions" },
     ],
   },
   {
@@ -60,6 +61,7 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { key: "bankroll", href: "/bankroll" },
       { key: "tracker", href: "/tracker" },
+      { key: "performance", href: "/performance" },
     ],
   },
 ];
@@ -142,6 +144,7 @@ export const SETTINGS_NAV: readonly NavItem[] = [{ key: "profile", href: "/setti
 
 /** Schede della sezione Impostazioni. */
 export const SETTINGS_TABS = [
+  { key: "account", href: "/settings/account" },
   { key: "security", href: "/settings/security" },
   { key: "preferences", href: "/settings/preferences" },
 ] as const satisfies readonly NavItem[];

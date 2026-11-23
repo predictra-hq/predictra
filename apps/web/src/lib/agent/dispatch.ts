@@ -1,12 +1,13 @@
 /*
  * Avvio di riserva del ciclo Python (M7 fase A4, ADR 0035, punto aperto 1).
  *
- * GitHub può ritardare o saltare gli schedule nei momenti di carico: il 9/11/2026
- * nessun workflow programmato è partito per circa 9 ore. QStash invece chiama
- * l'endpoint ogni 15 minuti. Se il ciclo `github_actions` non parte da più di
- * MISSED_AFTER_MINUTES, l'endpoint chiede a GitHub di avviare il workflow
- * _Agent (Python)_ (`workflow_dispatch`, branch `dev`, con le stesse pianificazioni
- * dello schedule). Al massimo un avvio l'ora (contatore `github-dispatch`).
+ * Dal 23/11/2026 è l'unico avvio del ciclo Python (ADR 0061): lo schedule di GitHub, ogni
+ * 3 ore e spesso in ritardo, consumava troppi minuti del piano gratuito. QStash chiama
+ * l'endpoint ogni 15 minuti; a ogni fascia di `CYCLE_SLOTS_UTC` senza un ciclo
+ * `github_actions` successivo, l'endpoint chiede a GitHub di avviare il workflow
+ * _Agent (Python)_ (`workflow_dispatch`, con tutte le pianificazioni). Tre cicli al
+ * giorno bastano: quote e previsioni del mattino, quote pre-partita e previsioni del
+ * pomeriggio, risultati della sera. Al massimo un avvio l'ora (contatore `github-dispatch`).
  *
  * Spento finché non esiste GITHUB_DISPATCH_TOKEN (token GitHub a grana fine, solo
  * questo repository, permesso Actions: Read and write). Gratuito: i minuti restano
@@ -20,10 +21,29 @@ export interface DispatchConfig {
   ref: string;
 }
 
-/** Oltre lo schedule ogni 3 h, più il ritardo tipico di GitHub (fino a ~30 min). */
-export const MISSED_AFTER_MINUTES = 210;
+/**
+ * Fasce del ciclo Python (ora UTC, minuto): mattino dopo le 06 (quote `daily`, previsioni
+ * `morning`, schedine `morning`), pomeriggio dopo le 15 (quote `prematch`, previsioni
+ * `afternoon`, schedine `evening`), sera dopo le 22 (risultati delle partite serali).
+ */
+export const CYCLE_SLOTS_UTC: readonly (readonly [number, number])[] = [
+  [6, 50],
+  [15, 50],
+  [22, 50],
+];
 export const DISPATCH_QUOTA_PER_HOUR = 1;
 const REPO_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
+/** Ultima fascia già iniziata rispetto a `now` (anche del giorno prima). */
+export function latestSlot(now: number): number {
+  const day = new Date(now);
+  const candidates = [0, 1].flatMap((back) =>
+    CYCLE_SLOTS_UTC.map(([h, m]) =>
+      Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate() - back, h, m),
+    ),
+  );
+  return Math.max(...candidates.filter((t) => t <= now));
+}
 
 export function dispatchConfigFromEnv(
   env: Record<string, string | undefined> = process.env,
@@ -38,12 +58,12 @@ export function dispatchConfigFromEnv(
   return { token, repo, workflow: "agent-python.yml", ref };
 }
 
-/** `true` se l'ultimo ciclo GitHub Actions è più vecchio della soglia (o non c'è mai stato). */
+/** `true` se dopo l'ultima fascia iniziata non è ancora partito un ciclo GitHub Actions. */
 export function cycleMissed(lastRunAt: string | null, now: number): boolean {
   if (!lastRunAt) return true;
   const last = Date.parse(lastRunAt);
   if (Number.isNaN(last)) return true;
-  return now - last > MISSED_AFTER_MINUTES * 60_000;
+  return last < latestSlot(now);
 }
 
 export type DispatchOutcome = "disabled" | "not-needed" | "rate-limited" | "dispatched" | "failed";

@@ -8,12 +8,12 @@ import type { ActionState } from "@/lib/errors";
 import { getMessages, LOCALES } from "@/lib/i18n";
 import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/server";
-import { parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
+import { isAvatarStyle } from "@predictra/shared-types";
+import { isAdult, parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
 
 const timezones = new Set(Intl.supportedValuesOf("timeZone"));
 
 const schema = z.object({
-  displayName: z.string().trim().min(1).max(80),
   locale: z.enum(LOCALES),
   timezone: z.string().refine((tz) => timezones.has(tz)),
 });
@@ -25,7 +25,6 @@ export async function savePreferences(
   const m = getMessages();
   const user = await requireUser();
   const parsed = schema.safeParse({
-    displayName: formData.get("displayName"),
     locale: formData.get("locale"),
     timezone: formData.get("timezone"),
   });
@@ -33,16 +32,32 @@ export async function savePreferences(
 
   const supabase = await createClient();
   // RLS garantisce che si possa scrivere solo la propria riga.
-  const [profile, prefs] = await Promise.all([
-    supabase.from("profiles").update({ display_name: parsed.data.displayName }).eq("id", user.id),
-    supabase
-      .from("user_preferences")
-      .upsert({ user_id: user.id, locale: parsed.data.locale, timezone: parsed.data.timezone }),
-  ]);
-  if (profile.error || prefs.error) return { ok: false, message: m.common.genericError };
+  const { error } = await supabase
+    .from("user_preferences")
+    .upsert({ user_id: user.id, locale: parsed.data.locale, timezone: parsed.data.timezone });
+  if (error) return { ok: false, message: m.common.genericError };
 
   revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.saved };
+}
+
+/** Nome utente (Il tuo profilo → Nome utente): lo vedono gli altri iscritti nei commenti. */
+export async function saveDisplayName(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const parsed = z.string().trim().min(1).max(80).safeParse(formData.get("displayName"));
+  if (!parsed.success) return { ok: false, message: m.account.nameInvalid };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ display_name: parsed.data })
+    .eq("id", user.id);
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/", "layout");
+  return { ok: true, message: m.account.nameSaved };
 }
 
 /** Soglia degli avvisi in Home: preferenza di questo browser, come il tema. */
@@ -72,9 +87,13 @@ export async function saveBirthday(_prev: ActionState, formData: FormData): Prom
     show_birthday: formData.get("showBirthday") === "on",
   });
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
-  revalidatePath("/dashboard");
-  return { ok: true, message: m.preferences.birthdaySaved };
+  revalidatePath("/", "layout");
+  return {
+    ok: true,
+    message: isAdult(birthDate, todayInRome())
+      ? m.preferences.birthdaySavedUnlocked
+      : m.preferences.birthdaySaved,
+  };
 }
 
 export async function removeBirthday(): Promise<ActionState> {
@@ -83,8 +102,7 @@ export async function removeBirthday(): Promise<ActionState> {
   const supabase = await createClient();
   const { error } = await supabase.from("user_birthdays").delete().eq("user_id", user.id);
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
-  revalidatePath("/dashboard");
+  revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.birthdayRemoved };
 }
 
@@ -96,6 +114,26 @@ export async function saveNameStyle(_prev: ActionState, formData: FormData): Pro
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update(style).eq("id", user.id);
   if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/settings/preferences");
+  // Tutto il layout: il nome compare anche nel menu laterale.
+  revalidatePath("/", "layout");
   return { ok: true, message: m.preferences.nameStyleSaved };
+}
+
+/** Colore del cerchio dell'avatar, da un elenco chiuso; «automatico» lo toglie. */
+export async function saveAvatarStyle(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages();
+  const user = await requireUser();
+  const raw = formData.get("avatarStyle");
+  const avatarStyle = isAvatarStyle(raw) ? raw : null;
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_style: avatarStyle })
+    .eq("id", user.id);
+  if (error) return { ok: false, message: m.common.genericError };
+  revalidatePath("/", "layout");
+  return { ok: true, message: m.preferences.avatarSaved };
 }
