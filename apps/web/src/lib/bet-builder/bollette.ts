@@ -1,4 +1,5 @@
 import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
   italianPriceFor,
@@ -38,9 +39,18 @@ import {
  *   che lo porterebbe sotto non entra. Meglio una schedina in meno che una che in media
  *   fa perdere;
  * - se le selezioni valide sono meno di `MIN_LEGS`, quel profilo non viene proposto.
+ *
+ * Precisione (ADR 0065):
+ * - la probabilità del modello si corregge con la verifica storica del suo mercato e della
+ *   sua fascia (`calibration.ts`): un mercato che in passato è uscito meno del previsto
+ *   pesa meno;
+ * - modello e mercato devono essere d'accordo: oltre `MAX_DISAGREEMENT` punti di distanza
+ *   uno dei due sbaglia e la giocata non entra;
+ * - si sceglie prima la precisione, poi il valore: punteggio = probabilità + valore;
+ * - niente più schedina lunga a 6 partite: con sei esiti al 55% vince meno di 3 volte su 100.
  */
 
-export const BOLLETTA_PROFILES = ["DOUBLE", "SOLID", "BALANCED", "LONG", "HIGH"] as const;
+export const BOLLETTA_PROFILES = ["DOUBLE", "SOLID", "BALANCED", "HIGH"] as const;
 export type BollettaProfile = (typeof BOLLETTA_PROFILES)[number];
 
 export interface BollettaRule {
@@ -54,10 +64,9 @@ export interface BollettaRule {
 
 export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
   DOUBLE: { minProbability: 0.72, minPrice: 1.2, legs: 2 },
-  SOLID: { minProbability: 0.65, minPrice: 1.25, legs: 3 },
-  BALANCED: { minProbability: 0.55, minPrice: 1.45, legs: 4 },
-  LONG: { minProbability: 0.55, minPrice: 1.3, legs: 6 },
-  HIGH: { minProbability: 0.42, minPrice: 1.8, legs: 4 },
+  SOLID: { minProbability: 0.66, minPrice: 1.25, legs: 3 },
+  BALANCED: { minProbability: 0.58, minPrice: 1.45, legs: 3 },
+  HIGH: { minProbability: 0.45, minPrice: 1.8, legs: 4 },
 };
 
 /** Valore = probabilità × quota − 1. Fuori da questo intervallo la selezione è scartata. */
@@ -66,6 +75,8 @@ export const MAX_EDGE = 0.15;
 /** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
 export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
 export const MIN_LEGS = 2;
+/** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
+export const MAX_DISAGREEMENT = 0.1;
 /**
  * Valore atteso minimo dell'intera schedina (probabilità × quota totale − 1). Zero: non si
  * consiglia una schedina che in media fa perdere, anche se ogni selezione è "sicura".
@@ -189,13 +200,20 @@ export function playablePicks(
   prices: ReadonlyMap<string, ItalianPrice>,
   consensus: ReadonlyMap<string, number> = new Map(),
   weight: number = MARKET_WEIGHT,
+  calibration: Calibration = new Map(),
 ): BollettaPick[] {
   const result: BollettaPick[] = [];
   for (const r of rows) {
-    const modelProbability = Number(r.probability);
+    const rawProbability = Number(r.probability);
     const confidence = Number(r.confidence_score);
     if (!allowedMarket(r) || confidence < MIN_CONFIDENCE) continue;
-    if (!(modelProbability > 0)) continue;
+    if (!(rawProbability > 0)) continue;
+    const modelProbability = calibrate(
+      rawProbability,
+      r.market,
+      r.line === null ? null : Number(r.line),
+      calibration,
+    );
     const pick: LikelyPick = {
       matchId: Number(r.match_id),
       kickoffAt: r.kickoff_at,
@@ -210,6 +228,7 @@ export function playablePicks(
     const it = italianPriceFor(prices, pick);
     if (!it || !(it.price > 1)) continue;
     const market = consensusFor(consensus, pick);
+    if (market !== null && Math.abs(modelProbability - market) > MAX_DISAGREEMENT) continue;
     const probability =
       market === null ? modelProbability : (1 - weight) * modelProbability + weight * market;
     if (probability > MAX_PICK_PROBABILITY) continue;
@@ -230,9 +249,9 @@ export function playablePicks(
   return result;
 }
 
-/** Prima il valore più alto, a parità la probabilità più alta. */
+/** Precisione e valore insieme: probabilità + valore, a parità la probabilità più alta. */
 const byValue = (a: BollettaPick, b: BollettaPick) =>
-  b.edge - a.edge ||
+  b.probability + b.edge - (a.probability + a.edge) ||
   b.probability - a.probability ||
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
@@ -285,9 +304,10 @@ export function buildBollette(
   rows: readonly LikelyRow[],
   prices: ReadonlyMap<string, ItalianPrice>,
   consensus: ReadonlyMap<string, number> = new Map(),
+  calibration: Calibration = new Map(),
 ): Bolletta[] {
   const byRound = new Map<string, BollettaPick[]>();
-  for (const p of playablePicks(rows, prices, consensus)) {
+  for (const p of playablePicks(rows, prices, consensus, MARKET_WEIGHT, calibration)) {
     const round = roundOfKickoff(p.kickoffAt);
     byRound.set(round, [...(byRound.get(round) ?? []), p]);
   }

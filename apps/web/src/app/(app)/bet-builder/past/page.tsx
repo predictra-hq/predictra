@@ -5,12 +5,13 @@ import { pickLabel } from "@/components/bet-builder/likely";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
+import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
+import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { formatRound } from "@/lib/bet-builder/format";
 import { loadPastRounds } from "@/lib/bet-builder/past-load";
 import type { PastOutcome } from "@/lib/bet-builder/past";
-import { getMessages } from "@/lib/i18n";
+import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
 export const metadata: Metadata = { title: "Passate — Schedine" };
@@ -51,37 +52,57 @@ export default async function PastSlipsPage() {
               <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                 {r.bollette.map((b) => (
                   <li key={`${b.bolletta.profile}-${b.bolletta.round}`}>
-                    <Card className="h-full">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-semibold">{profiles[b.bolletta.profile]}</p>
-                        <Badge tone={TONE[b.outcome]}>{p.outcome[b.outcome]}</Badge>
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted">
-                        {fillTemplate(p.details, {
-                          price: formatOdds(b.bolletta.price),
-                          p: formatPercent(b.bolletta.probability, 0),
-                        })}
-                      </p>
-                      <ul className="mt-3 divide-y divide-border">
-                        {b.legs.map((l) => (
-                          <li
-                            key={`${l.pick.matchId}-${l.pick.market}-${l.pick.selection}`}
-                            className="flex items-center justify-between gap-3 py-2 text-sm"
-                          >
-                            <span className="min-w-0">
-                              <Link
-                                href={`/match-center/${l.pick.matchId}`}
-                                className="block truncate hover:underline"
-                              >
-                                {l.pick.home} – {l.pick.away}
-                              </Link>
-                              <span className="block text-xs text-muted">
-                                {pickLabel(l.pick)} · {formatOdds(l.pick.price)}
-                              </span>
-                            </span>
-                            <span className="flex shrink-0 items-center gap-2">
+                    <Ticket
+                      className="h-full"
+                      title={profiles[b.bolletta.profile]}
+                      badge={<Badge tone={TONE[b.outcome]}>{p.outcome[b.outcome]}</Badge>}
+                      totals={
+                        <TicketTotals
+                          priceLabel={m.bollette.totalOdds}
+                          price={formatOdds(b.bolletta.price)}
+                          items={[
+                            {
+                              label: m.bollette.winProbability,
+                              value: formatPercent(b.bolletta.probability, 0),
+                            },
+                          ]}
+                        />
+                      }
+                      footer={
+                        <ShareSlip
+                          {...shareProps({
+                            title: `${profiles[b.bolletta.profile]} · ${p.outcome[b.outcome]}`,
+                            picks: b.legs.map((l) => ({
+                              match: `${l.pick.home} – ${l.pick.away}${l.score ? ` ${l.score}` : ""}`,
+                              pick: pickLabel(l.pick),
+                              price: l.pick.price,
+                            })),
+                            price: b.bolletta.price,
+                            probability: b.bolletta.probability,
+                          })}
+                        />
+                      }
+                    >
+                      {b.legs.map((l) => (
+                        <TicketLeg
+                          key={`${l.pick.matchId}-${l.pick.market}-${l.pick.selection}`}
+                          time={formatDateTime(l.pick.kickoffAt)}
+                          match={
+                            <Link
+                              href={`/match-center/${l.pick.matchId}`}
+                              className="hover:underline"
+                            >
+                              {l.pick.home} – {l.pick.away}
+                            </Link>
+                          }
+                          pick={pickLabel(l.pick)}
+                          price={formatOdds(l.pick.price)}
+                          status={
+                            <span className="flex items-center gap-1.5">
                               {l.score ? (
-                                <span className="tabular-nums text-muted">{l.score}</span>
+                                <span className="font-mono text-xs tabular-nums text-muted">
+                                  {l.score}
+                                </span>
                               ) : null}
                               {l.won === true ? (
                                 <Check
@@ -103,24 +124,10 @@ export default async function PastSlipsPage() {
                                 />
                               )}
                             </span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-3">
-                        <ShareSlip
-                          {...shareProps({
-                            title: `${profiles[b.bolletta.profile]} · ${p.outcome[b.outcome]}`,
-                            picks: b.legs.map((l) => ({
-                              match: `${l.pick.home} – ${l.pick.away}${l.score ? ` ${l.score}` : ""}`,
-                              pick: pickLabel(l.pick),
-                              price: l.pick.price,
-                            })),
-                            price: b.bolletta.price,
-                            probability: b.bolletta.probability,
-                          })}
+                          }
                         />
-                      </div>
-                    </Card>
+                      ))}
+                    </Ticket>
                   </li>
                 ))}
               </ul>

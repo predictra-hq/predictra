@@ -9,7 +9,7 @@ import { listCommunityPosts, listRecentComments } from "@/lib/community/queries"
 import { getMessages } from "@/lib/i18n";
 import { deletePost, moderatePost, postMessage } from "./actions";
 
-export const metadata: Metadata = { title: "Comunità" };
+export const metadata: Metadata = { title: "Spogliatoio" };
 
 const TABS = ["general", "slips", "matches"] as const;
 type Tab = (typeof TABS)[number];
@@ -19,12 +19,12 @@ const CHANNEL: Record<Exclude<Tab, "matches">, CommunityChannel> = {
 };
 
 /**
- * Comunità (ADR 0064): tre chat per tutti gli iscritti. Generale per parlare di tutto,
+ * Spogliatoio (ADR 0064): tre chat per tutti gli iscritti. Generale per parlare di tutto,
  * Schedine per condividere e commentare le schedine, Partite con gli ultimi commenti
  * scritti sotto le partite. Ognuno compare con il nome, lo stile e l'immagine scelti nel
  * Profilo; mai l'email.
  */
-export default async function CommunityPage({ searchParams }: PageProps<"/community">) {
+export default async function LockerRoomPage({ searchParams }: PageProps<"/locker-room">) {
   const user = await requireUser();
   const m = getMessages();
   const c = m.community;
@@ -38,7 +38,7 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
       <PageHeader title={c.title} description={c.description} />
       <nav aria-label={c.title} className="tab-strip mb-4">
         {TABS.map((t) => (
-          <Link key={t} href={`/community?c=${t}`} aria-current={t === tab ? "page" : undefined}>
+          <Link key={t} href={`/locker-room?c=${t}`} aria-current={t === tab ? "page" : undefined}>
             {c.tabs[t]}
           </Link>
         ))}

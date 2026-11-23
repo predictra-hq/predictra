@@ -30,7 +30,7 @@ from .data import Fixture, MatchResult, parse_ts, sha256_json, training_data_has
 from .markets import derive_markets, markets_1x2
 from .models import FittedModel, Model
 from .models.blend import EloBlendModel
-from .reliability import Reliability
+from .reliability import RELIABILITY_VERSION, Reliability
 from .selection import CONTENDERS, Candidate, Decision, choose_active, model_code_hash
 
 CHUNK = 500
@@ -271,6 +271,13 @@ def run(
     # la pagina Affidabilità ha i numeri senza aspettare il confronto settimanale.
     stale = stale or any(
         "reliability_matches" in r and r["reliability_matches"] is None for r in recorded.values()
+    )
+    # Riepilogo di una versione precedente (ADR 0065: mercato per fascia): si rifà subito.
+    stale = stale or any(
+        "reliability_version" in r
+        and r["reliability_matches"] is not None
+        and int(r["reliability_version"] or 1) < RELIABILITY_VERSION
+        for r in recorded.values()
     )
     if stale or (needs_backtest and recorded):
         needs_backtest = [m.key for m in contenders]

@@ -13,11 +13,12 @@ from dataclasses import asdict, dataclass
 
 @dataclass(frozen=True)
 class Rules:
-    rules_version: str = "2026.11.12-2"
+    # ADR 0065: meno proposte e più solide (erano 8 per categoria, selezioni dal 20%).
+    rules_version: str = "2026.11.23-1"
     max_legs: int = 4
-    max_proposals_per_category: int = 8
-    min_leg_probability: float = 0.2
-    min_probability: float = 0.1
+    max_proposals_per_category: int = 2
+    min_leg_probability: float = 0.35
+    min_probability: float = 0.15
     min_leg_expected_value: float = 0.02
     min_expected_value: float = 0.05
     min_confidence_score: float = 0.4

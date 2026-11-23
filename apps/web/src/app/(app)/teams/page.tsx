@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Form from "next/form";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { LeaguesNav } from "@/components/football/leagues-nav";
 import { Button, Card, EmptyState, Field, Input, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { listFollowedTeams, listFollows } from "@/lib/football/follows";
@@ -44,7 +45,8 @@ export default async function TeamsPage({ searchParams }: PageProps<"/teams">) {
 
   return (
     <>
-      <PageHeader title={m.title} description={m.description} />
+      <PageHeader title={getMessages().leagueIntelligence.title} description={m.description} />
+      <LeaguesNav current="teams" />
       <Form action="/teams" className="mb-4 flex items-end gap-3">
         <div className="min-w-0 flex-1">
           <Field label={m.searchLabel} htmlFor="q">

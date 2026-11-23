@@ -142,7 +142,8 @@ class SupabaseStore:
             {
                 "select": (
                     "brier,log_loss,ece,baseline_brier,baseline_log_loss,created_at,"
-                    "reliability_matches:reliability->>matches"
+                    "reliability_matches:reliability->>matches,"
+                    "reliability_version:reliability->>version"
                 ),
                 "model_version_id": f"eq.{model_version_id}",
                 "order": "created_at.desc",
