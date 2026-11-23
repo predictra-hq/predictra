@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { playSound, setSoundsEnabled } from "@/lib/sounds";
+import { saveAccountSettings } from "@/app/(app)/account-settings-action";
 
 /**
  * Interruttore dei suoni in _Preferenze_: vale per questo dispositivo. Accendendoli si sente
@@ -26,6 +27,7 @@ export function SoundToggle({
           onClick={() => {
             setSoundsEnabled(value);
             setEnabled(value);
+            void saveAccountSettings({ sounds: value });
             if (value) playSound("success", { force: true });
           }}
           className={cn(

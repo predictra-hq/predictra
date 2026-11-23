@@ -54,7 +54,7 @@ export default async function PastSlipsPage() {
                   ? p.summaryNone
                   : fillTemplate(p.summary, { won: r.won, settled: r.settled })}
               </p>
-              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {r.bollette.map((b) => (
                   <li key={`${b.bolletta.profile}-${b.bolletta.round}`}>
                     <Ticket

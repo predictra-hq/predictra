@@ -453,3 +453,62 @@ describe("rate limiting", () => {
     ).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("modifica del profilo da un amministratore (ADR 0067)", () => {
+  const update = "select public.admin_update_profile($1, $2, $3, $4, $5)";
+
+  it("un Admin cambia nome e stile di un utente; la modifica va nel registro", async () => {
+    await asUser(db, admin, (tx) =>
+      tx.query(update, [alice.id, " Alice R. ", "violet", "mono", "ball"]),
+    );
+    const { rows } = await db.query<Record<string, string>>(
+      "select display_name, name_color, name_style, avatar_style from public.profiles where id = $1",
+      [alice.id],
+    );
+    expect(rows[0]).toEqual({
+      display_name: "Alice R.",
+      name_color: "violet",
+      name_style: "mono",
+      avatar_style: "ball",
+    });
+    const audit = await db.query<{ fields: string[] }>(
+      "select metadata->'fields' fields from public.audit_logs where action = 'profile.updated_by_admin'",
+    );
+    expect(audit.rows[0]!.fields).toEqual([
+      "display_name",
+      "name_color",
+      "name_style",
+      "avatar_style",
+    ]);
+  });
+
+  it("niente modifiche senza 2FA, da un utente o su un ruolo pari o superiore", async () => {
+    expect(
+      await asUser(
+        db,
+        admin,
+        (tx) => attempt(tx, update, [alice.id, "X", null, null, null]),
+        "aal1",
+      ),
+    ).toMatch(/.+/);
+    expect(
+      await asUser(db, bob, (tx) => attempt(tx, update, [alice.id, "X", null, null, null])),
+    ).toMatch(/.+/);
+    expect(
+      await asUser(db, admin, (tx) => attempt(tx, update, [superA.id, "X", null, null, null])),
+    ).toMatch(/Permessi insufficienti/);
+    // Il Super Admin può modificare anche un altro Super Admin.
+    expect(
+      await asUser(db, superA, (tx) => attempt(tx, update, [superB.id, "B", null, null, null])),
+    ).toBeNull();
+  });
+
+  it("nome vuoto o stili fuori elenco non passano", async () => {
+    expect(
+      await asUser(db, admin, (tx) => attempt(tx, update, [alice.id, "  ", null, null, null])),
+    ).toMatch(/Nome non valido/);
+    expect(
+      await asUser(db, admin, (tx) => attempt(tx, update, [alice.id, "A", "fucsia", null, null])),
+    ).toMatch(/profiles_name_color_check/);
+  });
+});

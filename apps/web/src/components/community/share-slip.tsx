@@ -50,23 +50,23 @@ export function ShareSlip({
   }
 
   return (
-    <div className="mt-3 border-t border-border pt-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 text-xs text-muted">
-          <Share2 size={14} aria-hidden="true" />
+    <div className="mt-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="flex items-center gap-1 text-xs text-muted">
+          <Share2 size={13} aria-hidden="true" />
           {labels.share}
         </span>
         <Button
           type="button"
-          variant="secondary"
-          className="h-8 px-3 text-xs"
+          variant="ghost"
+          className="h-7 px-2 text-xs"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
         >
           <Users size={14} aria-hidden="true" />
           {labels.toCommunity}
         </Button>
-        <Button type="button" variant="secondary" className="h-8 px-3 text-xs" onClick={toApps}>
+        <Button type="button" variant="ghost" className="h-7 px-2 text-xs" onClick={toApps}>
           <Send size={14} aria-hidden="true" />
           {labels.toApps}
         </Button>

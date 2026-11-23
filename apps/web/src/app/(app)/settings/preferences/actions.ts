@@ -1,5 +1,6 @@
 "use server";
 
+import { saveAccountSettings } from "../../account-settings-action";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -70,6 +71,8 @@ export async function setAlertThreshold(formData: FormData): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   });
+  // Anche nell'account, così vale su ogni dispositivo (ADR 0067).
+  await saveAccountSettings({ alertThreshold: threshold });
   revalidatePath("/dashboard");
   revalidatePath("/settings/preferences");
 }

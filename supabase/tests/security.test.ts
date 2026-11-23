@@ -30,6 +30,7 @@ const AUTHENTICATED_FUNCTIONS = [
   // RPC dell'app
   "public.accept_invitation",
   "public.add_team_alias",
+  "public.admin_update_profile",
   "public.ask_consume",
   "public.ask_record",
   // SECURITY DEFINER di sola lettura: nome visualizzato e stile, mai email o date

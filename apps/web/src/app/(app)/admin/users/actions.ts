@@ -9,6 +9,8 @@ import { getMessages } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { roleSchema, uuidSchema } from "@/lib/validation";
+import { parseNameStyle } from "@/lib/community/community";
+import { isAvatarStyle } from "@predictra/shared-types";
 
 const statusSchema = z.enum(["ACTIVE", "SUSPENDED"]);
 
@@ -59,6 +61,38 @@ export async function setUserRole(_prev: ActionState, formData: FormData): Promi
   if (error) return { ok: false, message: toUserMessage(error) };
 
   revalidatePath("/admin/users");
+  return { ok: true, message: m.admin.updated };
+}
+
+/**
+ * Profilo pubblico di un utente modificato da un amministratore (ADR 0067). Il database
+ * ricontrolla 2FA, gerarchia dei ruoli e valori, e registra i campi cambiati.
+ */
+export async function adminUpdateProfile(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages();
+  await requirePermission("users.manage");
+  const userId = uuidSchema.safeParse(formData.get("userId"));
+  const name = String(formData.get("displayName") ?? "").trim();
+  if (!userId.success || name.length < 1 || name.length > 80)
+    return { ok: false, message: m.account.nameInvalid };
+  const style = parseNameStyle(formData.get("nameColor"), formData.get("nameStyle"));
+  const avatar = formData.get("avatarStyle");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_update_profile", {
+    p_user_id: userId.data,
+    p_display_name: name,
+    p_name_color: style.name_color,
+    p_name_style: style.name_style,
+    p_avatar_style: isAvatarStyle(avatar) ? avatar : null,
+  });
+  if (error) return { ok: false, message: toUserMessage(error) };
+
+  revalidatePath("/admin/users");
+  revalidatePath("/", "layout");
   return { ok: true, message: m.admin.updated };
 }
 

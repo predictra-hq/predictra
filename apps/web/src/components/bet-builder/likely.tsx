@@ -93,7 +93,7 @@ export function LikelyCard({
           {multiples.length > 0 ? (
             <>
               <h3 className="mb-2 mt-4 text-sm font-semibold">{m.multiples}</h3>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {multiples.map((x) => {
                   const real = combinedItalianPrice(prices, x.picks);
                   return (

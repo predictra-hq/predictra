@@ -68,7 +68,7 @@ function Group({
   children?: ReactNode;
 }) {
   return (
-    <section className="mt-4">
+    <section>
       <h2 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wider text-subtle">
         {title}
       </h2>
@@ -121,7 +121,7 @@ export default async function ProfilePage() {
   const alertThreshold = parseAlertThreshold(jar.get(ALERT_COOKIE)?.value);
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div>
       <h1 className="sr-only">{p.title}</h1>
       <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-3">
         <UserAvatar style={user.avatarStyle} name={name} className="size-12" />
@@ -150,62 +150,68 @@ export default async function ProfilePage() {
         </Link>
       </div>
 
-      <Group
-        title={p.groupProfile}
-        rows={[
-          {
-            href: "/settings/account",
-            icon: <UserAvatar style={user.avatarStyle} name={name} className="size-7" />,
-            label: p.rowProfile,
-            value: (
-              <StyledName
-                name={user.displayName ?? user.email.split("@")[0]!}
-                color={user.nameColor}
-                style={user.nameStyle}
-              />
-            ),
-          },
-          {
-            href: "/settings/security",
-            icon: ShieldCheck,
-            label: p.rowSecurity,
-            value: p.securityValue,
-            badge: user.hasMfa
-              ? { text: p.mfaOn, tone: "positive" }
-              : { text: p.mfaOff, tone: "warning" },
-          },
-          {
-            href: "/settings/preferences",
-            icon: Palette,
-            label: p.rowPreferences,
-            value: [
-              pref.themes[theme],
-              soundsOn ? pref.soundsOn : pref.soundsOff,
-              fillTemplate(pref.alertsFrom, { n: alertThreshold }),
-              prefs?.timezone ?? "Europe/Rome",
-            ].join(" · "),
-          },
-        ]}
-      />
-
-      <Group title={p.groupHelp} rows={[{ href: "/ask", icon: BotMessageSquare, label: p.rowAsk }]}>
-        <li>
-          <TourRestartRow label={p.restartTour} />
-        </li>
-      </Group>
-
-      {admin.length > 0 ? (
+      {/* Stessa larghezza delle altre pagine: gruppi affiancati dal computer (ADR 0067). */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Group
-          title={m.nav.administration}
-          rows={admin.map((item) => ({
-            href: item.href,
-            icon: NAV_ICONS[item.key] ?? ShieldCheck,
-            label: m.nav[item.key],
-          }))}
+          title={p.groupProfile}
+          rows={[
+            {
+              href: "/settings/account",
+              icon: <UserAvatar style={user.avatarStyle} name={name} className="size-7" />,
+              label: p.rowProfile,
+              value: (
+                <StyledName
+                  name={user.displayName ?? user.email.split("@")[0]!}
+                  color={user.nameColor}
+                  style={user.nameStyle}
+                />
+              ),
+            },
+            {
+              href: "/settings/security",
+              icon: ShieldCheck,
+              label: p.rowSecurity,
+              value: p.securityValue,
+              badge: user.hasMfa
+                ? { text: p.mfaOn, tone: "positive" }
+                : { text: p.mfaOff, tone: "warning" },
+            },
+            {
+              href: "/settings/preferences",
+              icon: Palette,
+              label: p.rowPreferences,
+              value: [
+                pref.themes[theme],
+                soundsOn ? pref.soundsOn : pref.soundsOff,
+                fillTemplate(pref.alertsFrom, { n: alertThreshold }),
+                prefs?.timezone ?? "Europe/Rome",
+              ].join(" · "),
+            },
+          ]}
         />
-      ) : null}
 
-      <form action="/auth/signout" method="post" className="mt-4">
+        <Group
+          title={p.groupHelp}
+          rows={[{ href: "/ask", icon: BotMessageSquare, label: p.rowAsk }]}
+        >
+          <li>
+            <TourRestartRow label={p.restartTour} />
+          </li>
+        </Group>
+
+        {admin.length > 0 ? (
+          <Group
+            title={m.nav.administration}
+            rows={admin.map((item) => ({
+              href: item.href,
+              icon: NAV_ICONS[item.key] ?? ShieldCheck,
+              label: m.nav[item.key],
+            }))}
+          />
+        ) : null}
+      </div>
+
+      <form action="/auth/signout" method="post" className="mt-4 lg:max-w-sm">
         <button
           type="submit"
           className="flex h-11 w-full text-sm cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-card)] border border-negative/40 bg-negative-soft font-medium text-negative-strong transition-colors hover:bg-negative/20"

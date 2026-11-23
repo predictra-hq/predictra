@@ -283,3 +283,19 @@ Versione **1.4.0** (passaggio in produzione). ADR 0065.
 - **Partite:** colonna «Giocata più probabile», in grigio sotto il 70%. **Data Center:** spiegazione di ogni controllo di qualità.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV: altezza della chat su telefono con la tastiera aperta, invio con Invio su computer.
+
+## 23/11/2026, sera: preferenze nell'account, schedine compatte
+
+ADR 0067. Versione automatica (ADR 0066).
+
+- **Preferenze:** tema, suoni e avvisi salvati nell'account e allineati su ogni dispositivo (`components/shell/account-settings-sync.tsx`). Fuso orario con l'ora accanto; tolti lingua e formato quote, che avevano una sola scelta.
+- **Utenti e accessi:** «Modifica profilo» per nome, immagine, colore e scritta del nome di un iscritto.
+- **Pulsanti Salva** spenti finché non si cambia qualcosa (`ActionForm trackChanges`); invio della chat spento senza testo.
+- **Schedine:**
+  - più corte, al massimo 3 per riga;
+  - puntata in «Gioca questa schedina», un pannello chiuso;
+  - proposte con valore giocabili e divise per fascia di quota.
+- **Chat:** nome e immagine in alto in ogni messaggio, anche nei propri. Sul telefono il campo per scrivere resta sopra la barra di navigazione.
+- **Larghezza:** tutte le pagine usano tutta la colonna, come la Home.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: tema e suoni dopo l'accesso da un secondo dispositivo, «Modifica profilo» in Utenti e accessi, pannello «Gioca questa schedina».

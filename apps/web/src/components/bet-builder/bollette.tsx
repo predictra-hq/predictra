@@ -4,7 +4,13 @@ import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
-import { Ticket, TicketLeg, TicketTotals, whenAndWhere } from "@/components/bet-builder/ticket";
+import {
+  Ticket,
+  TICKET_GRID,
+  TicketLeg,
+  TicketTotals,
+  whenAndWhere,
+} from "@/components/bet-builder/ticket";
 import { Badge } from "@/components/ui/primitives";
 import {
   buildBollette,
@@ -114,15 +120,10 @@ function BollettaCard({
           ]}
         />
       }
-      footer={
+      play={
         <>
-          <p className={`text-xs ${old ? "text-warning" : "text-muted"}`}>
-            {fillTemplate(old ? m.oddsOld : m.oddsRead, {
-              at: formatDateTime(bolletta.oddsObservedAt),
-            })}
-          </p>
           {bankroll && advice ? (
-            <p className="mt-2 text-xs text-muted" title={m.adviceHint}>
+            <p className="mb-2 text-xs text-muted" title={m.adviceHint}>
               {advised !== null
                 ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
                 : fillTemplate(m.adviceNone, { name: bankroll.name })}
@@ -146,20 +147,27 @@ function BollettaCard({
             )}
             labels={stakeBoxLabels()}
           />
-          <div className="mt-3">
-            <ShareSlip
-              {...shareProps({
-                title: m.profiles[bolletta.profile],
-                picks: bolletta.picks.map((p) => ({
-                  match: `${p.home} – ${p.away}`,
-                  pick: pickLabel(p),
-                  price: p.price,
-                })),
-                price: bolletta.price,
-                probability: bolletta.probability,
-              })}
-            />
-          </div>
+        </>
+      }
+      footer={
+        <>
+          <p className={old ? "text-warning" : undefined}>
+            {fillTemplate(old ? m.oddsOld : m.oddsRead, {
+              at: formatDateTime(bolletta.oddsObservedAt),
+            })}
+          </p>
+          <ShareSlip
+            {...shareProps({
+              title: m.profiles[bolletta.profile],
+              picks: bolletta.picks.map((p) => ({
+                match: `${p.home} – ${p.away}`,
+                pick: pickLabel(p),
+                price: p.price,
+              })),
+              price: bolletta.price,
+              probability: bolletta.probability,
+            })}
+          />
         </>
       }
     >
@@ -205,7 +213,7 @@ export function BolletteCard({
             <h3 className="mb-2 mt-3 text-sm text-muted">
               {fillTemplate(m.round, { round: formatRound(round) })}
             </h3>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className={TICKET_GRID}>
               {bollette
                 .filter((b) => b.round === round)
                 .map((b) => (

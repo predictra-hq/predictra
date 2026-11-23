@@ -30,12 +30,33 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <Card id={id} className="mb-3 max-w-lg scroll-mt-24 p-4 sm:p-4">
+    <Card id={id} className="scroll-mt-24 p-4 sm:p-4">
       <CardTitle className="text-sm">{title}</CardTitle>
       <p className="mb-3 mt-0.5 text-xs text-muted">{hint}</p>
       {children}
     </Card>
   );
+}
+
+/** "Europe/Rome · 15:42 (GMT+1)": il fuso con l'ora che c'è adesso. */
+function timezoneLabel(tz: string, now: Date): string {
+  try {
+    const parts = new Intl.DateTimeFormat("it-IT", {
+      timeZone: tz,
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZoneName: "shortOffset",
+    }).formatToParts(now);
+    const time = parts
+      .filter((x) => x.type === "hour" || x.type === "minute" || x.type === "literal")
+      .map((x) => x.value)
+      .join("")
+      .trim();
+    const offset = parts.find((x) => x.type === "timeZoneName")?.value ?? "";
+    return `${tz.replaceAll("_", " ")} · ${time} (${offset})`;
+  } catch {
+    return tz;
+  }
 }
 
 /**
@@ -50,76 +71,73 @@ export default async function PreferencesPage() {
   const supabase = await createClient();
   const { data: prefs } = await supabase
     .from("user_preferences")
-    .select("locale, timezone, odds_format")
+    .select("timezone")
     .eq("user_id", user.id)
     .maybeSingle();
   const jar = await cookies();
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   const alertThreshold = parseAlertThreshold(jar.get(ALERT_COOKIE)?.value);
   const timezones = Intl.supportedValuesOf("timeZone");
+  const now = new Date();
 
   return (
     <>
       <PageHeader title={p.appTitle} description={p.appDescription} />
       <SettingsTabs current="preferences" />
 
-      <Section id="theme" title={p.theme} hint={p.themeHint}>
-        <ThemePicker initial={theme} labels={p.themes} />
-      </Section>
+      {/* Riquadri affiancati dal computer: stessa larghezza delle altre pagine. */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <Section id="theme" title={p.theme} hint={p.themeHint}>
+          <ThemePicker initial={theme} labels={p.themes} />
+        </Section>
 
-      <Section id="sounds" title={p.sounds} hint={p.soundsHint}>
-        <SoundToggle
-          initial={soundsOnFromCookie(jar.get(SOUND_COOKIE)?.value)}
-          labels={{ on: p.soundsOn, off: p.soundsOff }}
-        />
-      </Section>
+        <Section id="sounds" title={p.sounds} hint={p.soundsHint}>
+          <SoundToggle
+            initial={soundsOnFromCookie(jar.get(SOUND_COOKIE)?.value)}
+            labels={{ on: p.soundsOn, off: p.soundsOff }}
+          />
+        </Section>
 
-      <Section id="alerts" title={p.alerts} hint={p.alertsHint}>
-        <form action={setAlertThreshold} className="flex flex-wrap gap-2">
-          {ALERT_THRESHOLDS.map((t) => (
-            <button
-              key={t}
-              type="submit"
-              name="threshold"
-              value={t}
-              aria-pressed={alertThreshold === t}
-              className={cn(
-                "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",
-                alertThreshold === t
-                  ? "border-positive/40 bg-positive-soft text-positive-strong"
-                  : "border-border text-muted hover:text-fg",
-              )}
-            >
-              {fillTemplate(p.alertsFrom, { n: t })}
-            </button>
-          ))}
-        </form>
-      </Section>
+        <Section id="alerts" title={p.alerts} hint={p.alertsHint}>
+          <form action={setAlertThreshold} className="flex flex-wrap gap-2">
+            {ALERT_THRESHOLDS.map((t) => (
+              <button
+                key={t}
+                type="submit"
+                name="threshold"
+                value={t}
+                aria-pressed={alertThreshold === t}
+                className={cn(
+                  "cursor-pointer rounded-lg border px-3 py-2 text-sm transition-colors",
+                  alertThreshold === t
+                    ? "border-positive/40 bg-positive-soft text-positive-strong"
+                    : "border-border text-muted hover:text-fg",
+                )}
+              >
+                {fillTemplate(p.alertsFrom, { n: t })}
+              </button>
+            ))}
+          </form>
+        </Section>
 
-      <Section id="region" title={p.regionTitle} hint={p.regionHint}>
-        <ActionForm action={savePreferences}>
-          <Field label={p.language} htmlFor="locale">
-            <Select id="locale" name="locale" defaultValue={prefs?.locale ?? "it"}>
-              <option value="it">{p.italian}</option>
-            </Select>
-          </Field>
-          <Field label={p.timezone} htmlFor="timezone">
-            <Select id="timezone" name="timezone" defaultValue={prefs?.timezone ?? "Europe/Rome"}>
-              {timezones.map((tz) => (
-                <option key={tz} value={tz}>
-                  {tz}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={p.oddsFormat} htmlFor="oddsFormat">
-            <Select id="oddsFormat" disabled defaultValue="decimal">
-              <option value="decimal">{p.decimal}</option>
-            </Select>
-          </Field>
-          <SubmitButton>{m.common.save}</SubmitButton>
-        </ActionForm>
-      </Section>
+        <Section id="region" title={p.regionTitle} hint={p.regionHint}>
+          <ActionForm action={savePreferences} trackChanges>
+            {/* Lingua e formato delle quote hanno una sola scelta (italiano, decimale): niente
+              campi da toccare, la lingua viaggia nascosta. */}
+            <input type="hidden" name="locale" value="it" />
+            <Field label={p.timezone} htmlFor="timezone">
+              <Select id="timezone" name="timezone" defaultValue={prefs?.timezone ?? "Europe/Rome"}>
+                {timezones.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {timezoneLabel(tz, now)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <SubmitButton>{m.common.save}</SubmitButton>
+          </ActionForm>
+        </Section>
+      </div>
     </>
   );
 }
