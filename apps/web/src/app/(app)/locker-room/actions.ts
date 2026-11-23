@@ -35,7 +35,7 @@ export async function postMessage(_prev: ActionState, formData: FormData): Promi
         : getMessages().common.genericError,
     };
   }
-  revalidatePath("/community");
+  revalidatePath("/locker-room");
   return { ok: true, message: m.published };
 }
 
@@ -57,7 +57,7 @@ export async function shareSlip(_prev: ActionState, formData: FormData): Promise
         : getMessages().common.genericError,
     };
   }
-  revalidatePath("/community");
+  revalidatePath("/locker-room");
   return { ok: true, message: m.shared };
 }
 
@@ -73,7 +73,7 @@ export async function deletePost(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = await createClient();
   await supabase.from("community_posts").delete().eq("id", id);
-  revalidatePath("/community");
+  revalidatePath("/locker-room");
 }
 
 /** Moderazione: un amministratore con 2FA cancella un messaggio altrui; resta nel registro. */
@@ -83,5 +83,5 @@ export async function moderatePost(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = await createClient();
   await supabase.rpc("moderate_community_post", { p_post_id: id });
-  revalidatePath("/community");
+  revalidatePath("/locker-room");
 }

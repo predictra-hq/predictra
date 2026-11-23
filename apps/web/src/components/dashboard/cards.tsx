@@ -20,6 +20,7 @@ import { pickLabel } from "@/components/bet-builder/likely";
 import { cookies } from "next/headers";
 import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
 import { buildBollette, oddsAreOld } from "@/lib/bet-builder/bollette";
+import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
 import { getSourceHealth } from "@/lib/football/queries";
@@ -401,8 +402,11 @@ export function ExploreGrid() {
 // --- Schedine consigliate (ADR 0037) -------------------------------------------------
 
 async function loadBollette() {
-  const { rows, prices, consensus } = await loadPicksData();
-  return buildBollette(rows, prices, consensus);
+  const [{ rows, prices, consensus }, calibration] = await Promise.all([
+    loadPicksData(),
+    loadCalibration(),
+  ]);
+  return buildBollette(rows, prices, consensus, calibration);
 }
 
 /** Le schedine consigliate del turno più vicino, in breve: il dettaglio è nella pagina. */

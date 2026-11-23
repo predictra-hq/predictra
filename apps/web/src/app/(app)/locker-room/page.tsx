@@ -24,7 +24,7 @@ const CHANNEL: Record<Exclude<Tab, "matches">, CommunityChannel> = {
  * scritti sotto le partite. Ognuno compare con il nome, lo stile e l'immagine scelti nel
  * Profilo; mai l'email.
  */
-export default async function CommunityPage({ searchParams }: PageProps<"/community">) {
+export default async function LockerRoomPage({ searchParams }: PageProps<"/locker-room">) {
   const user = await requireUser();
   const m = getMessages();
   const c = m.community;
@@ -38,7 +38,7 @@ export default async function CommunityPage({ searchParams }: PageProps<"/commun
       <PageHeader title={c.title} description={c.description} />
       <nav aria-label={c.title} className="tab-strip mb-4">
         {TABS.map((t) => (
-          <Link key={t} href={`/community?c=${t}`} aria-current={t === tab ? "page" : undefined}>
+          <Link key={t} href={`/locker-room?c=${t}`} aria-current={t === tab ? "page" : undefined}>
             {c.tabs[t]}
           </Link>
         ))}

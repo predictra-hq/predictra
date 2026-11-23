@@ -34,8 +34,6 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
       // «Chiedi a PREDICTRA» non è una voce del menu: è il pulsante fisso in basso a destra
       // (AskLauncher), che apre la chat sopra qualunque pagina.
       { key: "dashboard", href: "/dashboard" },
-      // Spogliatoio (ADR 0064): le chat degli iscritti. Sul telefono è una scheda di Home.
-      { key: "community", href: "/community" },
     ],
   },
   {
@@ -52,8 +50,10 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     label: "groupFootball",
     items: [
       { key: "matchCenter", href: "/match-center" },
-      { key: "leagueIntelligence", href: "/leagues" },
-      { key: "teams", href: "/teams" },
+      // Campionati e squadre in una sezione sola (ADR 0065): Squadre è una scheda di Campionati.
+      { key: "leagueIntelligence", href: "/leagues", alsoMatch: ["/teams"] },
+      // Spogliatoio (ADR 0064, 0065): le chat degli iscritti, accanto alle partite.
+      { key: "community", href: "/locker-room" },
     ],
   },
   {

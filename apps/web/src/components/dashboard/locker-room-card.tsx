@@ -20,7 +20,7 @@ export async function LockerRoomCard() {
     .slice(0, 3);
 
   return (
-    <StatCard href="/community" title={c.title}>
+    <StatCard href="/locker-room" title={c.title}>
       {general === null && slips === null ? (
         <p className="mt-2 text-sm text-muted">{m.dashboard.noData}</p>
       ) : posts.length === 0 ? (

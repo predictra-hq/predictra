@@ -12,15 +12,13 @@ import {
   BetBuilderDisclaimer,
   BetBuilderNav,
   CategoryBadge,
-  Metrics,
   StakeSimulation,
 } from "@/components/bet-builder/shared";
+import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
 import { FilterForm } from "@/components/ui/filter-form";
 import {
   Alert,
-  Badge,
   Button,
-  Card,
   CardSkeleton,
   EmptyState,
   Input,
@@ -59,59 +57,63 @@ function ProposalCard({
 }) {
   const m = getMessages().betBuilder;
   return (
-    <Card className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <CategoryBadge category={p.category} />
-        <Badge>{m.kinds[p.kind]}</Badge>
-        <span className="text-xs text-muted">
-          {m.rank} {p.rank}
-        </span>
-        <Link
-          href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
-          className="ml-auto text-sm text-positive hover:underline"
-        >
-          {m.details}
-        </Link>
-      </div>
-      <ul className="flex flex-col gap-1 text-sm">
-        {legs.map((l) => (
-          <li key={l.leg_no} className="flex flex-wrap items-baseline justify-between gap-2">
+    <Ticket
+      title={`${m.categories[p.category]} · ${m.kinds[p.kind]}`}
+      badge={<CategoryBadge category={p.category} />}
+      totals={
+        <TicketTotals
+          priceLabel={m.combinedPrice}
+          price={formatOdds(p.combined_price)}
+          items={[
+            { label: m.probability, value: formatPercent(p.probability, 0) },
+            {
+              label: m.expectedValue,
+              value:
+                p.expected_value === null
+                  ? "—"
+                  : `${p.expected_value >= 0 ? "+" : "−"}${formatPercent(Math.abs(p.expected_value), 1)}`,
+              tone: "positive",
+            },
+          ]}
+        />
+      }
+      footer={
+        <div className="flex flex-col gap-2">
+          {stake !== null && p.combined_price !== null && p.probability !== null ? (
+            <StakeSimulation stake={stake} price={p.combined_price} probability={p.probability} />
+          ) : null}
+          {p.legs_stale > 0 ? (
+            <Alert tone="warning">{fillTemplate(m.staleWarning, { n: p.legs_stale })}</Alert>
+          ) : null}
+          {p.legs_price_changed > 0 ? (
+            <Alert>{fillTemplate(m.priceChangedWarning, { n: p.legs_price_changed })}</Alert>
+          ) : null}
+          <p className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
             <span>
-              <span className="font-medium">
-                {l.home_team_name} – {l.away_team_name}
-              </span>{" "}
-              <span className="text-muted">
-                ·{" "}
-                {selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}{" "}
-                · {formatDateTime(l.kickoff_at)}
-              </span>
+              {fillTemplate(m.oddsUpdated, { at: formatDateTime(p.odds_observed_at) })}
+              {technical ? ` · ${m.model}: ${p.model_key} ${p.model_version}` : ""}
             </span>
-            <span className="font-mono text-xs text-muted">
-              {formatPercent(l.probability)} · {formatOdds(l.price)}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <Metrics
-        probability={p.probability}
-        price={p.combined_price}
-        expectedValue={p.expected_value}
-        confidence={p.confidence_score}
-      />
-      {stake !== null && p.combined_price !== null && p.probability !== null ? (
-        <StakeSimulation stake={stake} price={p.combined_price} probability={p.probability} />
-      ) : null}
-      {p.legs_stale > 0 ? (
-        <Alert tone="warning">{fillTemplate(m.staleWarning, { n: p.legs_stale })}</Alert>
-      ) : null}
-      {p.legs_price_changed > 0 ? (
-        <Alert>{fillTemplate(m.priceChangedWarning, { n: p.legs_price_changed })}</Alert>
-      ) : null}
-      <p className="text-xs text-muted">
-        {fillTemplate(m.oddsUpdated, { at: formatDateTime(p.odds_observed_at) })}
-        {technical ? ` · ${m.model}: ${p.model_key} ${p.model_version}` : ""}
-      </p>
-    </Card>
+            <Link
+              href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
+              className="font-medium text-positive-strong hover:underline"
+            >
+              {m.details} →
+            </Link>
+          </p>
+        </div>
+      }
+    >
+      {legs.map((l) => (
+        <TicketLeg
+          key={l.leg_no}
+          time={formatDateTime(l.kickoff_at)}
+          match={`${l.home_team_name} – ${l.away_team_name}`}
+          pick={selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}
+          probability={formatPercent(l.probability, 0)}
+          price={formatOdds(l.price)}
+        />
+      ))}
+    </Ticket>
   );
 }
 

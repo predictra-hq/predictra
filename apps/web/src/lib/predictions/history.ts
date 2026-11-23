@@ -21,6 +21,8 @@ export interface HistoryCheck {
   picks: Tally;
   bands: (Tally & { from: number; to: number })[];
   markets: (Tally & { market: string })[];
+  /** Mercato (con la linea) per fascia, tutti gli esiti (versione 2, ADR 0065). */
+  marketBands: (Tally & { market: string; from: number })[];
   competitions: (Tally & { competitionId: number })[];
   seasons: (Tally & { season: string })[];
   weeks: (Tally & { week: string })[];
@@ -72,6 +74,11 @@ export function parseHistoryCheck(
         : null,
     ),
     markets: list(o.markets, (x) => (typeof x.market === "string" ? { market: x.market } : null)),
+    marketBands: list(o.market_bands, (x) =>
+      typeof x.market === "string" && Number.isFinite(Number(x.from))
+        ? { market: x.market, from: Number(x.from) }
+        : null,
+    ),
     competitions: list(o.competitions, (x) =>
       Number.isInteger(Number(x.competition_id))
         ? { competitionId: Number(x.competition_id) }

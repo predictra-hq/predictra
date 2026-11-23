@@ -32,6 +32,9 @@ GROUPS: tuple[tuple[str, float | None], ...] = (
 PICK_THRESHOLD = 0.7
 BANDS = (0.5, 0.6, 0.7, 0.75, 0.8, 0.85, 0.9)
 RECENT_WEEKS = 26
+# Versione del riepilogo: la 2 aggiunge ``market_bands`` (ADR 0065). Un backtest con una
+# versione più vecchia si rifà al ciclo successivo.
+RELIABILITY_VERSION = 2
 
 
 def settle(market: str, line: float | None, selection: str, home: int, away: int) -> bool | None:
@@ -77,6 +80,9 @@ class Reliability:
     exact: Tally = field(default_factory=Tally)
     picks: Tally = field(default_factory=Tally)
     bands: dict[float, Tally] = field(default_factory=dict)
+    # Per mercato (con la linea) e fascia, su tutti gli esiti: serve alle schedine per
+    # correggere la probabilità di ogni giocata con quanto è uscita davvero (ADR 0065).
+    market_bands: dict[tuple[str, float], Tally] = field(default_factory=dict)
     markets: dict[str, Tally] = field(default_factory=dict)
     competitions: dict[int, Tally] = field(default_factory=dict)
     seasons: dict[str, Tally] = field(default_factory=dict)
@@ -95,16 +101,17 @@ class Reliability:
             options = [p for p in prices if p.market == market and p.line == line]
             if not options:
                 continue
+            key = market if line is None else f"{market}:{line:g}"
             for p in options:
                 won = settle(market, line, p.selection, h, a)
                 band = max((b for b in BANDS if p.probability >= b), default=None)
                 if won is not None and band is not None:
                     self.bands.setdefault(band, Tally()).add(p.probability, won)
+                    self.market_bands.setdefault((key, band), Tally()).add(p.probability, won)
             best = max(options, key=lambda p: p.probability)
             won = settle(market, line, best.selection, h, a)
             if won is None or best.probability < PICK_THRESHOLD:
                 continue
-            key = market if line is None else f"{market}:{line:g}"
             self.picks.add(best.probability, won)
             self.markets.setdefault(key, Tally()).add(best.probability, won)
             self.competitions.setdefault(result.competition_id, Tally()).add(best.probability, won)
@@ -117,7 +124,7 @@ class Reliability:
     def to_json(self) -> dict[str, Any]:
         weeks = sorted(self.weeks.items())[-RECENT_WEEKS:]
         return {
-            "version": 1,
+            "version": RELIABILITY_VERSION,
             "matches": self.matches,
             "threshold": PICK_THRESHOLD,
             "favourite": self.favourite.to_json(),
@@ -128,6 +135,10 @@ class Reliability:
                 for b, t in sorted(self.bands.items())
             ],
             "markets": [{"market": k, **t.to_json()} for k, t in sorted(self.markets.items())],
+            "market_bands": [
+                {"market": k, "from": b, **t.to_json()}
+                for (k, b), t in sorted(self.market_bands.items())
+            ],
             "competitions": [
                 {"competition_id": k, **t.to_json()} for k, t in sorted(self.competitions.items())
             ],

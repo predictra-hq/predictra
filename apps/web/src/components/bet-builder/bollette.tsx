@@ -4,6 +4,7 @@ import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
+import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
 import { Badge } from "@/components/ui/primitives";
 import {
   buildBollette,
@@ -20,6 +21,7 @@ import {
   pickAdviceBankroll,
   type AdviceBankroll,
 } from "@/lib/bet-builder/register";
+import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
@@ -28,7 +30,6 @@ const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> 
   DOUBLE: "positive",
   SOLID: "positive",
   BALANCED: "neutral",
-  LONG: "neutral",
   HIGH: "warning",
 };
 
@@ -60,111 +61,107 @@ function BollettaCard({
   const advised = advice?.kelly ? advice.kelly : null;
   // Puntata mostrata e passata al Tracker: quella scelta dall'utente, altrimenti la consigliata.
   const playStake = stake ?? advised;
+  const legs = bolletta.picks.map((p) => (
+    <TicketLeg
+      key={p.matchId}
+      time={formatDateTime(p.kickoffAt)}
+      match={
+        <Link href={`/match-center/${p.matchId}`} className="hover:underline">
+          {p.home} – {p.away}
+        </Link>
+      }
+      pick={pickLabel(p)}
+      probability={`${formatPercent(p.probability, 0)} · ${p.bookmaker}`}
+      price={formatOdds(p.price)}
+      note={
+        p.better ? (
+          <span className="text-warning">
+            {fillTemplate(m.betterElsewhere, {
+              price: formatOdds(p.better.price),
+              bookmaker: p.better.bookmaker,
+            })}
+          </span>
+        ) : null
+      }
+    />
+  ));
   return (
-    <article className="flex flex-col rounded-[var(--radius-card)] border border-border bg-surface p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h4 className="text-base font-semibold">{m.profiles[bolletta.profile]}</h4>
+    <Ticket
+      title={m.profiles[bolletta.profile]}
+      badge={
         <Badge tone={PROFILE_TONE[bolletta.profile]}>
           {fillTemplate(m.legs, { n: bolletta.picks.length })}
         </Badge>
-      </div>
-
-      <dl className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-xl bg-surface-2 px-3 py-2">
-          <dt className="text-xs text-muted">{m.totalOdds}</dt>
-          <dd className="font-mono text-2xl font-semibold text-positive-strong">
-            {formatOdds(bolletta.price)}
-          </dd>
-        </div>
-        <div className="rounded-xl bg-surface-2 px-3 py-2">
-          <dt className="text-xs text-muted">{m.winProbability}</dt>
-          <dd className="font-mono text-2xl font-semibold">
-            {formatPercent(bolletta.probability, 0)}
-          </dd>
-        </div>
-      </dl>
-      {bolletta.expectedValue >= 0 ? (
-        <p className="mt-2 text-xs text-positive-strong" title={m.valueHint}>
-          {m.value} {formatSignedPercent(bolletta.expectedValue)}
-        </p>
-      ) : null}
-
-      <ol className="mt-2 flex-1 divide-y divide-border text-sm">
-        {bolletta.picks.map((p) => (
-          <li key={p.matchId} className="flex items-center justify-between gap-3 py-2.5">
-            <span className="min-w-0">
-              <Link
-                href={`/match-center/${p.matchId}`}
-                className="block truncate font-medium hover:underline"
-              >
-                {p.home} – {p.away}
-              </Link>
-              <span className="block text-positive-strong">{pickLabel(p)}</span>
-              <span className="block truncate text-xs text-muted">
-                {formatDateTime(p.kickoffAt)} · {p.bookmaker}
-              </span>
-              {p.better ? (
-                <span className="block truncate text-xs text-warning">
-                  {fillTemplate(m.betterElsewhere, {
-                    price: formatOdds(p.better.price),
-                    bookmaker: p.better.bookmaker,
-                  })}
-                </span>
-              ) : null}
-            </span>
-            <span className="shrink-0 text-right font-mono">
-              <span className="block text-base font-semibold">{formatOdds(p.price)}</span>
-              <span className="block text-xs text-muted">{formatPercent(p.probability, 0)}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-
-      <p className={`mt-3 text-xs ${old ? "text-warning" : "text-muted"}`}>
-        {fillTemplate(old ? m.oddsOld : m.oddsRead, {
-          at: formatDateTime(bolletta.oddsObservedAt),
-        })}
-      </p>
-      {bankroll && advice ? (
-        <p className="mt-2 text-xs text-muted" title={m.adviceHint}>
-          {advised !== null
-            ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
-            : fillTemplate(m.adviceNone, { name: bankroll.name })}
-          {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
-        </p>
-      ) : null}
-      <StakeBox
-        defaultStake={Math.max(1, Math.floor(playStake ?? EXAMPLE_STAKE))}
-        price={bolletta.price}
-        site={site}
-        registerHref={bollettaTrackerHref(
-          bolletta,
-          {
-            market: m.registerMarket,
-            selection: fillTemplate(m.registerSelection, {
-              profile: m.profiles[bolletta.profile],
-              n: bolletta.picks.length,
-            }),
-          },
-          null,
-        )}
-        labels={stakeBoxLabels()}
-      />
-      <div className="mt-3">
-        <ShareSlip
-          {...shareProps({
-            title: m.profiles[bolletta.profile],
-            picks: bolletta.picks.map((p) => ({
-              match: `${p.home} – ${p.away}`,
-              pick: pickLabel(p),
-              price: p.price,
-            })),
-            price: bolletta.price,
-            probability: bolletta.probability,
-          })}
+      }
+      totals={
+        <TicketTotals
+          priceLabel={m.totalOdds}
+          price={formatOdds(bolletta.price)}
+          items={[
+            { label: m.winProbability, value: formatPercent(bolletta.probability, 0) },
+            ...(bolletta.expectedValue >= 0
+              ? [
+                  {
+                    label: m.value,
+                    value: formatSignedPercent(bolletta.expectedValue),
+                    tone: "positive" as const,
+                  },
+                ]
+              : []),
+          ]}
         />
-      </div>
-    </article>
+      }
+      footer={
+        <>
+          <p className={`text-xs ${old ? "text-warning" : "text-muted"}`}>
+            {fillTemplate(old ? m.oddsOld : m.oddsRead, {
+              at: formatDateTime(bolletta.oddsObservedAt),
+            })}
+          </p>
+          {bankroll && advice ? (
+            <p className="mt-2 text-xs text-muted" title={m.adviceHint}>
+              {advised !== null
+                ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
+                : fillTemplate(m.adviceNone, { name: bankroll.name })}
+              {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
+            </p>
+          ) : null}
+          <StakeBox
+            defaultStake={Math.max(1, Math.floor(playStake ?? EXAMPLE_STAKE))}
+            price={bolletta.price}
+            site={site}
+            registerHref={bollettaTrackerHref(
+              bolletta,
+              {
+                market: m.registerMarket,
+                selection: fillTemplate(m.registerSelection, {
+                  profile: m.profiles[bolletta.profile],
+                  n: bolletta.picks.length,
+                }),
+              },
+              null,
+            )}
+            labels={stakeBoxLabels()}
+          />
+          <div className="mt-3">
+            <ShareSlip
+              {...shareProps({
+                title: m.profiles[bolletta.profile],
+                picks: bolletta.picks.map((p) => ({
+                  match: `${p.home} – ${p.away}`,
+                  pick: pickLabel(p),
+                  price: p.price,
+                })),
+                price: bolletta.price,
+                probability: bolletta.probability,
+              })}
+            />
+          </div>
+        </>
+      }
+    >
+      {legs}
+    </Ticket>
   );
 }
 
@@ -246,14 +243,15 @@ async function loadAdviceBankroll(): Promise<AdviceBankroll | null> {
 
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
 export async function SchedineSection({ stake }: { stake: number | null }) {
-  const [{ rows, prices, consensus }, bankroll, site] = await Promise.all([
+  const [{ rows, prices, consensus }, bankroll, site, calibration] = await Promise.all([
     loadPicksData(),
     loadAdviceBankroll(),
     userBookmaker(),
+    loadCalibration(),
   ]);
   return (
     <BolletteCard
-      bollette={buildBollette(rows, prices, consensus)}
+      bollette={buildBollette(rows, prices, consensus, calibration)}
       stake={stake}
       now={new Date()}
       bankroll={bankroll}

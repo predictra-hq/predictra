@@ -75,6 +75,10 @@ def test_singola_e_multipla_con_i_valori_del_database():
     assert item["explanation"]["correlation"] == "independence"
 
 
+# Più posti per categoria: qui si controllano le combinazioni, non il limite.
+WIDE = replace(DEFAULT_RULES, max_proposals_per_category=8)
+
+
 def test_nessuna_schedina_forzata():
     legs = [leg(1, "0.25", "3.40"), leg(2, "0.30", "3.00")]  # EV ≤ −0,1
     assert build_proposals(legs, DEFAULT_RULES) == ([], 0)
@@ -83,11 +87,11 @@ def test_nessuna_schedina_forzata():
 
 def test_mai_stessa_partita_o_stessa_squadra():
     legs = [
-        leg(1, "0.5", "2.5", match=1),
-        leg(2, "0.3", "4.0", match=1, home=2, away=3, selection="AWAY"),  # stessa partita
-        leg(3, "0.5", "2.5", home=2),  # squadra 2 = casa della partita 1
+        leg(1, "0.6", "2.0", match=1),
+        leg(2, "0.4", "3.0", match=1, home=2, away=3, selection="AWAY"),  # stessa partita
+        leg(3, "0.6", "2.0", home=2),  # squadra 2 = casa della partita 1
     ]
-    proposals, _ = build_proposals(legs, DEFAULT_RULES)
+    proposals, _ = build_proposals(legs, WIDE)
     assert all(len(p.legs) == 1 for p in proposals)
     assert len(proposals) == 3
 
@@ -95,12 +99,12 @@ def test_mai_stessa_partita_o_stessa_squadra():
 def test_adr_0036_multiple_nello_stesso_turno():
     # Venerdì 20, sabato 21 e lunedì 23: stesso turno. Martedì 24: turno successivo.
     legs = [
-        leg(1, "0.5", "2.5", offset_h=-24),
-        leg(2, "0.5", "2.5"),
-        leg(3, "0.5", "2.5", offset_h=48),
-        leg(4, "0.5", "2.5", offset_h=72),
+        leg(1, "0.6", "2.0", offset_h=-24),
+        leg(2, "0.6", "2.0"),
+        leg(3, "0.6", "2.0", offset_h=48),
+        leg(4, "0.6", "2.0", offset_h=72),
     ]
-    proposals, _ = build_proposals(legs, DEFAULT_RULES)
+    proposals, _ = build_proposals(legs, WIDE)
     multiples = [p for p in proposals if len(p.legs) > 1]
     assert max(len(p.legs) for p in proposals) == 3
     assert all(104 not in {x.prediction_id for x in p.legs} for p in multiples)
@@ -170,3 +174,13 @@ def test_max_legs():
     proposals, evaluated = build_proposals(legs, Rules(max_legs=2, max_proposals_per_category=50))
     assert max(len(p.legs) for p in proposals) == 2
     assert evaluated == 6 + 15
+
+
+def test_adr_0065_al_massimo_due_proposte_per_categoria():
+    legs = [leg(i, "0.6", "2.0", home=10 * i, away=10 * i + 1) for i in range(1, 7)]
+    proposals, _ = build_proposals(legs, DEFAULT_RULES)
+    per_group: dict[tuple[str, str], int] = {}
+    for p in proposals:
+        key = (str(p.slate_date), p.category)
+        per_group[key] = per_group.get(key, 0) + 1
+    assert proposals and max(per_group.values()) <= 2
