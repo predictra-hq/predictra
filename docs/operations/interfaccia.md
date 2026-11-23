@@ -192,13 +192,13 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
 
 - Il numero sta nel campo `version` di `apps/web/package.json`. `next.config.ts` lo fissa alla build (`APP_RELEASE`); `formatRelease()` in `lib/version.ts` aggiunge la «v» e mostra `v0.0.0` se il valore non è valido.
 - Il commit (`APP_VERSION`, da `GITHUB_SHA`) resta solo per l'avviso «nuova versione disponibile» e non si mostra.
-- **Come si aggiorna** (maggiore.minore.correzione, campo `version` in `apps/web/package.json`), regola dal 18/11/2026:
-  - **ogni PR verso `dev` che cambia l'app** alza solo l'ultima cifra, qualunque sia la novità: `1.3.0` → `1.3.1` → `1.3.2`. Le PR di sola documentazione non la toccano;
-  - **solo il passaggio in produzione** (merge di `dev` su `main`) alza la cifra di mezzo e azzera l'ultima: `1.3.4` → `1.4.0`. La prima cifra (`2.0.0`) sale solo per un cambiamento grande, che cambia il modo di usare l'app, deciso dal proprietario;
-  - così un numero che finisce con `.0` è una versione arrivata in produzione, gli altri sono prove su DEV.
-- Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, con la cifra successiva a quella già su `dev`.
-- Le versioni 1.1.0, 1.2.0 e 1.3.0 sono state alzate su `dev` prima di questa regola; da lì si prosegue con 1.3.1.
-- Il 23/11/2026 i commit su `dev` dopo la 1.3.0 non avevano alzato la versione: il passaggio in produzione di quel giorno porta direttamente la **1.4.0**. Da qui si torna alla regola: `1.4.1`, `1.4.2`… su `dev`, `1.5.0` al prossimo passaggio in produzione.
+- **Come si aggiorna:** dal 23/11/2026 in automatico, a ogni deploy e per ambiente (ADR 0066). Nessuno tocca più il numero a mano.
+  - **PROD** (merge su `main`): la cifra di mezzo sale di uno a ogni merge e l'ultima è 0: `1.4.0` → `1.5.0` → `1.6.0`.
+  - **DEV** (push su `dev`): stessa cifra di mezzo di PROD; l'ultima conta i commit di `dev` non ancora in produzione: `1.4.1`, `1.4.2`… Dopo il merge su `main` riparte: `1.5.0`, poi `1.5.1`.
+  - Il calcolo è in `scripts/release/version.sh` e parte da `apps/web/release.json`: una versione di PROD e il merge di `main` a cui corrisponde. Il deploy (`deploy-target.yml`) passa il numero alla build come `APP_RELEASE` e lo scrive nel riepilogo del run.
+  - La prima cifra (`2.0.0`) sale solo per un cambiamento grande, deciso dal proprietario: si aggiorna `release.json` con la nuova base.
+  - In locale il sito mostra il `version` di `apps/web/package.json`.
+- Storia: fino al 23/11/2026 il numero si alzava a mano in `package.json` (1.1.0–1.4.0). Il 23/11/2026 PROD era alla 1.4.0, base del calcolo automatico.
 
 ## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
 

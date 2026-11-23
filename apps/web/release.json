@@ -1,0 +1,5 @@
+{
+  "comment": "Base della versione automatica (ADR 0066): la versione di PROD nel merge di main indicato. scripts/release/version.sh calcola da qui le versioni di DEV e PROD a ogni deploy.",
+  "version": "1.4.0",
+  "mainCommit": "55f8fa24ab9e6bba56936cbe6b901e0684cfabaf"
+}

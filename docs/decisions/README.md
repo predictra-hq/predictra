@@ -58,3 +58,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0063](0063-taratura-under-3-5.md)                        | Taratura anche della linea 3,5 dei gol                                   | Accettata |
 | [0064](0064-comunita-chat-e-profilo-pubblico.md)          | Comunità con più chat, schedine condivise e profilo pubblico             | Accettata |
 | [0065](0065-schedine-precise-e-calcio-con-spogliatoio.md) | Schedine più precise, meno proposte con valore, Spogliatoio sotto Calcio | Accettata |
+| [0066](0066-versione-automatica-per-ambiente.md)          | Versione del sito automatica per ambiente                                | Accettata |
