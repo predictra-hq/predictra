@@ -12,8 +12,10 @@ name: Verifica DEV
 # Avvio manuale: Actions → Verifica DEV → Run workflow (branch dev).
 # Nelle PR si controlla solo la sintassi dello script.
 
+# PR e push solo su dev (ADR 0061): il passaggio dev → main non ripete gli stessi controlli.
 on:
   pull_request:
+    branches: [dev]
     paths:
       - "apps/web/scripts/verify-*.mjs"
       - ".github/workflows/verify-dev.yml"

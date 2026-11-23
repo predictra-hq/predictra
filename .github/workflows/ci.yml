@@ -25,6 +25,9 @@ permissions:
 jobs:
   checks:
     name: Lint, typecheck, test, build
+    # Sul push verso main (merge della PR dev → main) i controlli sono già passati sulla
+    # PR, sullo stesso codice unito: si va diretti al deploy (ADR 0061).
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -44,15 +47,14 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      # Cache di Turborepo e di Next: i pacchetti con input invariati non rifanno
-      # lint, typecheck, test e build. La chiave cambia a ogni commit; si riparte
-      # dalla cache più recente dello stesso branch, poi da quella di dev.
-      - name: Cache Turborepo e Next
-        uses: actions/cache@v4
+      # Cache di Turborepo: i pacchetti con input invariati non rifanno lint, typecheck e
+      # test. Solo `.turbo/cache`: la cache di Next (`.next/cache`) pesava quasi 1 GB e la
+      # build gira solo nelle PR. v5 gira su Node 24 (v4 usava Node 20, deprecato). La
+      # chiave cambia a ogni commit; si riparte dalla più recente del branch, poi da dev.
+      - name: Cache Turborepo
+        uses: actions/cache@v5
         with:
-          path: |
-            .turbo/cache
-            apps/web/.next/cache
+          path: .turbo/cache
           key: turbo-${{ runner.os }}-${{ github.ref_name }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
@@ -112,7 +114,7 @@ jobs:
   deploy-prod:
     name: Deploy PROD
     needs: [checks]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always() && needs.checks.result == 'skipped' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-target.yml
     with:
       environment: prod

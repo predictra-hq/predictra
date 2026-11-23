@@ -17,8 +17,10 @@ name: Agent (Python)
 # (main). Lo schedule esegue il codice di `dev`; l'avvio manuale quello del branch scelto.
 # Runbook: docs/operations/agent.md
 
+# PR e push solo su dev (ADR 0061): il passaggio dev → main non ripete gli stessi controlli.
 on:
   pull_request:
+    branches: [dev]
     paths:
       - "services/agent/**"
       - "services/data-collector/**"
@@ -26,7 +28,7 @@ on:
       - "services/bet-builder/**"
       - ".github/workflows/agent-python.yml"
   push:
-    branches: [dev, main]
+    branches: [dev]
     paths:
       - "services/agent/**"
       - "services/data-collector/**"

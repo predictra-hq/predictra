@@ -2,6 +2,8 @@ import Link from "next/link";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
+import { shareProps } from "@/components/community/share-labels";
+import { ShareSlip } from "@/components/community/share-slip";
 import { Badge } from "@/components/ui/primitives";
 import {
   buildBollette,
@@ -148,6 +150,20 @@ function BollettaCard({
         )}
         labels={stakeBoxLabels()}
       />
+      <div className="mt-3">
+        <ShareSlip
+          {...shareProps({
+            title: m.profiles[bolletta.profile],
+            picks: bolletta.picks.map((p) => ({
+              match: `${p.home} – ${p.away}`,
+              pick: pickLabel(p),
+              price: p.price,
+            })),
+            price: bolletta.price,
+            probability: bolletta.probability,
+          })}
+        />
+      </div>
     </article>
   );
 }

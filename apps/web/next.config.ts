@@ -36,6 +36,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/certezze", destination: "/certainties", permanent: true },
       { source: "/affidabilita", destination: "/reliability", permanent: true },
+      { source: "/discussions", destination: "/community?c=matches", permanent: true },
     ];
   },
 };

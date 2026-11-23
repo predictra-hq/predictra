@@ -70,6 +70,7 @@ const PAGES = [
   "/bankroll",
   "/tracker",
   "/performance",
+  "/community",
   "/ask",
   "/settings",
   "/settings/preferences",

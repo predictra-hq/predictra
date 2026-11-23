@@ -3,24 +3,15 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
-  Bell,
   BotMessageSquare,
-  Cake,
   ChevronRight,
-  Globe,
-  KeyRound,
   LogOut,
-  MonitorSmartphone,
   Palette,
   PenLine,
   ShieldCheck,
-  Type,
-  UserRound,
-  Volume2,
   type LucideIcon,
 } from "lucide-react";
 import { hasPermission, highestRole } from "@predictra/shared-types";
-import { avatarStyleOf } from "@/lib/profile/avatar";
 import { StyledName } from "@/components/community/styled-name";
 import { ADMIN_NAV } from "@/components/shell/nav-config";
 import { NAV_ICONS } from "@/components/shell/nav-icons";
@@ -29,8 +20,6 @@ import { Badge } from "@/components/ui/primitives";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
 import { requireUser } from "@/lib/auth/dal";
-import { isAdult, todayInRome } from "@/lib/community/community";
-import { getOwnCommunityProfile } from "@/lib/community/queries";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { SOUND_COOKIE, soundsOnFromCookie } from "@/lib/sounds";
@@ -107,9 +96,9 @@ function Group({
 }
 
 /**
- * Profilo: chi sei e tutto ciò che puoi cambiare, diviso per tipo (il tuo profilo, accesso
- * e sicurezza, app, aiuto, amministrazione). Ogni voce porta direttamente al riquadro giusto
- * e mostra il valore attuale, così si capisce cosa si sta per cambiare senza aprire nulla.
+ * Profilo: una voce per pagina (ADR 0064). Il tuo profilo (nome, immagine, stile), accesso e
+ * sicurezza, preferenze dell'app; poi aiuto e amministrazione. Ogni voce mostra in breve il
+ * valore attuale.
  */
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -123,19 +112,13 @@ export default async function ProfilePage() {
   );
 
   const supabase = await createClient();
-  const [community, { data: prefs }, jar] = await Promise.all([
-    getOwnCommunityProfile(user.id),
+  const [{ data: prefs }, jar] = await Promise.all([
     supabase.from("user_preferences").select("timezone").eq("user_id", user.id).maybeSingle(),
     cookies(),
   ]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   const soundsOn = soundsOnFromCookie(jar.get(SOUND_COOKIE)?.value);
   const alertThreshold = parseAlertThreshold(jar.get(ALERT_COOKIE)?.value);
-  const birthday = !community.birthDate
-    ? p.birthdayMissing
-    : isAdult(community.birthDate, todayInRome())
-      ? p.birthdayUnlocked
-      : p.birthdayUnderAge;
 
   return (
     <div className="mx-auto max-w-xl">
@@ -171,21 +154,9 @@ export default async function ProfilePage() {
         title={p.groupProfile}
         rows={[
           {
-            href: "/settings/account#name",
-            icon: UserRound,
-            label: p.rowName,
-            value: user.displayName ?? p.nameMissing,
-          },
-          {
-            href: "/settings/account#avatar",
+            href: "/settings/account",
             icon: <UserAvatar style={user.avatarStyle} name={name} className="size-7" />,
-            label: p.rowAvatar,
-            value: pref.avatarStyles[avatarStyleOf(user.avatarStyle)],
-          },
-          {
-            href: "/settings/account#name-style",
-            icon: Type,
-            label: p.rowNameStyle,
+            label: p.rowProfile,
             value: (
               <StyledName
                 name={user.displayName ?? user.email.split("@")[0]!}
@@ -194,64 +165,30 @@ export default async function ProfilePage() {
               />
             ),
           },
-          { href: "/settings/account#birthday", icon: Cake, label: p.rowBirthday, value: birthday },
-        ]}
-      />
-
-      <Group
-        title={p.groupSecurity}
-        rows={[
           {
-            href: "/settings/security#mfa",
+            href: "/settings/security",
             icon: ShieldCheck,
-            label: p.rowMfa,
+            label: p.rowSecurity,
+            value: p.securityValue,
             badge: user.hasMfa
               ? { text: p.mfaOn, tone: "positive" }
               : { text: p.mfaOff, tone: "warning" },
           },
           {
-            href: "/settings/security#password",
-            icon: KeyRound,
-            label: p.rowPassword,
-          },
-          {
-            href: "/settings/security#sessions",
-            icon: MonitorSmartphone,
-            label: p.rowSessions,
+            href: "/settings/preferences",
+            icon: Palette,
+            label: p.rowPreferences,
+            value: [
+              pref.themes[theme],
+              soundsOn ? pref.soundsOn : pref.soundsOff,
+              fillTemplate(pref.alertsFrom, { n: alertThreshold }),
+              prefs?.timezone ?? "Europe/Rome",
+            ].join(" · "),
           },
         ]}
       />
 
-      <Group
-        title={p.groupApp}
-        rows={[
-          {
-            href: "/settings/preferences#theme",
-            icon: Palette,
-            label: p.rowTheme,
-            value: pref.themes[theme],
-          },
-          {
-            href: "/settings/preferences#sounds",
-            icon: Volume2,
-            label: p.rowSounds,
-            value: soundsOn ? pref.soundsOn : pref.soundsOff,
-          },
-          {
-            href: "/settings/preferences#alerts",
-            icon: Bell,
-            label: p.rowAlerts,
-            value: fillTemplate(pref.alertsFrom, { n: alertThreshold }),
-          },
-          {
-            href: "/settings/preferences#region",
-            icon: Globe,
-            label: p.rowRegion,
-            value: `${pref.italian} · ${prefs?.timezone ?? "Europe/Rome"}`,
-          },
-          { href: "/ask", icon: BotMessageSquare, label: p.rowAsk },
-        ]}
-      >
+      <Group title={p.groupHelp} rows={[{ href: "/ask", icon: BotMessageSquare, label: p.rowAsk }]}>
         <li>
           <TourRestartRow label={p.restartTour} />
         </li>

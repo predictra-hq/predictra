@@ -35,10 +35,12 @@ const AUTHENTICATED_FUNCTIONS = [
   // SECURITY DEFINER di sola lettura: nome visualizzato e stile, mai email o date
   "public.birthdays_today",
   "public.authorize_password_reset",
+  "public.community_feed",
   "public.create_invitation",
   // sola lettura, SECURITY INVOKER: rispetta la RLS di chi chiama (quote per partita)
   "public.latest_odds_for_matches",
   "public.match_comment_feed",
+  "public.moderate_community_post",
   "public.moderate_match_comment",
   "public.recent_comment_feed",
   "public.retry_dead_agent_job",
@@ -54,6 +56,7 @@ const AUTHENTICATED_WRITABLE = [
   "bankroll_movements",
   "bankrolls",
   "bets",
+  "community_posts",
   "match_comments",
   "personal_limits",
   "user_bet_slip_selections",
