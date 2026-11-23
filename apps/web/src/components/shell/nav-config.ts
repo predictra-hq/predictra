@@ -34,6 +34,8 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
       // «Chiedi a PREDICTRA» non è una voce del menu: è il pulsante fisso in basso a destra
       // (AskLauncher), che apre la chat sopra qualunque pagina.
       { key: "dashboard", href: "/dashboard" },
+      // Spogliatoio (ADR 0064): le chat degli iscritti. Sul telefono è una scheda di Home.
+      { key: "community", href: "/community" },
     ],
   },
   {

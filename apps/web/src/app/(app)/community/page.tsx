@@ -9,7 +9,7 @@ import { listCommunityPosts, listRecentComments } from "@/lib/community/queries"
 import { getMessages } from "@/lib/i18n";
 import { deletePost, moderatePost, postMessage } from "./actions";
 
-export const metadata: Metadata = { title: "Comunità" };
+export const metadata: Metadata = { title: "Spogliatoio" };
 
 const TABS = ["general", "slips", "matches"] as const;
 type Tab = (typeof TABS)[number];
@@ -19,7 +19,7 @@ const CHANNEL: Record<Exclude<Tab, "matches">, CommunityChannel> = {
 };
 
 /**
- * Comunità (ADR 0064): tre chat per tutti gli iscritti. Generale per parlare di tutto,
+ * Spogliatoio (ADR 0064): tre chat per tutti gli iscritti. Generale per parlare di tutto,
  * Schedine per condividere e commentare le schedine, Partite con gli ultimi commenti
  * scritti sotto le partite. Ognuno compare con il nome, lo stile e l'immagine scelti nel
  * Profilo; mai l'email.
