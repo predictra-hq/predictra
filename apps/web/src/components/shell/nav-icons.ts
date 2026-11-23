@@ -43,6 +43,7 @@ export const NAV_ICONS: Partial<Record<NavItem["key"], LucideIcon>> = {
   discussions: MessagesSquare,
   bankroll: Wallet,
   tracker: ListChecks,
+  performance: TrendingUp,
   modelIntelligence: LineChart,
   dataCenter: Database,
   askPredictra: BotMessageSquare,

@@ -8,10 +8,7 @@ import {
   BankrollCard,
   CertaintiesCard,
   SchedineCard,
-  SystemStatusCard,
-  UpcomingMatchesCard,
 } from "@/components/dashboard/cards";
-import { LeaguesCard, ModelHitsCard } from "@/components/dashboard/charts";
 import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -74,33 +71,12 @@ export default async function DashboardPage() {
         <FollowedMatchesCard />
       </Suspense>
 
-      {/* Calendario con le probabilità e due grafici: resa del modello e campionati. */}
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Suspense fallback={<CardSkeleton />}>
-          <UpcomingMatchesCard />
-        </Suspense>
-        <div className="flex flex-col gap-4">
-          <Suspense fallback={<CardSkeleton />}>
-            <ModelHitsCard />
-          </Suspense>
-          <Suspense fallback={<CardSkeleton />}>
-            <LeaguesCard />
-          </Suspense>
-        </div>
-      </div>
-
-      {/* Stato tecnico e avvisi dell'agente: solo per chi gestisce il sistema. */}
+      {/* Avvisi dell'agente solo quando ce ne sono, per chi gestisce il sistema. Lo stato
+          tecnico completo è in Amministrazione › Sistema. */}
       {canMonitor ? (
-        <>
-          <div className="mt-4">
-            <Suspense fallback={<CardSkeleton />}>
-              <SystemStatusCard canMonitor />
-            </Suspense>
-          </div>
-          <Suspense fallback={null}>
-            <NotificationsCard />
-          </Suspense>
-        </>
+        <Suspense fallback={null}>
+          <NotificationsCard />
+        </Suspense>
       ) : null}
 
       <p className="mt-8 text-xs text-subtle">{m.app.disclaimer}</p>

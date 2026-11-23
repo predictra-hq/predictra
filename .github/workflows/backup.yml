@@ -13,7 +13,8 @@ on:
       - "scripts/backup/**"
       - ".github/workflows/backup.yml"
   schedule:
-    - cron: "30 2 * * *"
+    # Lunedì e giovedì (ADR 0061: minuti del piano gratuito); prova di ripristino il 1° del mese.
+    - cron: "30 2 * * 1,4"
     - cron: "30 3 1 * *"
   workflow_dispatch:
     inputs:

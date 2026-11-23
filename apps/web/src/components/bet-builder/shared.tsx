@@ -33,19 +33,21 @@ export function BetBuilderDisclaimer() {
 export function BetBuilderNav({
   current,
 }: {
-  current: "proposals" | "builder" | "slips" | "results";
+  current: "proposals" | "builder" | "slips" | "results" | "past";
 }) {
   const m = getMessages().betBuilder;
+  // Tre schede (ADR 0062): le schedine salvate stanno in Costruisci, le statistiche
+  // delle proposte con valore in Passate.
+  const active = current === "slips" ? "builder" : current === "results" ? "past" : current;
   const items = [
     { key: "proposals", href: "/bet-builder", label: m.navProposals },
+    { key: "past", href: "/bet-builder/past", label: m.navPast },
     { key: "builder", href: "/bet-builder/builder", label: m.navBuilder },
-    { key: "slips", href: "/bet-builder/slips", label: m.navSlips },
-    { key: "results", href: "/bet-builder/results", label: m.navResults },
   ] as const;
   return (
     <nav aria-label={m.title} className="tab-strip">
       {items.map((i) => (
-        <Link key={i.key} href={i.href} aria-current={i.key === current ? "page" : undefined}>
+        <Link key={i.key} href={i.href} aria-current={i.key === active ? "page" : undefined}>
           {i.label}
         </Link>
       ))}
