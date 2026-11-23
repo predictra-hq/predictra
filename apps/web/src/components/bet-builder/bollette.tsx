@@ -4,7 +4,7 @@ import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
-import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
+import { Ticket, TicketLeg, TicketTotals, whenAndWhere } from "@/components/bet-builder/ticket";
 import { Badge } from "@/components/ui/primitives";
 import {
   buildBollette,
@@ -23,6 +23,7 @@ import {
 } from "@/lib/bet-builder/register";
 import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadPicksData } from "@/lib/bet-builder/queries";
+import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
@@ -48,7 +49,9 @@ function BollettaCard({
   now,
   bankroll,
   site,
+  competitions,
 }: {
+  competitions: ReadonlyMap<number, string>;
   bolletta: Bolletta;
   stake: number | null;
   now: Date;
@@ -64,7 +67,7 @@ function BollettaCard({
   const legs = bolletta.picks.map((p) => (
     <TicketLeg
       key={p.matchId}
-      time={formatDateTime(p.kickoffAt)}
+      time={whenAndWhere(p, competitions)}
       match={
         <Link href={`/match-center/${p.matchId}`} className="hover:underline">
           {p.home} – {p.away}
@@ -175,8 +178,11 @@ export function BolletteCard({
   now,
   bankroll = null,
   site = null,
+  competitions = new Map(),
 }: {
   bollette: readonly Bolletta[];
+  /** Nomi dei campionati, mostrati sotto le squadre. */
+  competitions?: ReadonlyMap<number, string>;
   /** Sito del bankroll di riferimento, se indicato. */
   site?: string | null;
   stake?: number | null;
@@ -199,7 +205,7 @@ export function BolletteCard({
             <h3 className="mb-2 mt-3 text-sm text-muted">
               {fillTemplate(m.round, { round: formatRound(round) })}
             </h3>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {bollette
                 .filter((b) => b.round === round)
                 .map((b) => (
@@ -210,6 +216,7 @@ export function BolletteCard({
                     now={now}
                     bankroll={bankroll}
                     site={site}
+                    competitions={competitions}
                   />
                 ))}
             </div>
@@ -243,12 +250,14 @@ async function loadAdviceBankroll(): Promise<AdviceBankroll | null> {
 
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
 export async function SchedineSection({ stake }: { stake: number | null }) {
-  const [{ rows, prices, consensus }, bankroll, site, calibration] = await Promise.all([
-    loadPicksData(),
-    loadAdviceBankroll(),
-    userBookmaker(),
-    loadCalibration(),
-  ]);
+  const [{ rows, prices, consensus }, bankroll, site, calibration, competitions] =
+    await Promise.all([
+      loadPicksData(),
+      loadAdviceBankroll(),
+      userBookmaker(),
+      loadCalibration(),
+      listCompetitions().catch(() => []),
+    ]);
   return (
     <BolletteCard
       bollette={buildBollette(rows, prices, consensus, calibration)}
@@ -256,6 +265,7 @@ export async function SchedineSection({ stake }: { stake: number | null }) {
       now={new Date()}
       bankroll={bankroll}
       site={site?.name ?? null}
+      competitions={new Map(competitions.map((c) => [c.id, c.name]))}
     />
   );
 }

@@ -450,7 +450,6 @@ export const it = {
   community: {
     title: "Spogliatoio",
     homeEmpty: "Ancora nessun messaggio. Entra e scrivi il primo.",
-    homeOpen: "Entra nello Spogliatoio →",
     description:
       "Le chat degli iscritti: parla di calcio, condividi le tue schedine, commenta le partite.",
     tabs: { general: "Generale", slips: "Schedine", matches: "Partite" },
@@ -483,8 +482,6 @@ export const it = {
     shared: "Schedina condivisa.",
     copied: "Testo copiato: incollalo nella chat che vuoi.",
     seeChat: "Apri la chat",
-    slipPrice: "Quota {price}",
-    slipProbability: "probabilità {p}",
     textTotal: "Quota totale",
     textProbability: "Probabilità",
   },
@@ -653,7 +650,10 @@ export const it = {
     noData:
       "Nessuna partita disponibile. I dati compaiono dopo la prima raccolta da football-data.org (vedi la pagina Dati).",
     matchTitle: "Dettaglio partita",
-    strongestPick: "Certezza",
+    strongestPick: "Giocata più probabile",
+    noPickHint:
+      "Nessuna previsione: la partita è oltre i 10 giorni, è già iniziata o una squadra non ha abbastanza partite nello storico.",
+    weakPickHint: "Sotto il 70%: è la giocata più probabile, ma non una certezza.",
     currentMatchday: "{n} (attuale)",
     technical: "Dettagli tecnici (provenienza dei dati e controlli di qualità)",
     back: "Torna alle partite",
@@ -799,6 +799,29 @@ export const it = {
       WARNING: "Avviso",
       ERROR: "Errore",
     },
+    issueMeaning: "Cosa vuol dire",
+    // Spiegazione di ogni controllo (ADR 0065): niente codici da interpretare.
+    issueChecks: {
+      "competition.payload_incomplete":
+        "La fonte ha mandato il campionato senza dati obbligatori. Di solito si risolve alla raccolta successiva.",
+      "competition.type_unknown": "Tipo di competizione non riconosciuto: va guardato.",
+      "match.payload_incomplete":
+        "Partita arrivata senza dati obbligatori: non è stata salvata. Si chiude da sola quando torna completa.",
+      "match.status_unknown":
+        "Stato della partita sconosciuto (né in programma, né giocata, né rinviata). Si chiude da solo.",
+      "match.teams_undefined":
+        "Turno a eliminazione diretta con le squadre ancora da decidere: non è un errore. Si chiude da solo quando la fonte le indica.",
+      "match.same_team": "La fonte indica la stessa squadra in casa e fuori: va guardato.",
+      "match.score_missing":
+        "Partita finita ma senza risultato: capita nei minuti dopo il fischio finale. Si chiude da solo alla raccolta successiva.",
+      "match.score_unexpected": "Risultato presente su una partita non finita. Si chiude da solo.",
+      "match.score_non_regular":
+        "La partita è finita ai supplementari o ai rigori: il risultato al 90' non c'è e la partita non conta nelle verifiche. Si chiude da solo.",
+      "standing.team_missing":
+        "Riga di classifica senza squadra: si sistema alla raccolta successiva.",
+      "standing.games_mismatch":
+        "Partite giocate in classifica diverse da vinte + pareggiate + perse: errore della fonte, di solito temporaneo.",
+    } as Record<string, string>,
   },
   marketIntelligence: {
     title: "Quote",
@@ -1075,12 +1098,12 @@ export const it = {
       singles: "Pronostico più probabile per partita",
       probability: "Probabilità",
       fairOdds: "Quota equa",
+      realOdds: "Quota reale",
       confidence: "Affidabilità",
       empty:
         "Nessun pronostico disponibile: servono previsioni del modello attivo per le partite in programma.",
       showAll: "Mostra tutti i {n} pronostici",
       italianPrice: "quota {price} · {bookmaker}",
-      combinedItalian: "Quota reale combinata (bookmaker italiani): {price}",
     },
     likelyToggle: "Mostra anche i pronostici più probabili (quote basse)",
     valueTitle: "Proposte con valore",

@@ -99,9 +99,15 @@ const homeCertainties = cache(async (): Promise<Pick[]> => {
   );
 });
 
-const STRONGEST_THRESHOLD = 0.7;
+/**
+ * Soglia della giocata più forte in Partite: dal 50%, così ogni partita con una previsione
+ * mostra qualcosa. Sotto il 70% (`CERTAINTY_FROM`) la pagina la scrive in grigio: è la più
+ * probabile, non una certezza.
+ */
+const STRONGEST_THRESHOLD = 0.5;
+export const CERTAINTY_FROM = 0.7;
 
-/** Giocata più forte (dal 70%) di ciascuna partita richiesta, se ce n'è una. */
+/** Giocata più probabile (dal 50%) di ciascuna partita richiesta, se ce n'è una. */
 export async function strongestPicks(ids: readonly number[]): Promise<Map<number, Pick>> {
   const out = new Map<number, Pick>();
   if (ids.length === 0) return out;

@@ -59,6 +59,15 @@ def _now() -> str:
 
 # Controlli sul punteggio: chiusi da soli quando la partita torna senza problemi (ADR 0034).
 SCORE_CHECKS = ("match.score_missing", "match.score_non_regular", "match.score_unexpected")
+# Tutti i controlli su una partita (ADR 0065): si chiudono da soli quando la partita torna
+# senza quel problema, per esempio un turno a eliminazione diretta che ora ha le squadre.
+MATCH_CHECKS = (
+    *SCORE_CHECKS,
+    "match.teams_undefined",
+    "match.status_unknown",
+    "match.payload_incomplete",
+    "match.same_team",
+)
 
 
 def resolvable_matches(batch: dict[str, Any] | None, issues: list[dict[str, Any]]) -> list[str]:
@@ -68,7 +77,7 @@ def resolvable_matches(batch: dict[str, Any] | None, issues: list[dict[str, Any]
     flagged = {
         i.get("provider_entity_id")
         for i in issues
-        if i.get("entity_type") == "match" and i.get("check_code") in SCORE_CHECKS
+        if i.get("entity_type") == "match" and i.get("check_code") in MATCH_CHECKS
     }
     return [m["provider_id"] for m in batch.get("matches") or [] if m["provider_id"] not in flagged]
 
@@ -126,7 +135,7 @@ def run(
                     written = store.ingest(run_id, batch)
                     rows = int(written.get("matches", 0)) + int(written.get("teams", 0))
                 store.report_issues(run_id, issues)
-                store.resolve_issues(run_id, SCORE_CHECKS, resolvable_matches(batch, issues))
+                store.resolve_issues(run_id, MATCH_CHECKS, resolvable_matches(batch, issues))
                 store.finish_run(
                     run_id,
                     result.status,

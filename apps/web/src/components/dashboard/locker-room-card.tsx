@@ -48,7 +48,6 @@ export async function LockerRoomCard() {
           ))}
         </ul>
       )}
-      <p className="mt-3 text-xs font-medium text-positive-strong">{c.homeOpen}</p>
     </StatCard>
   );
 }

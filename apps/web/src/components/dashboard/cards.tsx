@@ -94,9 +94,6 @@ export async function ActiveModelCard() {
           <p className="text-lg font-semibold">
             {m.modelIntelligence.modelNames[active.model_key]}
           </p>
-          <p className="truncate font-mono text-xs text-muted" title={active.version}>
-            {active.version}
-          </p>
           <p className="text-xs text-muted">
             {d.brier}{" "}
             <span className="font-mono text-fg">

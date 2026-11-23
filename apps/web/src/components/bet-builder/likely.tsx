@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { PredictionMarket } from "@predictra/shared-types";
 import { CategoryBadge, StakeSimulation } from "@/components/bet-builder/shared";
-import { Badge, Card, CardTitle } from "@/components/ui/primitives";
+import { Ticket, TicketLeg, TicketTotals, whenAndWhere } from "@/components/bet-builder/ticket";
+import { Card, CardTitle } from "@/components/ui/primitives";
+import { listCompetitions } from "@/lib/football/queries";
 import {
   bestPicks,
   combinedItalianPrice,
@@ -31,22 +33,6 @@ export function pickLabel(
   const selection = (p.selections as Record<string, string>)[pick.selection] ?? pick.selection;
   const line = formatLine(pick.line, pick.market as PredictionMarket);
   return [market, selection, line].filter(Boolean).join(" ");
-}
-
-function marketName(market: string): string {
-  const p = getMessages().predictions;
-  return p.markets[market as PredictionMarket] ?? market;
-}
-
-/** Pronostici di una multipla raggruppati per tipo di giocata, nell'ordine in cui arrivano. */
-function groupByMarket(picks: readonly LikelyPick[]): { market: string; picks: LikelyPick[] }[] {
-  const groups: { market: string; picks: LikelyPick[] }[] = [];
-  for (const pick of picks) {
-    const last = groups.at(-1);
-    if (last && last.market === pick.market) last.picks.push(pick);
-    else groups.push({ market: pick.market, picks: [pick] });
-  }
-  return groups;
 }
 
 type Prices = ReadonlyMap<string, ItalianPrice>;
@@ -85,7 +71,10 @@ export function LikelyCard({
   multiples,
   prices,
   stake = null,
+  competitions = new Map(),
 }: {
+  /** Nomi dei campionati, mostrati sotto le squadre. */
+  competitions?: ReadonlyMap<number, string>;
   picks: readonly LikelyPick[];
   multiples: readonly LikelyMultiple[];
   prices: Prices;
@@ -104,58 +93,58 @@ export function LikelyCard({
           {multiples.length > 0 ? (
             <>
               <h3 className="mb-2 mt-4 text-sm font-semibold">{m.multiples}</h3>
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-                {multiples.map((x) => (
-                  <div
-                    key={x.category}
-                    className="rounded-lg border border-border bg-surface-2 p-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="flex flex-wrap items-center gap-2 font-medium">
-                        <CategoryBadge category={x.category} />
-                        {fillTemplate(m.multiple, { n: x.size })}
-                      </span>
-                      <Badge tone="positive">
-                        {m.probability} {formatPercent(x.probability)}
-                      </Badge>
-                    </div>
-                    <p className="mt-1 text-xs text-muted">
-                      {m.fairOdds} {formatFairOdds(x.probability)} · {m.confidence}{" "}
-                      {confidenceLabel(x.confidence)}
-                    </p>
-                    {(() => {
-                      const real = combinedItalianPrice(prices, x.picks);
-                      return real === null ? null : (
-                        <>
-                          <p className="mt-1 text-xs">
-                            {fillTemplate(m.combinedItalian, { price: formatOdds(real) })}
-                          </p>
-                          {stake !== null ? (
-                            <div className="mt-2">
-                              <StakeSimulation
-                                stake={stake}
-                                price={real}
-                                probability={x.probability}
-                              />
-                            </div>
-                          ) : null}
-                        </>
-                      );
-                    })()}
-                    {groupByMarket(x.picks).map((g) => (
-                      <div key={g.market} className="mt-3">
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted">
-                          {marketName(g.market)} · {g.picks.length}
-                        </h4>
-                        <ul className="text-sm">
-                          {g.picks.map((p) => (
-                            <PickRow key={p.matchId} pick={p} prices={prices} />
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                {multiples.map((x) => {
+                  const real = combinedItalianPrice(prices, x.picks);
+                  return (
+                    <Ticket
+                      key={x.category}
+                      title={fillTemplate(m.multiple, { n: x.size })}
+                      badge={<CategoryBadge category={x.category} />}
+                      totals={
+                        <TicketTotals
+                          priceLabel={real === null ? m.fairOdds : m.realOdds}
+                          price={real === null ? formatFairOdds(x.probability) : formatOdds(real)}
+                          items={[
+                            { label: m.probability, value: formatPercent(x.probability) },
+                            { label: m.confidence, value: confidenceLabel(x.confidence) },
+                          ]}
+                        />
+                      }
+                      footer={
+                        real !== null && stake !== null ? (
+                          <StakeSimulation stake={stake} price={real} probability={x.probability} />
+                        ) : undefined
+                      }
+                    >
+                      {x.picks.map((p) => {
+                        const it = italianPriceFor(prices, p);
+                        return (
+                          <TicketLeg
+                            key={p.matchId}
+                            time={whenAndWhere(p, competitions)}
+                            match={
+                              <Link href={`/match-center/${p.matchId}`} className="hover:underline">
+                                {p.home} – {p.away}
+                              </Link>
+                            }
+                            pick={pickLabel(p)}
+                            probability={formatPercent(p.probability)}
+                            price={
+                              it ? (
+                                formatOdds(it.price)
+                              ) : (
+                                <span className="text-muted" title={m.fairOdds}>
+                                  {formatFairOdds(p.probability)}
+                                </span>
+                              )
+                            }
+                          />
+                        );
+                      })}
+                    </Ticket>
+                  );
+                })}
               </div>
             </>
           ) : null}
@@ -186,9 +175,18 @@ export function LikelyCard({
 
 /** Sezione asincrona: legge previsioni e quote e mostra i pronostici più probabili. */
 export async function LikelySection({ stake }: { stake: number | null }) {
-  const { rows, prices } = await loadPicksData();
+  const [{ rows, prices }, competitionList] = await Promise.all([
+    loadPicksData(),
+    listCompetitions().catch(() => []),
+  ]);
   const picks = bestPicks(rows);
   return (
-    <LikelyCard picks={picks} multiples={likelyMultiples(picks)} prices={prices} stake={stake} />
+    <LikelyCard
+      picks={picks}
+      multiples={likelyMultiples(picks)}
+      prices={prices}
+      stake={stake}
+      competitions={new Map(competitionList.map((c) => [c.id, c.name]))}
+    />
   );
 }
