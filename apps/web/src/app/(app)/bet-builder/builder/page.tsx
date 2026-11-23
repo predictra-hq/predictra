@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   BuilderPicker,
   type BuilderGroup,
@@ -163,6 +164,11 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
           </div>
         </div>
       )}
+      <p className="mt-6 text-sm">
+        <Link href="/bet-builder/slips" className="text-positive-strong hover:underline">
+          {m.savedSlips} →
+        </Link>
+      </p>
       <BetBuilderDisclaimer />
     </>
   );

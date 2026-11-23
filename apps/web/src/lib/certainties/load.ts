@@ -58,6 +58,8 @@ export const loadUpcoming = cache(async (): Promise<UpcomingData> => {
 
 export interface VerificationData extends Verification {
   market: MarketLookup;
+  /** Probabilità di mercato senza margine, dalle quote prima del calcio d'inizio. */
+  consensus: Map<string, number>;
   /** Migliori quote italiane osservate prima del calcio d'inizio. */
   prices: Map<string, ItalianPrice>;
 }
@@ -69,9 +71,11 @@ export const loadVerification = cache(async (): Promise<VerificationData> => {
   const odds = (await oddsFor(matchIds(verification.rows))).filter(
     (o) => o.match_id !== null && Date.parse(o.observed_at) < (kickoff.get(o.match_id) ?? 0),
   );
+  const consensus = marketConsensus(odds);
   return {
     ...verification,
-    market: marketLookup(marketConsensus(odds)),
+    market: marketLookup(consensus),
+    consensus,
     prices: bestItalianPrices(odds),
   };
 });

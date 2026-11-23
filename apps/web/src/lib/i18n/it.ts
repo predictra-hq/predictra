@@ -235,6 +235,7 @@ export const it = {
     discussions: "Discussioni",
     bankroll: "Bankroll",
     tracker: "Giocate fatte",
+    performance: "Andamento",
     modelIntelligence: "Modello",
     dataCenter: "Dati",
     askPredictra: "Chiedi a PREDICTRA",
@@ -389,6 +390,7 @@ export const it = {
     favourite: "Favorito",
     probabilitiesLabel: "Probabilità: 1 {home}, X {draw}, 2 {away}",
     confidence: "Confidenza",
+    bankrollLine: "Disponibile {available} · giocate aperte {open}",
     hitsTitle: "Come ci ha preso il modello",
     hitsMore: "Affidabilità",
     hitsSummary:
@@ -1081,8 +1083,26 @@ export const it = {
       "Singole e multiple (fino a 4 partite dello stesso turno) in cui la quota di un bookmaker italiano è più alta di quella giusta secondo modello e mercato insieme. Sono le giocate con il miglior rapporto tra quota e probabilità: poche, e solo quando ci sono davvero.",
     technicalDetails: "Soglie e ultima esecuzione",
     navProposals: "Proposte",
+    navPast: "Passate",
+    past: {
+      title: "Schedine passate",
+      description:
+        "Le schedine consigliate dei turni già iniziati e come sono andate, partita per partita.",
+      round: "Turno {round}",
+      summary: "{won} vinte su {settled} concluse",
+      summaryNone: "Nessuna schedina ancora conclusa",
+      outcome: { WON: "Vinta", LOST: "Persa", PENDING: "In corso" },
+      details: "Quota {price} · probabilità {p}",
+      legWon: "Uscita",
+      legLost: "Non uscita",
+      legPending: "Da giocare",
+      note: "Le schedine sono ricostruite con le stesse regole delle Proposte, usando l'ultima previsione e le quote raccolte prima di ogni partita.",
+      empty: "Nessun turno ancora iniziato con schedine consigliate.",
+      stats: "Statistiche delle proposte con valore",
+    },
     navBuilder: "Costruisci",
     navSlips: "Le mie schedine",
+    savedSlips: "Le tue schedine salvate",
     navResults: "Risultati",
     results: {
       title: "Risultati delle proposte",
@@ -1557,6 +1577,10 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
+    seePerformance: "Come stanno andando le tue giocate",
+    performanceTitle: "Andamento",
+    performanceDescription:
+      "Profitto, giocate vinte e resa delle giocate registrate, mese per mese. Li vedi solo tu.",
     howAmIDoing: "Come sto andando",
     byMonth: "Per mese",
     byMarket: "Per tipo di giocata",

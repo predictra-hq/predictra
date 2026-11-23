@@ -33,8 +33,9 @@ on:
       - "services/prediction-engine/**"
       - "services/bet-builder/**"
       - ".github/workflows/agent-python.yml"
-  schedule:
-    - cron: "47 */3 * * *" # ciclo dell'agente: raccolta football-data.org e job in coda
+  # Nessuno schedule di GitHub dal 23/11/2026 (ADR 0061): il ciclo lo avvia QStash
+  # (endpoint /api/jobs/cycle) tre volte al giorno, alle fasce di CYCLE_SLOTS_UTC in
+  # apps/web/src/lib/agent/dispatch.ts. Lo schedule ogni 3 ore consumava troppi minuti.
   workflow_dispatch:
     inputs:
       selftest:

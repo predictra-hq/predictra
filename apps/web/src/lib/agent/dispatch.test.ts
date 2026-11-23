@@ -7,7 +7,7 @@ import {
   cycleMissed,
   dispatchConfigFromEnv,
   dispatchIfMissed,
-  MISSED_AFTER_MINUTES,
+  latestSlot,
   type FallbackDeps,
 } from "./dispatch";
 
@@ -32,7 +32,7 @@ function fakeFetch(status = 204) {
 function deps(over: Partial<FallbackDeps> = {}): FallbackDeps {
   return {
     config: CONFIG,
-    lastGithubRun: async () => minutesAgo(MISSED_AFTER_MINUTES + 5),
+    lastGithubRun: async () => minutesAgo(200),
     consumeQuota: async () => true,
     now: () => NOW,
     ...over,
@@ -59,8 +59,11 @@ describe("configurazione", () => {
 
 describe("ciclo saltato", () => {
   it("soglia di 3 h 30", () => {
-    expect(cycleMissed(minutesAgo(200), NOW)).toBe(false);
-    expect(cycleMissed(minutesAgo(211), NOW)).toBe(true);
+    // Alle 09:00 l'ultima fascia è quella delle 06:50: un ciclo dopo le 06:50 basta.
+    expect(cycleMissed(minutesAgo(120), NOW)).toBe(false);
+    expect(cycleMissed(minutesAgo(140), NOW)).toBe(true);
+    expect(latestSlot(Date.parse("2026-11-09T05:00:00Z"))).toBe(Date.parse("2026-11-08T22:50:00Z"));
+    expect(latestSlot(Date.parse("2026-11-09T15:50:00Z"))).toBe(Date.parse("2026-11-09T15:50:00Z"));
     expect(cycleMissed(null, NOW)).toBe(true);
     expect(cycleMissed("non-una-data", NOW)).toBe(true);
   });
