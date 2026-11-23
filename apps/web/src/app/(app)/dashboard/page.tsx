@@ -10,6 +10,7 @@ import {
   SchedineCard,
 } from "@/components/dashboard/cards";
 import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
+import { LockerRoomCard } from "@/components/dashboard/locker-room-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
@@ -57,6 +58,13 @@ export default async function DashboardPage() {
         </Suspense>
         <Suspense fallback={<CardSkeleton />}>
           <BankrollCard />
+        </Suspense>
+      </div>
+
+      {/* Ultimi messaggi dello Spogliatoio (ADR 0064). */}
+      <div className="mt-4">
+        <Suspense fallback={<CardSkeleton />}>
+          <LockerRoomCard />
         </Suspense>
       </div>
 

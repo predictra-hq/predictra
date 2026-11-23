@@ -255,9 +255,9 @@ Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `land
 - Nessuna promessa di vincita e nessun numero reale: le scene restano con dati `DEMO`. Sul costo la pagina dice solo ciò che è vero oggi: dentro PREDICTRA non si compra nulla e l'accesso è su invito.
 - In fondo l'avvertenza sul gioco: vietato ai minori di 18 anni, il gioco può causare dipendenza.
 
-## 23/11/2026: Comunità, profilo pubblico, Costruisci più chiaro
+## 23/11/2026: Spogliatoio, profilo pubblico, Costruisci più chiaro
 
-- **Comunità** (`/community`, gruppo Home, ADR 0064): chat Generale, Schedine e Partite. La vecchia `/discussions` reindirizza alla chat Partite. Ogni messaggio mostra immagine, nome e stile di chi scrive.
+- **Spogliatoio** (`/community`, gruppo Home, ADR 0064; sul telefono è una scheda di Home e in Home c'è una card con gli ultimi messaggi): chat Generale, Schedine e Partite. La vecchia `/discussions` reindirizza alla chat Partite. Ogni messaggio mostra immagine, nome e stile di chi scrive.
 - **Condividi** nelle schedine consigliate, nelle Passate e nella Valutazione di Costruisci: nella chat Schedine oppure in altre app (condivisione del telefono, altrimenti copia del testo).
 - **Niente data di nascita**: tolti il riquadro, il compleanno in Home e lo sblocco dei commenti. Scrivono tutti gli iscritti attivi.
 - **Immagine del profilo come il logo**: stesso quadrato, stessa linea e stesso pallone, in cinque versioni.

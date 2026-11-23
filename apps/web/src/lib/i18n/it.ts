@@ -235,7 +235,7 @@ export const it = {
     bankroll: "Bankroll",
     tracker: "Giocate fatte",
     performance: "Andamento",
-    community: "Comunità",
+    community: "Spogliatoio",
     modelIntelligence: "Modello",
     dataCenter: "Dati",
     askPredictra: "Chiedi a PREDICTRA",
@@ -287,10 +287,10 @@ export const it = {
   account: {
     title: "Il tuo profilo",
     description: "Come ti vedono tutti gli iscritti: nome, immagine e stile del nome.",
-    publicHint: "Così ti vedono tutti nella Comunità e sotto le partite.",
+    publicHint: "Così ti vedono tutti nello Spogliatoio e sotto le partite.",
     nameTitle: "Nome utente",
     nameHint:
-      "Il nome che vedono gli altri iscritti nella Comunità e nei commenti. Non è l'email: puoi usare un soprannome.",
+      "Il nome che vedono gli altri iscritti nello Spogliatoio e nei commenti. Non è l'email: puoi usare un soprannome.",
     nameLabel: "Nome utente",
     nameSaved: "Nome utente salvato.",
     nameInvalid: "Scrivi un nome tra 1 e 80 caratteri.",
@@ -448,7 +448,9 @@ export const it = {
     passwordUpdated: "Password aggiornata.",
   },
   community: {
-    title: "Comunità",
+    title: "Spogliatoio",
+    homeEmpty: "Ancora nessun messaggio. Entra e scrivi il primo.",
+    homeOpen: "Entra nello Spogliatoio →",
     description:
       "Le chat degli iscritti: parla di calcio, condividi le tue schedine, commenta le partite.",
     tabs: { general: "Generale", slips: "Schedine", matches: "Partite" },
@@ -474,7 +476,7 @@ export const it = {
     rules:
       "I messaggi li vedono tutti gli iscritti, con il tuo nome, il suo stile e la tua immagine (mai l’email). Niente insulti, niente dati personali: gli amministratori possono rimuoverli.",
     share: "Condividi",
-    toCommunity: "Nella comunità",
+    toCommunity: "Nello Spogliatoio",
     toApps: "In altre app",
     sharePlaceholder: "Aggiungi un messaggio (facoltativo)…",
     shareSend: "Condividi nella chat Schedine",
@@ -526,7 +528,7 @@ export const it = {
     soundsOn: "Accesi",
     soundsOff: "Spenti",
     nameStyle: "Stile del nome",
-    nameStyleHint: "Come tutti vedono il tuo nome nella Comunità e nei commenti.",
+    nameStyleHint: "Come tutti vedono il tuo nome nello Spogliatoio e nei commenti.",
     nameColor: "Colore",
     nameFont: "Scritta",
     nameDefault: "Normale",

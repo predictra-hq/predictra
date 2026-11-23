@@ -13,7 +13,7 @@
 
 ## Decisione
 
-1. **Comunità** (`/community`, gruppo Home) con tre chat:
+1. **Spogliatoio** (`/community`, gruppo Home: sul telefono è una scheda di Home; in Home una card con gli ultimi tre messaggi) con tre chat. Il nome «Comunità» è stato scartato il giorno stesso: Spogliatoio è più da calcio e dice che il gruppo è ristretto, su invito.
    - **Generale**, per parlare di tutto;
    - **Schedine**, con le schedine condivise;
    - **Partite**, con gli ultimi commenti scritti sotto le partite (ex `/discussions`, che reindirizza qui).
@@ -24,7 +24,7 @@
    - stesso limite dei commenti: 10 messaggi in 5 minuti;
    - moderazione admin con 2FA tramite `moderate_community_post()`, registrata in `audit_logs`.
 3. **Condividi una schedina** da Proposte, Passate e Costruisci:
-   - _Nella comunità_ la pubblica nella chat Schedine con un messaggio facoltativo;
+   - _Nello Spogliatoio_ la pubblica nella chat Schedine con un messaggio facoltativo;
    - _In altre app_ apre la condivisione del telefono (WhatsApp, Telegram…) con il testo della schedina, oppure lo copia;
    - la schedina condivisa è un riepilogo (partita, giocata, quota, probabilità), ricontrollato dal server (`lib/community/slip.ts`). Non è un dato nuovo: viene dalle stesse quote e previsioni già mostrate.
 4. **Niente data di nascita.**
