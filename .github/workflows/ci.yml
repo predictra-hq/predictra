@@ -25,6 +25,9 @@ permissions:
 jobs:
   checks:
     name: Lint, typecheck, test, build
+    # Sul push verso main (merge della PR dev → main) i controlli sono già passati sulla
+    # PR, sullo stesso codice unito: si va diretti al deploy (ADR 0061).
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -112,7 +115,7 @@ jobs:
   deploy-prod:
     name: Deploy PROD
     needs: [checks]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always() && needs.checks.result == 'skipped' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/deploy-target.yml
     with:
       environment: prod

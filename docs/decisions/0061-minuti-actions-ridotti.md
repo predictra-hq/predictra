@@ -21,7 +21,8 @@ Senza sviluppo il sistema consumava circa 36 minuti al giorno: più di 1.000 al 
 1. **Agente: tre cicli al giorno.** Niente più schedule di GitHub (ogni 3 ore, spesso in ritardo e compensato da QStash). Lo avvia solo QStash, alle fasce `CYCLE_SLOTS_UTC` (06:50, 15:50, 22:50 UTC): quote e previsioni del mattino, quote pre-partita e previsioni del pomeriggio, risultati della sera. Le finestre dei job (`odds`, `predictions`, `bet_builder`) restano le stesse.
 2. **Backup e copia su DEV:** lunedì e giovedì invece che ogni giorno; la prova di ripristino resta il 1° del mese.
 3. **CI:** la scansione dei segreti diventa un passo del job principale (un job in meno da arrotondare); la build si fa solo sulle PR, perché sui push la rifà già il deploy; anche i file `.md` fuori da `docs/` non fanno partire la CI.
-4. **Verifica DEV:** solo quando serve davvero (cambi grossi all'interfaccia o all'accesso), non a ogni modifica.
+4. **Passaggio dev → main senza doppioni** (aggiunta del 23/11/2026): la CI completa gira sulla PR verso `main`, sul codice già unito; al merge si fa solo il deploy di PROD. I controlli dei servizi Python e degli script (agente, motore, raccolte, Bet Builder, backup, Verifica) girano solo su PR e push verso `dev`. Un rilascio passa da circa 19 a circa 7 minuti.
+5. **Verifica DEV:** solo quando serve davvero (cambi grossi all'interfaccia o all'accesso), non a ogni modifica.
 
 ## Stima
 
