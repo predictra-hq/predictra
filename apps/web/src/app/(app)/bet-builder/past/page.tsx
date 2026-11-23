@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Circle, X } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { shareProps } from "@/components/community/share-labels";
+import { ShareSlip } from "@/components/community/share-slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
@@ -104,6 +106,20 @@ export default async function PastSlipsPage() {
                           </li>
                         ))}
                       </ul>
+                      <div className="mt-3">
+                        <ShareSlip
+                          {...shareProps({
+                            title: `${profiles[b.bolletta.profile]} · ${p.outcome[b.outcome]}`,
+                            picks: b.legs.map((l) => ({
+                              match: `${l.pick.home} – ${l.pick.away}${l.score ? ` ${l.score}` : ""}`,
+                              pick: pickLabel(l.pick),
+                              price: l.pick.price,
+                            })),
+                            price: b.bolletta.price,
+                            probability: b.bolletta.probability,
+                          })}
+                        />
+                      </div>
                     </Card>
                   </li>
                 ))}

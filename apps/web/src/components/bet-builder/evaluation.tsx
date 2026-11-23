@@ -22,6 +22,7 @@ export function EvaluationPanel({ evaluation }: { evaluation: Evaluation }) {
           price={evaluation.price}
           expectedValue={evaluation.expectedValue}
           confidence={evaluation.confidence}
+          compact
         />
       ) : (
         <Alert tone="negative">{m.notModellable}</Alert>

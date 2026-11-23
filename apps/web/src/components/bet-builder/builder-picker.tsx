@@ -92,7 +92,8 @@ function Choices({
 /**
  * Scelta delle giocate di Costruisci: partite divise per campionato, una giocata per
  * partita (toccarla di nuovo la toglie). Ogni scelta aggiorna l'indirizzo e la pagina
- * ricalcola la valutazione sul server; la barra in basso resta sempre visibile.
+ * ricalcola la valutazione sul server. Sul telefono una barra in basso resta sempre
+ * visibile e porta alla Valutazione; sul computer la Valutazione è già a fianco.
  */
 export function BuilderPicker({
   groups,
@@ -196,8 +197,9 @@ export function BuilderPicker({
         </details>
       ))}
 
-      {/* Barra sempre visibile: sopra la barra di navigazione sul telefono. */}
-      <div className="sticky bottom-[calc(4.5rem+max(env(safe-area-inset-bottom),0.375rem))] z-10 lg:bottom-4 lg:mr-20">
+      {/* Barra sempre visibile sul telefono, sopra la barra di navigazione. Sul computer
+          non serve: la Valutazione a destra si aggiorna da sola. */}
+      <div className="sticky bottom-[calc(4.5rem+max(env(safe-area-inset-bottom),0.375rem))] z-10 lg:hidden">
         <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface/95 p-3 shadow-lg backdrop-blur">
           <div className="min-w-0 flex-1" aria-live="polite">
             <p className="text-sm font-semibold">

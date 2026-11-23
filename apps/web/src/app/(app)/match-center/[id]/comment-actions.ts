@@ -13,7 +13,7 @@ function parseMatchId(raw: FormDataEntryValue | null): number | null {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
-/** Pubblica un commento. La maggiore età e i limiti li ricontrolla il database (RLS e trigger). */
+/** Pubblica un commento. Utente attivo e limiti li ricontrolla il database (RLS e trigger). */
 export async function addComment(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const m = getMessages().comments;
   await requireUser();
@@ -25,7 +25,6 @@ export async function addComment(_prev: ActionState, formData: FormData): Promis
   const { error } = await supabase.from("match_comments").insert({ match_id: matchId, body });
   if (error) {
     if (error.message.includes(COMMENT_RATE_LIMIT)) return { ok: false, message: m.rateLimited };
-    if (error.code === "42501") return { ok: false, message: m.adultsOnly };
     return { ok: false, message: getMessages().common.genericError };
   }
   revalidatePath(`/match-center/${matchId}`);

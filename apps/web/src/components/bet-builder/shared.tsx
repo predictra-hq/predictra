@@ -116,15 +116,18 @@ export function Metrics({
   price,
   expectedValue,
   confidence,
+  compact = false,
 }: {
   probability: number | null;
   price: number | null;
   expectedValue: number | null;
   confidence: number | null;
+  /** In una colonna stretta (Valutazione di Costruisci): sempre due per riga. */
+  compact?: boolean;
 }) {
   const m = getMessages().betBuilder;
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className={compact ? "grid grid-cols-2 gap-2" : "grid grid-cols-2 gap-2 sm:grid-cols-4"}>
       <Metric label={m.probability} value={formatPercent(probability)} />
       <Metric label={m.combinedPrice} value={formatOdds(price)} />
       <Metric

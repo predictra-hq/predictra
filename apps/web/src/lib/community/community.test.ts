@@ -1,38 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { NAME_COLORS } from "@predictra/shared-types";
-import {
-  ageOn,
-  isAdult,
-  nameClasses,
-  parseBirthDate,
-  parseCommentBody,
-  parseNameStyle,
-  todayInRome,
-} from "./community";
-
-describe("età e maggiore età", () => {
-  it("conta gli anni compiuti, anche il giorno del compleanno", () => {
-    expect(ageOn("2008-11-17", "2026-11-17")).toBe(18);
-    expect(ageOn("2008-11-18", "2026-11-17")).toBe(17);
-    expect(ageOn("2008-12-01", "2026-11-17")).toBe(17);
-  });
-
-  it("senza data non si è maggiorenni", () => {
-    expect(isAdult(null, "2026-11-17")).toBe(false);
-    expect(isAdult("1990-01-01", "2026-11-17")).toBe(true);
-    expect(isAdult("2010-01-01", "2026-11-17")).toBe(false);
-  });
-});
+import { nameClasses, parseCommentBody, parseNameStyle, todayInRome } from "./community";
 
 describe("dati dei moduli", () => {
-  it("accetta solo date vere, non nel futuro e dal 1900", () => {
-    expect(parseBirthDate("1990-05-10", "2026-11-17")).toBe("1990-05-10");
-    expect(parseBirthDate("1990-02-30", "2026-11-17")).toBeNull();
-    expect(parseBirthDate("2027-01-01", "2026-11-17")).toBeNull();
-    expect(parseBirthDate("1899-12-31", "2026-11-17")).toBeNull();
-    expect(parseBirthDate("10/05/1990", "2026-11-17")).toBeNull();
-  });
-
   it("testo del commento tra 1 e 500 caratteri, senza spazi ai bordi", () => {
     expect(parseCommentBody("  ciao  ")).toBe("ciao");
     expect(parseCommentBody("   ")).toBeNull();

@@ -1,6 +1,7 @@
 import "server-only";
 import type {
-  BirthdayTodayRow,
+  CommunityChannel,
+  CommunityPostRow,
   MatchCommentFeedRow,
   NameColor,
   NameStyle,
@@ -14,25 +15,18 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 export interface OwnCommunityProfile {
-  birthDate: string | null;
-  showBirthday: boolean;
   nameColor: NameColor | null;
   nameStyle: NameStyle | null;
 }
 
 export async function getOwnCommunityProfile(userId: string): Promise<OwnCommunityProfile> {
   const supabase = await createClient();
-  const [{ data: birthday }, { data: profile }] = await Promise.all([
-    supabase
-      .from("user_birthdays")
-      .select("birth_date, show_birthday")
-      .eq("user_id", userId)
-      .maybeSingle(),
-    supabase.from("profiles").select("name_color, name_style").eq("id", userId).maybeSingle(),
-  ]);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name_color, name_style")
+    .eq("id", userId)
+    .maybeSingle();
   return {
-    birthDate: (birthday?.birth_date as string | undefined) ?? null,
-    showBirthday: Boolean(birthday?.show_birthday),
     nameColor: (profile?.name_color as NameColor | null) ?? null,
     nameStyle: (profile?.name_style as NameStyle | null) ?? null,
   };
@@ -44,15 +38,22 @@ export async function listMatchComments(matchId: number): Promise<MatchCommentFe
   return error ? null : ((data ?? []) as MatchCommentFeedRow[]);
 }
 
-export async function listBirthdaysToday(): Promise<BirthdayTodayRow[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("birthdays_today");
-  return error ? [] : ((data ?? []) as BirthdayTodayRow[]);
-}
-
-/** Ultimi commenti di tutte le partite (pagina Discussioni); null se la lettura fallisce. */
+/** Ultimi commenti di tutte le partite (chat Partite della Comunità); null se la lettura fallisce. */
 export async function listRecentComments(limit = 50): Promise<RecentCommentRow[] | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("recent_comment_feed", { p_limit: limit });
   return error ? null : ((data ?? []) as RecentCommentRow[]);
+}
+
+/** Messaggi di una chat della comunità, dal più recente; null se la lettura fallisce. */
+export async function listCommunityPosts(
+  channel: CommunityChannel,
+  limit = 50,
+): Promise<CommunityPostRow[] | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("community_feed", {
+    p_channel: channel,
+    p_limit: limit,
+  });
+  return error ? null : ((data ?? []) as CommunityPostRow[]);
 }

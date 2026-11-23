@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { X } from "lucide-react";
 import {
   BuilderPicker,
   type BuilderGroup,
   type BuilderMarket,
 } from "@/components/bet-builder/builder-picker";
 import { EvaluationPanel } from "@/components/bet-builder/evaluation";
+import { ShareSlip } from "@/components/community/share-slip";
+import { shareProps } from "@/components/community/share-labels";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, EmptyState, Field, Input, PageHeader } from "@/components/ui/primitives";
@@ -62,6 +65,13 @@ function marketsOf(o: ManualOption): { main: BuilderMarket; more: BuilderMarket[
   return { main, more };
 }
 
+/** Indirizzo di Costruisci con queste giocate scelte. */
+function builderHref(keys: string[]): string {
+  const params = new URLSearchParams(keys.map((k) => ["s", k]));
+  const query = params.toString();
+  return query ? `/bet-builder/builder?${query}` : "/bet-builder/builder";
+}
+
 export default async function BuilderPage({ searchParams }: PageProps<"/bet-builder/builder">) {
   await requireUser();
   const m = getMessages().betBuilder;
@@ -110,6 +120,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
           <BuilderPicker
+            key={chosenKeys.join(",")}
             groups={groups}
             initial={selected.map(selectionKey)}
             summary={summary}
@@ -129,15 +140,70 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
           >
             <Card>
               <CardTitle className="mb-3">{m.evaluation}</CardTitle>
-              <ul className="mb-3 flex flex-col gap-1 text-sm">
-                {selected.map((x) => (
-                  <li key={selectionKey(x)}>
-                    {x.homeTeam} – {x.awayTeam} ·{" "}
-                    {selectionLabel(x.selection, x.homeTeam, x.awayTeam, x.market, x.line)}
-                  </li>
-                ))}
-              </ul>
+              {selected.length > 0 ? (
+                <>
+                  <ul className="mb-2 flex flex-col divide-y divide-border">
+                    {selected.map((x) => {
+                      const key = selectionKey(x);
+                      const pick = selectionLabel(
+                        x.selection,
+                        x.homeTeam,
+                        x.awayTeam,
+                        x.market,
+                        x.line,
+                      );
+                      return (
+                        <li key={key} className="flex items-start gap-2 py-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold">{pick}</p>
+                            <p className="truncate text-xs text-muted">
+                              {x.homeTeam} – {x.awayTeam} · {formatDateTime(x.kickoffAt)}
+                            </p>
+                          </div>
+                          <span className="shrink-0 pt-0.5 text-right text-xs tabular-nums text-muted">
+                            {fillTemplate(m.builderPickDetail, {
+                              p: x.probability === null ? "–" : formatPercent(x.probability, 0),
+                              price: x.price === null ? "–" : formatOdds(x.price),
+                            })}
+                          </span>
+                          <Link
+                            href={builderHref(chosenKeys.filter((k) => k !== key))}
+                            scroll={false}
+                            aria-label={fillTemplate(m.builderRemove, { pick })}
+                            className="-mr-1 shrink-0 rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
+                          >
+                            <X size={16} aria-hidden="true" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <Link
+                    href="/bet-builder/builder"
+                    scroll={false}
+                    className="mb-4 inline-block text-xs font-medium text-negative-strong hover:underline"
+                  >
+                    {m.builderClearAll}
+                  </Link>
+                </>
+              ) : null}
               <EvaluationPanel evaluation={evaluation} />
+              {selected.length > 0 ? (
+                <div className="mt-4">
+                  <ShareSlip
+                    {...shareProps({
+                      title: m.builderShareTitle,
+                      picks: selected.map((x) => ({
+                        match: `${x.homeTeam} – ${x.awayTeam}`,
+                        pick: selectionLabel(x.selection, x.homeTeam, x.awayTeam, x.market, x.line),
+                        price: x.price,
+                      })),
+                      price: evaluation.price,
+                      probability: evaluation.probability,
+                    })}
+                  />
+                </div>
+              ) : null}
             </Card>
             {selected.length > 0 ? (
               <Card>

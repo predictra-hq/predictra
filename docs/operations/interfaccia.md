@@ -254,3 +254,12 @@ Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `land
 - **Il video non cambia più dimensione:** le quattro scene stanno una sopra l'altra nella stessa cella e si vede solo quella attiva, quindi il riquadro ha sempre l'altezza della più alta. Prima ogni scena aveva la sua altezza e spostava tutta la pagina. Verificato in anteprima locale: altezza identica nelle quattro scene, su computer e su telefono.
 - Nessuna promessa di vincita e nessun numero reale: le scene restano con dati `DEMO`. Sul costo la pagina dice solo ciò che è vero oggi: dentro PREDICTRA non si compra nulla e l'accesso è su invito.
 - In fondo l'avvertenza sul gioco: vietato ai minori di 18 anni, il gioco può causare dipendenza.
+
+## 23/11/2026: Comunità, profilo pubblico, Costruisci più chiaro
+
+- **Comunità** (`/community`, gruppo Home, ADR 0064): chat Generale, Schedine e Partite. La vecchia `/discussions` reindirizza alla chat Partite. Ogni messaggio mostra immagine, nome e stile di chi scrive.
+- **Condividi** nelle schedine consigliate, nelle Passate e nella Valutazione di Costruisci: nella chat Schedine oppure in altre app (condivisione del telefono, altrimenti copia del testo).
+- **Niente data di nascita**: tolti il riquadro, il compleanno in Home e lo sblocco dei commenti. Scrivono tutti gli iscritti attivi.
+- **Immagine del profilo come il logo**: stesso quadrato, stessa linea e stesso pallone, in cinque versioni.
+- **Profilo**: una voce per pagina (Il tuo profilo, Accesso e sicurezza, Preferenze). Il tuo profilo mostra in alto come ti vedono gli altri.
+- **Costruisci**: sul computer niente barra in basso, la Valutazione a destra si aggiorna da sola. Ogni giocata ha l'esito in grassetto, sotto partita e data, e una × per toglierla; «Togli tutte» svuota la schedina. Sul telefono la barra resta, sopra la navigazione.

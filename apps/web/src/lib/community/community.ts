@@ -1,5 +1,4 @@
 import {
-  ADULT_AGE,
   COMMENT_MAX_LENGTH,
   isNameColor,
   isNameStyle,
@@ -8,32 +7,10 @@ import {
 } from "@predictra/shared-types";
 
 /**
- * Comunità (ADR 0058): maggiore età dichiarata, stile del nome, testo dei commenti.
+ * Comunità (ADR 0058, 0064): stile del nome e testo dei messaggi.
  * Le stesse regole sono nel database (`20261117190000_community.sql`): qui servono per
  * mostrare l'interfaccia giusta e messaggi chiari prima di scrivere.
  */
-
-/** Età compiuta alla data `today` (entrambe `AAAA-MM-GG`). */
-export function ageOn(birthDate: string, today: string): number {
-  const [by, bm, bd] = birthDate.split("-").map(Number) as [number, number, number];
-  const [ty, tm, td] = today.split("-").map(Number) as [number, number, number];
-  const hadBirthday = tm > bm || (tm === bm && td >= bd);
-  return ty - by - (hadBirthday ? 0 : 1);
-}
-
-/** Maggiorenne dichiarato: almeno 18 anni compiuti oggi. Senza data, no. */
-export function isAdult(birthDate: string | null | undefined, today: string): boolean {
-  return Boolean(birthDate) && ageOn(birthDate!, today) >= ADULT_AGE;
-}
-
-/** Data di nascita dal modulo: valida, non nel futuro, non prima del 1900. */
-export function parseBirthDate(raw: unknown, today: string): string | null {
-  if (typeof raw !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
-  const date = new Date(`${raw}T00:00:00Z`);
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== raw) return null;
-  if (raw < "1900-01-01" || raw > today) return null;
-  return raw;
-}
 
 /** Testo del commento: spazi ai bordi tolti; vuoto o troppo lungo non vale. */
 export function parseCommentBody(raw: unknown): string | null {
