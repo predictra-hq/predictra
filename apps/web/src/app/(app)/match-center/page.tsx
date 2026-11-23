@@ -7,7 +7,7 @@ import { MatchStatusBadge, ProviderAttribution } from "@/components/football/bad
 import { FilterForm } from "@/components/ui/filter-form";
 import { Button, Card, EmptyState, Field, PageHeader, Select } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { strongestPicks } from "@/lib/certainties/load";
+import { CERTAINTY_FROM, strongestPicks } from "@/lib/certainties/load";
 import type { Pick } from "@/lib/certainties/logic";
 import { FavoriteCompetitionButton } from "@/components/football/favorite-button";
 import { chooseCompetition } from "@/lib/football/favorite";
@@ -47,11 +47,24 @@ async function StrongestLine({ idsKey, matchId }: { idsKey: string; matchId: num
 }
 
 function StrongestPick({ pick }: { pick: Pick | undefined }) {
-  if (!pick) return <span className="text-subtle">–</span>;
+  const mc = getMessages().matchCenter;
+  // Senza previsione: partita oltre l'orizzonte del modello, già iniziata o con squadre
+  // senza storico sufficiente.
+  if (!pick)
+    return (
+      <span className="text-subtle" title={mc.noPickHint}>
+        –
+      </span>
+    );
+  const certain = pick.probability >= CERTAINTY_FROM;
   return (
-    <span className="whitespace-nowrap">
+    <span className="whitespace-nowrap" title={certain ? undefined : mc.weakPickHint}>
       {pickLabel(pick)}{" "}
-      <span className="font-mono font-semibold text-positive-strong">
+      <span
+        className={
+          certain ? "font-mono font-semibold text-positive-strong" : "font-mono text-muted"
+        }
+      >
         {formatPercent(pick.probability, 0)}
       </span>
     </span>

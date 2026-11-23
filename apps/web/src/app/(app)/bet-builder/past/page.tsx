@@ -2,16 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Circle, X } from "lucide-react";
 import { pickLabel } from "@/components/bet-builder/likely";
+import { listCompetitions } from "@/lib/football/queries";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
-import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
+import { Ticket, TicketLeg, TicketTotals, whenAndWhere } from "@/components/bet-builder/ticket";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { formatRound } from "@/lib/bet-builder/format";
 import { loadPastRounds } from "@/lib/bet-builder/past-load";
 import type { PastOutcome } from "@/lib/bet-builder/past";
-import { formatDateTime, getMessages } from "@/lib/i18n";
+import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
 export const metadata: Metadata = { title: "Passate — Schedine" };
@@ -28,7 +29,11 @@ export default async function PastSlipsPage() {
   const m = getMessages().betBuilder;
   const p = m.past;
   const profiles = m.bollette.profiles;
-  const rounds = await loadPastRounds();
+  const [rounds, competitionList] = await Promise.all([
+    loadPastRounds(),
+    listCompetitions().catch(() => []),
+  ]);
+  const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
 
   return (
     <>
@@ -49,7 +54,7 @@ export default async function PastSlipsPage() {
                   ? p.summaryNone
                   : fillTemplate(p.summary, { won: r.won, settled: r.settled })}
               </p>
-              <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {r.bollette.map((b) => (
                   <li key={`${b.bolletta.profile}-${b.bolletta.round}`}>
                     <Ticket
@@ -86,7 +91,7 @@ export default async function PastSlipsPage() {
                       {b.legs.map((l) => (
                         <TicketLeg
                           key={`${l.pick.matchId}-${l.pick.market}-${l.pick.selection}`}
-                          time={formatDateTime(l.pick.kickoffAt)}
+                          time={whenAndWhere(l.pick, competitions)}
                           match={
                             <Link
                               href={`/match-center/${l.pick.matchId}`}

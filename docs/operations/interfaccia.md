@@ -274,3 +274,12 @@ Versione **1.4.0** (passaggio in produzione). ADR 0065.
 - **Campionati e Squadre** in una sezione: Squadre è una scheda interna di Campionati (`components/football/leagues-nav.tsx`) e non è più una voce del menu. L'indirizzo `/teams` non cambia.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV, anche da telefono: biglietti delle schedine (tacche dello strappo su sfondo chiaro e scuro), schede di Calcio con lo Spogliatoio, schede Classifiche/Squadre.
+
+## 23/11/2026, sera: versione 1.4.1
+
+- **Spogliatoio come una chat** (`components/community/chat.tsx`, `chat-composer.tsx`): bolle, ultimo messaggio in basso (`flex-col-reverse`, la chat si apre già in fondo senza codice nel browser), campo per scrivere fisso sotto. Schedine condivise come biglietti.
+- **Home:** la card dello Spogliatoio mostra al massimo tre messaggi su una riga ciascuno, senza la scritta «Entra»: basta la freccia.
+- **Certezze:** riquadri più piccoli, al massimo 4 per riga (da 1536 px). **Schedine** (consigliate, Passate, proposte, multiple più probabili, salvate): al massimo 4 per riga, campionato accanto all'orario.
+- **Partite:** colonna «Giocata più probabile», in grigio sotto il 70%. **Data Center:** spiegazione di ogni controllo di qualità.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: altezza della chat su telefono con la tastiera aperta, invio con Invio su computer.

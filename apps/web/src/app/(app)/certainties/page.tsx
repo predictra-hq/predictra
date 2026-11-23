@@ -153,13 +153,13 @@ async function CertaintiesContent() {
                     : fillTemplate(c.competitionCount, { count: String(group.matches.length) })}
                 </span>
               </summary>
-              <ul className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {group.matches.map((match) => (
                   <li key={match.matchId}>
-                    <Card className="h-full">
+                    <Card className="h-full p-4 sm:p-4">
                       <Link
                         href={`/match-center/${match.matchId}`}
-                        className="block font-medium hover:underline"
+                        className="block text-sm font-semibold leading-snug hover:underline"
                       >
                         {match.home} – {match.away}
                       </Link>
@@ -232,7 +232,7 @@ export default async function CertaintiesPage() {
       <PageHeader title={c.title} description={c.description} />
       <Suspense
         fallback={
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />

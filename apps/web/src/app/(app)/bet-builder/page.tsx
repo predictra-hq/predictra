@@ -43,6 +43,11 @@ import { hasPermission } from "@predictra/shared-types";
 
 export const metadata: Metadata = { title: "Schedine" };
 
+/** Nome del modello per chi legge (es. «Dixon-Coles»), senza la versione. */
+function modelName(key: string): string {
+  return (getMessages().modelIntelligence.modelNames as Record<string, string>)[key] ?? key;
+}
+
 function ProposalCard({
   p,
   legs,
@@ -91,7 +96,7 @@ function ProposalCard({
           <p className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
             <span>
               {fillTemplate(m.oddsUpdated, { at: formatDateTime(p.odds_observed_at) })}
-              {technical ? ` · ${m.model}: ${p.model_key} ${p.model_version}` : ""}
+              {technical ? ` · ${m.model}: ${modelName(p.model_key)}` : ""}
             </span>
             <Link
               href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
@@ -249,7 +254,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                           {m.categories[c]}{" "}
                           <span className="font-normal text-muted">({m.categoryHints[c]})</span>
                         </h3>
-                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                           {group.map((p) => (
                             <ProposalCard
                               key={p.proposal_id}

@@ -191,7 +191,7 @@ export default async function DataCenterPage() {
               <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
                 <tr>
                   <Th>{d.severity}</Th>
-                  <Th>{d.check}</Th>
+                  <Th>{d.issueMeaning}</Th>
                   <Th>{d.entity}</Th>
                   <Th>{d.lastSeen}</Th>
                 </tr>
@@ -202,7 +202,12 @@ export default async function DataCenterPage() {
                     <td className="px-4 py-3">
                       <Badge tone={severityTone(i.severity)}>{d.issueSeverity[i.severity]}</Badge>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">{i.check_code}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <span className="block">{d.issueChecks[i.check_code] ?? i.check_code}</span>
+                      <span className="block font-mono text-[11px] text-subtle">
+                        {i.check_code}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 font-mono text-xs text-muted">
                       {i.entity_type === "match" && i.entity_id ? (
                         <Link href={`/match-center/${i.entity_id}`} className="hover:text-fg">

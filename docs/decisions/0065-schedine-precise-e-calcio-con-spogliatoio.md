@@ -45,3 +45,13 @@
 - Le Passate si ricostruiscono con le regole attuali (ADR 0062). Dal 23/11/2026 mostrano quindi quello che le nuove regole avrebbero proposto nei turni già giocati: è una prova delle regole, non lo storico di quanto mostrato allora.
 - Finché il backtest non ha le celle della versione 2, le schedine usano la probabilità senza correzione. Il backtest si rifà al primo ciclo del motore dopo il rilascio.
 - Possono esserci turni con meno schedine o meno proposte: meglio nessuna che una debole.
+
+## Aggiornamento (23/11/2026, sera, versione 1.4.1)
+
+- **Spogliatoio come una chat:** messaggi in bolle (i tuoi a destra in verde), il più recente in basso, campo per scrivere fisso sotto. Invio manda, Maiusc+Invio va a capo. Le schedine condivise usano lo stesso biglietto delle schedine.
+- **Schedine:** campionato accanto all'orario di ogni partita. Anche le multiple più probabili sono biglietti. Al massimo 4 per riga in tutte le viste. Il modello si indica solo per nome.
+- **Partite:** per ogni partita con una previsione c'è la giocata più probabile, dal 50%. Sotto il 70% è scritta in grigio, perché non è una certezza. Senza previsione la partita è oltre i 10 giorni, è già iniziata o una squadra non ha storico sufficiente.
+- **Salute delle fonti:**
+  - la soglia di freschezza delle partite di football-data.org passa da 6 a 10 ore (migrazione `20261123120000`). Con tre giri al giorno tra due raccolte passano fino a 9 ore, e la fonte risultava «degradata» anche con l'ultima raccolta riuscita;
+  - il collector chiude da solo tutti i controlli sulle partite quando una partita torna senza quel problema, compresi i turni a eliminazione diretta senza squadre (`match.teams_undefined`), che prima restavano aperti per sempre;
+  - il Data Center spiega ogni controllo in italiano.

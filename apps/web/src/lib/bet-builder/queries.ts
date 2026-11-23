@@ -307,7 +307,7 @@ export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
         supabase
           .from("v_active_predictions")
           .select(
-            "match_id, kickoff_at, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+            "match_id, kickoff_at, competition_id, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
           )
           .in("match_id", chunk)
           .in("market", Object.keys(LIKELY_MARKETS))

@@ -217,6 +217,7 @@ export function playablePicks(
     const pick: LikelyPick = {
       matchId: Number(r.match_id),
       kickoffAt: r.kickoff_at,
+      competitionId: r.competition_id ?? null,
       home: r.home_team_name,
       away: r.away_team_name,
       market: r.market,

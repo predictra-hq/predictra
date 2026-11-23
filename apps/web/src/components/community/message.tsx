@@ -3,38 +3,44 @@ import type { SharedSlip } from "@predictra/shared-types";
 import { StyledName } from "@/components/community/styled-name";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { formatOdds, formatPercent } from "@/lib/odds/format";
+import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
 
-/** Schedina condivisa: titolo, una riga per partita, quota e probabilità. */
+/** Schedina condivisa: lo stesso biglietto delle schedine di PREDICTRA (ADR 0065). */
 export function SlipSummary({ slip }: { slip: SharedSlip }) {
-  const m = getMessages().community;
+  const m = getMessages();
   return (
-    <div className="mt-2 rounded-xl border border-border bg-surface-2 p-3">
-      <p className="text-sm font-semibold">{slip.title}</p>
-      <ul className="mt-1.5 flex flex-col gap-1 text-sm">
-        {slip.picks.map((p, i) => (
-          <li key={i} className="flex items-baseline justify-between gap-3">
-            <span className="min-w-0">
-              <span className="block font-medium">{p.pick}</span>
-              <span className="block truncate text-xs text-muted">{p.match}</span>
-            </span>
-            {p.price ? <span className="shrink-0 tabular-nums">{formatOdds(p.price)}</span> : null}
-          </li>
-        ))}
-      </ul>
-      {slip.price || slip.probability ? (
-        <p className="mt-2 border-t border-border pt-2 text-xs text-muted">
-          {[
-            slip.price ? fillTemplate(m.slipPrice, { price: formatOdds(slip.price) }) : null,
-            slip.probability
-              ? fillTemplate(m.slipProbability, { p: formatPercent(slip.probability, 0) })
-              : null,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      ) : null}
-    </div>
+    <Ticket
+      className="mt-2"
+      title={slip.title}
+      totals={
+        slip.price ? (
+          <TicketTotals
+            priceLabel={m.betBuilder.bollette.totalOdds}
+            price={formatOdds(slip.price)}
+            items={
+              slip.probability
+                ? [
+                    {
+                      label: m.betBuilder.bollette.winProbability,
+                      value: formatPercent(slip.probability, 0),
+                    },
+                  ]
+                : []
+            }
+          />
+        ) : undefined
+      }
+    >
+      {slip.picks.map((p, i) => (
+        <TicketLeg
+          key={i}
+          match={p.match}
+          pick={p.pick}
+          price={p.price ? formatOdds(p.price) : "–"}
+        />
+      ))}
+    </Ticket>
   );
 }
 
