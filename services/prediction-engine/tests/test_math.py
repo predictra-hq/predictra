@@ -152,3 +152,11 @@ def test_over_25_meno_estremo_della_matrice():
 
     assert _calibrate(0.2, OVER_25_SLOPE, OVER_25_SHIFT) > 0.2
     assert _calibrate(0.85, OVER_25_SLOPE, OVER_25_SHIFT) < 0.85
+
+
+def test_under_35_meno_sicuro_della_matrice():
+    """ADR 0063: l'under 3,5 della matrice era troppo sicuro; tarato scende."""
+    from predictra_engine.markets import OVER_35_SHIFT, OVER_35_SLOPE, _calibrate
+
+    over = 0.22  # under 3,5 al 78% secondo la matrice
+    assert 1 - _calibrate(over, OVER_35_SLOPE, OVER_35_SHIFT) < 0.75
