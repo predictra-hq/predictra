@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Logo } from "@/components/shell/logo";
-import { getMessages } from "@/lib/i18n";
+import { formatDateTime, getMessages } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /*
@@ -74,7 +74,7 @@ export function TicketLeg({
   note,
   status,
 }: {
-  time: ReactNode;
+  time?: ReactNode;
   match: ReactNode;
   pick: ReactNode;
   price: ReactNode;
@@ -87,7 +87,9 @@ export function TicketLeg({
   return (
     <li className="flex items-start gap-3 border-b border-dotted border-border py-2.5 last:border-b-0">
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[11px] uppercase tracking-wide text-subtle">{time}</p>
+        {time ? (
+          <p className="font-mono text-[11px] uppercase tracking-wide text-subtle">{time}</p>
+        ) : null}
         <div className="truncate text-sm font-medium">{match}</div>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="rounded-md border border-positive/40 bg-positive-soft px-1.5 py-0.5 text-xs font-semibold text-positive-strong">
@@ -140,4 +142,13 @@ export function TicketTotals({
       </div>
     </div>
   );
+}
+
+/** "24/11/26, 18:45 · Serie A": orario e campionato della partita. */
+export function whenAndWhere(
+  p: { kickoffAt: string; competitionId?: number | null },
+  competitions: ReadonlyMap<number, string>,
+): string {
+  const name = p.competitionId ? competitions.get(p.competitionId) : undefined;
+  return name ? `${formatDateTime(p.kickoffAt)} · ${name}` : formatDateTime(p.kickoffAt);
 }

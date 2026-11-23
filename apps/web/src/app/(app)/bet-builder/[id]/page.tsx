@@ -84,7 +84,10 @@ export default async function ProposalPage({
         </p>
         {technical ? (
           <p className="text-xs text-muted">
-            {m.model}: {proposal.model_key} {proposal.model_version}
+            {m.model}:{" "}
+            {(getMessages().modelIntelligence.modelNames as Record<string, string>)[
+              proposal.model_key
+            ] ?? proposal.model_key}
             {proposal.rules_version ? ` · ${m.rulesVersion}: ${proposal.rules_version}` : ""} ·{" "}
             {m.generatedAt} {formatDateTime(proposal.created_at)}
           </p>

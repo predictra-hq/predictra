@@ -332,7 +332,8 @@ describe("viste", () => {
       const fresh = await insertMatch(tx, d, { kickoffHours: 48 });
       const stale = await insertMatch(tx, d, {
         kickoffHours: 72,
-        observedHoursAgo: 7,
+        // Oltre le 10 ore di freschezza delle partite (migrazione 20261123120000).
+        observedHoursAgo: 11,
       });
       const oldFinished = await insertMatch(tx, d, {
         status: "FINISHED",

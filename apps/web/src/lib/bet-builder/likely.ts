@@ -42,6 +42,8 @@ export const MULTIPLE_MIN_PROBABILITY: Readonly<Record<BetProposalCategory, numb
 export interface LikelyRow {
   match_id: number;
   kickoff_at: string;
+  /** Campionato della partita, per mostrarlo sotto le squadre. */
+  competition_id?: number | null;
   home_team_name: string;
   away_team_name: string;
   market: string;
@@ -54,6 +56,7 @@ export interface LikelyRow {
 export interface LikelyPick {
   matchId: number;
   kickoffAt: string;
+  competitionId?: number | null;
   home: string;
   away: string;
   market: string;
@@ -186,6 +189,7 @@ export function bestPicks(rows: readonly LikelyRow[]): LikelyPick[] {
     best.set(id, {
       matchId: id,
       kickoffAt: r.kickoff_at,
+      competitionId: r.competition_id ?? null,
       home: r.home_team_name,
       away: r.away_team_name,
       market: r.market,

@@ -328,3 +328,14 @@ def test_suggerimento_nel_lotto():
     by_name = {t["name"]: t for t in norm.batch["teams"]}
     assert by_name["Wydad AC"]["same_as_team_id"] == 42
     assert "same_as_team_id" not in by_name["Rapide Oued ZEM"]
+
+
+def test_adr_0065_si_chiude_anche_il_turno_senza_squadre():
+    from predictra_collector.runner import MATCH_CHECKS
+
+    batch = {"matches": [{"provider_id": "1"}, {"provider_id": "2"}]}
+    issues = [
+        {"entity_type": "match", "check_code": "match.teams_undefined", "provider_entity_id": "2"}
+    ]
+    assert "match.teams_undefined" in MATCH_CHECKS
+    assert resolvable_matches(batch, issues) == ["1"]

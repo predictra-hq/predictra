@@ -83,6 +83,17 @@ jobs:
         if: steps.config.outputs.ready == 'true'
         with:
           ref: ${{ inputs.ref }}
+          # Storia completa di main e dev: serve al numero di versione (ADR 0066).
+          fetch-depth: 0
+
+      - name: Versione del sito (automatica per ambiente)
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          # PROD: la cifra di mezzo sale a ogni merge su main. DEV: l'ultima cifra conta i
+          # commit di dev non ancora in produzione (ADR 0066). Niente commit di versione.
+          release=$(scripts/release/version.sh "$DEPLOY_ENV")
+          echo "APP_RELEASE=$release" >> "$GITHUB_ENV"
+          echo "Versione ${DEPLOY_ENV}: v$release" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: supabase/setup-cli@v3
         if: steps.config.outputs.ready == 'true'
