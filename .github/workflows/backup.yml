@@ -7,8 +7,10 @@ name: Backup
 # Schedule e pulsante esistono solo quando questo file è anche su main.
 # Runbook: docs/operations/backup-restore.md
 
+# PR e push solo su dev (ADR 0061): il passaggio dev → main non ripete gli stessi controlli.
 on:
   pull_request:
+    branches: [dev]
     paths:
       - "scripts/backup/**"
       - ".github/workflows/backup.yml"

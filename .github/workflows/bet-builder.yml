@@ -8,14 +8,16 @@ name: Bet Builder
 #   `main` ed esegue il codice del branch scelto.
 # Runbook: docs/operations/bet-builder.md
 
+# PR e push solo su dev (ADR 0061): il passaggio dev → main non ripete gli stessi controlli.
 on:
   pull_request:
+    branches: [dev]
     paths:
       - "services/bet-builder/**"
       - "packages/shared-types/src/bet-builder.ts"
       - ".github/workflows/bet-builder.yml"
   push:
-    branches: [dev, main]
+    branches: [dev]
     paths:
       - "services/bet-builder/**"
       - "packages/shared-types/src/bet-builder.ts"

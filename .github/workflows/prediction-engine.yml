@@ -8,13 +8,15 @@ name: Prediction engine
 #   file è su `main` ed esegue il codice del branch scelto.
 # Runbook: docs/operations/prediction-engine.md
 
+# PR e push solo su dev (ADR 0061): il passaggio dev → main non ripete gli stessi controlli.
 on:
   pull_request:
+    branches: [dev]
     paths:
       - "services/prediction-engine/**"
       - ".github/workflows/prediction-engine.yml"
   push:
-    branches: [dev, main]
+    branches: [dev]
     paths:
       - "services/prediction-engine/**"
       - ".github/workflows/prediction-engine.yml"
