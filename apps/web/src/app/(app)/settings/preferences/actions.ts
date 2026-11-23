@@ -9,7 +9,7 @@ import { getMessages, LOCALES } from "@/lib/i18n";
 import { ALERT_COOKIE, parseAlertThreshold } from "@/lib/alerts";
 import { createClient } from "@/lib/supabase/server";
 import { isAvatarStyle } from "@predictra/shared-types";
-import { isAdult, parseBirthDate, parseNameStyle, todayInRome } from "@/lib/community/community";
+import { parseNameStyle } from "@/lib/community/community";
 
 const timezones = new Set(Intl.supportedValuesOf("timeZone"));
 
@@ -72,38 +72,6 @@ export async function setAlertThreshold(formData: FormData): Promise<void> {
   });
   revalidatePath("/dashboard");
   revalidatePath("/settings/preferences");
-}
-
-/** Data di nascita (ADR 0058): solo il proprietario la legge; il database ricontrolla la data. */
-export async function saveBirthday(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const m = getMessages();
-  const user = await requireUser();
-  const birthDate = parseBirthDate(formData.get("birthDate"), todayInRome());
-  if (!birthDate) return { ok: false, message: m.preferences.birthdayInvalid };
-  const supabase = await createClient();
-  const { error } = await supabase.from("user_birthdays").upsert({
-    user_id: user.id,
-    birth_date: birthDate,
-    show_birthday: formData.get("showBirthday") === "on",
-  });
-  if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/", "layout");
-  return {
-    ok: true,
-    message: isAdult(birthDate, todayInRome())
-      ? m.preferences.birthdaySavedUnlocked
-      : m.preferences.birthdaySaved,
-  };
-}
-
-export async function removeBirthday(): Promise<ActionState> {
-  const m = getMessages();
-  const user = await requireUser();
-  const supabase = await createClient();
-  const { error } = await supabase.from("user_birthdays").delete().eq("user_id", user.id);
-  if (error) return { ok: false, message: m.common.genericError };
-  revalidatePath("/", "layout");
-  return { ok: true, message: m.preferences.birthdayRemoved };
 }
 
 /** Colore e scritta del nome, da elenchi chiusi (vincoli anche nel database). */

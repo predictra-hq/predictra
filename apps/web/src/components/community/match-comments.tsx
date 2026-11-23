@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { highestRole } from "@predictra/shared-types";
 import { COMMENT_MAX_LENGTH } from "@predictra/shared-types";
 import {
@@ -6,39 +5,20 @@ import {
   deleteComment,
   moderateComment,
 } from "@/app/(app)/match-center/[id]/comment-actions";
-import { StyledName } from "@/components/community/styled-name";
+import { Message } from "@/components/community/message";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, Label } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { isAdult, todayInRome } from "@/lib/community/community";
-import { getOwnCommunityProfile, listMatchComments } from "@/lib/community/queries";
-import { formatDateTime, getMessages } from "@/lib/i18n";
+import { listMatchComments } from "@/lib/community/queries";
+import { getMessages } from "@/lib/i18n";
 
 /**
- * Commenti sotto la partita (ADR 0058): li leggono e li scrivono solo gli utenti che hanno
- * dichiarato almeno 18 anni. Agli altri si spiega come sbloccarli.
+ * Commenti sotto la partita (ADR 0058, 0064): li leggono e li scrivono tutti gli iscritti
+ * attivi, con il nome, lo stile e l'immagine scelti nel Profilo.
  */
 export async function MatchComments({ matchId }: { matchId: number }) {
   const user = await requireUser();
   const m = getMessages().comments;
-  const own = await getOwnCommunityProfile(user.id);
-
-  if (!isAdult(own.birthDate, todayInRome())) {
-    return (
-      <Card className="mt-4">
-        <CardTitle>{m.title}</CardTitle>
-        <p className="mt-2 text-sm text-muted">{own.birthDate ? m.underAge : m.locked}</p>
-        {!own.birthDate ? (
-          <Link
-            href="/settings/account#birthday"
-            className="mt-3 inline-block text-sm font-medium text-positive-strong underline underline-offset-2"
-          >
-            {m.unlock}
-          </Link>
-        ) : null}
-      </Card>
-    );
-  }
 
   const comments = await listMatchComments(matchId);
   const role = highestRole(user.roles);
@@ -74,26 +54,29 @@ export async function MatchComments({ matchId }: { matchId: number }) {
         <ol className="mt-4 flex flex-col divide-y divide-border">
           {comments.map((c) => (
             <li key={c.id} className="py-3">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm">
-                  <StyledName name={c.author_name} color={c.name_color} style={c.name_style} />
-                  <span className="ml-2 text-xs text-subtle">{formatDateTime(c.created_at)}</span>
-                </p>
-                {c.is_own || canModerate ? (
-                  <form action={c.is_own ? deleteComment : moderateComment}>
-                    <input type="hidden" name="matchId" value={matchId} />
-                    <input type="hidden" name="commentId" value={c.id} />
-                    <SubmitButton
-                      variant="ghost"
-                      className="h-auto px-2 py-1 text-xs"
-                      confirmMessage={c.is_own ? m.deleteConfirm : m.moderateConfirm}
-                    >
-                      {c.is_own ? m.delete : m.moderate}
-                    </SubmitButton>
-                  </form>
-                ) : null}
-              </div>
-              <p className="mt-1 whitespace-pre-line break-words text-sm text-fg">{c.body}</p>
+              <Message
+                author={c.author_name}
+                avatarStyle={c.avatar_style}
+                nameColor={c.name_color}
+                nameStyle={c.name_style}
+                createdAt={c.created_at}
+                body={c.body}
+                actions={
+                  c.is_own || canModerate ? (
+                    <form action={c.is_own ? deleteComment : moderateComment}>
+                      <input type="hidden" name="matchId" value={matchId} />
+                      <input type="hidden" name="commentId" value={c.id} />
+                      <SubmitButton
+                        variant="ghost"
+                        className="h-auto px-2 py-1 text-xs"
+                        confirmMessage={c.is_own ? m.deleteConfirm : m.moderateConfirm}
+                      >
+                        {c.is_own ? m.delete : m.moderate}
+                      </SubmitButton>
+                    </form>
+                  ) : null
+                }
+              />
             </li>
           ))}
         </ol>

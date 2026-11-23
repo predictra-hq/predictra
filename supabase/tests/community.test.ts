@@ -152,30 +152,38 @@ describe("commenti alle partite", () => {
       body,
     ]);
 
-  it("li scrive e li legge solo chi ha dichiarato 18 anni", async () => {
+  it("li scrive e li legge ogni utente attivo, con nome, stile e immagine dell'autore", async () => {
+    // Dal 23/11/2026 la data di nascita non serve più (ADR 0064): l'accesso è su invito.
+    await db.query("update public.profiles set avatar_style = 'ball' where id = $1", [alice.id]);
     await asUser(db, alice, async (tx) => expect(await comment(tx, "Partita aperta")).toBeNull());
-    await asUser(db, young, async (tx) =>
-      expect(await comment(tx, "Ciao")).toMatch(/row-level security/),
-    );
+    await asUser(db, young, async (tx) => expect(await comment(tx, "Ciao")).toBeNull());
     const feed = (user: TestUser) =>
       asUser(
         db,
         user,
         async (tx) =>
           (
-            await tx.query<{ body: string; author_name: string; is_own: boolean }>(
-              "select body, author_name, is_own from public.match_comment_feed($1)",
+            await tx.query<{
+              body: string;
+              author_name: string;
+              avatar_style: string | null;
+              is_own: boolean;
+            }>(
+              "select body, author_name, avatar_style, is_own from public.match_comment_feed($1) order by body",
               [matchId],
             )
           ).rows,
       );
-    expect(await feed(bob)).toEqual([
-      { body: "Partita aperta", author_name: "Alice", is_own: false },
+    expect((await feed(bob)).map((r) => [r.body, r.is_own])).toEqual([
+      ["Ciao", false],
+      ["Partita aperta", false],
     ]);
-    expect(await feed(alice)).toEqual([
-      { body: "Partita aperta", author_name: "Alice", is_own: true },
-    ]);
-    expect(await feed(young)).toEqual([]);
+    expect((await feed(alice)).find((r) => r.body === "Partita aperta")).toEqual({
+      body: "Partita aperta",
+      author_name: "Alice",
+      avatar_style: "ball",
+      is_own: true,
+    });
   });
 
   it("dalla tabella ognuno vede e cancella solo i propri, e non li modifica", async () => {
@@ -252,7 +260,7 @@ describe("tipo di avatar e ultimi commenti", () => {
     });
   });
 
-  it("gli ultimi commenti di tutte le partite: solo maggiorenni, con le squadre, senza id autore", async () => {
+  it("gli ultimi commenti di tutte le partite: con le squadre, senza id autore", async () => {
     await asUser(db, alice, (tx) =>
       tx.query("insert into public.match_comments (match_id, body) values ($1, 'Che partita')", [
         matchId,
@@ -277,6 +285,75 @@ describe("tipo di avatar e ultimi commenti", () => {
       is_own: false,
     });
     expect(Object.keys(rows[0]!)).not.toContain("user_id");
-    expect(await feed(young)).toEqual([]);
+  });
+});
+
+describe("chat della comunità (ADR 0064)", () => {
+  const post = (
+    tx: Pick<PGlite, "query" | "exec">,
+    channel: string,
+    body: string,
+    slip: unknown = null,
+  ) =>
+    attempt(tx, "insert into public.community_posts (channel, body, slip) values ($1, $2, $3)", [
+      channel,
+      body,
+      slip === null ? null : JSON.stringify(slip),
+    ]);
+  const feed = (user: TestUser, channel: string) =>
+    asUser(
+      db,
+      user,
+      async (tx) =>
+        (
+          await tx.query<Record<string, unknown>>("select * from public.community_feed($1, 20)", [
+            channel,
+          ])
+        ).rows,
+    );
+
+  it("messaggi nella chat generale e schedine condivise, letti da tutti senza id autore", async () => {
+    const slip = { title: "Solida", picks: [{ match: "DEMO A – DEMO B", pick: "1", price: 1.5 }] };
+    await asUser(db, alice, async (tx) => {
+      expect(await post(tx, "GENERAL", "Ciao a tutti")).toBeNull();
+      expect(await post(tx, "SLIPS", "La mia di oggi", slip)).toBeNull();
+    });
+    const general = await feed(bob, "GENERAL");
+    expect(general).toHaveLength(1);
+    expect(general[0]).toMatchObject({ body: "Ciao a tutti", author_name: "Alice", is_own: false });
+    expect(Object.keys(general[0]!)).not.toContain("user_id");
+    const slips = await feed(bob, "SLIPS");
+    expect(slips[0]).toMatchObject({ slip, body: "La mia di oggi" });
+  });
+
+  it("rifiuta messaggi vuoti, schedine fuori dalla chat Schedine, canali sconosciuti e raffiche", async () => {
+    await asUser(db, alice, async (tx) => {
+      expect(await post(tx, "GENERAL", "  ")).toMatch(/community_posts_content/);
+      expect(await post(tx, "GENERAL", "x", { title: "x" })).toMatch(
+        /community_posts_slip_channel/,
+      );
+      expect(await post(tx, "ALTRO", "x")).toMatch(/community_posts_channel_check/);
+      for (let i = 0; i < 10; i++) expect(await post(tx, "GENERAL", `Messaggio ${i}`)).toBeNull();
+      expect(await post(tx, "GENERAL", "Uno di troppo")).toContain(COMMENT_RATE_LIMIT);
+    });
+  });
+
+  it("ognuno cancella solo i propri; un amministratore con 2FA modera e resta traccia", async () => {
+    await asUser(db, alice, (tx) => post(tx, "GENERAL", "Da moderare"));
+    const postId = Number(
+      (await db.query<{ id: number }>("select id from public.community_posts")).rows[0]!.id,
+    );
+    await asUser(db, bob, async (tx) => {
+      const del = await tx.query("delete from public.community_posts returning id");
+      expect(del.rows).toEqual([]);
+    });
+    await asUser(db, admin, (tx) =>
+      tx.query("select public.moderate_community_post($1)", [postId]),
+    );
+    expect((await db.query("select id from public.community_posts")).rows).toEqual([]);
+    const audit = await db.query<{ action: string }>(
+      "select action from public.audit_logs where action = 'post.moderated'",
+    );
+    expect(audit.rows).toHaveLength(1);
   });
 });

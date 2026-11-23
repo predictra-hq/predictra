@@ -56,6 +56,8 @@ export interface MatchCommentFeedRow {
   author_name: string;
   name_color: NameColor | null;
   name_style: NameStyle | null;
+  /** Immagine del profilo dell'autore (`profiles.avatar_style`), visibile a tutti. */
+  avatar_style: string | null;
   is_own: boolean;
 }
 
@@ -83,4 +85,30 @@ export interface RecentCommentRow extends MatchCommentFeedRow {
   home_team: string;
   away_team: string;
   kickoff_at: string;
+}
+
+/** Chat della comunità (`community_posts.channel`, ADR 0064). */
+export const COMMUNITY_CHANNELS = ["GENERAL", "SLIPS"] as const;
+export type CommunityChannel = (typeof COMMUNITY_CHANNELS)[number];
+
+/** Riepilogo di una schedina condivisa: solo testo da mostrare, mai usato per calcoli. */
+export interface SharedSlip {
+  title: string;
+  picks: { match: string; pick: string; price: number | null }[];
+  price: number | null;
+  probability: number | null;
+}
+
+/** Riga di `public.community_feed(p_channel, p_limit)`: mai l'id né l'email dell'autore. */
+export interface CommunityPostRow {
+  id: number;
+  channel: CommunityChannel;
+  body: string;
+  slip: SharedSlip | null;
+  created_at: string;
+  author_name: string;
+  name_color: NameColor | null;
+  name_style: NameStyle | null;
+  avatar_style: string | null;
+  is_own: boolean;
 }

@@ -13,7 +13,6 @@ import { FollowedMatchesCard } from "@/components/dashboard/followed-card";
 import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
-import { BirthdaysCard } from "@/components/community/birthdays-card";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -42,11 +41,6 @@ export default async function DashboardPage() {
           </span>
         </Alert>
       ) : null}
-
-      {/* Compleanni di oggi, solo di chi li rende visibili; senza nessuno non compare. */}
-      <Suspense fallback={null}>
-        <BirthdaysCard />
-      </Suspense>
 
       {/* Ciò che richiede attenzione adesso; senza nulla da dire non compare. */}
       <Suspense fallback={null}>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AVATAR_STYLES, NAME_COLORS, NAME_STYLES } from "@predictra/shared-types";
 import { StyledName } from "@/components/community/styled-name";
 import { SettingsTabs } from "@/components/shell/settings-tabs";
@@ -7,17 +6,10 @@ import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, Field, Input, PageHeader } from "@/components/ui/primitives";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { requireUser } from "@/lib/auth/dal";
-import { isAdult, todayInRome } from "@/lib/community/community";
 import { getOwnCommunityProfile } from "@/lib/community/queries";
 import { getMessages } from "@/lib/i18n";
 import { avatarStyleOf } from "@/lib/profile/avatar";
-import {
-  removeBirthday,
-  saveAvatarStyle,
-  saveBirthday,
-  saveDisplayName,
-  saveNameStyle,
-} from "../preferences/actions";
+import { saveAvatarStyle, saveDisplayName, saveNameStyle } from "../preferences/actions";
 
 export const metadata: Metadata = { title: "Il tuo profilo" };
 
@@ -43,9 +35,8 @@ function Section({
 }
 
 /**
- * Il tuo profilo: come ti vedono gli altri iscritti. Nome utente, immagine, stile del nome e
- * data di nascita (che sblocca i commenti). Ogni riquadro ha un'ancora (`#name`, `#avatar`,
- * `#name-style`, `#birthday`) usata dalle voci del Profilo.
+ * Il tuo profilo: come ti vedono tutti gli iscritti nella Comunità e sotto le partite
+ * (ADR 0064). Nome utente, immagine e stile del nome in un'unica pagina, con l'anteprima.
  */
 export default async function AccountPage() {
   const user = await requireUser();
@@ -53,13 +44,26 @@ export default async function AccountPage() {
   const p = m.preferences;
   const a = m.account;
   const community = await getOwnCommunityProfile(user.id);
-  const adult = isAdult(community.birthDate, todayInRome());
   const shownName = user.displayName ?? user.email.split("@")[0]!;
 
   return (
     <>
       <PageHeader title={a.title} description={a.description} />
       <SettingsTabs current="account" />
+      <div className="mb-3 flex max-w-lg items-center gap-3 rounded-[var(--radius-card)] border border-border bg-surface p-4">
+        <UserAvatar style={user.avatarStyle} name={shownName} className="size-14" />
+        <div className="min-w-0">
+          <p className="truncate text-base">
+            <StyledName
+              name={shownName}
+              color={community.nameColor}
+              style={community.nameStyle}
+              className="font-semibold"
+            />
+          </p>
+          <p className="text-xs text-muted">{a.publicHint}</p>
+        </div>
+      </div>
 
       <Section id="name" title={a.nameTitle} hint={a.nameHint}>
         <ActionForm action={saveDisplayName}>
@@ -88,7 +92,7 @@ export default async function AccountPage() {
                 <label
                   key={s}
                   title={p.avatarStyles[s]}
-                  className="cursor-pointer rounded-full p-1 ring-2 ring-transparent transition-shadow has-[:checked]:ring-positive has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-positive"
+                  className="cursor-pointer rounded-xl p-1 ring-2 ring-transparent transition-shadow has-[:checked]:ring-positive has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-positive"
                 >
                   <input
                     type="radio"
@@ -155,55 +159,6 @@ export default async function AccountPage() {
           </fieldset>
           <SubmitButton>{m.common.save}</SubmitButton>
         </ActionForm>
-      </Section>
-
-      <Section id="birthday" title={p.birthday} hint={p.birthdayHint}>
-        <p
-          className={
-            adult
-              ? "mb-4 rounded-lg border border-positive/40 bg-positive-soft px-3 py-2 text-sm text-positive-strong"
-              : "mb-4 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm text-muted"
-          }
-        >
-          {adult ? (
-            <>
-              {p.commentsUnlocked}{" "}
-              <Link href="/discussions" className="font-medium underline underline-offset-2">
-                {p.commentsOpen}
-              </Link>
-            </>
-          ) : (
-            p.commentsLocked
-          )}
-        </p>
-        <ActionForm action={saveBirthday}>
-          <Field label={p.birthday} htmlFor="birthDate">
-            <Input
-              id="birthDate"
-              name="birthDate"
-              type="date"
-              min="1900-01-01"
-              max={todayInRome()}
-              defaultValue={community.birthDate ?? todayInRome()}
-              required
-            />
-          </Field>
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="showBirthday"
-              defaultChecked={community.showBirthday}
-              className="mt-0.5 size-4"
-            />
-            {p.birthdayShow}
-          </label>
-          <SubmitButton>{m.common.save}</SubmitButton>
-        </ActionForm>
-        {community.birthDate ? (
-          <ActionForm action={removeBirthday} className="mt-2">
-            <SubmitButton variant="ghost">{p.birthdayRemove}</SubmitButton>
-          </ActionForm>
-        ) : null}
       </Section>
     </>
   );
