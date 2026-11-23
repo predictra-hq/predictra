@@ -16,9 +16,13 @@ const nextConfig: NextConfig = {
   // Cache Components disattivato: app privata e interamente dinamica per utente
   // (ADR 0006). Si rivaluta quando esisteranno dati condivisi cacheabili (M2+).
   poweredByHeader: false,
-  // Fissati alla build (src/lib/version.ts): il commit serve solo all'avviso di aggiornamento,
-  // il numero di versione di package.json è quello mostrato agli utenti (docs/operations/interfaccia.md).
-  env: { APP_VERSION: process.env.GITHUB_SHA ?? "local", APP_RELEASE: packageJson.version },
+  // Fissati alla build (src/lib/version.ts): il commit serve solo all'avviso di aggiornamento.
+  // Il numero mostrato lo calcola il deploy per ambiente (APP_RELEASE, ADR 0066); in locale
+  // vale quello di package.json.
+  env: {
+    APP_VERSION: process.env.GITHUB_SHA ?? "local",
+    APP_RELEASE: process.env.APP_RELEASE ?? packageJson.version,
+  },
   transpilePackages: ["@predictra/quant", "@predictra/shared-types"],
   turbopack: {
     rules: {
