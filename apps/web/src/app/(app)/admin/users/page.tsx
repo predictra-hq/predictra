@@ -5,17 +5,25 @@ import {
   canManageAccount,
   highestRole,
   isRole,
+  AVATAR_STYLES,
+  NAME_COLORS,
+  NAME_STYLES,
   ROLES,
   type AccountStatus,
   type Role,
 } from "@predictra/shared-types";
 import { ActionDialog } from "@/components/ui/action-dialog";
-import { Alert, Badge, Card, Field, PageHeader, Select } from "@/components/ui/primitives";
+import { Alert, Badge, Card, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { createClient } from "@/lib/supabase/server";
-import { createPasswordResetLink, setAccountStatus, setUserRole } from "./actions";
+import {
+  adminUpdateProfile,
+  createPasswordResetLink,
+  setAccountStatus,
+  setUserRole,
+} from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
@@ -26,6 +34,8 @@ interface ProfileRow {
   email: string;
   display_name: string | null;
   avatar_style: string | null;
+  name_color: string | null;
+  name_style: string | null;
   status: AccountStatus;
   created_at: string;
   user_roles: { role: string }[];
@@ -41,7 +51,7 @@ export default async function UsersPage() {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, email, display_name, avatar_style, status, created_at, user_roles!user_roles_user_id_fkey(role)",
+      "id, email, display_name, avatar_style, name_color, name_style, status, created_at, user_roles!user_roles_user_id_fkey(role)",
     )
     .order("created_at", { ascending: true })
     .limit(500);
@@ -121,6 +131,68 @@ export default async function UsersPage() {
                     <td className="sm-wide px-4 py-3">
                       {manageable ? (
                         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                          {/* Profilo pubblico: nome, immagine e stile del nome (ADR 0067). */}
+                          <ActionDialog
+                            trigger={m.admin.editProfile}
+                            triggerVariant="secondary"
+                            title={fillTemplate(d.profileTitle, { name })}
+                            description={d.profileText}
+                            confirm={m.common.save}
+                            action={adminUpdateProfile}
+                            fields={{ userId: u.id }}
+                            labels={dialogLabels}
+                          >
+                            <Field label={m.account.nameLabel} htmlFor={`name-${u.id}`}>
+                              <Input
+                                id={`name-${u.id}`}
+                                name="displayName"
+                                defaultValue={u.display_name ?? ""}
+                                maxLength={80}
+                                required
+                              />
+                            </Field>
+                            <Field label={m.account.avatarTitle} htmlFor={`avatar-${u.id}`}>
+                              <Select
+                                id={`avatar-${u.id}`}
+                                name="avatarStyle"
+                                defaultValue={u.avatar_style ?? "classic"}
+                              >
+                                {AVATAR_STYLES.map((s) => (
+                                  <option key={s} value={s}>
+                                    {m.preferences.avatarStyles[s]}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                            <Field label={m.preferences.nameColor} htmlFor={`color-${u.id}`}>
+                              <Select
+                                id={`color-${u.id}`}
+                                name="nameColor"
+                                defaultValue={u.name_color ?? "default"}
+                              >
+                                <option value="default">{m.preferences.nameDefault}</option>
+                                {NAME_COLORS.map((c) => (
+                                  <option key={c} value={c}>
+                                    {m.preferences.nameColors[c]}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                            <Field label={m.preferences.nameFont} htmlFor={`style-${u.id}`}>
+                              <Select
+                                id={`style-${u.id}`}
+                                name="nameStyle"
+                                defaultValue={u.name_style ?? "default"}
+                              >
+                                <option value="default">{m.preferences.nameDefault}</option>
+                                {NAME_STYLES.map((s) => (
+                                  <option key={s} value={s}>
+                                    {m.preferences.nameStyles[s]}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                          </ActionDialog>
                           {role ? (
                             <ActionDialog
                               trigger={d.changeRole}

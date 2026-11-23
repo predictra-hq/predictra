@@ -564,6 +564,7 @@ export const it = {
     alertsFrom: "Dal {n}%",
   },
   admin: {
+    editProfile: "Modifica profilo",
     invitationsTitle: "Inviti",
     invitationsDescription:
       "Invita nuovi utenti: PREDICTRA genera un link personale che consegni tu con un canale esterno (nessuna email viene inviata). L'invito scade dopo 7 giorni, il link secondo la scadenza configurata in Supabase Auth.",
@@ -607,6 +608,9 @@ export const it = {
     when: "Quando",
     noAudit: "Nessun evento.",
     dialog: {
+      profileTitle: "Profilo di {name}",
+      profileText:
+        "Nome, immagine e stile del nome che vedono tutti gli iscritti. La modifica resta nel registro.",
       cancel: "Annulla",
       close: "Chiudi",
       roleTitle: "Cambia ruolo di {name}",
@@ -1244,6 +1248,9 @@ export const it = {
     builderClear: "Togli tutte le giocate",
     builderClearAll: "Togli tutte",
     ticketLabel: "PREDICTRA · Schedina",
+    ticketPlay: "Gioca questa schedina",
+    priceBands: { low: "Quota fino a 3", mid: "Quota da 3 a 6", high: "Quota oltre 6" },
+    priceBandCount: "{n} proposte",
     builderRemove: "Togli {pick}",
     builderPickDetail: "{p} · quota {price}",
     builderShareTitle: "La mia schedina",

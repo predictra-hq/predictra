@@ -32,7 +32,7 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
         </Alert>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card id="mfa" className="scroll-mt-24">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle>{m.security.mfaSection}</CardTitle>

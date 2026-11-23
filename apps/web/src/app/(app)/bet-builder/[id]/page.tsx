@@ -160,7 +160,7 @@ export default async function ProposalPage({
         </table>
       </Card>
 
-      <Card className="max-w-lg">
+      <Card>
         <CardTitle className="mb-3">{m.saveSlip}</CardTitle>
         <ActionForm action={saveProposalSlip}>
           <input type="hidden" name="proposalId" value={proposal.id} />

@@ -14,7 +14,7 @@ export default async function AskPage() {
   const enabled = askProvider() !== null;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <PageHeader title={m.title} description={m.description} />
       {enabled ? <AskChat /> : <Alert tone="warning">{m.disabled}</Alert>}
       <p className="mt-6 text-xs text-subtle">{m.privacy}</p>

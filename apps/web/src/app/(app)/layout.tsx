@@ -9,29 +9,35 @@ import { UpdateNotice } from "@/components/shell/update-notice";
 import { askProvider } from "@/lib/ask/provider";
 import { cookies } from "next/headers";
 import { isTourDone, isTourDoneInSettings, TOUR_COOKIE } from "@/lib/tour";
+import { readAccountSettings } from "@/lib/account-settings";
+import { AccountSettingsSync } from "@/components/shell/account-settings-sync";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { formatRelease } from "@/lib/version";
 
 /**
- * Tutorial già visto: prima il cookie di questo browser (nessuna lettura), poi il profilo,
- * così non ricompare dopo un nuovo accesso o nell’app installata, che ha cookie separati.
+ * Impostazioni dell'account (`user_dashboard_settings.settings`): tutorial già visto e
+ * preferenze dell'app (ADR 0067). Il tutorial guarda prima il cookie di questo browser.
  */
-async function tourDone(userId: string): Promise<boolean> {
-  if (isTourDone((await cookies()).get(TOUR_COOKIE)?.value)) return true;
+async function accountState(userId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("user_dashboard_settings")
     .select("settings")
     .eq("user_id", userId)
     .maybeSingle();
-  return isTourDoneInSettings(data?.settings);
+  return {
+    tourDone:
+      isTourDone((await cookies()).get(TOUR_COOKIE)?.value) || isTourDoneInSettings(data?.settings),
+    settings: readAccountSettings(data?.settings),
+  };
 }
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
   const m = getMessages();
+  const account = await accountState(user.id);
   const role = highestRole(user.roles);
   const adminNav = ADMIN_NAV.filter(
     (item) => !item.permission || hasPermission(user.roles, item.permission),
@@ -68,7 +74,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </main>
       <BottomNav messages={m} />
       <AskLauncher enabled={askProvider() !== null} />
-      <Tour messages={m.tour} done={await tourDone(user.id)} />
+      <Tour messages={m.tour} done={account.tourDone} />
+      <AccountSettingsSync settings={account.settings} />
       <UpdateNotice labels={{ message: m.common.updateAvailable, action: m.common.updateAction }} />
     </div>
   );

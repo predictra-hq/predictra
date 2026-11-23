@@ -52,7 +52,7 @@ const NAME_COLOR_CLASS: Readonly<Record<NameColor, string>> = {
 const NAME_STYLE_CLASS: Readonly<Record<NameStyle, string>> = {
   bold: "font-bold",
   italic: "italic",
-  mono: "font-mono",
+  mono: "name-mono",
   caps: "uppercase tracking-wider",
 };
 
