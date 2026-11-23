@@ -45,7 +45,14 @@ const SCREENSHOTS = new Set([
   "/match-center (mobile)",
   "/match-center/[id] (mobile)",
   "/leagues (mobile)",
+  "/bet-builder",
   "/bet-builder (mobile)",
+  "/bet-builder/past (mobile)",
+  "/bet-builder/builder",
+  "/bet-builder/builder (mobile)",
+  "/locker-room (mobile)",
+  "/teams (mobile)",
+  "/settings (mobile)",
   "/admin/users",
 ]);
 
@@ -70,7 +77,7 @@ const PAGES = [
   "/bankroll",
   "/tracker",
   "/performance",
-  "/community",
+  "/locker-room",
   "/ask",
   "/settings",
   "/settings/preferences",

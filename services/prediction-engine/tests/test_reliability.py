@@ -40,3 +40,22 @@ def test_riepilogo_della_verifica_storica():
     assert out["seasons"][0]["season"] == "2025/26"
     assert out["weeks"][0]["week"] == "2025-09-29"
     assert all(b["to"] > b["from"] for b in out["bands"])
+
+
+def test_mercato_per_fascia_per_le_schedine():
+    m = np.full((11, 11), 1e-6)
+    m[1, 0] = 0.6
+    m[0, 0] = 0.2
+    m[2, 0] = 0.15
+    m /= m.sum()
+    rel = Reliability()
+    rel.add(result(1, 0), m, np.array([0.75, 0.2, 0.05]))
+    rel.add(result(3, 2), m, np.array([0.75, 0.2, 0.05]))
+    out = rel.to_json()
+    assert out["version"] == 2
+    cells = {(c["market"], c["from"]): c for c in out["market_bands"]}
+    # Under 2,5 dato sopra il 90%: uscito una volta su due.
+    under = cells[("TOTAL_GOALS:2.5", 0.9)]
+    assert under["count"] == 2 and under["wins"] == 1
+    # Ogni cella sta anche nel totale per fascia.
+    assert sum(c["count"] for c in out["market_bands"]) == sum(b["count"] for b in out["bands"])

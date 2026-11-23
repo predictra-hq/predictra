@@ -3,6 +3,7 @@
 - **Stato:** accettato (23/11/2026)
 - **Milestone:** M8 (corsie 0, A e B: contratto, database e interfaccia nella stessa modifica)
 - **Sostituisce in parte:** ADR 0058 (maggiore età dichiarata per i commenti)
+- **Aggiornato da:** ADR 0065 (indirizzo `/locker-room`, gruppo Calcio)
 
 ## Contesto
 

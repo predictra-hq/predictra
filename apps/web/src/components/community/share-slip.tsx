@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Send, Share2, Users } from "lucide-react";
-import { shareSlip } from "@/app/(app)/community/actions";
+import { shareSlip } from "@/app/(app)/locker-room/actions";
 import { SubmitButton } from "@/components/ui/form";
 import { Alert, Button } from "@/components/ui/primitives";
 
@@ -87,7 +87,7 @@ export function ShareSlip({
             <Alert tone={state.ok ? "positive" : "negative"}>
               {state.message}{" "}
               {state.ok ? (
-                <a href="/community?c=slips" className="font-medium underline">
+                <a href="/locker-room?c=slips" className="font-medium underline">
                   {labels.seeChat}
                 </a>
               ) : null}

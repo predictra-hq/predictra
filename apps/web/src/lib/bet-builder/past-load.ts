@@ -1,6 +1,7 @@
 import "server-only";
 import { loadVerification } from "@/lib/certainties/load";
 import { buildBollette } from "./bollette";
+import { loadCalibration } from "./calibration-load";
 import type { LikelyRow } from "./likely";
 import { pastRounds, type PastRound } from "./past";
 import { loadPicksData } from "./queries";
@@ -11,9 +12,13 @@ import { loadPicksData } from "./queries";
  * previsioni e le quote di adesso. Stesse regole della pagina Proposte.
  */
 export async function loadPastRounds(): Promise<PastRound[]> {
-  const [verification, live] = await Promise.all([loadVerification(), loadPicksData()]);
+  const [verification, live, calibration] = await Promise.all([
+    loadVerification(),
+    loadPicksData(),
+    loadCalibration(),
+  ]);
   const rows = [...(verification.rows as unknown as LikelyRow[]), ...live.rows];
   const prices = new Map([...live.prices, ...verification.prices]);
   const consensus = new Map([...live.consensus, ...verification.consensus]);
-  return pastRounds(buildBollette(rows, prices, consensus), verification.results);
+  return pastRounds(buildBollette(rows, prices, consensus, calibration), verification.results);
 }

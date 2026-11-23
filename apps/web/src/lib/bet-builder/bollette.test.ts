@@ -115,9 +115,10 @@ describe("schedine consigliate (valori DEMO)", () => {
     expect(pick!.edge).toBeCloseTo(0.55 * 1.9 - 1);
   });
 
-  it("per ogni partita la giocata sicura con più valore, non la più probabile", () => {
+  it("per ogni partita prima la precisione, poi il valore (ADR 0065)", () => {
     const rows = [
-      // Partita 1: doppia chance più probabile ma senza valore, 1 con valore.
+      // Partita 1: doppia chance all'80% a quota giusta, 1 al 66% con valore: vince la
+      // prima (0,80 + 0 contro 0,66 + 0,056).
       row(1, "DOUBLE_CHANCE", "HOME_DRAW", 0.8),
       row(1, "1X2", "HOME", 0.66),
       row(3, "1X2", "HOME", 0.68),
@@ -131,14 +132,13 @@ describe("schedine consigliate (valori DEMO)", () => {
     ]);
     const [solid] = buildBollette(rows, prices);
     expect(solid!.profile).toBe("SOLID");
-    // Tutte sopra il 65% e quota 1,25: scelte per valore, poi in ordine di orario.
+    // L'over 1,5 (−2%) porterebbe il valore della schedina sotto zero: resta fuori.
     expect(solid!.picks.map((p) => [p.matchId, p.market])).toEqual([
-      [1, "1X2"],
+      [1, "DOUBLE_CHANCE"],
       [3, "1X2"],
-      [2, "TOTAL_GOALS"],
     ]);
-    expect(solid!.price).toBeCloseTo(1.6 * 1.5 * 1.4);
-    expect(solid!.probability).toBeCloseTo(0.66 * 0.68 * 0.7);
+    expect(solid!.price).toBeCloseTo(1.25 * 1.5);
+    expect(solid!.probability).toBeCloseTo(0.8 * 0.68);
     expect(solid!.expectedValue).toBeCloseTo(solid!.probability * solid!.price - 1);
     // Quote lette alle 08:00 del 20/11: aggiornate fino a 12 ore dopo, poi da ricontrollare.
     expect(solid!.oddsObservedAt).toBe("2026-11-20T08:00:00Z");
@@ -202,5 +202,23 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
     const rows = [1, 3].map((m) => row(m, "1X2", "HOME", 0.7));
     const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.4), odds(3, "h2h", "HOME", 1.4)]);
     expect(buildBollette(rows, prices)).toEqual([]);
+  });
+  it("scarta le giocate su cui modello e mercato non sono d'accordo (ADR 0065)", () => {
+    const rows = [row(1, "1X2", "HOME", 0.8)];
+    const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.4)]);
+    // Mercato al 60%: 20 punti dal modello, troppi.
+    const far = new Map([["1|h2h|HOME", 0.6]]);
+    expect(playablePicks(rows, prices, far)).toEqual([]);
+    const near = new Map([["1|h2h|HOME", 0.72]]);
+    expect(playablePicks(rows, prices, near)).toHaveLength(1);
+  });
+
+  it("corregge la probabilità con la verifica storica del mercato", () => {
+    const rows = [row(1, "1X2", "HOME", 0.66)];
+    const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.75)]);
+    // Data in media al 65%, uscita al 56%: la correzione arriva al massimo (8 punti).
+    const calibration = new Map([["1X2|0.6", { count: 1000, wins: 560, predicted: 650 }]]);
+    const [pick] = playablePicks(rows, prices, new Map(), 0.5, calibration);
+    expect(pick!.modelProbability).toBeCloseTo(0.58, 6);
   });
 });

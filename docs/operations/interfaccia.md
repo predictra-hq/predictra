@@ -1,5 +1,3 @@
-| in `dev` | #121 || in `dev` | #120 || in `dev` | #119 || in `dev` | #118 || in `dev` | #117 || in `dev` | #116 || in `dev` | #115 || in `dev` | #114 |# Interfaccia: navigazione, app sul telefono, tema e fluidità (M8, corsia B)
-
 Cosa c'è nell'interfaccia oltre alle singole pagine, dove sta nel codice e cosa resta da verificare. **Aggiornato:** 16/11/2026 (pagina Profilo e rifinitura da telefono).
 
 Le scelte dell'utente descritte qui restano in cookie del browser, tranne seguiti, data di nascita e stile del nome, che stanno nel database con RLS (sezioni del 17/11/2026).
@@ -24,7 +22,7 @@ Le scelte dell'utente descritte qui restano in cookie del browser, tranne seguit
 
 - **Menu laterale** (`components/shell/sidebar.tsx`, voci in `components/shell/nav-config.ts`): gruppi `MAIN_NAV_GROUPS` per ciò che si vuole fare; il gruppo «Dietro le quinte» è richiudibile e resta aperto quando si è su una sua pagina. Gli indirizzi delle pagine non sono cambiati.
 - **Profilo** (`app/(app)/settings/page.tsx`): una sola voce nel menu. Mostra chi sei e porta a Sicurezza, Preferenze, Amministrazione (secondo i permessi) e all'uscita. Sicurezza e Preferenze restano due schede (`components/shell/settings-tabs.tsx`) con il ritorno al Profilo. Le icone delle voci stanno in `components/shell/nav-icons.ts`, usabile anche dalle pagine lato server.
-- **Barra in basso sul telefono** (`components/shell/bottom-nav.tsx`, voci in `BOTTOM_NAV`): le stesse sezioni del menu laterale, cioè Home, Pronostici, Calcio, Soldi, più Profilo. Ogni voce apre la prima pagina della sezione e resta accesa su tutte le sue pagine. Le altre pagine della sezione sono schede in alto (`components/shell/section-nav.tsx`, solo sotto `lg`): Home (sola voce, quindi senza schede); Pronostici → Certezze, Schedine; Calcio → Partite, Campionati; Soldi → Bankroll, Giocate fatte. Profilo raccoglie account e amministrazione. Chi aggiunge una pagina la mette nel gruppo giusto di `MAIN_NAV_GROUPS`: barra e schede si aggiornano da sole. Con `viewportFit: "cover"` barra e intestazione rispettano le zone dei gesti di iPhone (`env(safe-area-inset-*)`).
+- **Barra in basso sul telefono** (`components/shell/bottom-nav.tsx`, voci in `BOTTOM_NAV`): le stesse sezioni del menu laterale, cioè Home, Pronostici, Calcio, Soldi, più Profilo. Ogni voce apre la prima pagina della sezione e resta accesa su tutte le sue pagine. Le altre pagine della sezione sono schede in alto (`components/shell/section-nav.tsx`, solo sotto `lg`): Home (sola voce, quindi senza schede); Pronostici → Certezze, Schedine, Affidabilità; Calcio → Partite, Campionati (con la scheda interna Squadre), Spogliatoio; Soldi → Bankroll, Giocate fatte, Andamento (dal 23/11/2026, ADR 0065). Profilo raccoglie account e amministrazione. Chi aggiunge una pagina la mette nel gruppo giusto di `MAIN_NAV_GROUPS`: barra e schede si aggiornano da sole. Con `viewportFit: "cover"` barra e intestazione rispettano le zone dei gesti di iPhone (`env(safe-area-inset-*)`).
 - **Schede interne** (Schedine, Profilo, Amministrazione): classe `tab-strip` in `globals.css`. Sul telefono stanno su una riga che scorre di lato.
 - **Tabelle sul telefono** (`globals.css`): dentro `Card scrollLabel` e `ScrollRegion` ogni riga diventa una scheda a due colonne (etichetta sopra, valore sotto). `compact-sm` le lascia tabelle vere con le colonne `sm-secondary` nascoste (classifiche: l'intestazione deve avere le stesse classi delle celle). `limit-sm` mostra solo le prime 8 righe e una nota (`data-more`), per gli elenchi lunghi dell'amministrazione.
 - **Telefono, regole generali** (16/11/2026): campi a 16 px sotto i 640 px (altrimenti iPhone ingrandisce la pagina quando si scrive); descrizione sotto il titolo solo da 640 px in su; griglie sempre con `grid-cols-1` di base; avvertenze in piccolo a fondo pagina invece che in riquadri in cima.
@@ -200,6 +198,7 @@ Il sito mostra un numero di versione, **v1.0.0** al 17/11/2026, e non più il co
   - così un numero che finisce con `.0` è una versione arrivata in produzione, gli altri sono prove su DEV.
 - Due PR aperte insieme che alzano la versione vanno in conflitto su quella riga: lo risolve chi unisce per secondo, con la cifra successiva a quella già su `dev`.
 - Le versioni 1.1.0, 1.2.0 e 1.3.0 sono state alzate su `dev` prima di questa regola; da lì si prosegue con 1.3.1.
+- Il 23/11/2026 i commit su `dev` dopo la 1.3.0 non avevano alzato la versione: il passaggio in produzione di quel giorno porta direttamente la **1.4.0**. Da qui si torna alla regola: `1.4.1`, `1.4.2`… su `dev`, `1.5.0` al prossimo passaggio in produzione.
 
 ## 18/11/2026: Profilo più chiaro, immagine del profilo per tipo
 
@@ -263,3 +262,15 @@ Versione **1.2.0**. La presentazione (`app/page.tsx`, testi in `it.ts` → `land
 - **Immagine del profilo come il logo**: stesso quadrato, stessa linea e stesso pallone, in cinque versioni.
 - **Profilo**: una voce per pagina (Il tuo profilo, Accesso e sicurezza, Preferenze). Il tuo profilo mostra in alto come ti vedono gli altri.
 - **Costruisci**: sul computer niente barra in basso, la Valutazione a destra si aggiorna da sola. Ogni giocata ha l'esito in grassetto, sotto partita e data, e una × per toglierla; «Togli tutte» svuota la schedina. Sul telefono la barra resta, sopra la navigazione.
+
+## 23/11/2026: versione 1.4.0, schedine come biglietti, Spogliatoio sotto Calcio
+
+Versione **1.4.0** (passaggio in produzione). ADR 0065.
+
+- **Schedine disegnate come biglietti** (`components/bet-builder/ticket.tsx`): intestazione con il simbolo e «PREDICTRA · Schedina», una riga per partita (orario, partita, esito in evidenza, quota), uno strappo tratteggiato con due tacche, poi la quota totale in grande. Le usano le schedine consigliate, le Passate e le proposte con valore.
+- **Proposte con valore**: al massimo 2 per categoria e turno (erano 8), selezioni dal 35% e combinazioni dal 15%. Regole `2026.11.23-1` nel motore e in `@predictra/shared-types`.
+- **Schedine consigliate più precise**: probabilità corretta con la verifica storica del mercato e della fascia, modello e mercato d'accordo entro 10 punti, prima la precisione e poi il valore, niente più schedina a 6 partite.
+- **Spogliatoio** all'indirizzo `/locker-room` (traduzione di spogliatoio), nel gruppo Calcio: sul telefono è una scheda di Calcio, accanto a Partite e Campionati. `/community` e `/discussions` reindirizzano.
+- **Campionati e Squadre** in una sezione: Squadre è una scheda interna di Campionati (`components/football/leagues-nav.tsx`) e non è più una voce del menu. L'indirizzo `/teams` non cambia.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV, anche da telefono: biglietti delle schedine (tacche dello strappo su sfondo chiaro e scuro), schede di Calcio con lo Spogliatoio, schede Classifiche/Squadre.

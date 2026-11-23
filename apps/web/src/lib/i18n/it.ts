@@ -978,6 +978,8 @@ export const it = {
     manage: "Gestisci",
   },
   leagueIntelligence: {
+    tabLeagues: "Classifiche",
+    tabTeams: "Squadre",
     title: "Campionati",
     description:
       "Classifiche, medie gol e vantaggio casalingo per competizione, dalla stagione più recente raccolta.",
@@ -1036,7 +1038,6 @@ export const it = {
         DOUBLE: "Doppia sicura",
         SOLID: "Solida",
         BALANCED: "Equilibrata",
-        LONG: "Lunga",
         HIGH: "Alta quota",
       },
       profileHint: "Ogni selezione: probabilità almeno {p}, quota almeno {price}",
@@ -1219,6 +1220,7 @@ export const it = {
     builderNone: "Tocca una giocata per iniziare",
     builderClear: "Togli tutte le giocate",
     builderClearAll: "Togli tutte",
+    ticketLabel: "PREDICTRA · Schedina",
     builderRemove: "Togli {pick}",
     builderPickDetail: "{p} · quota {price}",
     builderShareTitle: "La mia schedina",

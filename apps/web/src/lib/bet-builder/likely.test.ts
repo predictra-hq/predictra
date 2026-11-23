@@ -78,11 +78,12 @@ describe("le più probabili (valori DEMO)", () => {
       confidence: 0.8,
     }));
     const multiples = likelyMultiples(many);
-    // 0,85^4 ≈ 0,52 ≥ 0,50; 0,85^8 ≈ 0,27 ≥ 0,25; 0,85^14 ≈ 0,10 ma il tetto è 12.
+    // 0,85^4 ≈ 0,52 ≥ 0,50; 0,85^8 ≈ 0,27 ≥ 0,25; 0,85^11 ≈ 0,17 ≥ 0,15 (soglia minima
+    // delle regole 2026.11.23-1, ADR 0065), 0,85^12 ≈ 0,14 no.
     expect(multiples.map((x) => [x.category, x.size])).toEqual([
       ["CONSERVATIVE", 4],
       ["BALANCED", 8],
-      ["AGGRESSIVE", 12],
+      ["AGGRESSIVE", 11],
     ]);
     // Dentro la schedina: prima 1X2, poi under/over.
     expect(multiples[0]!.picks.map((p) => p.market)).toEqual([
