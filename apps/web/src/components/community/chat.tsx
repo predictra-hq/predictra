@@ -15,7 +15,7 @@ const TIME = new Intl.DateTimeFormat("it-IT", {
 
 /**
  * Messaggio in una bolla, come nelle app di chat (ADR 0065): i tuoi a destra in verde,
- * quelli degli altri a sinistra con immagine e nome nel loro stile.
+ * quelli degli altri a sinistra. In alto sempre immagine e nome nel loro stile.
  */
 export function ChatBubble({
   own,
@@ -42,8 +42,7 @@ export function ChatBubble({
   actions?: ReactNode;
 }) {
   return (
-    <li className={cn("flex items-end gap-2", own ? "justify-end" : "justify-start")}>
-      {!own ? <UserAvatar style={avatarStyle} name={author} className="size-8" /> : null}
+    <li className={cn("flex", own ? "justify-end" : "justify-start")}>
       <div
         className={cn(
           "min-w-0 rounded-2xl border px-3 py-2",
@@ -53,16 +52,16 @@ export function ChatBubble({
             : "rounded-bl-md border-border bg-surface-2",
         )}
       >
-        {!own ? (
-          <p className="truncate text-xs">
-            <StyledName
-              name={author}
-              color={nameColor as never}
-              style={nameStyle as never}
-              className="font-semibold"
-            />
-          </p>
-        ) : null}
+        {/* Chi scrive, sempre in alto: immagine e nome nel suo stile, anche nei propri. */}
+        <p className="mb-1 flex min-w-0 items-center gap-2 text-xs">
+          <UserAvatar style={avatarStyle} name={author} className="size-6" />
+          <StyledName
+            name={author}
+            color={nameColor as never}
+            style={nameStyle as never}
+            className="truncate font-semibold"
+          />
+        </p>
         {context ? <div className="mt-0.5 text-xs">{context}</div> : null}
         {body ? <p className="whitespace-pre-line break-words text-sm text-fg">{body}</p> : null}
         {slip ? <SlipSummary slip={slip} /> : null}
@@ -97,7 +96,7 @@ export function ChatThread({
   return (
     <section
       aria-label={label}
-      className="flex h-[calc(100dvh-17rem)] min-h-[22rem] max-w-3xl flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface lg:h-[calc(100dvh-14rem)]"
+      className="flex h-[calc(100dvh-23rem)] min-h-[20rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface lg:h-[calc(100dvh-14rem)]"
     >
       <div className="flex flex-1 flex-col-reverse overflow-y-auto overscroll-contain p-3">
         {empty ? (

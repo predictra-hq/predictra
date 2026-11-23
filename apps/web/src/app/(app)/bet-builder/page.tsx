@@ -1,6 +1,6 @@
 import {
-  BET_PROPOSAL_CATEGORIES,
   DEFAULT_BET_BUILDER_RULES,
+  hasPermission,
   type ActiveBetProposalRow,
   type BetBuilderLatestRunRow,
   type BetProposalLegRow,
@@ -8,40 +8,48 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ChevronDown } from "lucide-react";
+import { SchedineSection } from "@/components/bet-builder/bollette";
+import { LikelySection } from "@/components/bet-builder/likely";
 import {
   BetBuilderDisclaimer,
   BetBuilderNav,
   CategoryBadge,
-  StakeSimulation,
 } from "@/components/bet-builder/shared";
-import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
-import { FilterForm } from "@/components/ui/filter-form";
+import { StakeBox } from "@/components/bet-builder/stake-box";
+import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import {
-  Alert,
-  Button,
-  CardSkeleton,
-  EmptyState,
-  Input,
-  PageHeader,
-  Select,
-} from "@/components/ui/primitives";
+  Ticket,
+  TICKET_GRID,
+  TicketLeg,
+  TicketTotals,
+  whenAndWhere,
+} from "@/components/bet-builder/ticket";
+import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import {
-  formatRound,
-  parseCategory,
-  parseSlateDate,
-  parseStake,
-  roundStartOf,
-  selectionLabel,
-} from "@/lib/bet-builder/format";
-import { SchedineSection } from "@/components/bet-builder/bollette";
-import { LikelySection } from "@/components/bet-builder/likely";
+import { formatRound, roundStartOf, selectionLabel } from "@/lib/bet-builder/format";
 import { getLatestRun, listActiveProposals, listProposalLegs } from "@/lib/bet-builder/queries";
+import { slipTrackerHref } from "@/lib/bet-builder/register";
+import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
-import { hasPermission } from "@predictra/shared-types";
 
 export const metadata: Metadata = { title: "Schedine" };
+
+/** Fasce di quota delle proposte con valore (ADR 0067): si apre solo quella che interessa. */
+const PRICE_BANDS = [
+  { key: "low", max: 3 },
+  { key: "mid", max: 6 },
+  { key: "high", max: Infinity },
+] as const;
+type PriceBand = (typeof PRICE_BANDS)[number]["key"];
+
+function bandOf(price: number | null): PriceBand {
+  return PRICE_BANDS.find((b) => (price ?? 0) < b.max)?.key ?? "high";
+}
+
+/** Puntata d'esempio per «Gioca questa schedina» quando non c'è una consigliata. */
+const EXAMPLE_STAKE = 10;
 
 /** Nome del modello per chi legge (es. «Dixon-Coles»), senza la versione. */
 function modelName(key: string): string {
@@ -51,19 +59,21 @@ function modelName(key: string): string {
 function ProposalCard({
   p,
   legs,
-  stake,
   technical,
+  competitions,
 }: {
   p: ActiveBetProposalRow;
   legs: BetProposalLegRow[];
-  stake: number | null;
-  /** Modello e versione: solo per chi gestisce il sistema. */
+  /** Modello: solo per chi gestisce il sistema. */
   technical: boolean;
+  competitions: ReadonlyMap<number, string>;
 }) {
   const m = getMessages().betBuilder;
+  const title =
+    legs.length > 1 ? fillTemplate(m.bollette.legs, { n: legs.length }) : m.kinds[p.kind];
   return (
     <Ticket
-      title={`${m.categories[p.category]} · ${m.kinds[p.kind]}`}
+      title={title}
       badge={<CategoryBadge category={p.category} />}
       totals={
         <TicketTotals
@@ -82,24 +92,48 @@ function ProposalCard({
           ]}
         />
       }
+      play={
+        p.combined_price !== null ? (
+          <StakeBox
+            defaultStake={EXAMPLE_STAKE}
+            price={p.combined_price}
+            site={null}
+            registerHref={slipTrackerHref(
+              legs.map((l) => ({
+                matchId: l.match_id,
+                home: l.home_team_name,
+                away: l.away_team_name,
+                market: l.market,
+                line: l.line,
+                selection: l.selection,
+                bookmaker: l.bookmaker_title,
+              })),
+              p.combined_price,
+              {
+                market: m.kinds[p.kind],
+                selection: `${m.categories[p.category]} · ${title}`,
+              },
+              null,
+            )}
+            labels={stakeBoxLabels()}
+          />
+        ) : undefined
+      }
       footer={
-        <div className="flex flex-col gap-2">
-          {stake !== null && p.combined_price !== null && p.probability !== null ? (
-            <StakeSimulation stake={stake} price={p.combined_price} probability={p.probability} />
-          ) : null}
+        <div className="flex flex-col gap-1.5">
           {p.legs_stale > 0 ? (
             <Alert tone="warning">{fillTemplate(m.staleWarning, { n: p.legs_stale })}</Alert>
           ) : null}
           {p.legs_price_changed > 0 ? (
             <Alert>{fillTemplate(m.priceChangedWarning, { n: p.legs_price_changed })}</Alert>
           ) : null}
-          <p className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+          <p className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {fillTemplate(m.oddsUpdated, { at: formatDateTime(p.odds_observed_at) })}
               {technical ? ` · ${m.model}: ${modelName(p.model_key)}` : ""}
             </span>
             <Link
-              href={`/bet-builder/${p.proposal_id}${stake !== null ? `?s=${stake}` : ""}`}
+              href={`/bet-builder/${p.proposal_id}`}
               className="font-medium text-positive-strong hover:underline"
             >
               {m.details} →
@@ -111,10 +145,17 @@ function ProposalCard({
       {legs.map((l) => (
         <TicketLeg
           key={l.leg_no}
-          time={formatDateTime(l.kickoff_at)}
-          match={`${l.home_team_name} – ${l.away_team_name}`}
+          time={whenAndWhere(
+            { kickoffAt: l.kickoff_at, competitionId: l.competition_id },
+            competitions,
+          )}
+          match={
+            <Link href={`/match-center/${l.match_id}`} className="hover:underline">
+              {l.home_team_name} – {l.away_team_name}
+            </Link>
+          }
           pick={selectionLabel(l.selection, l.home_team_name, l.away_team_name, l.market, l.line)}
-          probability={formatPercent(l.probability, 0)}
+          probability={`${formatPercent(l.probability, 0)} · ${l.bookmaker_title}`}
           price={formatOdds(l.price)}
         />
       ))}
@@ -129,30 +170,30 @@ function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
   return <p className="mb-6 text-sm text-muted">{text}</p>;
 }
 
-export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
+/**
+ * Proposte: schedine consigliate in alto, poi le proposte con valore divise per turno e
+ * per fascia di quota in riquadri che si aprono (ADR 0067), così la pagina resta corta.
+ */
+export default async function BetBuilderPage() {
   const user = await requireUser();
   const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().betBuilder;
-  const params = await searchParams;
-  const [run, proposals] = await Promise.all([getLatestRun(), listActiveProposals()]);
+  const [run, proposals, competitionList] = await Promise.all([
+    getLatestRun(),
+    listActiveProposals(),
+    listCompetitions().catch(() => []),
+  ]);
+  const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
 
   // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
   const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();
-  const slate = parseSlateDate(params.d);
-  const category = parseCategory(params.cat);
-  const stake = parseStake(params.s);
-  const shown = proposals
-    .filter(
-      (p) =>
-        (!slate || roundStartOf(p.slate_date) === slate) && (!category || p.category === category),
-    )
-    .sort((a, b) => a.rank - b.rank);
-  const legs = await listProposalLegs(shown.map((p) => p.proposal_id));
+  const sorted = [...proposals].sort(
+    (a, b) => (a.combined_price ?? 0) - (b.combined_price ?? 0) || a.rank - b.rank,
+  );
+  const legs = await listProposalLegs(sorted.map((p) => p.proposal_id));
   const legsBy = new Map<number, BetProposalLegRow[]>();
   for (const l of legs) legsBy.set(l.proposal_id, [...(legsBy.get(l.proposal_id) ?? []), l]);
-
-  const r = DEFAULT_BET_BUILDER_RULES;
-  const rules = run?.rules ?? r;
+  const rules = run?.rules ?? DEFAULT_BET_BUILDER_RULES;
 
   return (
     <>
@@ -160,17 +201,65 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
       <BetBuilderNav current="proposals" />
 
       <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
-        <SchedineSection stake={stake} />
+        <SchedineSection stake={null} />
       </Suspense>
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>
-      {proposals.length > 0 ? (
+      {proposals.length === 0 ? (
+        <NoProposals run={run} />
+      ) : (
         <>
-          <p className="mb-2 text-sm text-muted">{m.valueDescription}</p>
+          <p className="mb-3 hidden text-sm text-muted sm:block">{m.valueDescription}</p>
+          {slates.map((d) => {
+            const round = sorted.filter((p) => roundStartOf(p.slate_date) === d);
+            return (
+              <section key={d} className="mb-6">
+                <h3 className="mb-2 text-sm text-muted">
+                  {fillTemplate(m.roundTitle, { round: formatRound(d) })}
+                </h3>
+                <div className="flex flex-col gap-2">
+                  {PRICE_BANDS.map((band, index) => {
+                    const group = round.filter((p) => bandOf(p.combined_price) === band.key);
+                    if (group.length === 0) return null;
+                    return (
+                      <details
+                        key={band.key}
+                        open={index === 0}
+                        className="group rounded-[var(--radius-card)] border border-border bg-surface/40 p-3"
+                      >
+                        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold hover:text-fg [&::-webkit-details-marker]:hidden">
+                          <ChevronDown
+                            size={16}
+                            aria-hidden="true"
+                            className="shrink-0 transition-transform group-open:rotate-180"
+                          />
+                          {m.priceBands[band.key]}
+                          <span className="font-normal text-subtle">
+                            {fillTemplate(m.priceBandCount, { n: group.length })}
+                          </span>
+                        </summary>
+                        <div className={`mt-3 ${TICKET_GRID}`}>
+                          {group.map((p) => (
+                            <ProposalCard
+                              key={p.proposal_id}
+                              p={p}
+                              legs={legsBy.get(p.proposal_id) ?? []}
+                              technical={technical}
+                              competitions={competitions}
+                            />
+                          ))}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
           {technical ? (
-            <details className="mb-4 text-xs text-muted">
+            <details className="mb-6 text-xs text-muted">
               <summary className="cursor-pointer">{m.technicalDetails}</summary>
-              <p className="mb-1 mt-2 text-xs text-muted">
+              <p className="mb-1 mt-2">
                 {fillTemplate(m.thresholds, {
                   ev: formatPercent(rules.min_expected_value, 0),
                   p: formatPercent(rules.min_probability, 0),
@@ -179,7 +268,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                 })}
               </p>
               {run ? (
-                <p className="mb-4 text-xs text-muted">
+                <p>
                   {fillTemplate(m.lastRun, {
                     at: formatDateTime(run.finished_at ?? run.started_at),
                     candidates: run.candidates_evaluated,
@@ -190,94 +279,12 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
             </details>
           ) : null}
         </>
-      ) : null}
-
-      {proposals.length === 0 ? (
-        <NoProposals run={run} />
-      ) : (
-        <>
-          <FilterForm className="mb-4 flex flex-wrap items-end gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs text-muted">{m.slate}</span>
-              <Select name="d" defaultValue={slate ?? ""}>
-                <option value="">{m.allSlates}</option>
-                {slates.map((d) => (
-                  <option key={d} value={d}>
-                    {formatRound(d)}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs text-muted">{m.category}</span>
-              <Select name="cat" defaultValue={category ?? ""}>
-                <option value="">{m.allCategories}</option>
-                {BET_PROPOSAL_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {m.categories[c]} ({m.categoryHints[c]})
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-xs text-muted">{m.stake}</span>
-              <Input
-                name="s"
-                inputMode="decimal"
-                placeholder={m.stakePlaceholder}
-                defaultValue={typeof params.s === "string" ? params.s : ""}
-                className="w-40"
-              />
-            </label>
-            <Button type="submit" variant="secondary">
-              {m.show}
-            </Button>
-          </FilterForm>
-
-          {shown.length === 0 ? <EmptyState>{m.emptyFiltered}</EmptyState> : null}
-          {slates
-            .filter((d) => !slate || d === slate)
-            .map((d) => {
-              const day = shown.filter((p) => roundStartOf(p.slate_date) === d);
-              if (day.length === 0) return null;
-              return (
-                <section key={d} className="mb-6">
-                  <h2 className="mb-3 text-lg font-semibold">
-                    {fillTemplate(m.roundTitle, { round: formatRound(d) })}
-                  </h2>
-                  {BET_PROPOSAL_CATEGORIES.map((c) => {
-                    const group = day.filter((p) => p.category === c);
-                    if (group.length === 0) return null;
-                    return (
-                      <div key={c} className="mb-4">
-                        <h3 className="mb-2 text-sm font-semibold">
-                          {m.categories[c]}{" "}
-                          <span className="font-normal text-muted">({m.categoryHints[c]})</span>
-                        </h3>
-                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                          {group.map((p) => (
-                            <ProposalCard
-                              key={p.proposal_id}
-                              p={p}
-                              legs={legsBy.get(p.proposal_id) ?? []}
-                              stake={stake}
-                              technical={technical}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </section>
-              );
-            })}
-        </>
       )}
 
       <details className="mb-6">
         <summary className="mb-3 cursor-pointer text-sm text-positive">{m.likelyToggle}</summary>
         <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
-          <LikelySection stake={stake} />
+          <LikelySection stake={null} />
         </Suspense>
       </details>
       <BetBuilderDisclaimer />

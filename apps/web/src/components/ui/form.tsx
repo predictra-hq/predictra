@@ -1,11 +1,30 @@
 "use client";
 
-import { useActionState, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useActionState,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useFormStatus } from "react-dom";
 import type { ActionState } from "@/lib/errors";
 import { playSound } from "@/lib/sounds";
 import { Modal } from "./modal";
 import { Alert, Button, Spinner } from "./primitives";
+
+/** Modulo con `trackChanges`: il pulsante resta spento finché non si cambia qualcosa. */
+const UnchangedContext = createContext(false);
+
+/** Valori del modulo in una stringa, per capire se sono cambiati da quelli salvati. */
+function snapshotOf(form: HTMLFormElement): string {
+  return JSON.stringify(
+    [...new FormData(form).entries()].map(([k, v]) => [k, typeof v === "string" ? v : v.name]),
+  );
+}
 
 /**
  * Pulsante di invio: durante l'attesa mostra un indicatore e blocca i doppi clic.
@@ -23,10 +42,11 @@ export function SubmitButton({
   confirmMessage?: string;
 }) {
   const { pending } = useFormStatus();
+  const unchanged = useContext(UnchangedContext);
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || unchanged}
       aria-busy={pending}
       variant={variant}
       className={className}
@@ -84,10 +104,16 @@ export function ActionForm({
   children,
   className,
   resultDialog,
+  trackChanges = false,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children: ReactNode;
   className?: string;
+  /**
+   * Per i moduli che modificano valori già salvati (profilo, preferenze): il pulsante si
+   * accende solo quando qualcosa è diverso da com'era, e si rispegne dopo il salvataggio.
+   */
+  trackChanges?: boolean;
   /** Esito in una finestra modale invece che sotto il modulo: titolo e testo di chiusura. */
   resultDialog?: { title: string; close: string };
 }) {
@@ -97,6 +123,23 @@ export function ActionForm({
     if (result) playSound(result.ok ? "success" : "error");
     return result;
   }, null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const saved = useRef<string | null>(null);
+  const [unchanged, setUnchanged] = useState(trackChanges);
+  const check = useCallback(() => {
+    if (!trackChanges || !formRef.current) return;
+    setUnchanged(snapshotOf(formRef.current) === saved.current);
+  }, [trackChanges]);
+  useEffect(() => {
+    if (trackChanges && formRef.current) saved.current = snapshotOf(formRef.current);
+  }, [trackChanges]);
+  // Dopo un salvataggio riuscito i valori attuali diventano quelli salvati.
+  useEffect(() => {
+    if (trackChanges && state?.ok && formRef.current) {
+      saved.current = snapshotOf(formRef.current);
+      setUnchanged(true);
+    }
+  }, [state, trackChanges]);
   // Ogni nuovo esito riapre la modale; chiuderla segna quell'esito come già visto.
   const [seen, setSeen] = useState<ActionState>(null);
   const result = state ? (
@@ -106,8 +149,15 @@ export function ActionForm({
     </>
   ) : null;
   return (
-    <form action={formAction} className={className ?? "flex flex-col gap-4"} noValidate>
-      {children}
+    <form
+      ref={formRef}
+      action={formAction}
+      onInput={check}
+      onChange={check}
+      className={className ?? "flex flex-col gap-4"}
+      noValidate
+    >
+      <UnchangedContext.Provider value={unchanged}>{children}</UnchangedContext.Provider>
       {resultDialog ? (
         <Modal
           open={state !== null && state !== seen}

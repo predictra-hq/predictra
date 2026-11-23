@@ -4,6 +4,7 @@ import { useState } from "react";
 import { THEME_COLOR, THEME_COOKIE, THEMES, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { playSound } from "@/lib/sounds";
+import { saveAccountSettings } from "@/app/(app)/account-settings-action";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 
@@ -41,6 +42,7 @@ export function ThemePicker({
           onClick={() => {
             applyTheme(t);
             setTheme(t);
+            void saveAccountSettings({ theme: t });
             playSound("tap");
           }}
           className={cn(

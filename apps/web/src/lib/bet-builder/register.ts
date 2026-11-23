@@ -44,18 +44,39 @@ export function bollettaTrackerHref(
   labels: { market: string; selection: string },
   stake: number | null,
 ): string {
-  const matches = bolletta.picks.map((p) => `${p.home} – ${p.away}`).join("; ");
+  return slipTrackerHref(bolletta.picks, bolletta.price, labels, stake);
+}
+
+/** Giocata della schedina come la vede il Tracker: partita, esito e bookmaker. */
+export interface SlipPickLike {
+  matchId: number;
+  home: string;
+  away: string;
+  market: string;
+  line: number | null;
+  selection: string;
+  bookmaker: string;
+}
+
+/** Come `bollettaTrackerHref`, per qualunque schedina (anche le proposte con valore). */
+export function slipTrackerHref(
+  picks: readonly SlipPickLike[],
+  price: number,
+  labels: { market: string; selection: string },
+  stake: number | null,
+): string {
+  const matches = picks.map((p) => `${p.home} – ${p.away}`).join("; ");
   const params = new URLSearchParams({
     add: "1",
     d: matches.length > MAX_DESCRIPTION ? `${matches.slice(0, MAX_DESCRIPTION - 1)}…` : matches,
     mk: labels.market,
     sel: labels.selection,
-    o: bolletta.price.toFixed(2),
+    o: price.toFixed(2),
   });
-  const bookmakers = new Set(bolletta.picks.map((p) => p.bookmaker));
+  const bookmakers = new Set(picks.map((p) => p.bookmaker));
   if (bookmakers.size === 1) params.set("bk", [...bookmakers][0]!);
   if (stake !== null && stake > 0) params.set("st", stake.toFixed(2));
-  const legs = encodeLegs(bolletta.picks);
+  const legs = encodeLegs(picks);
   if (legs) params.set("lg", legs);
   return `/tracker?${params.toString()}#bet-event`;
 }

@@ -425,3 +425,10 @@ input::-webkit-date-and-time-value {
 .font-mono {
   font-variant-numeric: tabular-nums;
 }
+
+/* Nome in stile «Macchina da scrivere»: un vero carattere a larghezza fissa. `.font-mono`
+   nel resto del sito usa il carattere del testo con cifre allineate. */
+.name-mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  letter-spacing: -0.01em;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { SendHorizontal } from "lucide-react";
 import { COMMENT_MAX_LENGTH } from "@predictra/shared-types";
 import type { ActionState } from "@/lib/errors";
@@ -23,17 +23,20 @@ export function ChatComposer({
   sendLabel: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  // Niente invio a vuoto: il pulsante si accende solo con del testo.
+  const [empty, setEmpty] = useState(true);
   const [state, formAction, pending] = useActionState(
     async (prev: ActionState, formData: FormData) => {
       const result = await action(prev, formData);
       if (result) playSound(result.ok ? "success" : "error");
+      if (result?.ok) {
+        formRef.current?.reset();
+        setEmpty(true);
+      }
       return result;
     },
     null,
   );
-  useEffect(() => {
-    if (state?.ok) formRef.current?.reset();
-  }, [state]);
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-1.5">
@@ -56,17 +59,18 @@ export function ChatComposer({
           rows={1}
           maxLength={COMMENT_MAX_LENGTH}
           placeholder={placeholder}
+          onInput={(e) => setEmpty(e.currentTarget.value.trim() === "")}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
-              e.currentTarget.form?.requestSubmit();
+              if (e.currentTarget.value.trim()) e.currentTarget.form?.requestSubmit();
             }
           }}
           className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-bg px-4 py-2.5 text-base text-fg placeholder:text-subtle focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30 sm:text-sm [field-sizing:content]"
         />
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || empty}
           aria-label={sendLabel}
           className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-positive text-on-positive transition-opacity hover:opacity-90 disabled:opacity-50"
         >
