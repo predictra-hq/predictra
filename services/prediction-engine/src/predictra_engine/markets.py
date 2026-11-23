@@ -44,16 +44,21 @@ def _over_under(dist: np.ndarray, line: float) -> tuple[float, float, float | No
 # - entrambe segnano: 0,6870 → 0,6844 (2024-25) e 0,6897 → 0,6870 (2025-26), ADR 0053;
 # - over 1,5 (8.616 partite reali, 17/11/2026): 0,5171 → 0,5143 e 0,5320 → 0,5261;
 # - over 2,5 (stesse partite):                  0,6745 → 0,6730 e 0,6879 → 0,6810.
-# Sulla linea 3,5 il guadagno c'è in un verso solo: resta quella della matrice.
+# - over 3,5 (stesse partite):                  0,6240 → 0,6240 e 0,6252 → 0,6196; adottata il
+#   23/11/2026 (ADR 0063): le giocate dal 70% sull'under 3,5 uscivano il 73,9% contro il
+#   78,2% dato e le schedine del 20–23/11 le sceglievano troppo spesso.
 BTTS_SLOPE = 0.6
 BTTS_SHIFT = 0.05
 OVER_15_SLOPE = 0.6
 OVER_15_SHIFT = 0.55
 OVER_25_SLOPE = 0.6
 OVER_25_SHIFT = 0.15
+OVER_35_SLOPE = 0.65
+OVER_35_SHIFT = -0.2
 TOTAL_CALIBRATION: dict[float, tuple[float, float]] = {
     1.5: (OVER_15_SLOPE, OVER_15_SHIFT),
     2.5: (OVER_25_SLOPE, OVER_25_SHIFT),
+    3.5: (OVER_35_SLOPE, OVER_35_SHIFT),
 }
 
 

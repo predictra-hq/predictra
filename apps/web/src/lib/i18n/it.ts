@@ -1495,6 +1495,7 @@ export const it = {
     band: "dal {from} al {to}",
     bandLast: "dal {from} in su",
     bySeason: "Per stagione",
+    moreDetails: "Più dettagli: probabilità per fascia e per stagione",
     weeklyTitle: "Settimana per settimana",
     weeklyIntro: "Giocate dal 70% uscite nelle ultime settimane dello storico.",
     weeklyNote:
