@@ -7,6 +7,7 @@ import {
   asUser,
   createAuthUser,
   createDatabase,
+  createMigratedDatabase,
   grantRole,
   migrationFiles,
   type TestUser,
@@ -39,7 +40,7 @@ const count = async (tx: Pick<PGlite, "query">, sql: string, params: unknown[] =
 describe("migrazioni", () => {
   it("si applicano da zero in ordine su un database vuoto", async () => {
     expect(migrationFiles().length).toBeGreaterThan(0);
-    const fresh = await createDatabase();
+    const fresh = await createMigratedDatabase();
     const { rows } = await fresh.query<{ code: string }>(
       "select code from public.roles order by rank",
     );

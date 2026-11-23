@@ -26,12 +26,34 @@ export function migrationFiles(): string[] {
     .sort();
 }
 
-export async function createDatabase(): Promise<PGlite> {
+/** Database con lo stub di Supabase e tutte le migrazioni, applicate da zero. */
+export async function createMigratedDatabase(): Promise<PGlite> {
   const db = new PGlite();
   await db.exec(SUPABASE_STUB);
   for (const file of migrationFiles()) {
     await db.exec(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
   }
+  return db;
+}
+
+// Le migrazioni si applicano una volta per file di test; ogni test parte da una copia
+// della cartella dati (ADR 0061: la suite passava da minuti a secondi in CI).
+let snapshot: Promise<File | Blob> | null = null;
+
+function migratedSnapshot(): Promise<File | Blob> {
+  snapshot ??= (async () => {
+    const db = await createMigratedDatabase();
+    const dump = await db.dumpDataDir("none");
+    await db.close();
+    return dump;
+  })();
+  return snapshot;
+}
+
+/** Database nuovo, già migrato: copia identica di uno appena creato con le migrazioni. */
+export async function createDatabase(): Promise<PGlite> {
+  const db = new PGlite({ loadDataDir: await migratedSnapshot() });
+  await db.waitReady;
   return db;
 }
 
