@@ -6,17 +6,26 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 
 ## Stato
 
-| Milestone                                                                      | Stato                                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                                                                                                |
-| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in servizio su DEV: https://predictra-dev.vercel.app                                                                                                                                                                     |
-| M2 — Football data                                                             | ✅ in servizio su DEV (8 competizioni, raccolta da football-data.org); backfill API-Football in preparazione (termini verificati l'11/11/2026): [piano](docs/roadmap/M2-football-data.md)                                   |
-| M3 — Statistiche e quote                                                       | ✅ completata l'11/11/2026, in servizio su DEV: quote 1X2 reali, margine e de-margin, pagine Market, Statistics e League Intelligence, alias squadre ([piano](docs/roadmap/M3-statistiche-e-quote.md))                      |
-| M5 — Smart Bet Builder                                                         | ✅ in servizio su DEV: proposte da modello attivo e quote reali FRESH, nessuna schedina forzata ([piano](docs/roadmap/M5-bet-builder.md), [runbook](docs/operations/bet-builder.md))                                        |
-| M4 — Prediction engine                                                         | ✅ in servizio su DEV (modello attivo: Poisson; [runbook](docs/operations/prediction-engine.md))                                                                                                                            |
-| M6 — Bankroll e tracker                                                        | ✅ in servizio su DEV (isolamento verificato con il workflow _Verifica DEV_)                                                                                                                                                |
-| M7 — Agente autonomo                                                           | ✅ completata, in servizio su DEV: coda su Postgres, raccolte, previsioni e proposte programmate dall'agente, watchdog e avvio di riserva, monitoraggio in _Amministrazione → Agente_ ([runbook](docs/operations/agent.md)) |
-| M8                                                                             | [roadmap](docs/roadmap/README.md)                                                                                                                                                                                           |
+In produzione dal 17/11/2026. Versione calcolata a ogni deploy ([ADR 0066](docs/decisions/0066-versione-automatica-per-ambiente.md)).
+
+| Ambiente | Indirizzo                         | Branch | Dati                                                                                                         |
+| -------- | --------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------ |
+| **PROD** | https://predictra-prod.vercel.app | `main` | raccolti dall'agente tre volte al giorno                                                                     |
+| DEV      | https://predictra-dev.vercel.app  | `dev`  | copia giornaliera di quelli di PROD ([ADR 0055](docs/decisions/0055-una-sola-raccolta-prod-copia-su-dev.md)) |
+
+Dettagli: [ambienti](docs/operations/ambienti.md), [produzione](docs/operations/produzione.md).
+
+| Milestone                                                                      | Stato                                                                                                                                                                 |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 — Audit e piano                                                             | ✅ approvata                                                                                                                                                          |
+| M1 — Fondazioni (monorepo, auth su invito senza email, ruoli, 2FA, RLS, CI/CD) | ✅ in produzione                                                                                                                                                      |
+| M2 — Football data                                                             | ✅ in produzione (8 competizioni, raccolta da football-data.org); backfill API-Football in preparazione: [piano](docs/roadmap/M2-football-data.md)                    |
+| M3 — Statistiche e quote                                                       | ✅ in produzione: quote reali, margine e de-margin, mercati, statistiche e campionati, alias squadre ([piano](docs/roadmap/M3-statistiche-e-quote.md))                |
+| M4 — Prediction engine                                                         | ✅ in produzione: modello Dixon-Coles con Elo, taratura dei gol, verifica storica e confronto settimanale ([runbook](docs/operations/prediction-engine.md))           |
+| M5 — Smart Bet Builder                                                         | ✅ in produzione: schedine consigliate, proposte con valore da quote reali, Costruisci, nessuna schedina forzata ([runbook](docs/operations/bet-builder.md))          |
+| M6 — Bankroll e tracker                                                        | ✅ in produzione (isolamento dei dati personali verificato con il workflow _Verifica DEV_)                                                                            |
+| M7 — Agente autonomo                                                           | ✅ in produzione: coda su Postgres, tre giri al giorno avviati da QStash, watchdog, monitoraggio in _Amministrazione → Sistema_ ([runbook](docs/operations/agent.md)) |
+| M8 — Hardening e produzione                                                    | in corso: Spogliatoio, profilo pubblico, versioni automatiche; aperti step-up 2FA e conservazione dei dati ([roadmap](docs/roadmap/README.md))                        |
 
 ## Struttura
 
@@ -24,7 +33,10 @@ Piattaforma privata di football intelligence: dati storici e aggiornati, modelli
 apps/web/                 Next.js 16 (App Router), TypeScript strict, Tailwind 4 — UI + Server Actions
 packages/shared-types/    ruoli, permessi e regole di dominio condivise (con test)
 packages/config/          tsconfig condivisi
-services/data-collector/  raccolta dati calcio in Python (football-data.org → Supabase), con test
+services/data-collector/  raccolta dati calcio e quote in Python (football-data.org, The Odds API → Supabase)
+services/prediction-engine/ modello delle previsioni (Python), backtest e verifica storica
+services/bet-builder/     proposte con valore (Python)
+services/agent/           agente: coda dei lavori e giri programmati (Python)
 supabase/migrations/      migrazioni SQL versionate (schema, RLS, RPC)
 supabase/tests/           test di migrazione, RLS e isolamento (Postgres embedded)
 supabase/config.toml      impostazioni Auth applicate dalla pipeline
@@ -64,8 +76,8 @@ pnpm format        # formattazione Prettier
 
 | Branch      | Uso                      |
 | ----------- | ------------------------ |
-| `main`      | produzione stabile       |
-| `dev`       | integrazione             |
+| `main`      | produzione (PROD)        |
+| `dev`       | integrazione (DEV)       |
 | `feature/*` | sviluppo, PR verso `dev` |
 
 Nomi dei branch di sviluppo: `feature/m<N>-<0|a|b>-<slug>` (milestone e corsia), oppure `feature/docs-<slug>`.
