@@ -61,3 +61,9 @@ Comando `api-football-backfill` ([runbook](../operations/data-collector.md)). Il
 - Account attivo: registrato da `gennpalm` l'11/11/2026, piano Free, limite di 100 richieste al giorno (letto in dashboard).
 - Segreto GitHub `API_FOOTBALL_KEY`: presente dall'11/11/2026.
 - Primo account (7/11/2026): sospeso, 0 richieste usate. Da far chiudere al supporto per rispettare la regola di un solo account.
+
+## Sospensione del 24/11/2026
+
+L'account risultava sospeso già alla prima chiamata del giorno («Your account is suspended»). Nelle ore prima non c'era stata nessuna richiesta: la quota giornaliera è esclusa. La causa più probabile sono gli IP condivisi dei runner di GitHub, che fanno scattare i controlli contro i doppi account del piano Free.
+
+Da allora API-Football si chiama solo da un IP non condiviso: runner self-hosted con IP dedicato o macchina propria ([ADR 0069](../decisions/0069-api-football-solo-da-ip-non-condivisi.md)). Un account sospeso non viene più sollecitato con nuovi tentativi.

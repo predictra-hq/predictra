@@ -167,3 +167,54 @@ def test_limite_del_piano_non_ritenta(queue: FakeQueue) -> None:
     )
     run_cycle(queue, handlers(collector), config(), clock=queue.clock)
     assert queue.jobs[job_id].status == "dead"
+
+
+class SuspendedCollector(FakeCollector):
+    def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+        self.calls.append({"competitions": competitions, **kw})
+        raise RuntimeError("API-Football /status: access: Your account is suspended")
+
+
+def test_adr_0069_mai_dai_runner_condivisi_di_github(queue: FakeQueue) -> None:
+    env = {"API_FOOTBALL_KEY": AF_KEY, "RUNNER_ENVIRONMENT": "github-hosted"}
+    assert not api_football_details.egress_allowed(env)
+    assert api_football_details.egress_allowed({"RUNNER_ENVIRONMENT": "self-hosted"})
+    assert api_football_details.egress_allowed({})
+    job_id = plan(queue)
+    collector = FakeCollector(Summary())
+    run_cycle(queue, handlers(collector, env=env), config(), clock=queue.clock)
+    # Nessuna chiamata e nessun nuovo tentativo.
+    assert collector.calls == []
+    assert queue.jobs[job_id].status == "dead"
+
+
+def test_adr_0069_account_sospeso_non_ritenta(queue: FakeQueue) -> None:
+    job_id = plan(queue)
+    rescorer = SuspendedCollector(Summary())
+    run_cycle(
+        queue, handlers(FakeCollector(Summary()), rescorer=rescorer), config(), clock=queue.clock
+    )
+    assert len(rescorer.calls) == 1
+    assert queue.jobs[job_id].status == "dead"
+
+
+def test_adr_0069_le_chiamate_del_minuto_passano_al_secondo_client(queue: FakeQueue) -> None:
+    class Rescorer(FakeCollector):
+        def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+            client.minute_remaining = 1  # il primo client ha quasi finito il minuto
+            return RescoreSummary()
+
+    class Collector(FakeCollector):
+        def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+            self.calls.append({"minute_remaining": client.minute_remaining})
+            return self.summary
+
+    plan(queue)
+    collector = Collector(Summary())
+    run_cycle(
+        queue,
+        handlers(collector, rescorer=Rescorer(Summary())),
+        config(),
+        clock=queue.clock,
+    )
+    assert collector.calls == [{"minute_remaining": 1}]

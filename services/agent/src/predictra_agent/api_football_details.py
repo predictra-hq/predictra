@@ -41,6 +41,22 @@ def planned_job(now: datetime) -> tuple[str, str, dict[str, Any], int]:
     return JOB_TYPE, f"{JOB_TYPE}:{day}", {"date": day}, MAX_ATTEMPTS
 
 
+# Runner ospitati da GitHub: IP di uscita condivisi con migliaia di altri utenti su Azure.
+# API-SPORTS sospende i piani Free che chiamano da IP condivisi (controlli multi-account,
+# ADR 0069), anche con poche richieste: da lì API-Football non si chiama mai.
+SHARED_RUNNER = "github-hosted"
+
+
+def egress_allowed(env: Mapping[str, str]) -> bool:
+    """Vero se le chiamate partono da un IP non condiviso (runner self-hosted o PC proprio)."""
+    return (env.get("RUNNER_ENVIRONMENT") or "").strip() != SHARED_RUNNER
+
+
+def is_suspended(exc: BaseException) -> bool:
+    """Risposta «Your account is suspended»: riprovare non serve e peggiora le cose."""
+    return "suspended" in str(exc).lower()
+
+
 def make_handler(
     env: Mapping[str, str],
     *,
@@ -53,17 +69,36 @@ def make_handler(
         key = (env.get("API_FOOTBALL_KEY") or "").strip()
         if not key:
             raise PermanentJobError("Variabile API_FOOTBALL_KEY mancante")
+        if not egress_allowed(env):
+            raise PermanentJobError(
+                "API-Football non si chiama dai runner di GitHub: IP condivisi (ADR 0069)"
+            )
+        try:
+            return _collect(key)
+        except PermanentJobError:
+            raise
+        except Exception as exc:
+            if is_suspended(exc):
+                # Nessun nuovo tentativo: un account sospeso non va sollecitato.
+                raise PermanentJobError(f"Account API-Football sospeso: {exc}") from exc
+            raise
+
+    def _collect(key: str) -> dict[str, Any]:
         store = SupabaseStore(supabase_url, supabase_secret_key)
+        first = ApiFootballClient(key)
         rescore = rescorer(
-            ApiFootballClient(key),
+            first,
             store,
             V1_COMPETITIONS,
             triggered_by="schedule",
             secrets=(key, supabase_secret_key),
             refresh=True,
         )
-        # Client nuovo: il budget dei dettagli si ricalcola da /status, già aggiornato.
+        # Client nuovo: il budget dei dettagli si ricalcola da /status, già aggiornato. Le
+        # chiamate rimaste nel minuto passano dal primo client al secondo, altrimenti il
+        # secondo partirebbe senza aspettare e potrebbe superare il limite al minuto.
         client = ApiFootballClient(key)
+        client.minute_remaining = first.minute_remaining
         summary = collector(
             client,
             store,

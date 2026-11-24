@@ -67,8 +67,9 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
     planned: list[tuple[str, str, dict[str, object], int]] = []
     if "football-data" in args.plan:
         planned.append((*football_data.planned_job(now), 5))
-        # Statistiche e formazioni API-Football (ADR 0012): un job al giorno, se c'è la chiave.
-        if (env.get("API_FOOTBALL_KEY") or "").strip():
+        # Statistiche e formazioni API-Football (ADR 0012): un job al giorno, se c'è la chiave
+        # e solo da un IP non condiviso (ADR 0069): mai dai runner ospitati da GitHub.
+        if (env.get("API_FOOTBALL_KEY") or "").strip() and api_football_details.egress_allowed(env):
             planned.append(api_football_details.planned_job(now))
     if "odds" in args.plan:
         planned.extend(odds.planned_jobs(now))

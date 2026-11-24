@@ -29,7 +29,9 @@ import httpx
 PROVIDER = "api-football"
 BASE_URL = "https://v3.football.api-sports.io"
 DAILY_BUDGET = 90  # ADR 0010 §5: 90 richieste su 100 al giorno
-MINUTE_RESERVE = 1  # sotto questa soglia di X-RateLimit-Remaining si aspetta
+# Sotto questa soglia di X-RateLimit-Remaining si aspetta il minuto dopo. 2 e non 1: resta
+# posto per la chiamata a /status di un client nuovo nello stesso minuto (ADR 0069).
+MINUTE_RESERVE = 2
 
 
 class ApiFootballError(RuntimeError):
