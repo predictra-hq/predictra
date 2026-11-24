@@ -67,9 +67,20 @@ def _cmd_cycle(args: argparse.Namespace, env: dict[str, str]) -> int:
     planned: list[tuple[str, str, dict[str, object], int]] = []
     if "football-data" in args.plan:
         planned.append((*football_data.planned_job(now), 5))
-        # Statistiche e formazioni API-Football (ADR 0012): un job al giorno, se c'è la chiave.
-        if (env.get("API_FOOTBALL_KEY") or "").strip():
-            planned.append(api_football_details.planned_job(now))
+        # Statistiche e formazioni API-Football (ADR 0012): un job al giorno, se c'è la chiave
+        # e se quella chiave non è risultata sospesa negli ultimi 7 giorni (ADR 0069).
+        af_key = (env.get("API_FOOTBALL_KEY") or "").strip()
+        if af_key:
+            try:
+                last = queue.last_dead_error(
+                    api_football_details.JOB_TYPE, now - api_football_details.SUSPENSION_PAUSE
+                )
+            except QueueError:
+                last = None
+            if api_football_details.should_plan(af_key, last):
+                planned.append(api_football_details.planned_job(now))
+            else:
+                print("Piano: API-Football saltato, account sospeso (si riprova tra 7 giorni)")
     if "odds" in args.plan:
         planned.extend(odds.planned_jobs(now))
     if "predictions" in args.plan:

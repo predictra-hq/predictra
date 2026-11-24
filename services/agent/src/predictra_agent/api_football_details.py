@@ -14,12 +14,15 @@ l'adattatore alla coda.
   più nulla. Va prima perché i dettagli usano tutto il budget del giorno.
 - Chiave mancante o limite del piano → errore non recuperabile; stagione fallita → un solo
   nuovo tentativo.
+- Account sospeso (ADR 0069) → errore non recuperabile con l'impronta della chiave; per 7
+  giorni quella chiave non si chiama più. Con una chiave nuova si riparte subito.
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from predictra_collector.api_football import ApiFootballClient
@@ -41,6 +44,31 @@ def planned_job(now: datetime) -> tuple[str, str, dict[str, Any], int]:
     return JOB_TYPE, f"{JOB_TYPE}:{day}", {"date": day}, MAX_ATTEMPTS
 
 
+# Dopo una sospensione l'account non si chiama più (ADR 0069): solo un controllo a
+# settimana per vedere se è tornato attivo. Una chiave nuova riparte subito.
+SUSPENSION_PAUSE = timedelta(days=7)
+
+
+def key_fingerprint(key: str) -> str:
+    """Impronta della chiave (12 caratteri dell'hash): distingue gli account, non la rivela."""
+    return hashlib.sha256(key.strip().encode()).hexdigest()[:12]
+
+
+def suspension_mark(key: str) -> str:
+    """Testo salvato nell'errore del job quando l'account con questa chiave è sospeso."""
+    return f"[sospeso chiave {key_fingerprint(key)}]"
+
+
+def should_plan(key: str, last_dead_error: str | None) -> bool:
+    """Falso se l'ultimo job morto negli ultimi 7 giorni dice che questa chiave è sospesa."""
+    return not (last_dead_error and suspension_mark(key) in last_dead_error)
+
+
+def is_suspended(exc: BaseException) -> bool:
+    """Risposta «Your account is suspended»: riprovare non serve e peggiora le cose."""
+    return "suspended" in str(exc).lower()
+
+
 def make_handler(
     env: Mapping[str, str],
     *,
@@ -53,17 +81,34 @@ def make_handler(
         key = (env.get("API_FOOTBALL_KEY") or "").strip()
         if not key:
             raise PermanentJobError("Variabile API_FOOTBALL_KEY mancante")
+        try:
+            return _collect(key)
+        except PermanentJobError:
+            raise
+        except Exception as exc:
+            if is_suspended(exc):
+                # Nessun nuovo tentativo: un account sospeso non va sollecitato.
+                raise PermanentJobError(
+                    f"Account API-Football sospeso {suspension_mark(key)}: {exc}"
+                ) from exc
+            raise
+
+    def _collect(key: str) -> dict[str, Any]:
         store = SupabaseStore(supabase_url, supabase_secret_key)
+        first = ApiFootballClient(key)
         rescore = rescorer(
-            ApiFootballClient(key),
+            first,
             store,
             V1_COMPETITIONS,
             triggered_by="schedule",
             secrets=(key, supabase_secret_key),
             refresh=True,
         )
-        # Client nuovo: il budget dei dettagli si ricalcola da /status, già aggiornato.
+        # Client nuovo: il budget dei dettagli si ricalcola da /status, già aggiornato. Le
+        # chiamate rimaste nel minuto passano dal primo client al secondo, altrimenti il
+        # secondo partirebbe senza aspettare e potrebbe superare il limite al minuto.
         client = ApiFootballClient(key)
+        client.minute_remaining = first.minute_remaining
         summary = collector(
             client,
             store,

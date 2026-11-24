@@ -167,3 +167,54 @@ def test_limite_del_piano_non_ritenta(queue: FakeQueue) -> None:
     )
     run_cycle(queue, handlers(collector), config(), clock=queue.clock)
     assert queue.jobs[job_id].status == "dead"
+
+
+class SuspendedCollector(FakeCollector):
+    def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+        self.calls.append({"competitions": competitions, **kw})
+        raise RuntimeError("API-Football /status: access: Your account is suspended")
+
+
+def test_adr_0069_sospensione_ricordata_per_chiave() -> None:
+    mark = api_football_details.suspension_mark(AF_KEY)
+    assert AF_KEY not in mark
+    error = f"Account API-Football sospeso {mark}: Your account is suspended"
+    # La stessa chiave non si chiama più; una chiave nuova sì; senza errori si chiama.
+    assert not api_football_details.should_plan(AF_KEY, error)
+    assert api_football_details.should_plan("af_ALTRA_CHIAVE_DEMO", error)
+    assert api_football_details.should_plan(AF_KEY, None)
+    assert api_football_details.should_plan(AF_KEY, "Stagioni non completate: PL:2023")
+
+
+def test_adr_0069_account_sospeso_non_ritenta(queue: FakeQueue) -> None:
+    job_id = plan(queue)
+    rescorer = SuspendedCollector(Summary())
+    run_cycle(
+        queue, handlers(FakeCollector(Summary()), rescorer=rescorer), config(), clock=queue.clock
+    )
+    assert len(rescorer.calls) == 1
+    assert queue.jobs[job_id].status == "dead"
+    # L'errore porta l'impronta della chiave: il piano dei giorni dopo la salta.
+    assert not api_football_details.should_plan(AF_KEY, queue.jobs[job_id].last_error)
+
+
+def test_adr_0069_le_chiamate_del_minuto_passano_al_secondo_client(queue: FakeQueue) -> None:
+    class Rescorer(FakeCollector):
+        def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+            client.minute_remaining = 1  # il primo client ha quasi finito il minuto
+            return RescoreSummary()
+
+    class Collector(FakeCollector):
+        def __call__(self, client: Any, store: Any, competitions: tuple[str, ...], **kw: Any):
+            self.calls.append({"minute_remaining": client.minute_remaining})
+            return self.summary
+
+    plan(queue)
+    collector = Collector(Summary())
+    run_cycle(
+        queue,
+        handlers(collector, rescorer=Rescorer(Summary())),
+        config(),
+        clock=queue.clock,
+    )
+    assert collector.calls == [{"minute_remaining": 1}]

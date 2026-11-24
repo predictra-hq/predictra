@@ -112,3 +112,21 @@ def test_watchdog_chiama_la_rpc() -> None:
     assert queue.watchdog() == 2
     assert seen[0].url.path == "/rest/v1/rpc/agent_watchdog"
     assert json.loads(seen[0].content) == {}
+
+
+def test_adr_0069_ultimo_errore_dei_job_morti() -> None:
+    from datetime import UTC, datetime
+
+    queue, seen = make_queue(
+        lambda r: httpx.Response(200, json=[{"last_error": "Account sospeso [sospeso chiave x]"}])
+    )
+    since = datetime(2026, 11, 17, tzinfo=UTC)
+    assert (
+        queue.last_dead_error("api-football.details", since) == "Account sospeso [sospeso chiave x]"
+    )
+    params = dict(seen[0].url.params)
+    assert params["type"] == "eq.api-football.details"
+    assert params["status"] == "eq.dead"
+    assert params["finished_at"].startswith("gte.2026-11-17")
+    empty, _ = make_queue(lambda r: httpx.Response(200, json=[]))
+    assert empty.last_dead_error("api-football.details", since) is None

@@ -7,6 +7,7 @@ server, mai nei log. Funzioni e codici d'errore: docs/data-dictionary/agent.md.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Literal, Protocol
 
 import httpx
@@ -119,6 +120,28 @@ class SupabaseQueue:
                 raise LeaseLostError(message, code)
             raise QueueError(message, code)
         return response.json() if response.content else None
+
+    def last_dead_error(self, job_type: str, since: datetime) -> str | None:
+        """Errore dell'ultimo job di questo tipo finito in `dead` dopo `since`, se c'è."""
+        try:
+            response = self.http.get(
+                f"{self.url}/rest/v1/agent_jobs",
+                params={
+                    "select": "last_error",
+                    "type": f"eq.{job_type}",
+                    "status": "eq.dead",
+                    "finished_at": f"gte.{since.isoformat()}",
+                    "order": "finished_at.desc",
+                    "limit": "1",
+                },
+                headers=self._headers(),
+            )
+        except httpx.HTTPError as exc:
+            raise QueueError(f"Supabase agent_jobs: {type(exc).__name__}") from None
+        if response.status_code >= 400:
+            raise QueueError(f"Supabase agent_jobs: HTTP {response.status_code}")
+        rows = response.json() or []
+        return str(rows[0].get("last_error") or "") or None if rows else None
 
     def enqueue(
         self,
