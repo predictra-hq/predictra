@@ -89,7 +89,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: "giocate_piu_probabili",
       description:
-        "Le giocate più probabili dei prossimi 7 giorni su tutti i campionati (pagina Certezze): partita, giocata e probabilità. Usalo per domande come: cosa conviene giocare, quali sono le partite più sicure.",
+        "Le giocate più probabili dei prossimi 7 giorni su tutti i campionati (pagina Alta probabilità): partita, giocata e probabilità. Usalo per domande come: quali sono le giocate più probabili. Probabile non vuol dire conveniente: non presentarle come sicure né come giocate che convengono, perché la quota può pagare meno del giusto.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
@@ -160,7 +160,7 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
     function: {
       name: "proposte",
       description:
-        "Le schedine consigliate (pagina Pronostici › Schedine › Proposte), la migliore per categoria.",
+        "Le schedine consigliate (pagina Analisi › Schedine › Proposte), la migliore per categoria.",
       parameters: { type: "object", properties: {}, additionalProperties: false },
     },
   },
