@@ -61,4 +61,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0066](0066-versione-automatica-per-ambiente.md)            | Versione del sito automatica per ambiente                                    | Accettata |
 | [0067](0067-preferenze-nell-account-e-schedine-compatte.md) | Preferenze nell'account, profilo modificabile dagli admin, schedine compatte | Accettata |
 | [0068](0068-repository-pubblico.md)                         | Repository pubblico                                                          | Accettata |
-| [0069](0069-api-football-solo-da-ip-non-condivisi.md)       | API-Football solo da IP non condivisi                                        | Accettata |
+| [0069](0069-api-football-sospensione-gestita.md)            | API-Football: sospensione gestita e IP condivisi                             | Accettata |
