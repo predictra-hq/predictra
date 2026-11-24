@@ -110,13 +110,6 @@ jobs:
             api-football-*) needed="API_FOOTBALL_KEY" ;;
             *) echo "::error::Lavoro sconosciuto: $JOB"; exit 1 ;;
           esac
-          # ADR 0069: API-SPORTS sospende i piani Free che chiamano da IP condivisi, come
-          # quelli dei runner ospitati da GitHub. Da qui API-Football non si chiama.
-          if [[ "$JOB" == api-football-* && "$RUNNER_ENVIRONMENT" == "github-hosted" ]]; then
-            echo "::warning title=Raccolta saltata ($JOB)::API-Football non si chiama dai runner di GitHub: IP condivisi (ADR 0069, docs/data-sources/api-football.md)"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           missing=""
           for v in $needed SUPABASE_PROJECT_ID SUPABASE_SECRET_KEY; do
             if [ -z "${!v}" ]; then missing="$missing $v"; fi

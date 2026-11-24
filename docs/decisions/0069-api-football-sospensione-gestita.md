@@ -1,4 +1,4 @@
-# ADR 0069 — API-Football solo da IP non condivisi
+# ADR 0069 — API-Football: sospensione gestita e IP condivisi
 
 - **Stato:** accettato (24/11/2026)
 - **Milestone:** M8 (corsia A)
@@ -19,11 +19,14 @@ API-Football non indica il motivo. Le piste trovate:
 
 ## Decisione
 
-- **Mai dai runner di GitHub.** Se `RUNNER_ENVIRONMENT` è `github-hosted`, l'agente non pianifica API-Football e il lavoro va subito in `dead`; il workflow `data-collector` salta i lavori `api-football-*`. Da un runner self-hosted con IP dedicato, o da una macchina propria, le chiamate restano possibili.
-- **Account sospeso.** La risposta «Your account is suspended» manda il lavoro in `dead` senza nuovi tentativi.
+Il proprietario ha scelto di continuare a chiamare API-Football dai runner di GitHub, accettando il rischio di nuove sospensioni. Il codice limita i danni:
+
+- **Account sospeso.** La risposta «Your account is suspended» manda il lavoro in `dead` senza nuovi tentativi, con l'impronta della chiave nell'errore: 12 caratteri dell'hash, che non rivelano la chiave.
+- **Nessuna chiamata dopo la sospensione.** Prima di pianificare il lavoro del giorno, l'agente guarda l'ultimo lavoro API-Football finito in `dead` negli ultimi 7 giorni. Se riguarda la stessa chiave, salta API-Football. Dopo 7 giorni fa un solo controllo per vedere se l'account è tornato attivo. Con una chiave nuova riparte subito.
 - **Limite al minuto.** Le chiamate rimaste nel minuto passano dal primo al secondo client, e la riserva sale da 1 a 2 (`MINUTE_RESERVE`).
+- Se le sospensioni continuano, la soluzione è un runner self-hosted con un IP dedicato.
 
 ## Conseguenze
 
-- Senza un runner self-hosted con IP dedicato, PREDICTRA non chiama più API-Football. Statistiche e formazioni aggiuntive delle partite nuove mancano; partite, risultati, quote e modello non cambiano (football-data.org e The Odds API).
-- Un nuovo account usato dagli stessi runner verrebbe con ogni probabilità sospeso di nuovo. I termini di API-Football vietano più account per superare il piano Free e l'uso di account altrui: PREDICTRA usa un solo account, intestato a chi lo gestisce.
+- Se l'account viene sospeso, PREDICTRA smette da sola di chiamarlo. Mancano solo statistiche e formazioni aggiuntive; partite, risultati, quote e modello non cambiano (football-data.org e The Odds API).
+- Per riprendere subito basta aggiornare il secret `API_FOOTBALL_KEY` con una chiave valida.

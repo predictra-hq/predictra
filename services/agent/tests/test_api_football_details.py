@@ -175,17 +175,15 @@ class SuspendedCollector(FakeCollector):
         raise RuntimeError("API-Football /status: access: Your account is suspended")
 
 
-def test_adr_0069_mai_dai_runner_condivisi_di_github(queue: FakeQueue) -> None:
-    env = {"API_FOOTBALL_KEY": AF_KEY, "RUNNER_ENVIRONMENT": "github-hosted"}
-    assert not api_football_details.egress_allowed(env)
-    assert api_football_details.egress_allowed({"RUNNER_ENVIRONMENT": "self-hosted"})
-    assert api_football_details.egress_allowed({})
-    job_id = plan(queue)
-    collector = FakeCollector(Summary())
-    run_cycle(queue, handlers(collector, env=env), config(), clock=queue.clock)
-    # Nessuna chiamata e nessun nuovo tentativo.
-    assert collector.calls == []
-    assert queue.jobs[job_id].status == "dead"
+def test_adr_0069_sospensione_ricordata_per_chiave() -> None:
+    mark = api_football_details.suspension_mark(AF_KEY)
+    assert AF_KEY not in mark
+    error = f"Account API-Football sospeso {mark}: Your account is suspended"
+    # La stessa chiave non si chiama più; una chiave nuova sì; senza errori si chiama.
+    assert not api_football_details.should_plan(AF_KEY, error)
+    assert api_football_details.should_plan("af_ALTRA_CHIAVE_DEMO", error)
+    assert api_football_details.should_plan(AF_KEY, None)
+    assert api_football_details.should_plan(AF_KEY, "Stagioni non completate: PL:2023")
 
 
 def test_adr_0069_account_sospeso_non_ritenta(queue: FakeQueue) -> None:
@@ -196,6 +194,8 @@ def test_adr_0069_account_sospeso_non_ritenta(queue: FakeQueue) -> None:
     )
     assert len(rescorer.calls) == 1
     assert queue.jobs[job_id].status == "dead"
+    # L'errore porta l'impronta della chiave: il piano dei giorni dopo la salta.
+    assert not api_football_details.should_plan(AF_KEY, queue.jobs[job_id].last_error)
 
 
 def test_adr_0069_le_chiamate_del_minuto_passano_al_secondo_client(queue: FakeQueue) -> None:

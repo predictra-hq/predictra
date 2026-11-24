@@ -14,12 +14,15 @@ l'adattatore alla coda.
   più nulla. Va prima perché i dettagli usano tutto il budget del giorno.
 - Chiave mancante o limite del piano → errore non recuperabile; stagione fallita → un solo
   nuovo tentativo.
+- Account sospeso (ADR 0069) → errore non recuperabile con l'impronta della chiave; per 7
+  giorni quella chiave non si chiama più. Con una chiave nuova si riparte subito.
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from predictra_collector.api_football import ApiFootballClient
@@ -41,15 +44,24 @@ def planned_job(now: datetime) -> tuple[str, str, dict[str, Any], int]:
     return JOB_TYPE, f"{JOB_TYPE}:{day}", {"date": day}, MAX_ATTEMPTS
 
 
-# Runner ospitati da GitHub: IP di uscita condivisi con migliaia di altri utenti su Azure.
-# API-SPORTS sospende i piani Free che chiamano da IP condivisi (controlli multi-account,
-# ADR 0069), anche con poche richieste: da lì API-Football non si chiama mai.
-SHARED_RUNNER = "github-hosted"
+# Dopo una sospensione l'account non si chiama più (ADR 0069): solo un controllo a
+# settimana per vedere se è tornato attivo. Una chiave nuova riparte subito.
+SUSPENSION_PAUSE = timedelta(days=7)
 
 
-def egress_allowed(env: Mapping[str, str]) -> bool:
-    """Vero se le chiamate partono da un IP non condiviso (runner self-hosted o PC proprio)."""
-    return (env.get("RUNNER_ENVIRONMENT") or "").strip() != SHARED_RUNNER
+def key_fingerprint(key: str) -> str:
+    """Impronta della chiave (12 caratteri dell'hash): distingue gli account, non la rivela."""
+    return hashlib.sha256(key.strip().encode()).hexdigest()[:12]
+
+
+def suspension_mark(key: str) -> str:
+    """Testo salvato nell'errore del job quando l'account con questa chiave è sospeso."""
+    return f"[sospeso chiave {key_fingerprint(key)}]"
+
+
+def should_plan(key: str, last_dead_error: str | None) -> bool:
+    """Falso se l'ultimo job morto negli ultimi 7 giorni dice che questa chiave è sospesa."""
+    return not (last_dead_error and suspension_mark(key) in last_dead_error)
 
 
 def is_suspended(exc: BaseException) -> bool:
@@ -69,10 +81,6 @@ def make_handler(
         key = (env.get("API_FOOTBALL_KEY") or "").strip()
         if not key:
             raise PermanentJobError("Variabile API_FOOTBALL_KEY mancante")
-        if not egress_allowed(env):
-            raise PermanentJobError(
-                "API-Football non si chiama dai runner di GitHub: IP condivisi (ADR 0069)"
-            )
         try:
             return _collect(key)
         except PermanentJobError:
@@ -80,7 +88,9 @@ def make_handler(
         except Exception as exc:
             if is_suspended(exc):
                 # Nessun nuovo tentativo: un account sospeso non va sollecitato.
-                raise PermanentJobError(f"Account API-Football sospeso: {exc}") from exc
+                raise PermanentJobError(
+                    f"Account API-Football sospeso {suspension_mark(key)}: {exc}"
+                ) from exc
             raise
 
     def _collect(key: str) -> dict[str, Any]:

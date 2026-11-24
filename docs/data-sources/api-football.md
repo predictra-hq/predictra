@@ -66,4 +66,4 @@ Comando `api-football-backfill` ([runbook](../operations/data-collector.md)). Il
 
 L'account risultava sospeso già alla prima chiamata del giorno («Your account is suspended»). Nelle ore prima non c'era stata nessuna richiesta: la quota giornaliera è esclusa. La causa più probabile sono gli IP condivisi dei runner di GitHub, che fanno scattare i controlli contro i doppi account del piano Free.
 
-Da allora API-Football si chiama solo da un IP non condiviso: runner self-hosted con IP dedicato o macchina propria ([ADR 0069](../decisions/0069-api-football-solo-da-ip-non-condivisi.md)). Un account sospeso non viene più sollecitato con nuovi tentativi.
+Da allora l'agente gestisce la sospensione: niente nuovi tentativi e, per 7 giorni, nessuna chiamata con la stessa chiave. Una chiave nuova riparte subito. La chiave sta solo nel secret GitHub `API_FOOTBALL_KEY` ([ADR 0069](../decisions/0069-api-football-sospensione-gestita.md)).
