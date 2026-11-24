@@ -1,5 +1,5 @@
 import "server-only";
-import { loadVerification } from "@/lib/certainties/load";
+import { loadSlipVerification } from "@/lib/certainties/load";
 import { buildBollette } from "./bollette";
 import { loadCalibration } from "./calibration-load";
 import type { LikelyRow } from "./likely";
@@ -13,7 +13,7 @@ import { loadPicksData } from "./queries";
  */
 export async function loadPastRounds(): Promise<PastRound[]> {
   const [verification, live, calibration] = await Promise.all([
-    loadVerification(),
+    loadSlipVerification(),
     loadPicksData(),
     loadCalibration(),
   ]);

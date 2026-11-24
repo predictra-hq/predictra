@@ -64,8 +64,21 @@ export interface VerificationData extends Verification {
   prices: Map<string, ItalianPrice>;
 }
 
-export const loadVerification = cache(async (): Promise<VerificationData> => {
-  const verification = await recentVerification();
+/** Sotto questa probabilità nessun profilo di schedina prende una giocata. */
+export const SLIP_MIN_PROBABILITY = 0.4;
+
+export const loadVerification = cache((): Promise<VerificationData> => verificationFrom(undefined));
+
+/**
+ * Come `loadVerification`, ma con tutte le giocate dal 40%: le schedine passate usano
+ * anche quelle sotto il 70% (Equilibrata, Alta quota). ADR 0070.
+ */
+export const loadSlipVerification = cache((): Promise<VerificationData> =>
+  verificationFrom(SLIP_MIN_PROBABILITY),
+);
+
+async function verificationFrom(minProbability: number | undefined): Promise<VerificationData> {
+  const verification = await recentVerification(new Date(), minProbability);
   const kickoff = new Map(verification.rows.map((r) => [r.match_id, Date.parse(r.kickoff_at)]));
   // Solo quote raccolte prima della partita: quelle che si potevano davvero giocare.
   const odds = (await oddsFor(matchIds(verification.rows))).filter(
@@ -78,7 +91,7 @@ export const loadVerification = cache(async (): Promise<VerificationData> => {
     consensus,
     prices: bestItalianPrices(odds),
   };
-});
+}
 
 /** Soglia, orizzonte e numero di giocate del riquadro in Home. */
 export const HOME_CERTAINTY_THRESHOLD = 0.8;

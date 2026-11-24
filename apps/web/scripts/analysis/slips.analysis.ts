@@ -16,7 +16,7 @@ import {
 import { calibrationFrom } from "@/lib/bet-builder/calibration";
 import type { LikelyRow } from "@/lib/bet-builder/likely";
 import { settleBolletta } from "@/lib/bet-builder/past";
-import { loadVerification } from "@/lib/certainties/load";
+import { loadSlipVerification } from "@/lib/certainties/load";
 import { settle } from "@/lib/certainties/logic";
 import { getActiveHistoryCheck } from "@/lib/predictions/queries";
 import { withServiceClient } from "@/lib/supabase/server";
@@ -52,7 +52,7 @@ it("analisi delle schedine", async () => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   await withServiceClient(client, async () => {
-    const v = await loadVerification();
+    const v = await loadSlipVerification();
     const history = await getActiveHistoryCheck().catch(() => null);
     const calibration = calibrationFrom(history);
     const rows = v.rows as unknown as LikelyRow[];
