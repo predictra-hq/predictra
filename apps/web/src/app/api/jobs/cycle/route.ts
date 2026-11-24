@@ -5,6 +5,7 @@ import { handleCycleRequest } from "@/lib/agent/endpoint";
 import { WEB_HANDLERS } from "@/lib/agent/handlers";
 import { qstashKeysFromEnv } from "@/lib/agent/qstash";
 import { supabaseQueue } from "@/lib/agent/queue";
+import { recordSlips } from "@/lib/bet-builder/record";
 import { serverEnv } from "@/lib/env.server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -50,6 +51,8 @@ export async function POST(request: Request): Promise<Response> {
           consumeQuota: (provider, quota) =>
             supabaseQueue(createAdminClient()).consumeQuota(provider, "hour", quota, 1),
         }),
+      // ADR 0070: a ogni giro si salvano le schedine consigliate di quel momento.
+      slips: () => recordSlips(createAdminClient()),
     });
   } catch {
     // Nessun dettaglio nella risposta: l'esito del ciclo, se iniziato, è in agent_runs.

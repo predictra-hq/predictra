@@ -42,6 +42,8 @@ export async function predictionsFor(
   what: string,
   /** `v_pre_kickoff_predictions` per le partite giocate: vale anche dopo un cambio di versione. */
   relation: "v_active_predictions" | "v_pre_kickoff_predictions" = "v_active_predictions",
+  /** Probabilità minima delle righe lette (le schedine usano anche giocate sotto il 70%). */
+  minProbability: number = MIN_PROBABILITY,
 ): Promise<ActivePredictionRow[]> {
   const supabase = await createClient();
   return inChunks(ids, ID_CHUNK, (chunk) =>
@@ -51,7 +53,7 @@ export async function predictionsFor(
         .select("*")
         .in("match_id", chunk)
         .in("market", [...CERTAINTY_MARKETS])
-        .gte("probability", MIN_PROBABILITY)
+        .gte("probability", minProbability)
         .order("match_id", { ascending: true })
         .order("market", { ascending: true })
         .order("selection", { ascending: true })
@@ -88,7 +90,10 @@ export interface Verification {
 }
 
 /** Previsioni sopra la soglia minima sulle partite finite negli ultimi `VERIFY_DAYS` giorni. */
-export async function recentVerification(now = new Date()): Promise<Verification> {
+export async function recentVerification(
+  now = new Date(),
+  minProbability: number = MIN_PROBABILITY,
+): Promise<Verification> {
   const supabase = await createClient();
   const since = new Date(now.getTime() - VERIFY_DAYS * 86_400_000).toISOString();
   const results = new Map<number, { home: number; away: number }>();
@@ -117,6 +122,7 @@ export async function recentVerification(now = new Date()): Promise<Verification
     [...results.keys()],
     "verifica delle certezze",
     "v_pre_kickoff_predictions",
+    minProbability,
   );
   return { rows, results };
 }

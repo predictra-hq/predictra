@@ -446,15 +446,23 @@ export async function listPastProposals(
  * Previsioni e migliori quote italiane delle partite dei prossimi giorni, lette una sola
  * volta per richiesta: le usano schedine consigliate, più probabili e riquadro della Home.
  */
-export const loadPicksData = cache(async () => {
+export const loadPicksData = cache(async () => picksData(userBookmaker));
+
+/**
+ * Previsioni e quote delle prossime partite. `bookmaker` sceglie il sito preferito
+ * dell'utente per le quote; il salvataggio delle schedine (senza utente) non ne usa.
+ */
+export async function picksData(
+  bookmaker: () => Promise<{ tracked: string | null } | null> = async () => null,
+) {
   const rows = await listLikelyRows(new Date());
   const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
   // Circa 200 righe di quote per partita: gruppi da 5, in parallelo.
   const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk), 4);
-  const site = await userBookmaker();
+  const site = await bookmaker();
   return {
     rows,
     prices: bestItalianPrices(odds, site?.tracked ?? null),
     consensus: marketConsensus(odds),
   };
-});
+}

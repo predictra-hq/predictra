@@ -5,12 +5,13 @@ import { pickLabel } from "@/components/bet-builder/likely";
 import { listCompetitions } from "@/lib/football/queries";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
+import { pickKey } from "@/lib/community/slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { Ticket, TicketLeg, TicketTotals, whenAndWhere } from "@/components/bet-builder/ticket";
 import { Badge, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { formatRound } from "@/lib/bet-builder/format";
-import { loadPastRounds } from "@/lib/bet-builder/past-load";
+import { loadPastRounds, type SavedBolletta } from "@/lib/bet-builder/past-load";
+import { slipWindowFrom, windowTitle, WindowTabs } from "@/components/bet-builder/window-tabs";
 import type { PastOutcome } from "@/lib/bet-builder/past";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
@@ -24,13 +25,14 @@ const TONE: Record<PastOutcome, "positive" | "negative" | "neutral"> = {
 };
 
 /** Schedine consigliate dei turni già iniziati, con l'esito di ogni partita (ADR 0062). */
-export default async function PastSlipsPage() {
+export default async function PastSlipsPage({ searchParams }: PageProps<"/bet-builder/past">) {
   await requireUser();
+  const window = slipWindowFrom((await searchParams).w);
   const m = getMessages().betBuilder;
   const p = m.past;
   const profiles = m.bollette.profiles;
   const [rounds, competitionList] = await Promise.all([
-    loadPastRounds(),
+    loadPastRounds(window),
     listCompetitions().catch(() => []),
   ]);
   const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
@@ -39,6 +41,7 @@ export default async function PastSlipsPage() {
     <>
       <PageHeader title={p.title} description={p.description} />
       <BetBuilderNav current="past" />
+      <WindowTabs current={window} path="/bet-builder/past" />
 
       {rounds.length === 0 ? (
         <EmptyState>{p.empty}</EmptyState>
@@ -47,7 +50,7 @@ export default async function PastSlipsPage() {
           {rounds.map((r) => (
             <section key={r.round} aria-labelledby={`turno-${r.round}`}>
               <h2 id={`turno-${r.round}`} className="text-lg font-semibold">
-                {fillTemplate(p.round, { round: formatRound(r.round) })}
+                {windowTitle(window, r.round)}
               </h2>
               <p className="mb-3 text-sm text-muted">
                 {r.settled === 0
@@ -60,7 +63,14 @@ export default async function PastSlipsPage() {
                     <Ticket
                       className="h-full"
                       title={profiles[b.bolletta.profile]}
-                      badge={<Badge tone={TONE[b.outcome]}>{p.outcome[b.outcome]}</Badge>}
+                      badge={
+                        <span className="flex items-center gap-1">
+                          {(b.bolletta as SavedBolletta).rebuilt ? (
+                            <Badge title={m.rebuiltHint}>{m.rebuilt}</Badge>
+                          ) : null}
+                          <Badge tone={TONE[b.outcome]}>{p.outcome[b.outcome]}</Badge>
+                        </span>
+                      }
                       totals={
                         <TicketTotals
                           priceLabel={m.bollette.totalOdds}
@@ -81,6 +91,7 @@ export default async function PastSlipsPage() {
                               match: `${l.pick.home} – ${l.pick.away}${l.score ? ` ${l.score}` : ""}`,
                               pick: pickLabel(l.pick),
                               price: l.pick.price,
+                              key: pickKey(l.pick),
                             })),
                             price: b.bolletta.price,
                             probability: b.bolletta.probability,

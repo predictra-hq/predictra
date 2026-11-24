@@ -12,7 +12,7 @@ SYNC_TABLES=(
   match_team_statistics match_lineups match_lineup_players
   bookmakers odds_events odds_snapshots
   model_versions prediction_runs predictions prediction_score_matrices backtests
-  bet_builder_runs bet_proposals bet_proposal_legs
+  bet_builder_runs bet_proposals bet_proposal_legs recommended_slips
 )
 
 # Stato dell'agente: solo all'avvio di PROD (da DEV a PROD), così PROD riprende da dove
@@ -26,6 +26,6 @@ SEED_ONLY_TABLES=(
 LOCAL_TABLES=(
   profiles roles user_roles invitations audit_logs user_preferences user_dashboard_settings
   bankrolls bankroll_movements bets personal_limits user_bet_slips user_bet_slip_selections
-  ask_usage notifications user_follows user_birthdays match_comments community_posts
+  ask_usage notifications user_follows user_birthdays match_comments community_posts community_reactions
   providers markets source_freshness_rules
 )

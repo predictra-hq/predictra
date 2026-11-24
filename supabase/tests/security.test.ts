@@ -58,6 +58,7 @@ const AUTHENTICATED_WRITABLE = [
   "bankrolls",
   "bets",
   "community_posts",
+  "community_reactions",
   "match_comments",
   "personal_limits",
   "user_bet_slip_selections",

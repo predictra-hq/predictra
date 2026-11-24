@@ -9,6 +9,8 @@ import type {
 } from "@predictra/shared-types";
 import { upcomingMatchIds } from "@/lib/predictions/queries";
 import { createClient } from "@/lib/supabase/server";
+import { inChunks } from "@/lib/chunks";
+import type { BetLeg } from "./legs";
 import { matchMarkets } from "@/lib/bet-builder/market";
 import { groupKellyMatches, type KellyMatch } from "./kelly";
 
@@ -149,4 +151,61 @@ export async function getMarketConsensus(
     .limit(500);
   if (error) throw new BankrollUnavailable("quote di mercato", error);
   return matchMarkets((data ?? []) as MatchOddsH2hRow[]).get(matchId)?.consensus ?? {};
+}
+
+/** Partita di una giocata registrata: squadre, orario, stato e risultato. */
+export interface BetLegMatch {
+  home: string;
+  away: string;
+  kickoffAt: string;
+  status: string;
+  homeScore: number | null;
+  awayScore: number | null;
+}
+
+/**
+ * Selezioni delle proprie giocate multiple (ADR 0070) con le partite: per mostrare la
+ * schedina giocata e come è andata. Solo le proprie giocate (RLS).
+ */
+export async function listBetSlips(
+  betIds: readonly number[],
+): Promise<{ legs: Map<number, BetLeg[]>; matches: Map<number, BetLegMatch> }> {
+  const legs = new Map<number, BetLeg[]>();
+  const matches = new Map<number, BetLegMatch>();
+  if (betIds.length === 0) return { legs, matches };
+  const supabase = await createClient();
+  const { data } = await supabase.from("bets").select("id, legs").in("id", betIds.slice(0, 500));
+  for (const b of (data ?? []) as { id: number; legs: BetLeg[] | null }[]) {
+    if (Array.isArray(b.legs) && b.legs.length > 0) legs.set(Number(b.id), b.legs);
+  }
+  const ids = [...new Set([...legs.values()].flat().map((l) => l.m))];
+  if (ids.length === 0) return { legs, matches };
+  const rows = await inChunks(ids, 100, async (chunk) => {
+    const { data: m } = await supabase
+      .from("v_match_center")
+      .select(
+        "match_id, home_team_name, away_team_name, kickoff_at, status, home_score, away_score",
+      )
+      .in("match_id", chunk);
+    return (m ?? []) as {
+      match_id: number;
+      home_team_name: string;
+      away_team_name: string;
+      kickoff_at: string;
+      status: string;
+      home_score: number | null;
+      away_score: number | null;
+    }[];
+  });
+  for (const r of rows) {
+    matches.set(Number(r.match_id), {
+      home: r.home_team_name,
+      away: r.away_team_name,
+      kickoffAt: r.kickoff_at,
+      status: r.status,
+      homeScore: r.home_score,
+      awayScore: r.away_score,
+    });
+  }
+  return { legs, matches };
 }

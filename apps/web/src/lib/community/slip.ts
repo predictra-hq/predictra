@@ -6,6 +6,31 @@ import type { SharedSlip } from "@predictra/shared-types";
  */
 
 export const MAX_SHARED_PICKS = 12;
+/** `partita|mercato|linea|esito`, come le chiavi delle giocate (ADR 0070). */
+const PICK_KEY = /^\d{1,12}\|[A-Z0-9_]{2,20}\|(\d{1,2}(\.\d{1,2})?)?\|[A-Z_]{2,20}$/;
+
+/** Chiave di una giocata da condividere. */
+export function pickKey(p: {
+  matchId: number;
+  market: string;
+  line: number | null;
+  selection: string;
+}): string {
+  return `${p.matchId}|${p.market}|${p.line ?? ""}|${p.selection}`;
+}
+
+/** Esito di una schedina condivisa, calcolato dai risultati delle sue partite. */
+export type SharedOutcome = "WON" | "LOST" | "PENDING";
+
+export function parsePickKey(key: string) {
+  const [match, market, line, selection] = key.split("|");
+  return {
+    matchId: Number(match),
+    market: market!,
+    line: line ? Number(line) : null,
+    selection: selection!,
+  };
+}
 const MAX_TEXT = 120;
 
 const text = (v: unknown, max = MAX_TEXT): string | null =>
@@ -36,7 +61,9 @@ export function parseSharedSlip(raw: unknown): SharedSlip | null {
     const x = p as Record<string, unknown>;
     const match = text(x.match);
     const pick = text(x.pick);
-    return match && pick ? [{ match, pick, price: price(x.price) }] : [];
+    if (!match || !pick) return [];
+    const key = typeof x.key === "string" && PICK_KEY.test(x.key) ? x.key : undefined;
+    return [{ match, pick, price: price(x.price), ...(key ? { key } : {}) }];
   });
   if (picks.length === 0) return null;
   const probability = Number(o.probability);
@@ -67,4 +94,52 @@ export function sharedSlipText(
   if (totals.length) lines.push(totals.join(" · "));
   lines.push("— PREDICTRA");
   return lines.join("\n");
+}
+
+export interface SharedResult {
+  home: number;
+  away: number;
+  /** Quando è arrivato il risultato. */
+  observedAt: string;
+}
+
+/**
+ * Esito di una schedina condivisa (ADR 0070): persa appena una partita non esce, vinta
+ * quando escono tutte. `updatedAt` è l'arrivo dell'ultimo risultato usato. Senza chiavi
+ * (condivisioni precedenti) resta in corso.
+ */
+export function sharedOutcome(
+  slip: SharedSlip,
+  results: ReadonlyMap<number, SharedResult>,
+  settle: (
+    market: string,
+    line: number | null,
+    selection: string,
+    home: number,
+    away: number,
+  ) => boolean | null,
+): { outcome: SharedOutcome; legs: (boolean | null)[]; updatedAt: string | null } {
+  let updatedAt: string | null = null;
+  const legs = slip.picks.map((p) => {
+    if (!p.key) return null;
+    const k = parsePickKey(p.key);
+    const r = results.get(k.matchId);
+    if (!r) return null;
+    if (!updatedAt || r.observedAt > updatedAt) updatedAt = r.observedAt;
+    return settle(k.market, k.line, k.selection, r.home, r.away);
+  });
+  const outcome: SharedOutcome = legs.some((l) => l === false)
+    ? "LOST"
+    : legs.length > 0 && legs.every((l) => l === true)
+      ? "WON"
+      : "PENDING";
+  return { outcome, legs, updatedAt: outcome === "PENDING" ? null : updatedAt };
+}
+
+/** ID delle partite delle schedine condivise. */
+export function sharedMatchIds(slips: readonly (SharedSlip | null)[]): number[] {
+  const ids = new Set<number>();
+  for (const s of slips)
+    for (const p of s?.picks ?? []) if (p.key) ids.add(parsePickKey(p.key).matchId);
+  return [...ids];
 }

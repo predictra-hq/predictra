@@ -130,9 +130,12 @@ describe("schedine consigliate (valori DEMO)", () => {
       odds(3, "h2h", "HOME", 1.5), // +2%
       odds(2, "totals_1_5", "OVER", 1.4), // −2%
     ]);
-    const [solid] = buildBollette(rows, prices);
-    expect(solid!.profile).toBe("SOLID");
-    // L'over 1,5 (−2%) porterebbe il valore della schedina sotto zero: resta fuori.
+    // Regola «di valore» (ADR 0070): giocate almeno alla quota giusta.
+    const rule = { minProbability: 0.65, minPrice: 1.25, legs: 3 };
+    const rules = { DOUBLE: rule, SOLID: rule, BALANCED: rule, HIGH: rule };
+    const [solid] = buildBollette(rows, prices, new Map(), new Map(), { rules });
+    expect(solid!.profile).toBe("DOUBLE");
+    // L'over 1,5 (−2%) è sotto la quota giusta: resta fuori.
     expect(solid!.picks.map((p) => [p.matchId, p.market])).toEqual([
       [1, "DOUBLE_CHANCE"],
       [3, "1X2"],
@@ -168,17 +171,21 @@ describe("schedine consigliate (valori DEMO)", () => {
 });
 
 describe("una schedina consigliata non perde in media (valori DEMO)", () => {
-  it("le selezioni che porterebbero il valore sotto zero non entrano", () => {
-    // Probabilità 0,70: a quota 1,50 il valore è +5%, a 1,40 è −2% (ammesso da solo).
+  it("profili di valore: solo giocate almeno alla quota giusta (ADR 0070)", () => {
+    const rule = { minProbability: 0.65, minPrice: 1.25, legs: 3 };
+    const rules = { DOUBLE: rule, SOLID: rule, BALANCED: rule, HIGH: rule };
+    // Probabilità 0,70: a quota 1,50 il valore è +5%, a 1,40 è −2%.
     const rows = [1, 3, 5].map((m) => row(m, "1X2", "HOME", 0.7));
     const good = buildBollette(
       rows,
       bestItalianPrices([odds(1, "h2h", "HOME", 1.5), odds(3, "h2h", "HOME", 1.5)]),
+      new Map(),
+      new Map(),
+      { rules },
     );
     expect(good.length).toBeGreaterThan(0);
     expect(good.every((b) => b.expectedValue >= 0)).toBe(true);
-
-    // Una conveniente e due appena sotto: entrano finché il valore complessivo resta ≥ 0.
+    // Una conveniente e due sotto la quota giusta: da sola non fa una schedina.
     const mixed = buildBollette(
       rows,
       bestItalianPrices([
@@ -186,16 +193,31 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
         odds(3, "h2h", "HOME", 1.4),
         odds(5, "h2h", "HOME", 1.4),
       ]),
+      new Map(),
+      new Map(),
+      { rules },
     );
-    expect(mixed.length).toBeGreaterThan(0);
-    expect(mixed.every((b) => b.expectedValue >= 0)).toBe(true);
+    expect(mixed).toEqual([]);
+  });
 
-    // +1,5% e −2%: insieme farebbero −0,5%, quindi la seconda non entra e la schedina non nasce.
-    const tooThin = buildBollette(
+  it("profili di precisione: le giocate più probabili, anche un po' sotto la quota giusta", () => {
+    // Doppia: due giocate dall'80%; la più probabile prima, anche con valore −2%.
+    const rows = [
+      row(1, "DOUBLE_CHANCE", "HOME_DRAW", 0.86),
+      row(3, "DOUBLE_CHANCE", "HOME_DRAW", 0.82),
+      row(5, "DOUBLE_CHANCE", "HOME_DRAW", 0.81),
+    ];
+    const bollette = buildBollette(
       rows,
-      bestItalianPrices([odds(1, "h2h", "HOME", 1.45), odds(3, "h2h", "HOME", 1.4)]),
+      bestItalianPrices([
+        odds(1, "double_chance", "HOME_DRAW", 1.14), // −2%
+        odds(3, "double_chance", "HOME_DRAW", 1.25), // +2,5%
+        odds(5, "double_chance", "HOME_DRAW", 1.24), // +0,4%
+      ]),
     );
-    expect(tooThin).toEqual([]);
+    const double = bollette.find((b) => b.profile === "DOUBLE")!;
+    expect(double.picks.map((p) => p.matchId)).toEqual([1, 3]);
+    expect(double.expectedValue).toBeGreaterThan(-0.05);
   });
 
   it("solo selezioni che non convengono: nessuna schedina", () => {
@@ -220,5 +242,16 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
     const calibration = new Map([["1X2|0.6", { count: 1000, wins: 560, predicted: 650 }]]);
     const [pick] = playablePicks(rows, prices, new Map(), 0.5, calibration);
     expect(pick!.modelProbability).toBeCloseTo(0.58, 6);
+  });
+});
+
+describe("periodo delle schedine (ADR 0070)", () => {
+  it("turno oppure giornata, nel fuso di Roma", async () => {
+    const { windowOf } = await import("./bollette");
+    // Sabato 21/11 alle 15 italiane: turno da venerdì 20.
+    expect(windowOf("2026-11-21T14:00:00Z", "round")).toBe("2026-11-20");
+    expect(windowOf("2026-11-21T14:00:00Z", "day")).toBe("2026-11-21");
+    // Mezzanotte passata a Roma: già il giorno dopo.
+    expect(windowOf("2026-11-21T23:30:00Z", "day")).toBe("2026-11-22");
   });
 });

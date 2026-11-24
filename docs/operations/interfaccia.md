@@ -299,3 +299,19 @@ ADR 0067. Versione automatica (ADR 0066).
 - **Larghezza:** tutte le pagine usano tutta la colonna, come la Home.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV: tema e suoni dopo l'accesso da un secondo dispositivo, «Modifica profilo» in Utenti e accessi, pannello «Gioca questa schedina».
+
+## 24/11/2026: schedine salvate, giornata o turno, Spogliatoio con esiti e reazioni
+
+ADR 0070.
+
+- **Proposte e Passate:** schede Turno e Giornata. Le Passate mostrano le schedine salvate, con l'etichetta «Ricostruita» per quelle precedenti al salvataggio.
+- **Giocate fatte:** «Vedi la schedina» sotto le multiple registrate, con partite, risultati ed esito di ciascuna (`app/(app)/tracker/bet-slip-details.tsx`).
+- **Spogliatoio:**
+  - le schedine condivise mostrano Vinta o Persa con la data dell'aggiornamento;
+  - la chat Schedine accetta solo condivisioni;
+  - reazioni con emoji visibili a tutti (`Reactions` in `components/community/chat.tsx`).
+- **Home:** nella card dello Spogliatoio ogni messaggio apre la sua chat sul messaggio (`#post-<id>`).
+- **Profilo:** «Esci» a tutta larghezza in fondo.
+- **Login:** «Mostra / Nascondi» password, recupero accanto al campo, «Torna alla presentazione» (dal lavoro di Alfredo).
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: reazioni sul telefono (la tavolozza delle emoji non deve uscire dallo schermo), apertura di un messaggio dalla Home dentro la chat.

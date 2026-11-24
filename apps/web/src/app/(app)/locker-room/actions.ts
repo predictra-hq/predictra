@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   COMMENT_RATE_LIMIT,
   COMMUNITY_CHANNELS,
+  REACTION_EMOJIS,
   type CommunityChannel,
 } from "@predictra/shared-types";
 import { requireUser } from "@/lib/auth/dal";
@@ -25,6 +26,8 @@ export async function postMessage(_prev: ActionState, formData: FormData): Promi
   const channel = channelOf(formData.get("channel"));
   const body = parseCommentBody(formData.get("body"));
   if (!channel || !body) return { ok: false, message: m.invalid };
+  // Nella chat Schedine solo schedine condivise (ADR 0070).
+  if (channel === "SLIPS") return { ok: false, message: m.slipsOnly };
   const supabase = await createClient();
   const { error } = await supabase.from("community_posts").insert({ channel, body });
   if (error) {
@@ -83,5 +86,27 @@ export async function moderatePost(formData: FormData): Promise<void> {
   if (!id) return;
   const supabase = await createClient();
   await supabase.rpc("moderate_community_post", { p_post_id: id });
+  revalidatePath("/locker-room");
+}
+
+/**
+ * Reazione con un'emoji a un messaggio (ADR 0070): la aggiunge, o la toglie se c'era già.
+ * Elenco delle emoji e proprietà li ricontrolla il database.
+ */
+export async function toggleReaction(formData: FormData): Promise<void> {
+  await requireUser();
+  const id = idOf(formData.get("postId"));
+  const emoji = String(formData.get("emoji") ?? "");
+  if (!id || !(REACTION_EMOJIS as readonly string[]).includes(emoji)) return;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("community_reactions")
+    .delete()
+    .eq("post_id", id)
+    .eq("emoji", emoji)
+    .select("post_id");
+  if (!data || data.length === 0) {
+    await supabase.from("community_reactions").insert({ post_id: id, emoji });
+  }
   revalidatePath("/locker-room");
 }

@@ -831,3 +831,28 @@ describe("schedine degli utenti", () => {
     });
   });
 });
+
+describe("schedine consigliate salvate (ADR 0070)", () => {
+  it("le leggono gli utenti attivi; le scrive solo il servizio", async () => {
+    await asServiceRole(db, (tx) =>
+      tx.query(
+        `insert into public.recommended_slips (window_kind, window_start, profile, signature, picks,
+           price, probability, expected_value, first_kickoff_at)
+         values ('day', '2026-11-24', 'DOUBLE', '1|DOUBLE_CHANCE||HOME_DRAW', '[{"matchId":1}]',
+           1.44, 0.7, 0.008, '2026-11-24T20:00:00Z')`,
+      ),
+    );
+    await asUser(db, alice, async (tx) => {
+      const { rows } = await tx.query("select profile from public.recommended_slips");
+      expect(rows).toEqual([{ profile: "DOUBLE" }]);
+      expect(
+        await attempt(
+          tx,
+          `insert into public.recommended_slips (window_kind, window_start, profile, signature, picks,
+             price, probability, expected_value, first_kickoff_at)
+           values ('day', '2026-11-25', 'DOUBLE', 'x', '[{}]', 2, 0.5, 0, now())`,
+        ),
+      ).toMatch(/permission denied/);
+    });
+  });
+});

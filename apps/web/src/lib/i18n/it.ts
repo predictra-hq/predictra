@@ -175,7 +175,11 @@ export const it = {
   },
   auth: {
     loginTitle: "Accesso riservato",
-    loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
+    loginSubtitle:
+      "Piattaforma privata, solo su invito. Al primo accesso apri il link di invito che hai ricevuto.",
+    showPassword: "Mostra",
+    hidePassword: "Nascondi",
+    backToPresentation: "Torna alla presentazione",
     loginButton: "Accedi",
     invalidCredentials: "Credenziali non valide.",
     tooManyAttempts: "Troppi tentativi. Attendi qualche minuto e riprova.",
@@ -450,6 +454,13 @@ export const it = {
   community: {
     title: "Spogliatoio",
     homeEmpty: "Ancora nessun messaggio. Entra e scrivi il primo.",
+    slipsOnly: "Nella chat Schedine si condividono solo schedine, con il pulsante «Condividi».",
+    slipsComposer:
+      "Qui solo schedine: condividile da Proposte, Passate o Costruisci con «Condividi». Puoi reagire con un'emoji.",
+    react: "Reagisci",
+    reactWith: "Reagisci con {emoji}",
+    slipOutcome: { WON: "Vinta", LOST: "Persa", PENDING: "In corso" },
+    slipUpdated: "Esito aggiornato il {at}",
     description:
       "Le chat degli iscritti: parla di calcio, condividi le tue schedine, commenta le partite.",
     tabs: { general: "Generale", slips: "Schedine", matches: "Partite" },
@@ -1128,7 +1139,7 @@ export const it = {
       legWon: "Uscita",
       legLost: "Non uscita",
       legPending: "Da giocare",
-      note: "Le schedine sono ricostruite con le stesse regole delle Proposte, usando l'ultima previsione e le quote raccolte prima di ogni partita.",
+      note: "Le schedine sono quelle proposte e salvate prima delle partite (dal 24/11/2026). Quelle precedenti sono ricostruite con le previsioni e le quote di allora e lo dice l'etichetta «Ricostruita».",
       empty: "Nessun turno ancora iniziato con schedine consigliate.",
       stats: "Statistiche delle proposte con valore",
     },
@@ -1249,6 +1260,13 @@ export const it = {
     builderClearAll: "Togli tutte",
     ticketLabel: "PREDICTRA · Schedina",
     ticketPlay: "Gioca questa schedina",
+    windowLabel: "Periodo delle schedine",
+    windowTabs: { round: "Turno", day: "Giornata" },
+    windowRound: "Turno {round}",
+    windowDay: "Giornata di {day}",
+    rebuilt: "Ricostruita",
+    rebuiltHint:
+      "Schedina ricostruita dopo, con le previsioni e le quote di prima delle partite: allora non veniva ancora salvata.",
     priceBands: { low: "Quota fino a 3", mid: "Quota da 3 a 6", high: "Quota oltre 6" },
     priceBandCount: "{n} proposte",
     builderRemove: "Togli {pick}",
@@ -1618,6 +1636,10 @@ export const it = {
     nameTaken: "Hai già un bankroll con questo nome.",
   },
   tracker: {
+    showSlip: "Vedi la schedina ({n} partite)",
+    legWon: "Uscita",
+    legLost: "Non uscita",
+    legPending: "Da giocare",
     seePerformance: "Come stanno andando le tue giocate",
     performanceTitle: "Andamento",
     performanceDescription:

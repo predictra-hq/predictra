@@ -379,6 +379,50 @@ input::-webkit-date-and-time-value {
   text-align: left;
 }
 
+/* Il campo sfuma verso il titolo e rimane dietro la scheda DEMO. */
+.landing-pitch {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: radial-gradient(ellipse at 80% 75%, var(--color-positive-soft), transparent 70%);
+}
+
+.landing-pitch::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: max(64%, 32rem);
+  height: 85%;
+  right: -4rem;
+  bottom: 4%;
+  transform: rotate(-12deg);
+  border: 2px solid currentColor;
+  color: var(--color-positive);
+  opacity: 0.22;
+  background:
+    radial-gradient(
+      circle at center,
+      transparent 3.9rem,
+      currentColor 3.9rem 4rem,
+      transparent 4rem
+    ),
+    linear-gradient(
+      90deg,
+      transparent calc(50% - 1px),
+      currentColor 50%,
+      transparent calc(50% + 1px)
+    ),
+    repeating-linear-gradient(90deg, var(--color-positive-soft) 0 10%, transparent 10% 20%);
+  mask-image: linear-gradient(100deg, transparent, black 50%);
+}
+
+@media (width < 48rem) {
+  .landing-pitch::before {
+    height: 46%;
+  }
+}
+
 /* Presentazione prima del login: animazioni del video dimostrativo (spente se il sistema chiede meno movimento). */
 @keyframes demo-grow {
   from {
