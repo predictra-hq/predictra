@@ -32,3 +32,8 @@ Agente circa 11 minuti al giorno (3 cicli), backup e copia circa 1,5: circa 380 
 
 - **Repository pubblico:** i minuti di Actions sui repository pubblici sono gratuiti e illimitati. I segreti restano protetti, ma il codice diventa visibile a tutti: decisione del proprietario.
 - **Runner self-hosted** su un computer sempre acceso: minuti gratis, ma serve una macchina accesa.
+
+## Aggiornamento (23/11/2026)
+
+- La PR da `dev` a `main` non fa più girare la CI. Il codice è lo stesso già controllato sul push in `dev`, e il merge su `main` va diretto al deploy di PROD. La CI gira per le PR verso `dev` (branch `feature/*`) e per i push su `dev` e `main`.
+- Al merge resta solo «Ripristino di dev», che dura pochi secondi e ricrea `dev` se GitHub lo cancella dopo la PR. Si può togliere disattivando _Settings → General → Automatically delete head branches_: senza quella opzione `dev` non viene mai cancellato.

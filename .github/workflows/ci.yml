@@ -2,7 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [dev, main]
+    # Solo le PR verso dev (i branch feature/*). La PR dev → main non rifà i controlli:
+    # il codice è lo stesso già passato sul push in dev (ADR 0061, aggiornamento 23/11).
+    branches: [dev]
     # Le modifiche solo alla documentazione non fanno girare la CI (né il deploy):
     # risparmia minuti del piano gratuito (2.000/mese sui repo privati).
     paths-ignore: ["docs/**", "**/*.md"]
@@ -25,8 +27,8 @@ permissions:
 jobs:
   checks:
     name: Lint, typecheck, test, build
-    # Sul push verso main (merge della PR dev → main) i controlli sono già passati sulla
-    # PR, sullo stesso codice unito: si va diretti al deploy (ADR 0061).
+    # Sul push verso main (merge della PR dev → main) i controlli sono già passati sul push
+    # in dev, sullo stesso codice: si va diretti al deploy (ADR 0061).
     if: github.event_name != 'push' || github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15

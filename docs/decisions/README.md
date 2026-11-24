@@ -60,3 +60,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0065](0065-schedine-precise-e-calcio-con-spogliatoio.md)   | Schedine più precise, meno proposte con valore, Spogliatoio sotto Calcio     | Accettata |
 | [0066](0066-versione-automatica-per-ambiente.md)            | Versione del sito automatica per ambiente                                    | Accettata |
 | [0067](0067-preferenze-nell-account-e-schedine-compatte.md) | Preferenze nell'account, profilo modificabile dagli admin, schedine compatte | Accettata |
+| [0068](0068-repository-pubblico.md)                         | Repository pubblico                                                          | Accettata |
