@@ -35,6 +35,8 @@ export interface CycleEndpointDeps {
   watchdog?: () => Promise<number>;
   /** Fase A4: avvia il ciclo Python se GitHub ha saltato lo schedule. */
   fallback?: () => Promise<DispatchOutcome>;
+  /** ADR 0070: salva le schedine consigliate; restituisce quante ne ha scritte. */
+  slips?: () => Promise<number>;
 }
 
 async function safely<T>(fn: (() => Promise<T>) | undefined): Promise<T | "error" | null> {
@@ -80,6 +82,7 @@ export async function handleCycleRequest(
   );
   const watchdog = await safely(deps.watchdog);
   const dispatch = await safely(deps.fallback);
+  const slips = await safely(deps.slips);
   return Response.json({
     run_id: summary.runId,
     status: summary.status,
@@ -91,5 +94,6 @@ export async function handleCycleRequest(
     qstash_within_budget: withinBudget,
     watchdog_notifications: watchdog,
     github_dispatch: dispatch,
+    slips_recorded: slips,
   });
 }

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ChevronDown } from "lucide-react";
 import { SchedineSection } from "@/components/bet-builder/bollette";
+import { slipWindowFrom, WindowTabs } from "@/components/bet-builder/window-tabs";
 import { LikelySection } from "@/components/bet-builder/likely";
 import {
   BetBuilderDisclaimer,
@@ -174,8 +175,9 @@ function NoProposals({ run }: { run: BetBuilderLatestRunRow | null }) {
  * Proposte: schedine consigliate in alto, poi le proposte con valore divise per turno e
  * per fascia di quota in riquadri che si aprono (ADR 0067), così la pagina resta corta.
  */
-export default async function BetBuilderPage() {
+export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-builder">) {
   const user = await requireUser();
+  const window = slipWindowFrom((await searchParams).w);
   const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().betBuilder;
   const [run, proposals, competitionList] = await Promise.all([
@@ -199,9 +201,10 @@ export default async function BetBuilderPage() {
     <>
       <PageHeader title={m.title} description={m.description} />
       <BetBuilderNav current="proposals" />
+      <WindowTabs current={window} path="/bet-builder" />
 
       <Suspense fallback={<CardSkeleton className="mb-6 h-64" />}>
-        <SchedineSection stake={null} />
+        <SchedineSection stake={null} window={window} />
       </Suspense>
 
       <h2 className="mb-1 text-lg font-semibold">{m.valueTitle}</h2>

@@ -1,18 +1,39 @@
 import type { ReactNode } from "react";
+import { Check, X } from "lucide-react";
 import type { SharedSlip } from "@predictra/shared-types";
+import { Badge } from "@/components/ui/primitives";
+import type { SharedOutcome } from "@/lib/community/slip";
 import { StyledName } from "@/components/community/styled-name";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { formatDateTime, getMessages } from "@/lib/i18n";
-import { formatOdds, formatPercent } from "@/lib/odds/format";
+import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { Ticket, TicketLeg, TicketTotals } from "@/components/bet-builder/ticket";
 
-/** Schedina condivisa: lo stesso biglietto delle schedine di PREDICTRA (ADR 0065). */
-export function SlipSummary({ slip }: { slip: SharedSlip }) {
+export interface SlipResult {
+  outcome: SharedOutcome;
+  legs: (boolean | null)[];
+  updatedAt: string | null;
+}
+
+const OUTCOME_TONE = { WON: "positive", LOST: "negative", PENDING: "neutral" } as const;
+
+/**
+ * Schedina condivisa: lo stesso biglietto delle schedine di PREDICTRA (ADR 0065). Con
+ * `result` mostra l'esito di ogni partita e della schedina, aggiornato quando finiscono le
+ * partite, con la data dell'aggiornamento (ADR 0070).
+ */
+export function SlipSummary({ slip, result }: { slip: SharedSlip; result?: SlipResult }) {
   const m = getMessages();
+  const c = m.community;
   return (
     <Ticket
       className="mt-2"
       title={slip.title}
+      badge={
+        result && slip.picks.some((p) => p.key) ? (
+          <Badge tone={OUTCOME_TONE[result.outcome]}>{c.slipOutcome[result.outcome]}</Badge>
+        ) : undefined
+      }
       totals={
         slip.price ? (
           <TicketTotals
@@ -31,15 +52,30 @@ export function SlipSummary({ slip }: { slip: SharedSlip }) {
           />
         ) : undefined
       }
+      footer={
+        result?.updatedAt ? (
+          <p>{fillTemplate(c.slipUpdated, { at: formatDateTime(result.updatedAt) })}</p>
+        ) : undefined
+      }
     >
-      {slip.picks.map((p, i) => (
-        <TicketLeg
-          key={i}
-          match={p.match}
-          pick={p.pick}
-          price={p.price ? formatOdds(p.price) : "–"}
-        />
-      ))}
+      {slip.picks.map((p, i) => {
+        const won = result?.legs[i];
+        return (
+          <TicketLeg
+            key={i}
+            match={p.match}
+            pick={p.pick}
+            price={p.price ? formatOdds(p.price) : "–"}
+            status={
+              won === true ? (
+                <Check size={16} className="text-positive-strong" aria-label={c.slipOutcome.WON} />
+              ) : won === false ? (
+                <X size={16} className="text-negative-strong" aria-label={c.slipOutcome.LOST} />
+              ) : null
+            }
+          />
+        );
+      })}
     </Ticket>
   );
 }

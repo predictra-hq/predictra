@@ -94,10 +94,30 @@ export type CommunityChannel = (typeof COMMUNITY_CHANNELS)[number];
 /** Riepilogo di una schedina condivisa: solo testo da mostrare, mai usato per calcoli. */
 export interface SharedSlip {
   title: string;
-  picks: { match: string; pick: string; price: number | null }[];
+  picks: {
+    match: string;
+    pick: string;
+    price: number | null;
+    /**
+     * Giocata come `partita|mercato|linea|esito` (ADR 0070): serve a mostrare in chat se la
+     * schedina è vinta o persa quando le partite finiscono. Assente nelle condivisioni
+     * precedenti.
+     */
+    key?: string;
+  }[];
   price: number | null;
   probability: number | null;
 }
+
+/** Reazione a un messaggio: emoji, quante persone, se c'è anche la propria. */
+export interface CommunityReaction {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
+
+/** Emoji ammesse nelle reazioni (vincolo `community_reactions_emoji_check`). */
+export const REACTION_EMOJIS = ["👍", "❤️", "🔥", "😂", "😮", "😢", "👏", "⚽"] as const;
 
 /** Riga di `public.community_feed(p_channel, p_limit)`: mai l'id né l'email dell'autore. */
 export interface CommunityPostRow {
@@ -111,4 +131,6 @@ export interface CommunityPostRow {
   name_style: NameStyle | null;
   avatar_style: string | null;
   is_own: boolean;
+  /** Reazioni di tutti (ADR 0070). */
+  reactions?: CommunityReaction[];
 }

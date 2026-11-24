@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { highestRole, type CommunityChannel } from "@predictra/shared-types";
-import { ChatBubble, ChatThread } from "@/components/community/chat";
+import { ChatBubble, ChatThread, Reactions } from "@/components/community/chat";
 import { ChatComposer } from "@/components/community/chat-composer";
 import { PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
-import { listCommunityPosts, listRecentComments } from "@/lib/community/queries";
+import { listCommunityPosts, listRecentComments, listSharedResults } from "@/lib/community/queries";
+import { sharedMatchIds, sharedOutcome } from "@/lib/community/slip";
+import { settle } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
-import { deletePost, moderatePost, postMessage } from "./actions";
+import { deletePost, moderatePost, postMessage, toggleReaction } from "./actions";
 
 export const metadata: Metadata = { title: "Spogliatoio" };
 
@@ -58,17 +60,29 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
   const m = getMessages();
   const c = m.community;
   const posts = await listCommunityPosts(channel);
+  // Esito delle schedine condivise dai risultati delle partite (ADR 0070).
+  const results = await listSharedResults(sharedMatchIds((posts ?? []).map((p) => p.slip)));
   return (
     <ChatThread
       label={c.title}
       empty={posts === null ? m.common.genericError : posts.length === 0 ? c.empty : null}
       composer={
-        <ChatComposer
-          action={postMessage}
-          hidden={{ channel }}
-          placeholder={channel === "SLIPS" ? c.placeholderSlips : c.placeholder}
-          sendLabel={c.publish}
-        />
+        channel === "SLIPS" ? (
+          // Nella chat Schedine solo schedine: si condividono dalle pagine delle schedine.
+          <p className="px-2 py-2 text-center text-xs text-muted">
+            {c.slipsComposer}{" "}
+            <Link href="/bet-builder" className="font-medium text-positive-strong hover:underline">
+              {m.nav.betBuilder} →
+            </Link>
+          </p>
+        ) : (
+          <ChatComposer
+            action={postMessage}
+            hidden={{ channel }}
+            placeholder={c.placeholder}
+            sendLabel={c.publish}
+          />
+        )
       }
     >
       {(posts ?? []).map((p) => (
@@ -82,6 +96,16 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
           createdAt={p.created_at}
           body={p.body}
           slip={p.slip}
+          anchor={`post-${p.id}`}
+          slipResult={p.slip ? sharedOutcome(p.slip, results, settle as never) : undefined}
+          reactions={
+            <Reactions
+              postId={p.id}
+              reactions={p.reactions ?? []}
+              action={toggleReaction}
+              labels={{ react: c.react, reactWith: c.reactWith }}
+            />
+          }
           actions={
             p.is_own || canModerate ? (
               <form action={p.is_own ? deletePost : moderatePost}>

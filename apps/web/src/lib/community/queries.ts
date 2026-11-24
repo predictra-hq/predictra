@@ -7,6 +7,7 @@ import type {
   NameStyle,
   RecentCommentRow,
 } from "@predictra/shared-types";
+import type { SharedResult } from "@/lib/community/slip";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -56,4 +57,30 @@ export async function listCommunityPosts(
     p_limit: limit,
   });
   return error ? null : ((data ?? []) as CommunityPostRow[]);
+}
+
+/** Risultati delle partite delle schedine condivise (ADR 0070); vuoto se la lettura fallisce. */
+export async function listSharedResults(
+  ids: readonly number[],
+): Promise<Map<number, SharedResult>> {
+  const out = new Map<number, SharedResult>();
+  if (ids.length === 0) return out;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("v_match_results")
+    .select("match_id, home_score, away_score, observed_at")
+    .in("match_id", ids.slice(0, 500));
+  for (const r of (data ?? []) as {
+    match_id: number;
+    home_score: number;
+    away_score: number;
+    observed_at: string;
+  }[]) {
+    out.set(Number(r.match_id), {
+      home: r.home_score,
+      away: r.away_score,
+      observedAt: r.observed_at,
+    });
+  }
+  return out;
 }

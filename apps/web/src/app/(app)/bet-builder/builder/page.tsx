@@ -9,6 +9,7 @@ import {
 import { EvaluationPanel } from "@/components/bet-builder/evaluation";
 import { ShareSlip } from "@/components/community/share-slip";
 import { shareProps } from "@/components/community/share-labels";
+import { pickKey } from "@/lib/community/slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Card, CardTitle, EmptyState, Field, Input, PageHeader } from "@/components/ui/primitives";
@@ -197,6 +198,12 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                         match: `${x.homeTeam} – ${x.awayTeam}`,
                         pick: selectionLabel(x.selection, x.homeTeam, x.awayTeam, x.market, x.line),
                         price: x.price,
+                        key: pickKey({
+                          matchId: x.matchId,
+                          market: x.market ?? "1X2",
+                          line: x.line ?? null,
+                          selection: x.selection,
+                        }),
                       })),
                       price: evaluation.price,
                       probability: evaluation.probability,

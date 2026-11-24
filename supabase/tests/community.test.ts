@@ -356,4 +356,42 @@ describe("chat della comunità (ADR 0064)", () => {
     );
     expect(audit.rows).toHaveLength(1);
   });
+
+  it("nella chat Schedine solo schedine (ADR 0070)", async () => {
+    await asUser(db, alice, async (tx) => {
+      expect(await post(tx, "SLIPS", "Solo testo")).toMatch(/community_posts_slips_only/);
+    });
+  });
+
+  it("reazioni: elenco chiuso, una per emoji e persona, contate per tutti (ADR 0070)", async () => {
+    const slip = { title: "Doppia", picks: [{ match: "DEMO A – DEMO B", pick: "1X", price: 1.2 }] };
+    await asUser(db, alice, (tx) => post(tx, "SLIPS", "", slip));
+    const postId = Number(
+      (await db.query<{ id: number }>("select id from public.community_posts")).rows[0]!.id,
+    );
+    const react = (u: TestUser, emoji: string) =>
+      asUser(db, u, (tx) =>
+        attempt(tx, "insert into public.community_reactions (post_id, emoji) values ($1, $2)", [
+          postId,
+          emoji,
+        ]),
+      );
+    expect(await react(alice, "🔥")).toBeNull();
+    expect(await react(bob, "🔥")).toBeNull();
+    expect(await react(bob, "👍")).toBeNull();
+    expect(await react(bob, "🔥")).toMatch(/duplicate|community_reactions_pkey/);
+    expect(await react(bob, "💩")).toMatch(/community_reactions_emoji_check/);
+    const [row] = await feed(alice, "SLIPS");
+    expect(row!.reactions).toEqual([
+      { emoji: "🔥", count: 2, mine: true },
+      { emoji: "👍", count: 1, mine: false },
+    ]);
+    // Ognuno toglie solo le proprie.
+    await asUser(db, alice, async (tx) => {
+      const del = await tx.query(
+        "delete from public.community_reactions where emoji = '👍' returning emoji",
+      );
+      expect(del.rows).toEqual([]);
+    });
+  });
 });

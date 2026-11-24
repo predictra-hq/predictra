@@ -25,6 +25,7 @@ import { expectedValue, fairOdds, KELLY_SELECTIONS, parseKellyInput } from "@/li
 import {
   listBankrolls,
   listBets,
+  listBetSlips,
   getMarketConsensus,
   listKellyMatches,
   listLimits,
@@ -35,6 +36,7 @@ import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
+import { BetSlipDetails } from "./bet-slip-details";
 import { Limited } from "@/components/ui/limited";
 
 export const metadata: Metadata = { title: "Giocate fatte" };
@@ -112,6 +114,11 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
   const kellyAsked = params.km !== undefined || params.ko !== undefined;
   const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
+  // Schedine giocate: partite, esiti scelti e risultati (ADR 0070).
+  const slips = await listBetSlips(bets.map((b) => b.id)).catch(() => ({
+    legs: new Map(),
+    matches: new Map(),
+  }));
 
   return (
     <>
@@ -304,6 +311,18 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
                         {bet.line !== null ? ` · ${bet.line}` : ""}
                         {bet.bookmaker ? ` · ${bet.bookmaker}` : ""}
                       </span>
+                      {slips.legs.has(bet.id) ? (
+                        <BetSlipDetails
+                          legs={slips.legs.get(bet.id)!}
+                          matches={slips.matches}
+                          labels={{
+                            show: t.showSlip,
+                            won: t.legWon,
+                            lost: t.legLost,
+                            pending: t.legPending,
+                          }}
+                        />
+                      ) : null}
                     </td>
                     <td className="px-3 py-3">
                       <span className="block">{bet.bankroll_name}</span>

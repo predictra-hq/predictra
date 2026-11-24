@@ -4,6 +4,7 @@ import { StakeBox } from "@/components/bet-builder/stake-box";
 import { stakeBoxLabels } from "@/components/bet-builder/stake-labels";
 import { shareProps } from "@/components/community/share-labels";
 import { ShareSlip } from "@/components/community/share-slip";
+import { pickKey } from "@/lib/community/slip";
 import {
   Ticket,
   TICKET_GRID,
@@ -12,15 +13,16 @@ import {
   whenAndWhere,
 } from "@/components/bet-builder/ticket";
 import { Badge } from "@/components/ui/primitives";
+import { windowTitle } from "@/components/bet-builder/window-tabs";
 import {
   buildBollette,
   oddsAreOld,
   type Bolletta,
   type BollettaProfile,
+  type SlipWindow,
 } from "@/lib/bet-builder/bollette";
 import { formatEuro } from "@/components/bankroll/shared";
 import { listBankrolls, listLimits, userBookmaker } from "@/lib/bankroll/queries";
-import { formatRound } from "@/lib/bet-builder/format";
 import {
   bollettaAdvice,
   bollettaTrackerHref,
@@ -163,6 +165,7 @@ function BollettaCard({
                 match: `${p.home} – ${p.away}`,
                 pick: pickLabel(p),
                 price: p.price,
+                key: pickKey(p),
               })),
               price: bolletta.price,
               probability: bolletta.probability,
@@ -187,7 +190,10 @@ export function BolletteCard({
   bankroll = null,
   site = null,
   competitions = new Map(),
+  window = "round",
 }: {
+  /** Periodo delle schedine (ADR 0070): turno o giornata. */
+  window?: SlipWindow;
   bollette: readonly Bolletta[];
   /** Nomi dei campionati, mostrati sotto le squadre. */
   competitions?: ReadonlyMap<number, string>;
@@ -210,9 +216,7 @@ export function BolletteCard({
       ) : (
         rounds.map((round) => (
           <section key={round}>
-            <h3 className="mb-2 mt-3 text-sm text-muted">
-              {fillTemplate(m.round, { round: formatRound(round) })}
-            </h3>
+            <h3 className="mb-2 mt-3 text-sm text-muted">{windowTitle(window, round)}</h3>
             <div className={TICKET_GRID}>
               {bollette
                 .filter((b) => b.round === round)
@@ -257,7 +261,13 @@ async function loadAdviceBankroll(): Promise<AdviceBankroll | null> {
 }
 
 /** Sezione asincrona: legge previsioni e quote e mostra le schedine consigliate. */
-export async function SchedineSection({ stake }: { stake: number | null }) {
+export async function SchedineSection({
+  stake,
+  window = "round",
+}: {
+  stake: number | null;
+  window?: SlipWindow;
+}) {
   const [{ rows, prices, consensus }, bankroll, site, calibration, competitions] =
     await Promise.all([
       loadPicksData(),
@@ -268,7 +278,8 @@ export async function SchedineSection({ stake }: { stake: number | null }) {
     ]);
   return (
     <BolletteCard
-      bollette={buildBollette(rows, prices, consensus, calibration)}
+      bollette={buildBollette(rows, prices, consensus, calibration, { window })}
+      window={window}
       stake={stake}
       now={new Date()}
       bankroll={bankroll}

@@ -60,17 +60,27 @@ export interface BollettaRule {
   minPrice: number;
   /** Selezioni al massimo. */
   legs: number;
+  /**
+   * Profilo «di precisione» (ADR 0070): sceglie le giocate più probabili, non le più
+   * convenienti, e accetta un valore della schedina fino a `minSlipValue` (leggermente
+   * negativo): si vince più spesso, con quote più basse.
+   */
+  precision?: boolean;
+  /** Valore minimo dell'intera schedina; predefinito `MIN_SLIP_VALUE` (zero). */
+  minSlipValue?: number;
 }
 
 export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
-  DOUBLE: { minProbability: 0.72, minPrice: 1.2, legs: 2 },
-  SOLID: { minProbability: 0.66, minPrice: 1.25, legs: 3 },
-  BALANCED: { minProbability: 0.58, minPrice: 1.45, legs: 3 },
-  HIGH: { minProbability: 0.45, minPrice: 1.8, legs: 4 },
+  // Dati delle ultime settimane (ADR 0070): giocate date dall'80% uscite l'86-87%, dal 70%
+  // il 75-76%. Le due schedine «sicure» usano solo quelle; le altre puntano sul valore.
+  DOUBLE: { minProbability: 0.8, minPrice: 1.1, legs: 2, precision: true, minSlipValue: -0.05 },
+  SOLID: { minProbability: 0.75, minPrice: 1.12, legs: 3, precision: true, minSlipValue: -0.05 },
+  BALANCED: { minProbability: 0.6, minPrice: 1.4, legs: 3 },
+  HIGH: { minProbability: 0.45, minPrice: 1.8, legs: 3 },
 };
 
 /** Valore = probabilità × quota − 1. Fuori da questo intervallo la selezione è scartata. */
-export const MIN_EDGE = -0.03;
+export const MIN_EDGE = -0.05;
 export const MAX_EDGE = 0.15;
 /** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
 export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
@@ -257,6 +267,13 @@ const byValue = (a: BollettaPick, b: BollettaPick) =>
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
 
+/** Prima la probabilità più alta, a parità il valore. */
+const byProbability = (a: BollettaPick, b: BollettaPick) =>
+  b.probability - a.probability ||
+  b.edge - a.edge ||
+  a.kickoffAt.localeCompare(b.kickoffAt) ||
+  a.matchId - b.matchId;
+
 function buildOne(
   profile: BollettaProfile,
   round: string,
@@ -264,22 +281,27 @@ function buildOne(
   rules: Readonly<Record<BollettaProfile, BollettaRule>> = BOLLETTA_RULES,
 ): Bolletta | null {
   const rule = rules[profile];
-  // Per ogni partita, la selezione con più valore tra quelle "sicure" per il profilo.
+  const order = rule.precision ? byProbability : byValue;
+  const minSlipValue = rule.minSlipValue ?? MIN_SLIP_VALUE;
+  // Valore: niente giocate sotto la quota giusta nei profili che puntano sul guadagno.
+  const minEdge = rule.precision ? MIN_EDGE : 0;
+  // Per ogni partita, la giocata migliore per il profilo tra quelle ammesse.
   const perMatch = new Map<number, BollettaPick>();
   for (const p of pool) {
-    if (p.probability < rule.minProbability || p.price < rule.minPrice) continue;
+    if (p.probability < rule.minProbability || p.price < rule.minPrice || p.edge < minEdge)
+      continue;
     const current = perMatch.get(p.matchId);
-    if (!current || byValue(p, current) < 0) perMatch.set(p.matchId, p);
+    if (!current || order(p, current) < 0) perMatch.set(p.matchId, p);
   }
   const chosen: BollettaPick[] = [];
   let value = 0;
   const teams = new Set<string>();
-  for (const p of [...perMatch.values()].sort(byValue)) {
+  for (const p of [...perMatch.values()].sort(order)) {
     if (chosen.length >= rule.legs) break;
     if (teams.has(p.home) || teams.has(p.away)) continue;
     // Una schedina consigliata non deve perdere in media: una selezione che porterebbe il
     // valore complessivo sotto zero non entra (le più convenienti vengono prima).
-    if ((1 + value) * (1 + p.edge) - 1 < MIN_SLIP_VALUE) continue;
+    if ((1 + value) * (1 + p.edge) - 1 < minSlipValue) continue;
     value = (1 + value) * (1 + p.edge) - 1;
     teams.add(p.home).add(p.away);
     chosen.push(p);

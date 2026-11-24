@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type { SharedSlip } from "@predictra/shared-types";
-import { SlipSummary } from "@/components/community/message";
+import { SmilePlus } from "lucide-react";
+import { REACTION_EMOJIS, type CommunityReaction, type SharedSlip } from "@predictra/shared-types";
+import { SlipSummary, type SlipResult } from "@/components/community/message";
 import { StyledName } from "@/components/community/styled-name";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { cn } from "@/lib/utils";
@@ -26,9 +27,18 @@ export function ChatBubble({
   createdAt,
   body,
   slip,
+  slipResult,
   context,
   actions,
+  reactions,
+  anchor,
 }: {
+  /** Ancora del messaggio (`post-<id>`), per arrivarci dalla Home. */
+  anchor?: string;
+  /** Esito della schedina condivisa (ADR 0070). */
+  slipResult?: SlipResult;
+  /** Reazioni con le emoji, sotto il messaggio. */
+  reactions?: ReactNode;
   own: boolean;
   author: string;
   avatarStyle: string | null;
@@ -42,10 +52,10 @@ export function ChatBubble({
   actions?: ReactNode;
 }) {
   return (
-    <li className={cn("flex", own ? "justify-end" : "justify-start")}>
+    <li id={anchor} className={cn("flex scroll-mt-4 flex-col", own ? "items-end" : "items-start")}>
       <div
         className={cn(
-          "min-w-0 rounded-2xl border px-3 py-2",
+          "min-w-0 rounded-2xl border px-3 py-2 [li:target_&]:ring-2 [li:target_&]:ring-positive",
           slip ? "w-full max-w-sm" : "max-w-[85%] sm:max-w-md",
           own
             ? "rounded-br-md border-positive/40 bg-positive-soft"
@@ -64,7 +74,7 @@ export function ChatBubble({
         </p>
         {context ? <div className="mt-0.5 text-xs">{context}</div> : null}
         {body ? <p className="whitespace-pre-line break-words text-sm text-fg">{body}</p> : null}
-        {slip ? <SlipSummary slip={slip} /> : null}
+        {slip ? <SlipSummary slip={slip} result={slipResult} /> : null}
         <div className="mt-1 flex items-center justify-end gap-2">
           {actions}
           <time dateTime={createdAt} className="text-[11px] tabular-nums text-subtle">
@@ -72,6 +82,7 @@ export function ChatBubble({
           </time>
         </div>
       </div>
+      {reactions}
     </li>
   );
 }
@@ -107,5 +118,75 @@ export function ChatThread({
       </div>
       <div className="border-t border-border bg-surface p-2">{composer}</div>
     </section>
+  );
+}
+
+/**
+ * Reazioni di un messaggio (ADR 0070): le emoji già usate con il numero di persone (la
+ * propria evidenziata, un tocco la toglie) e un pulsante per aggiungerne una. Le vedono
+ * tutti. Funziona anche senza JavaScript: ogni emoji è un piccolo modulo.
+ */
+export function Reactions({
+  postId,
+  reactions,
+  action,
+  labels,
+}: {
+  postId: number;
+  reactions: readonly CommunityReaction[];
+  action: (formData: FormData) => Promise<void>;
+  labels: { react: string; reactWith: string };
+}) {
+  const button = (emoji: string, content: ReactNode, mine: boolean, extra?: string) => (
+    <form key={emoji} action={action}>
+      <input type="hidden" name="postId" value={postId} />
+      <input type="hidden" name="emoji" value={emoji} />
+      <button
+        type="submit"
+        aria-label={labels.reactWith.replace("{emoji}", emoji)}
+        aria-pressed={mine}
+        className={cn(
+          "flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
+          mine
+            ? "border-positive/50 bg-positive-soft text-positive-strong"
+            : "border-border bg-surface hover:border-border-strong",
+          extra,
+        )}
+      >
+        {content}
+      </button>
+    </form>
+  );
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-1">
+      {reactions.map((r) =>
+        button(
+          r.emoji,
+          <>
+            <span aria-hidden="true">{r.emoji}</span>
+            {r.count}
+          </>,
+          r.mine,
+        ),
+      )}
+      <details className="group relative">
+        <summary
+          aria-label={labels.react}
+          className="flex h-7 cursor-pointer list-none items-center rounded-full border border-border bg-surface px-2 text-xs text-muted hover:text-fg [&::-webkit-details-marker]:hidden"
+        >
+          <SmilePlus size={14} aria-hidden="true" />
+        </summary>
+        <div className="absolute bottom-8 left-0 z-10 flex gap-1 rounded-full border border-border bg-surface p-1 shadow-lg">
+          {REACTION_EMOJIS.map((e) =>
+            button(
+              e,
+              <span aria-hidden="true">{e}</span>,
+              reactions.some((r) => r.emoji === e && r.mine),
+              "border-transparent bg-transparent text-base",
+            ),
+          )}
+        </div>
+      </details>
+    </div>
   );
 }

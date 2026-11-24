@@ -211,10 +211,11 @@ export default async function ProfilePage() {
         ) : null}
       </div>
 
-      <form action="/auth/signout" method="post" className="mt-4 lg:max-w-sm">
+      {/* Esci: a tutta larghezza in fondo, ben visibile anche sul computer. */}
+      <form action="/auth/signout" method="post" className="mt-6">
         <button
           type="submit"
-          className="flex h-11 w-full text-sm cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-card)] border border-negative/40 bg-negative-soft font-medium text-negative-strong transition-colors hover:bg-negative/20"
+          className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-card)] border border-negative/40 bg-negative-soft text-base font-semibold text-negative-strong transition-colors hover:bg-negative/20"
         >
           <LogOut size={18} aria-hidden="true" />
           {m.common.signOut}
