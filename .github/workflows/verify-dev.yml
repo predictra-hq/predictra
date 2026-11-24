@@ -108,7 +108,7 @@ jobs:
             # Analisi delle schedine sui dati di DEV (copia di PROD, ADR 0070): solo numeri
             # aggregati nel log, che è pubblico.
             slip-analysis)
-              pnpm --filter web exec vitest run --config vitest.analysis.config.ts ;;
+              pnpm --filter web exec vitest run --config vitest.analysis.config.mts ;;
             accessibility-prod)
               if [ -z "$PROD_APP_BASE_URL" ]; then echo "::error::Manca PROD_APP_BASE_URL"; exit 1; fi
               mkdir -p "$RUNNER_TEMP/screenshots"

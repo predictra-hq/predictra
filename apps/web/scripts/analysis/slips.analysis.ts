@@ -60,6 +60,35 @@ it("analisi delle schedine", async () => {
       `Partite finite: ${v.results.size} · righe di previsione: ${rows.length} · celle storiche: ${calibration.size}`,
     );
 
+    // 0. Il modello da solo, su tutte le previsioni prima della partita (senza quote).
+    const model = new Map<string, { n: number; won: number; p: number }>();
+    for (const r of v.rows) {
+      const x = v.results.get(r.match_id);
+      if (!x) continue;
+      const won = settle(
+        r.market,
+        r.line === null ? null : Number(r.line),
+        r.selection,
+        x.home,
+        x.away,
+      );
+      if (won === null) continue;
+      const pr = Number(r.probability);
+      const band = Math.min(9, Math.floor(pr * 10)) / 10;
+      const key = `${r.market}${r.line === null ? "" : ` ${Number(r.line)}`} · da ${pct(band)}`;
+      const c = model.get(key) ?? { n: 0, won: 0, p: 0 };
+      c.n += 1;
+      c.won += won ? 1 : 0;
+      c.p += pr;
+      model.set(key, c);
+    }
+    console.log("\n== Modello, tutte le previsioni dal 40%: data contro uscita ==");
+    for (const [k, c] of [...model].sort()) {
+      console.log(
+        `${k.padEnd(34)} n=${String(c.n).padStart(4)} data=${pct(c.p / c.n)} uscita=${pct(c.won / c.n)}`,
+      );
+    }
+
     // 1. Singole giocate ammesse nelle schedine: probabilità data e uscite.
     const pool = playablePicks(rows, v.prices, v.consensus, undefined, calibration);
     const cells = new Map<string, { n: number; won: number; p: number }>();
