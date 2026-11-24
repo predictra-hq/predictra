@@ -61,7 +61,9 @@ jobs:
           fi
 
       - name: Verifica autore del commit (piano Vercel Hobby)
-        if: steps.config.outputs.ready == 'true'
+        # Solo con il repository privato: su un repository pubblico Vercel Hobby accetta i
+        # commit di tutti i collaboratori (ADR 0068).
+        if: steps.config.outputs.ready == 'true' && github.event.repository.private
         env:
           GH_TOKEN: ${{ github.token }}
           REF: ${{ inputs.ref }}
