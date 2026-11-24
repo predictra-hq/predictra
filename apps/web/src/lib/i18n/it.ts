@@ -175,7 +175,11 @@ export const it = {
   },
   auth: {
     loginTitle: "Accesso riservato",
-    loginSubtitle: "Piattaforma privata: l'accesso è consentito solo su invito.",
+    loginSubtitle:
+      "Piattaforma privata, solo su invito. Al primo accesso apri il link di invito che hai ricevuto.",
+    showPassword: "Mostra",
+    hidePassword: "Nascondi",
+    backToPresentation: "Torna alla presentazione",
     loginButton: "Accedi",
     invalidCredentials: "Credenziali non valide.",
     tooManyAttempts: "Troppi tentativi. Attendi qualche minuto e riprova.",

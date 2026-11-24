@@ -101,31 +101,33 @@ export default async function Home() {
 
       <main>
         {/* Prima riga della F: cosa è e a cosa serve, con le tre rassicurazioni principali. */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-10 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pt-16">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-positive-strong">
-              {t.eyebrow}
-            </p>
-            <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-5xl">{t.heroTitle}</h1>
-            <p className="mt-4 max-w-xl text-lg text-muted">{t.heroText}</p>
-            <ul className="mt-6 flex flex-col gap-2">
-              {t.heroPoints.map((point) => (
-                <li key={point} className="flex items-start gap-2 text-sm">
-                  <BadgeCheck
-                    size={18}
-                    aria-hidden="true"
-                    className="mt-0.5 shrink-0 text-positive"
-                  />
-                  {point}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <LoginButton label={t.login} large />
-              <p className="max-w-xs text-sm text-subtle">{t.inviteOnly}</p>
+        <section className="landing-pitch">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-10 sm:px-8 lg:grid-cols-[1.1fr_1fr] lg:pt-16">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-positive-strong">
+                {t.eyebrow}
+              </p>
+              <h1 className="mt-3 text-4xl font-bold leading-tight sm:text-5xl">{t.heroTitle}</h1>
+              <p className="mt-4 max-w-xl text-lg text-muted">{t.heroText}</p>
+              <ul className="mt-6 flex flex-col gap-2">
+                {t.heroPoints.map((point) => (
+                  <li key={point} className="flex items-start gap-2 text-sm">
+                    <BadgeCheck
+                      size={18}
+                      aria-hidden="true"
+                      className="mt-0.5 shrink-0 text-positive"
+                    />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                <LoginButton label={t.login} large />
+                <p className="max-w-xs text-sm text-subtle">{t.inviteOnly}</p>
+              </div>
             </div>
+            <DemoVideo t={t} />
           </div>
-          <DemoVideo t={t} />
         </section>
 
         {/* A cosa serve: risponde a «non vedo cosa possa interessarmi». */}

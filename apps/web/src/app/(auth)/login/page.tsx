@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { KeepInput } from "@/components/ui/keep-input";
-import { Alert, Card, Field, Input } from "@/components/ui/primitives";
+import { Alert, Card, Field } from "@/components/ui/primitives";
+import { LoginPassword } from "./login-password";
 import { getMessages } from "@/lib/i18n";
 import { login } from "./actions";
 
@@ -24,21 +25,25 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <Field label={m.common.email} htmlFor="email">
           <KeepInput id="email" name="email" type="email" autoComplete="email" required />
         </Field>
-        <Field label={m.common.password} htmlFor="password">
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
-        </Field>
+        {/* Dal lavoro di Alfredo (branch accesso-presentazione): recupero accanto alla
+            password e pulsante per mostrarla; grafica invariata. */}
+        <div>
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <label htmlFor="password" className="font-medium">
+              {m.common.password}
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-muted underline underline-offset-4 hover:text-fg"
+            >
+              {m.auth.forgotPassword}
+            </Link>
+          </div>
+          <LoginPassword show={m.auth.showPassword} hide={m.auth.hidePassword} />
+        </div>
         <SubmitButton>{m.auth.loginButton}</SubmitButton>
-        <Link href="/forgot-password" className="text-center text-sm text-muted hover:text-fg">
-          {m.auth.forgotPassword}
-        </Link>
         <Link href="/" className="text-center text-sm text-muted hover:text-fg">
-          {m.landing.about}
+          {m.auth.backToPresentation}
         </Link>
       </ActionForm>
     </Card>

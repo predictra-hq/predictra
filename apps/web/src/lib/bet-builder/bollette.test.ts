@@ -222,3 +222,14 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
     expect(pick!.modelProbability).toBeCloseTo(0.58, 6);
   });
 });
+
+describe("periodo delle schedine (ADR 0070)", () => {
+  it("turno oppure giornata, nel fuso di Roma", async () => {
+    const { windowOf } = await import("./bollette");
+    // Sabato 21/11 alle 15 italiane: turno da venerdì 20.
+    expect(windowOf("2026-11-21T14:00:00Z", "round")).toBe("2026-11-20");
+    expect(windowOf("2026-11-21T14:00:00Z", "day")).toBe("2026-11-21");
+    // Mezzanotte passata a Roma: già il giorno dopo.
+    expect(windowOf("2026-11-21T23:30:00Z", "day")).toBe("2026-11-22");
+  });
+});
