@@ -89,6 +89,29 @@ it("analisi delle schedine", async () => {
       );
     }
 
+    // 0b. Modello, mercato o un mix: quale indovina meglio (Brier, più basso è meglio)?
+    const weights = [0, 0.25, 0.4, 0.5, 0.6, 0.75, 1];
+    const brier = weights.map(() => ({ sum: 0, n: 0 }));
+    for (const r of v.rows) {
+      const x = v.results.get(r.match_id);
+      if (!x) continue;
+      const line = r.line === null ? null : Number(r.line);
+      const won = settle(r.market, line, r.selection, x.home, x.away);
+      const market = v.market(r);
+      if (won === null || market === null || market === undefined) continue;
+      weights.forEach((w, i) => {
+        const p = (1 - w) * Number(r.probability) + w * market;
+        brier[i]!.sum += (p - (won ? 1 : 0)) ** 2;
+        brier[i]!.n += 1;
+      });
+    }
+    console.log("\n== Peso del mercato: Brier (più basso è meglio) ==");
+    weights.forEach((w, i) =>
+      console.log(
+        `peso mercato ${w.toFixed(2)}  n=${brier[i]!.n}  Brier=${(brier[i]!.sum / Math.max(1, brier[i]!.n)).toFixed(4)}`,
+      ),
+    );
+
     // 1. Singole giocate ammesse nelle schedine: probabilità data e uscite.
     const pool = playablePicks(rows, v.prices, v.consensus, undefined, calibration);
     const cells = new Map<string, { n: number; won: number; p: number }>();
