@@ -19,9 +19,10 @@ from typing import Any
 import numpy as np
 
 from ..data import MatchResult
-from .base import CompetitionFit, Model
+from .base import CompetitionFit, FittedModel, Model
 from .elo import Elo, EloFit
 from .goals import DEFAULT_L2, NEWCOMER_ATTACK, NEWCOMER_DEFENCE, GoalsFit, GoalsModel
+from .joint import JointFit, fit_joint
 
 
 def rescale_to_1x2(matrix: np.ndarray, target: np.ndarray) -> np.ndarray:
@@ -95,8 +96,98 @@ class EloBlendModel(Model):
 ELO_WEIGHT = 0.4
 
 
+@dataclass
+class JointBlendFit(CompetitionFit):
+    """1X2 = media tra il modello della competizione e il modello unico (ADR 0074)."""
+
+    inner: EloBlendFit
+    joint: JointFit
+    competition_id: int
+    weight: float
+
+    def _joint_1x2(self, home: int, away: int) -> np.ndarray | None:
+        if self.competition_id not in self.joint.comps:
+            return None
+        return self.joint.probabilities_for(self.competition_id, home, away)
+
+    def probabilities_1x2(self, home: int, away: int) -> np.ndarray:
+        p = self.inner.probabilities_1x2(home, away)
+        j = self._joint_1x2(home, away)
+        if j is None:
+            return p
+        q = (1 - self.weight) * p + self.weight * j
+        return q / q.sum()
+
+    def score_matrix(self, home: int, away: int) -> np.ndarray:
+        return rescale_to_1x2(
+            self.inner.goals.score_matrix(home, away), self.probabilities_1x2(home, away)
+        )
+
+    def lambdas(self, home: int, away: int) -> tuple[float, float, float | None]:
+        return self.inner.lambdas(home, away)
+
+    def parameters(self) -> dict[str, Any]:
+        # Del modello unico si salvano solo i valori della competizione e delle sue squadre.
+        return {
+            **self.inner.parameters(),
+            "joint": self.joint.parameters_for(self.competition_id, self.inner.goals.teams),
+            "joint_weight": self.weight,
+        }
+
+
+class JointEloBlendModel(EloBlendModel):
+    """Modello PREDICTRA dal 25/11/2026 (ADR 0074): Dixon-Coles + Elo per competizione,
+    mediato sull'1X2 con il modello gol unico su tutte le competizioni."""
+
+    def __init__(
+        self,
+        key: str,
+        goals: GoalsModel,
+        elo: Elo,
+        weight: float,
+        *,
+        joint_weight: float,
+        joint_xi: float,
+        joint_l2: float,
+    ) -> None:
+        super().__init__(key, goals, elo, weight)
+        if not 0 <= joint_weight <= 1:
+            raise ValueError("Peso del modello unico tra 0 e 1")
+        self.joint_weight = joint_weight
+        self.joint_xi = joint_xi
+        self.joint_l2 = joint_l2
+
+    def hyperparameters(self) -> dict[str, Any]:
+        return {
+            **super().hyperparameters(),
+            "joint": {
+                "weight": self.joint_weight,
+                "xi_per_day": self.joint_xi,
+                "l2": self.joint_l2,
+            },
+        }
+
+    def fit(self, results: list[MatchResult], as_of: datetime) -> FittedModel:
+        fitted = super().fit(results, as_of)
+        joint = fit_joint(results, as_of, self.joint_xi, self.joint_l2)
+        fitted.fits = {
+            comp: JointBlendFit(fit, joint, comp, self.joint_weight)  # type: ignore[arg-type]
+            for comp, fit in fitted.fits.items()
+        }
+        return fitted
+
+
+# ADR 0074 (prova `cross`, 3.499 partite dal 1/7/2024 mai viste dal modello): con peso 0,3
+# Log Loss 1X2 −0,0017 ± 0,0012 in tutto, −0,0023 sul 2024-25, +0,0001 ± 0,0026 sul 2025-26
+# (nessun peggioramento), −0,010 in Champions League. Con 0,5 il guadagno è nel rumore e il
+# 2025-26 peggiora un poco. ξ e L2 come Poisson per competizione.
+JOINT_WEIGHT = 0.3
+JOINT_XI = 0.0015
+
+
 def dixon_coles_model() -> EloBlendModel:
-    """Sfidante del modello PREDICTRA (ADR 0024): Dixon-Coles combinato con l'Elo.
+    """Modello PREDICTRA (ADR 0024, 0039, 0074): Dixon-Coles combinato con l'Elo e, sull'1X2,
+    con il modello gol unico su tutte le competizioni.
 
     ξ = 0,001 al giorno (emivita circa 23 mesi) e neopromosse più deboli (ADR 0038).
     """
@@ -108,4 +199,12 @@ def dixon_coles_model() -> EloBlendModel:
         newcomer_attack=NEWCOMER_ATTACK,
         newcomer_defence=NEWCOMER_DEFENCE,
     )
-    return EloBlendModel("dixon_coles", goals, Elo(), ELO_WEIGHT)
+    return JointEloBlendModel(
+        "dixon_coles",
+        goals,
+        Elo(),
+        ELO_WEIGHT,
+        joint_weight=JOINT_WEIGHT,
+        joint_xi=JOINT_XI,
+        joint_l2=DEFAULT_L2,
+    )

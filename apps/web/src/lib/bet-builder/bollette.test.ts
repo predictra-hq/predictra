@@ -150,7 +150,7 @@ describe("schedine consigliate (valori DEMO)", () => {
     expect(oddsAreOld(solid!, new Date("2026-11-21T11:00:00Z"))).toBe(true);
   });
 
-  it("nessuna schedina forzata e nessun doppione tra profili; squadre tutte diverse", () => {
+  it("nessuna schedina sotto la quota minima; squadre tutte diverse (ADR 0072)", () => {
     const rows = [
       row(1, "1X2", "HOME", 0.7),
       row(3, "1X2", "HOME", 0.66),
@@ -161,13 +161,15 @@ describe("schedine consigliate (valori DEMO)", () => {
       odds(1, "h2h", "HOME", 1.5),
       odds(3, "h2h", "HOME", 1.55),
       odds(5, "h2h", "HOME", 1.5),
+      odds(7, "h2h", "HOME", 1.5),
     ]);
-    const bollette = buildBollette(rows, prices);
-    // Solida ed Equilibrata sceglierebbero le stesse due partite: ne resta una sola.
-    expect(bollette).toHaveLength(1);
-    expect(bollette[0]!.picks.map((p) => p.matchId).sort()).toEqual([1, 3]);
-    // Una sola selezione valida: nessuna schedina.
-    expect(buildBollette([row(1, "1X2", "HOME", 0.7)], prices)).toEqual([]);
+    // Solo due partite utili: quota 2,33, sotto il minimo della Solida (3). Nessuna schedina.
+    expect(buildBollette(rows, prices)).toEqual([]);
+    // Con una terza partita la Solida arriva a 3,49; le altre non hanno giocate da 1,70.
+    const bollette = buildBollette([...rows, row(7, "1X2", "HOME", 0.68)], prices);
+    expect(bollette.map((b) => b.profile)).toEqual(["SOLID"]);
+    expect(bollette[0]!.picks.map((p) => p.matchId)).toEqual([1, 3, 7]);
+    expect(bollette[0]!.price).toBeCloseTo(1.5 * 1.55 * 1.5);
   });
 });
 
@@ -202,54 +204,57 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
   });
 
   it("profili di precisione: le giocate più probabili, anche un po' sotto la quota giusta", () => {
-    // Solida: le giocate più probabili, anche con valore −2%; la partita 1 (quota 1,14) è
-    // sotto la quota minima. Con le soglie allargate la quota totale resta sotto
-    // l'obiettivo (2): resta la schedina con le soglie del profilo.
+    // Solida: prima le più probabili, anche con valore −2%; oltre −5% (partita 7) no.
     const rows = [
-      row(1, "DOUBLE_CHANCE", "HOME_DRAW", 0.86),
-      row(3, "DOUBLE_CHANCE", "HOME_DRAW", 0.82),
-      row(5, "DOUBLE_CHANCE", "HOME_DRAW", 0.81),
+      row(1, "1X2", "HOME", 0.7),
+      row(3, "1X2", "HOME", 0.65),
+      row(5, "1X2", "HOME", 0.62),
+      row(7, "1X2", "HOME", 0.61),
     ];
     const bollette = buildBollette(
       rows,
       bestItalianPrices([
-        odds(1, "double_chance", "HOME_DRAW", 1.14), // −2%
-        odds(3, "double_chance", "HOME_DRAW", 1.25), // +2,5%
-        odds(5, "double_chance", "HOME_DRAW", 1.24), // +0,4%
+        odds(1, "h2h", "HOME", 1.4), // −2%
+        odds(3, "h2h", "HOME", 1.6), // +4%
+        odds(5, "h2h", "HOME", 1.62), // +0,4%
+        odds(7, "h2h", "HOME", 1.55), // −5,5%
       ]),
     );
-    const solid = bollette.find((b) => b.profile === "SOLID")!;
-    expect(solid.picks.map((p) => p.matchId)).toEqual([3, 5]);
-    expect(solid.expectedValue).toBeGreaterThan(-0.08);
+    expect(bollette.map((b) => b.profile)).toEqual(["SOLID"]);
+    expect(bollette[0]!.picks.map((p) => p.matchId)).toEqual([1, 3, 5]);
+    expect(bollette[0]!.price).toBeGreaterThanOrEqual(3);
   });
 
-  it("selezioni sotto la quota giusta: solo la Solida, entro la tolleranza", () => {
-    const rows = [1, 3].map((m) => row(m, "1X2", "HOME", 0.7));
-    // Valore −2% a giocata: Equilibrata e Alta quota no, la Solida sì (−4% in tutto).
-    const near = buildBollette(
-      rows,
-      bestItalianPrices([odds(1, "h2h", "HOME", 1.4), odds(3, "h2h", "HOME", 1.4)]),
-    );
-    expect(near.map((b) => b.profile)).toEqual(["SOLID"]);
-    // Valore −9% a giocata: nessuna schedina.
-    const far = bestItalianPrices([odds(1, "h2h", "HOME", 1.3), odds(3, "h2h", "HOME", 1.3)]);
+  it("selezioni troppo sotto la quota giusta: nessuna schedina", () => {
+    // Valore −9% a giocata.
+    const rows = [1, 3, 5].map((m) => row(m, "1X2", "HOME", 0.7));
+    const far = bestItalianPrices([1, 3, 5].map((m) => odds(m, "h2h", "HOME", 1.3)));
     expect(buildBollette(rows, far)).toEqual([]);
   });
 
-  it("tre schedine, ognuna fino alla sua quota obiettivo (ADR 0071)", () => {
-    // Quattro partite al 60% a quota 1,75 (valore +5%).
-    const rows = [1, 3, 5, 7].map((m) => row(m, "1X2", "HOME", 0.6));
-    const prices = bestItalianPrices([1, 3, 5, 7].map((m) => odds(m, "h2h", "HOME", 1.75)));
+  it("tre schedine, ognuna almeno alla sua quota minima: 3, 5 e 10 (ADR 0072)", () => {
+    const plays: [number, number, number][] = [
+      [1, 0.66, 1.6],
+      [3, 0.65, 1.6],
+      [5, 0.63, 1.65],
+      [7, 0.55, 1.9],
+      [9, 0.52, 2],
+      [6, 0.5, 2.1],
+      [2, 0.42, 2.5],
+      [4, 0.4, 2.6],
+    ];
+    const rows = plays.map(([m, p]) => row(m, "1X2", "HOME", p));
+    const prices = bestItalianPrices(plays.map(([m, , q]) => odds(m, "h2h", "HOME", q)));
     const bollette = buildBollette(rows, prices);
-    // Solida (soglie allargate fino al 58%): 2 partite, quota 3,06 ≥ 2.
-    // Equilibrata: 3 partite, quota 5,36 ≥ 3,5. Alta quota (quota minima 1,7): 4 partite, 9,38 ≥ 7.
-    expect(bollette.map((b) => [b.profile, b.picks.length])).toEqual([
-      ["SOLID", 2],
-      ["BALANCED", 3],
-      ["HIGH", 4],
+    // Si aggiungono partite finché la quota totale arriva al minimo, poi ci si ferma.
+    expect(bollette.map((b) => [b.profile, b.picks.map((p) => p.matchId).sort()])).toEqual([
+      ["SOLID", [1, 3, 5]],
+      ["BALANCED", [6, 7, 9]],
+      ["HIGH", [2, 6, 9]],
     ]);
-    expect(bollette[2]!.price).toBeCloseTo(1.75 ** 4);
+    expect(bollette.map((b) => Number(b.price.toFixed(2)))).toEqual([4.22, 7.98, 10.5]);
   });
+
   it("scarta le giocate su cui modello e mercato non sono d'accordo (ADR 0065)", () => {
     const rows = [row(1, "1X2", "HOME", 0.8)];
     const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.4)]);

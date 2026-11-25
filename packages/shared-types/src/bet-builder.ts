@@ -39,8 +39,9 @@ export interface BetBuilderRules {
 
 /** Valori iniziali (ADR 0025): si rivedono con un nuovo ADR dopo i primi dati reali. */
 /** ADR 0065: meno proposte e più solide (erano 8 per categoria, selezioni dal 20%). */
+/** ADR 0073: peso del mercato 0,75 (era 0,5): il mercato indovina meglio del modello. */
 export const DEFAULT_BET_BUILDER_RULES: Readonly<BetBuilderRules> = {
-  rules_version: "2026.11.23-1",
+  rules_version: "2026.11.25-1",
   max_legs: 4,
   max_proposals_per_category: 2,
   min_leg_probability: 0.35,
@@ -48,7 +49,7 @@ export const DEFAULT_BET_BUILDER_RULES: Readonly<BetBuilderRules> = {
   min_leg_expected_value: 0.02,
   min_expected_value: 0.05,
   min_confidence_score: 0.4,
-  market_weight: 0.5,
+  market_weight: 0.75,
   italian_bookmakers_only: true,
 };
 

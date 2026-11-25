@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/primitives";
 import { windowTitle } from "@/components/bet-builder/window-tabs";
 import {
+  BOLLETTA_PROFILES,
+  BOLLETTA_RULES,
   buildBollette,
   oddsAreOld,
   type Bolletta,
@@ -179,6 +181,18 @@ function BollettaCard({
   );
 }
 
+/** Profili senza schedina nel periodo (ADR 0072): si dice perché, invece di tacere. */
+function MissingProfiles({ present }: { present: readonly Bolletta[] }) {
+  const m = getMessages().betBuilder.bollette;
+  const missing = BOLLETTA_PROFILES.filter((p) => !present.some((b) => b.profile === p));
+  if (missing.length === 0) return null;
+  return (
+    <p className="mt-2 text-xs text-muted">
+      {fillTemplate(m.missing, { profiles: missing.map((p) => `«${m.profiles[p]}»`).join(", ") })}
+    </p>
+  );
+}
+
 /**
  * Bollette consigliate per turno: una multipla giocabile per profilo, con quote reali
  * di bookmaker italiani. Nessuna bolletta se le selezioni valide non bastano.
@@ -232,10 +246,18 @@ export function BolletteCard({
                   />
                 ))}
             </div>
+            <MissingProfiles present={bollette.filter((b) => b.round === round)} />
           </section>
         ))
       )}
-      <p className="mt-3 text-xs text-subtle">{m.note}</p>
+      <p className="mt-3 text-xs text-subtle">
+        {fillTemplate(m.minimums, {
+          solid: formatOdds(BOLLETTA_RULES.SOLID.targetPrice ?? 0),
+          balanced: formatOdds(BOLLETTA_RULES.BALANCED.targetPrice ?? 0),
+          high: formatOdds(BOLLETTA_RULES.HIGH.targetPrice ?? 0),
+        })}{" "}
+        {m.note}
+      </p>
     </section>
   );
 }

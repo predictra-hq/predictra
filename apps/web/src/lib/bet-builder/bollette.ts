@@ -1,3 +1,4 @@
+import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
@@ -50,10 +51,10 @@ import {
  */
 
 /*
- * ADR 0071: tre schedine per periodo, sempre, una per tipo: Solida, Equilibrata e Alta
- * quota. Ognuna ha una quota totale minima (circa 2, 3,5 e 7): si aggiungono partite finché
- * la si raggiunge. Se le giocate non bastano, le soglie si allentano un po' alla volta
- * (`RELAX_STEPS`) invece di non proporre niente.
+ * ADR 0071 e 0072: tre schedine per periodo, una per tipo: Solida, Equilibrata e Alta
+ * quota. Ognuna ha una quota totale minima (3, 5 e 10): si aggiungono partite finché la si
+ * raggiunge. Se le giocate non bastano, le soglie si allentano un po' alla volta
+ * (`RELAX_STEPS`); se nemmeno così si arriva alla quota, quella schedina non si propone.
  */
 export const BOLLETTA_PROFILES = ["SOLID", "BALANCED", "HIGH"] as const;
 /** Profili con cui si costruiscono oggi le schedine (ADR 0071). */
@@ -70,6 +71,8 @@ export interface BollettaRule {
   legs: number;
   /** Quota totale da raggiungere: si aggiungono partite finché non la si tocca. */
   targetPrice?: number;
+  /** Senza la quota totale `targetPrice` nessuna schedina (niente ripiego a quote basse). */
+  strictTarget?: boolean;
   /**
    * Profilo «di precisione» (ADR 0070): sceglie le giocate più probabili, non le più
    * convenienti, e accetta un valore della schedina fino a `minSlipValue` (leggermente
@@ -78,28 +81,46 @@ export interface BollettaRule {
   precision?: boolean;
   /** Valore minimo dell'intera schedina; predefinito `MIN_SLIP_VALUE` (zero). */
   minSlipValue?: number;
+  /** Valore minimo di ogni giocata; predefinito `MIN_EDGE` per la precisione, zero per il valore. */
+  minEdge?: number;
 }
 
+/**
+ * Profili dal 25/11/2026 (ADR 0072): quota totale **minima** 3, 5 e 10, senza ripiego a
+ * quote più basse. Poche partite con quote alte, invece di tante partite «sicure»: ogni
+ * partita in più moltiplica anche il margine del bookmaker.
+ */
 export const BOLLETTA_RULES: Readonly<Record<BuiltProfile, BollettaRule>> = {
-  // Giocate quotate almeno 1,25 (niente partite a 1,10 che non pagano), le più probabili.
+  // Le giocate più probabili, ognuna quotata almeno 1,40.
   SOLID: {
-    minProbability: 0.68,
-    minPrice: 1.25,
-    legs: 4,
-    targetPrice: 2,
+    minProbability: 0.6,
+    minPrice: 1.4,
+    legs: 5,
+    targetPrice: 3,
+    strictTarget: true,
     precision: true,
-    minSlipValue: -0.08,
+    minSlipValue: -0.15,
   },
-  // Giocate tra 1,45 e oltre, probabilità e valore insieme.
+  // Quote da 1,70, le più convenienti rispetto al mercato.
   BALANCED: {
-    minProbability: 0.55,
-    minPrice: 1.45,
-    legs: 4,
-    targetPrice: 3.5,
-    minSlipValue: -0.08,
+    minProbability: 0.5,
+    minPrice: 1.7,
+    legs: 5,
+    targetPrice: 5,
+    strictTarget: true,
+    minEdge: -0.03,
+    minSlipValue: -0.15,
   },
-  // Quote alte, poche partite: vince di rado, ma paga.
-  HIGH: { minProbability: 0.4, minPrice: 1.8, legs: 4, targetPrice: 7, minSlipValue: -0.08 },
+  // Quote da 2, le più convenienti: vince di rado, ma paga almeno 10 volte la puntata.
+  HIGH: {
+    minProbability: 0.38,
+    minPrice: 2,
+    legs: 5,
+    targetPrice: 10,
+    strictTarget: true,
+    minEdge: -0.03,
+    minSlipValue: -0.15,
+  },
 };
 
 /** Ogni passo abbassa la probabilità minima di 5 punti e la quota minima di 0,1. */
@@ -109,11 +130,12 @@ export const RELAX_STEPS = 3;
 export const MIN_EDGE = -0.05;
 export const MAX_EDGE = 0.15;
 /**
- * Peso del mercato nella probabilità delle schedine (ADR 0071). Sui dati veri le quote dei
- * bookmaker senza margine indovinano meglio del modello da solo (Brier 0,2100 contro
- * 0,2178 su 408 giocate) e ogni peso in più migliora: 0,75 tiene conto di entrambi.
+ * Peso del mercato nella probabilità delle schedine (ADR 0071, 0073): lo stesso delle proposte
+ * con valore. Sui dati veri le quote dei bookmaker senza margine indovinano meglio del
+ * modello da solo (Brier 0,2100 contro 0,2178 su 408 giocate; Log Loss 1X2 0,9500 contro
+ * 0,9694): 0,75 tiene conto di entrambi.
  */
-export const MARKET_WEIGHT = 0.75;
+export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.75;
 export const MIN_LEGS = 2;
 /** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
 export const MAX_DISAGREEMENT = 0.1;
@@ -314,7 +336,7 @@ function attempt(
   const order = rule.precision ? byProbability : byValue;
   const minSlipValue = rule.minSlipValue ?? MIN_SLIP_VALUE;
   // Precisione: anche un po' sotto la quota giusta; valore: almeno alla quota giusta (ADR 0070).
-  const minEdge = rule.precision ? MIN_EDGE : 0;
+  const minEdge = rule.minEdge ?? (rule.precision ? MIN_EDGE : 0);
   // Per ogni partita, la giocata migliore per il profilo tra quelle ammesse.
   const perMatch = new Map<number, BollettaPick>();
   for (const p of pool) {
@@ -349,8 +371,8 @@ function buildOne(
 ): Bolletta | null {
   const rule = rules[profile];
   // Prima con le soglie del profilo, poi un po' più larghe finché la quota totale arriva
-  // all'obiettivo (ADR 0071). Se non ci arriva nemmeno così, resta la schedina con le
-  // soglie più strette: meglio una quota più bassa che una schedina più rischiosa del dovuto.
+  // all'obiettivo (ADR 0071). Se non ci arriva nemmeno così: con `strictTarget` (ADR 0072)
+  // nessuna schedina, altrimenti resta quella con le soglie più strette.
   let chosen: BollettaPick[] | null = null;
   for (let step = 0; step <= RELAX_STEPS; step++) {
     const legs = attempt(
@@ -360,7 +382,7 @@ function buildOne(
       Math.max(1.05, rule.minPrice - 0.1 * step),
     );
     if (!legs) continue;
-    chosen ??= legs;
+    if (!rule.strictTarget) chosen ??= legs;
     const total = legs.reduce((acc, p) => acc * p.price, 1);
     if (!rule.targetPrice || total >= rule.targetPrice) {
       chosen = legs;
@@ -410,6 +432,8 @@ export interface BuildOptions {
   window?: SlipWindow;
   /** Regole dei profili (per l'analisi delle alternative). */
   rules?: Readonly<Record<BuiltProfile, BollettaRule>>;
+  /** Peso del mercato nella probabilità (per l'analisi); predefinito `MARKET_WEIGHT`. */
+  marketWeight?: number;
 }
 
 /** Bollette per periodo (dal più vicino) e profilo; senza doppioni nello stesso periodo. */
@@ -422,7 +446,8 @@ export function buildBollette(
 ): Bolletta[] {
   const window = options.window ?? "round";
   const byRound = new Map<string, BollettaPick[]>();
-  for (const p of playablePicks(rows, prices, consensus, MARKET_WEIGHT, calibration)) {
+  const weight = options.marketWeight ?? MARKET_WEIGHT;
+  for (const p of playablePicks(rows, prices, consensus, weight, calibration)) {
     const round = windowOf(p.kickoffAt, window);
     byRound.set(round, [...(byRound.get(round) ?? []), p]);
   }

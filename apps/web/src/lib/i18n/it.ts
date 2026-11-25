@@ -1103,6 +1103,9 @@ export const it = {
       empty:
         "Nessuna schedina conviene con le quote di adesso. Le quote arrivano 1–2 giorni prima delle partite: riprova più avanti.",
       note: "Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+      minimums: "Quota totale minima: Solida {solid}, Equilibrata {balanced}, Alta quota {high}.",
+      missing:
+        "Senza {profiles}: con le giocate e le quote di adesso non si arriva alla quota minima.",
     },
     likely: {
       title: "Le più probabili",
@@ -1363,7 +1366,7 @@ export const it = {
   modelIntelligence: {
     title: "Modello",
     description:
-      "Un solo modello PREDICTRA: Dixon-Coles sui gol combinato con l'Elo sui risultati. Si riaddestra due volte al giorno su tutte le partite giocate, pesando di più le recenti, e ogni settimana rifà il backtest per controllare che resti più preciso del riferimento. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
+      "Un solo modello PREDICTRA: Dixon-Coles sui gol combinato con l'Elo sui risultati e con un modello gol unico su tutte le competizioni, che in Champions League usa anche le partite dei campionati nazionali. Si riaddestra due volte al giorno su tutte le partite giocate, pesando di più le recenti, e ogni settimana rifà il backtest per controllare che resti più preciso del riferimento. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
     activeModel: "Modello PREDICTRA (attivo)",
     noActive:
       "Nessun modello attivo: il motore attiva da solo il modello più forte alla prossima esecuzione, se batte la baseline.",
@@ -1703,7 +1706,7 @@ export const it = {
       title: "Quanto puntare su una giocata",
       howItWorks: "Come funziona",
       description:
-        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
+        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è una media pesata: un quarto quella del modello attivo, tre quarti quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
       match: "Partita",
       chooseMatch: "Scegli una partita",
       selection: "Esito",

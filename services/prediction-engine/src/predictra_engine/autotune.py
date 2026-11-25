@@ -25,7 +25,7 @@ from typing import Any
 from .backtest import backtest_models
 from .data import MatchResult
 from .models.base import Model
-from .models.blend import EloBlendModel
+from .models.blend import EloBlendModel, JointEloBlendModel
 from .models.elo import Elo
 from .models.goals import GoalsModel
 from .selection import MARGIN
@@ -67,7 +67,18 @@ def with_settings(model: EloBlendModel, s: Settings) -> EloBlendModel:
         newcomer_defence=g.newcomer_defence,
         newcomer_days=g.newcomer_days,
     )
-    return EloBlendModel(model.key, goals, Elo(model.elo.k, model.elo.home_advantage), s.elo_weight)
+    elo = Elo(model.elo.k, model.elo.home_advantage)
+    if isinstance(model, JointEloBlendModel):
+        return JointEloBlendModel(
+            model.key,
+            goals,
+            elo,
+            s.elo_weight,
+            joint_weight=model.joint_weight,
+            joint_xi=model.joint_xi,
+            joint_l2=model.joint_l2,
+        )
+    return EloBlendModel(model.key, goals, elo, s.elo_weight)
 
 
 def model_from_hyperparameters(base: EloBlendModel, hp: dict[str, Any]) -> EloBlendModel | None:
@@ -88,12 +99,20 @@ def model_from_hyperparameters(base: EloBlendModel, hp: dict[str, Any]) -> EloBl
             newcomer_defence=float(newcomer.get("defence", 0.0)),
             newcomer_days=int(newcomer.get("days", 300)),
         )
-        return EloBlendModel(
-            base.key,
-            goals,
-            Elo(float(elo["k"]), float(elo["home_advantage"])),
-            float(hp["elo_weight"]),
-        )
+        rating = Elo(float(elo["k"]), float(elo["home_advantage"]))
+        joint = hp.get("joint")
+        # Versioni dal 25/11/2026 (ADR 0074): anche il modello unico; prima no.
+        if joint:
+            return JointEloBlendModel(
+                base.key,
+                goals,
+                rating,
+                float(hp["elo_weight"]),
+                joint_weight=float(joint["weight"]),
+                joint_xi=float(joint["xi_per_day"]),
+                joint_l2=float(joint["l2"]),
+            )
+        return EloBlendModel(base.key, goals, rating, float(hp["elo_weight"]))
     except (KeyError, TypeError, ValueError):
         return None
 
