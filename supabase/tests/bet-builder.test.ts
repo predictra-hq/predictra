@@ -564,7 +564,12 @@ describe("proposte", () => {
           [s.m2, market === "TOTAL_GOALS" ? "totals_2_5" : "double_chance", selection],
         ),
       });
-      const rules = { ...DEFAULT_BET_BUILDER_RULES, rules_version: "DEMO-0033" };
+      // Peso del mercato fissato a 0,5: il test riguarda i mercati (ADR 0033), non il peso.
+      const rules = {
+        ...DEFAULT_BET_BUILDER_RULES,
+        market_weight: 0.5,
+        rules_version: "DEMO-0033",
+      };
       const run = await startRun(tx, s.model, rules);
       // Over 2,5: modello 0,55, mercato 0,50 → usata 0,525; EV = 0,525 · 2,2 − 1 = 0,155.
       await record(tx, run, [

@@ -1,6 +1,6 @@
 # ADR 0072 — Schedine con quota totale minima 3, 5 e 10
 
-- **Stato:** accettato (25/11/2026)
+- **Stato:** accettato (25/11/2026); i numeri delle proposte con valore sono corretti dall'ADR 0073 (contavano le copie)
 - **Milestone:** M8 (corsie A e B)
 - **Aggiorna:** ADR 0071 (profili delle schedine)
 

@@ -1706,7 +1706,7 @@ export const it = {
       title: "Quanto puntare su una giocata",
       howItWorks: "Come funziona",
       description:
-        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è la media tra quella del modello attivo e quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
+        "Kelly indica quanto puntare in base alla probabilità e alla quota del tuo bookmaker. La probabilità usata è una media pesata: un quarto quella del modello attivo, tre quarti quella del mercato (quote di tutti i bookmaker), come nelle proposte con valore. Si usa un quarto di Kelly, con un massimo del 2% del disponibile e lo stake massimo dei tuoi limiti. Se la quota non ha valore, lo stake è zero. Solo informativo: PREDICTRA non piazza scommesse.",
       match: "Partita",
       chooseMatch: "Scegli una partita",
       selection: "Esito",

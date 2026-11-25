@@ -1,3 +1,4 @@
+import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
@@ -129,11 +130,12 @@ export const RELAX_STEPS = 3;
 export const MIN_EDGE = -0.05;
 export const MAX_EDGE = 0.15;
 /**
- * Peso del mercato nella probabilità delle schedine (ADR 0071). Sui dati veri le quote dei
- * bookmaker senza margine indovinano meglio del modello da solo (Brier 0,2100 contro
- * 0,2178 su 408 giocate) e ogni peso in più migliora: 0,75 tiene conto di entrambi.
+ * Peso del mercato nella probabilità delle schedine (ADR 0071, 0073): lo stesso delle proposte
+ * con valore. Sui dati veri le quote dei bookmaker senza margine indovinano meglio del
+ * modello da solo (Brier 0,2100 contro 0,2178 su 408 giocate; Log Loss 1X2 0,9500 contro
+ * 0,9694): 0,75 tiene conto di entrambi.
  */
-export const MARKET_WEIGHT = 0.75;
+export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.75;
 export const MIN_LEGS = 2;
 /** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
 export const MAX_DISAGREEMENT = 0.1;

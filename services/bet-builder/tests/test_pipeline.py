@@ -207,7 +207,7 @@ def test_adr_0028_mercato_e_solo_bookmaker_italiani():
     market = ((1 / 2.00) / s_int + (1 / 2.40) / s_it) / 2
     assert float(leg.market_probability) == pytest.approx(market, abs=1e-8)
     assert float(leg.model_probability) == 0.5
-    assert float(leg.probability) == pytest.approx(0.5 * 0.5 + 0.5 * market, abs=1e-8)
+    assert float(leg.probability) == pytest.approx(0.25 * 0.5 + 0.75 * market, abs=1e-8)
     item = summary.proposals[0].as_batch_item(DEFAULT_RULES)
     assert item["legs"][0]["market_probability"] == pytest.approx(market, abs=1e-8)
 
@@ -266,4 +266,6 @@ def test_adr_0033_tutti_i_mercati_con_quote_italiane():
     m_int = (1 / 2.0) / (1 / 2.0 + 1 / 1.8)
     assert float(over.market_probability) == pytest.approx((m_it + m_int) / 2, abs=1e-8)
     assert over.line == 2.5 and float(over.price) == 2.2
-    assert float(over.probability) == pytest.approx(0.5 * 0.55 + 0.5 * (m_it + m_int) / 2, abs=1e-8)
+    assert float(over.probability) == pytest.approx(
+        0.25 * 0.55 + 0.75 * (m_it + m_int) / 2, abs=1e-8
+    )

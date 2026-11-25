@@ -266,53 +266,121 @@ it("analisi delle schedine", async () => {
         );
     }
 
-    // 4. Proposte con valore salvate dal motore.
-    const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-    const { data } = await client
-      .from("bet_proposals")
-      .select(
-        "id, category, legs_count, combined_price, first_kickoff_at, bet_proposal_legs(match_id, market, line, selection)",
-      )
-      .gte("first_kickoff_at", since)
-      .lt("first_kickoff_at", new Date().toISOString())
-      .limit(5000);
-    const groups = new Map<string, { n: number; won: number; back: number }>();
-    for (const p of (data ?? []) as {
+    // 4. Proposte con valore salvate dal motore, tutte quelle già giocate (a pagine di 1.000).
+    interface SavedLeg {
+      match_id: number;
+      market: string;
+      line: number | null;
+      selection: string;
+      price: number;
+      model_probability: number | null;
+      market_probability: number | null;
+    }
+    interface SavedProposal {
       category: string;
       legs_count: number;
       combined_price: number;
-      bet_proposal_legs: {
-        match_id: number;
-        market: string;
-        line: number | null;
-        selection: string;
-      }[];
-    }[]) {
-      const legs = p.bet_proposal_legs.map((l) =>
-        legWon(
-          {
-            matchId: l.match_id,
-            market: l.market,
-            line: l.line === null ? null : Number(l.line),
-            selection: l.selection,
-          },
-          v.results,
-        ),
-      );
-      if (legs.some((x) => x === null)) continue;
-      const key = `${p.category} · ${p.legs_count} selezioni`;
-      const g = groups.get(key) ?? { n: 0, won: 0, back: 0 };
-      g.n += 1;
-      if (legs.every(Boolean)) {
-        g.won += 1;
-        g.back += Number(p.combined_price);
-      }
-      groups.set(key, g);
+      first_kickoff_at: string;
+      bet_proposal_legs: SavedLeg[];
     }
-    console.log("\n== Proposte con valore degli ultimi 30 giorni ==");
-    for (const [k, g] of [...groups].sort())
-      console.log(
-        `${k.padEnd(28)} vinte ${g.won}/${g.n} (${pct(g.won / g.n)}) ritorno ${pct(g.back / g.n - 1)}`,
+    const proposals: SavedProposal[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await client
+        .from("bet_proposals")
+        .select(
+          "id, category, legs_count, combined_price, first_kickoff_at, bet_proposal_legs(match_id, market, line, selection, price, model_probability, market_probability)",
+        )
+        .lt("first_kickoff_at", new Date().toISOString())
+        .order("id")
+        .range(from, from + 999);
+      if (error) throw error;
+      proposals.push(...((data ?? []) as unknown as SavedProposal[]));
+      if (!data || data.length < 1000) break;
+    }
+    const legResult = (l: SavedLeg) =>
+      legWon(
+        {
+          matchId: l.match_id,
+          market: l.market,
+          line: l.line === null ? null : Number(l.line),
+          selection: l.selection,
+        },
+        v.results,
       );
+    // Ritorno medio puntando 1 su ognuna, con intervallo al 95% (approssimazione normale):
+    // dice quanto il risultato può dipendere dalla fortuna.
+    const roiLine = (returns: number[]) => {
+      const n = returns.length;
+      if (n === 0) return "nessuna";
+      const mean = returns.reduce((a, x) => a + x, 0) / n;
+      const sd = Math.sqrt(returns.reduce((a, x) => a + (x - mean) ** 2, 0) / Math.max(1, n - 1));
+      const half = (1.96 * sd) / Math.sqrt(n);
+      const won = returns.filter((x) => x > 0).length;
+      return `vinte ${won}/${n} (${pct(won / n)}) ritorno ${pct(mean)} [95%: da ${pct(mean - half)} a ${pct(mean + half)}]`;
+    };
+    // Il motore gira più volte al giorno e ripropone spesso la stessa schedina: si conta una
+    // volta sola (stesse giocate), con la prima quota proposta.
+    const seenSlips = new Set<string>();
+    const settledProposals = proposals
+      .filter((p) => {
+        const key = p.bet_proposal_legs
+          .map((l) => `${l.match_id}|${l.market}|${l.line}|${l.selection}`)
+          .sort()
+          .join(",");
+        if (seenSlips.has(key)) return false;
+        seenSlips.add(key);
+        return true;
+      })
+      .map((p) => ({ p, legs: p.bet_proposal_legs.map(legResult) }))
+      .filter((x) => x.legs.length > 0 && x.legs.every((l) => l !== null));
+    const firstDay = settledProposals.map((x) => x.p.first_kickoff_at).sort()[0] ?? "—";
+    console.log(
+      `\n== Proposte con valore già decise: ${settledProposals.length} distinte (${proposals.length} salvate), dal ${firstDay.slice(0, 10)} ==`,
+    );
+    const groups = new Map<string, number[]>();
+    for (const { p, legs } of settledProposals) {
+      const key = `${p.category} · ${p.legs_count} selezioni`;
+      const r = legs.every(Boolean) ? Number(p.combined_price) - 1 : -1;
+      groups.set(key, [...(groups.get(key) ?? []), r]);
+      groups.set("TUTTE", [...(groups.get("TUTTE") ?? []), r]);
+    }
+    for (const [k, list] of [...groups].sort()) console.log(`${k.padEnd(28)} ${roiLine(list)}`);
+
+    // 7. Peso del mercato nelle proposte: con probabilità e prezzi salvati, quali giocate
+    //    avrebbero avuto valore (almeno +2%) con un altro peso, e come sono andate da singole.
+    //    Ogni giocata una volta sola, anche se compare in più proposte.
+    const distinct = new Map<string, SavedLeg>();
+    for (const { p } of settledProposals)
+      for (const l of p.bet_proposal_legs)
+        distinct.set(`${l.match_id}|${l.market}|${l.line}|${l.selection}`, l);
+    console.log(`\n== Giocate distinte delle proposte: ${distinct.size} ==`);
+    for (const w of [0, 0.25, 0.5, 0.75, 0.9, 1]) {
+      const kept: number[] = [];
+      let expected = 0;
+      for (const l of distinct.values()) {
+        if (l.model_probability === null || l.market_probability === null) continue;
+        const prob = (1 - w) * Number(l.model_probability) + w * Number(l.market_probability);
+        if (prob * Number(l.price) - 1 < 0.02) continue;
+        const won = legResult(l);
+        kept.push(won ? Number(l.price) - 1 : -1);
+        expected += prob;
+      }
+      console.log(
+        `peso mercato ${w.toFixed(2)}: data in media ${kept.length ? pct(expected / kept.length) : "—"} · ${roiLine(kept)}`,
+      );
+    }
+    // Le stesse proposte, tenute solo se ogni giocata ha ancora valore con il peso dato.
+    for (const w of [0.5, 0.75, 1]) {
+      const kept: number[] = [];
+      for (const { p, legs } of settledProposals) {
+        const ok = p.bet_proposal_legs.every((l) => {
+          if (l.model_probability === null || l.market_probability === null) return false;
+          const prob = (1 - w) * Number(l.model_probability) + w * Number(l.market_probability);
+          return prob * Number(l.price) - 1 >= 0.02;
+        });
+        if (ok) kept.push(legs.every(Boolean) ? Number(p.combined_price) - 1 : -1);
+      }
+      console.log(`proposte con peso mercato ${w.toFixed(2)}: ${roiLine(kept)}`);
+    }
   });
 });

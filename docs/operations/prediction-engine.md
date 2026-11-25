@@ -182,6 +182,7 @@ Prima esecuzione ([run 44](https://github.com/predictra-hq/predictra/actions/run
 | Dixon-Coles + Elo (attivo) | 0,9757                       | 0,9719                    |
 
 - Campione troppo piccolo: **nessuna modifica**. Da rilanciare quando il job `api-football.details` avrà coperto qualche migliaio di partite (circa 44 al giorno).
+- **25/11/2026** ([run](https://github.com/predictra-hq/predictra/actions/runs/45601073925)): 475 partite con statistiche su 8.773 (competizioni 1 e 2). Log Loss 1X2 su 3.499 partite dal 1/7/2024: Poisson 0,9776, con attesi 0,3–0,7 0,9775; Dixon-Coles + Elo 0,9763. Sulle 475 con statistiche: Poisson 0,9736, con attesi 0,7 0,9719. Guadagno piccolo e limitato alle partite con statistiche: **nessuna modifica**. Il piano gratuito non dà le statistiche della stagione in corso, quindi per le partite da giocare il guadagno sarebbe ancora minore.
 
 ## Under/over e taratura per mercato (15/11/2026)
 
@@ -201,6 +202,8 @@ Banco di prova, Dixon-Coles walk-forward (λ casa, λ ospite, ρ), stima su 2024
 Comando `market` (sola lettura): partite finite degli ultimi 60 giorni con l'ultima previsione fatta prima del calcio d'inizio (vista `v_pre_kickoff_predictions`, stessa famiglia del modello attivo) e quote 1X2 osservate prima del via, senza margine e mediate tra i bookmaker.
 
 Prima misura ([run 48](https://github.com/predictra-hq/predictra/actions/runs/43728372630)), **19 partite**: modello 0,8136, mercato 0,8072, combinata con peso 0,5 (in uso) 0,8063, con peso 0,6–0,7 0,8057. La combinazione batte modello e mercato da soli; tra 0,5 e 0,7 la differenza è rumore su 19 partite: **peso invariato a 0,5**. Da rilanciare quando le partite saranno qualche centinaio.
+
+**25/11/2026** ([run](https://github.com/predictra-hq/predictra/actions/runs/45601086856)), **75 partite**: modello 0,9694, peso 0,5 0,9555, peso 0,7 0,9523, peso 0,8 0,9512, mercato 0,9500. Ogni peso in più migliora; anche il Brier delle giocate delle schedine (408) dice lo stesso. **Peso portato a 0,75** nelle proposte con valore, nelle schedine consigliate e nel calcolo di Kelly (ADR 0073).
 
 ## Combinazione Dixon-Coles + Elo: stacking (16/11/2026)
 
