@@ -316,13 +316,15 @@ describe("chat della comunità (ADR 0064)", () => {
     const slip = { title: "Solida", picks: [{ match: "DEMO A – DEMO B", pick: "1", price: 1.5 }] };
     await asUser(db, alice, async (tx) => {
       expect(await post(tx, "GENERAL", "Ciao a tutti")).toBeNull();
+    });
+    await asUser(db, bob, async (tx) => {
       expect(await post(tx, "SLIPS", "La mia di oggi", slip)).toBeNull();
     });
     const general = await feed(bob, "GENERAL");
     expect(general).toHaveLength(1);
     expect(general[0]).toMatchObject({ body: "Ciao a tutti", author_name: "Alice", is_own: false });
     expect(Object.keys(general[0]!)).not.toContain("user_id");
-    const slips = await feed(bob, "SLIPS");
+    const slips = await feed(alice, "SLIPS");
     expect(slips[0]).toMatchObject({ slip, body: "La mia di oggi" });
   });
 
@@ -333,8 +335,9 @@ describe("chat della comunità (ADR 0064)", () => {
         /community_posts_slip_channel/,
       );
       expect(await post(tx, "ALTRO", "x")).toMatch(/community_posts_channel_check/);
-      for (let i = 0; i < 10; i++) expect(await post(tx, "GENERAL", `Messaggio ${i}`)).toBeNull();
-      expect(await post(tx, "GENERAL", "Uno di troppo")).toContain(COMMENT_RATE_LIMIT);
+      // Un messaggio alla volta (ADR 0071): il secondo subito dopo aspetta 2 minuti.
+      expect(await post(tx, "GENERAL", "Primo")).toBeNull();
+      expect(await post(tx, "GENERAL", "Secondo")).toContain("POST_COOLDOWN");
     });
   });
 
@@ -383,8 +386,8 @@ describe("chat della comunità (ADR 0064)", () => {
     expect(await react(bob, "💩")).toMatch(/community_reactions_emoji_check/);
     const [row] = await feed(alice, "SLIPS");
     expect(row!.reactions).toEqual([
-      { emoji: "🔥", count: 2, mine: true },
-      { emoji: "👍", count: 1, mine: false },
+      { emoji: "🔥", count: 2, mine: true, names: ["Alice", "Utente"] },
+      { emoji: "👍", count: 1, mine: false, names: ["Utente"] },
     ]);
     // Ognuno toglie solo le proprie.
     await asUser(db, alice, async (tx) => {

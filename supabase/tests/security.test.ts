@@ -60,6 +60,7 @@ const AUTHENTICATED_WRITABLE = [
   "community_posts",
   "community_reactions",
   "match_comments",
+  "notifications",
   "personal_limits",
   "user_bet_slip_selections",
   "user_bet_slips",
@@ -162,7 +163,6 @@ describe("revisione di sicurezza del database", () => {
       [AUTHENTICATED_WRITABLE],
     );
     expect(rows.map((r) => `${r.t}.${r.c}`).sort()).toEqual([
-      "notifications.read_at",
       "profiles.avatar_style",
       "profiles.display_name",
       "profiles.name_color",

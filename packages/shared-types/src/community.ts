@@ -31,6 +31,8 @@ export const COMMENT_MAX_LENGTH = 500;
 /** Errori del database. */
 export const BIRTH_DATE_INVALID = "BIRTH_DATE_INVALID";
 export const COMMENT_RATE_LIMIT = "COMMENT_RATE_LIMIT";
+/** Spogliatoio: dopo un messaggio si aspettano 2 minuti (ADR 0071). */
+export const POST_COOLDOWN = "POST_COOLDOWN";
 
 export function isNameColor(value: unknown): value is NameColor {
   return typeof value === "string" && (NAME_COLORS as readonly string[]).includes(value);
@@ -109,11 +111,13 @@ export interface SharedSlip {
   probability: number | null;
 }
 
-/** Reazione a un messaggio: emoji, quante persone, se c'è anche la propria. */
+/** Reazione a un messaggio: emoji, quante persone, se c'è anche la propria, chi l'ha messa. */
 export interface CommunityReaction {
   emoji: string;
   count: number;
   mine: boolean;
+  /** Nomi visibili di chi ha reagito, dal primo all'ultimo (mai l'email). */
+  names?: string[];
 }
 
 /** Emoji ammesse nelle reazioni (vincolo `community_reactions_emoji_check`). */

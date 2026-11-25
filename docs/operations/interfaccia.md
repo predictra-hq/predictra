@@ -315,3 +315,17 @@ ADR 0070.
 - **Login:** «Mostra / Nascondi» password, recupero accanto al campo, «Torna alla presentazione» (dal lavoro di Alfredo).
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV: reazioni sul telefono (la tavolozza delle emoji non deve uscire dallo schermo), apertura di un messaggio dalla Home dentro la chat.
+
+## 25/11/2026: schedine a quota obiettivo, Spogliatoio con attesa, notifiche eliminabili
+
+ADR 0071.
+
+- **Schedine consigliate:** tre profili (Solida, Equilibrata, Alta quota) con quota totale obiettivo 2, 3,5 e 7. Le vecchie «Doppia» restano nelle Passate come «Doppia (regola precedente)».
+- **Spogliatoio:**
+  - un messaggio ogni 2 minuti;
+  - passando sopra una reazione compaiono i nomi di chi l'ha messa (attributo `title`);
+  - la tavolozza delle emoji si apre verso l'interno della bolla, su due righe, e la chat non scorre più di lato (`overflow-x-hidden`).
+- **Home:** nella card delle notifiche «Elimina» su ogni notifica ed «Elimina le lette».
+- **Quote:** «Non aggiornata» solo dopo 26 ore.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV, anche da telefono: tavolozza delle emoji su messaggi propri e altrui, nomi al passaggio del mouse, eliminazione delle notifiche.

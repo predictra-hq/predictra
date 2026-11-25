@@ -109,7 +109,7 @@ export function ChatThread({
       aria-label={label}
       className="flex h-[calc(100dvh-23rem)] min-h-[20rem] flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface lg:h-[calc(100dvh-14rem)]"
     >
-      <div className="flex flex-1 flex-col-reverse overflow-y-auto overscroll-contain p-3">
+      <div className="flex flex-1 flex-col-reverse overflow-x-hidden overflow-y-auto overscroll-contain p-3">
         {empty ? (
           <p className="m-auto max-w-xs text-center text-sm text-muted">{empty}</p>
         ) : (
@@ -131,13 +131,22 @@ export function Reactions({
   reactions,
   action,
   labels,
+  align = "start",
 }: {
   postId: number;
   reactions: readonly CommunityReaction[];
   action: (formData: FormData) => Promise<void>;
   labels: { react: string; reactWith: string };
+  /** Lato della bolla: la tavolozza si apre verso l'interno della chat, senza uscire. */
+  align?: "start" | "end";
 }) {
-  const button = (emoji: string, content: ReactNode, mine: boolean, extra?: string) => (
+  const button = (
+    emoji: string,
+    content: ReactNode,
+    mine: boolean,
+    extra?: string,
+    title?: string,
+  ) => (
     <form key={emoji} action={action}>
       <input type="hidden" name="postId" value={postId} />
       <input type="hidden" name="emoji" value={emoji} />
@@ -145,6 +154,7 @@ export function Reactions({
         type="submit"
         aria-label={labels.reactWith.replace("{emoji}", emoji)}
         aria-pressed={mine}
+        title={title}
         className={cn(
           "flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
           mine
@@ -158,7 +168,7 @@ export function Reactions({
     </form>
   );
   return (
-    <div className="mt-1 flex flex-wrap items-center gap-1">
+    <div className={cn("mt-1 flex flex-wrap items-center gap-1", align === "end" && "justify-end")}>
       {reactions.map((r) =>
         button(
           r.emoji,
@@ -167,6 +177,9 @@ export function Reactions({
             {r.count}
           </>,
           r.mine,
+          undefined,
+          // Passando il mouse: chi l'ha messa (solo i nomi visibili, mai l'email).
+          r.names?.length ? r.names.join(", ") : undefined,
         ),
       )}
       <details className="group relative">
@@ -176,7 +189,12 @@ export function Reactions({
         >
           <SmilePlus size={14} aria-hidden="true" />
         </summary>
-        <div className="absolute bottom-8 left-0 z-10 flex gap-1 rounded-full border border-border bg-surface p-1 shadow-lg">
+        <div
+          className={cn(
+            "absolute bottom-8 z-10 grid w-max grid-cols-4 gap-0.5 rounded-xl border border-border bg-surface p-1 shadow-lg",
+            align === "end" ? "right-0" : "left-0",
+          )}
+        >
           {REACTION_EMOJIS.map((e) =>
             button(
               e,

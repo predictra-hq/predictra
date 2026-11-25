@@ -477,6 +477,7 @@ export const it = {
     published: "Messaggio inviato.",
     invalid: "Scrivi un messaggio tra 1 e 500 caratteri.",
     rateLimited: "Hai scritto molti messaggi di seguito. Riprova tra qualche minuto.",
+    cooldown: "Un messaggio alla volta: puoi scriverne un altro tra 2 minuti.",
     empty: "Ancora nessun messaggio: scrivi il primo.",
     emptyMatches: "Ancora nessun commento alle partite. Apri una partita e scrivi il primo.",
     delete: "Elimina",
@@ -1073,7 +1074,8 @@ export const it = {
       title: "Schedine consigliate",
       description: "Multiple pronte per il prossimo turno, con quote reali di bookmaker italiani.",
       profiles: {
-        DOUBLE: "Doppia, alta probabilità",
+        // Profilo usato fino al 25/11/2026: compare solo nelle schedine già salvate.
+        DOUBLE: "Doppia (regola precedente)",
         SOLID: "Solida",
         BALANCED: "Equilibrata",
         HIGH: "Alta quota",
@@ -1852,6 +1854,9 @@ export const it = {
     markRead: "Segna come letta",
     markAllRead: "Segna tutte come lette",
     marked: "Notifiche aggiornate.",
+    deleteNotification: "Elimina",
+    deleteRead: "Elimina le lette",
+    deleted: "Notifiche eliminate.",
     open: "Apri",
   },
   ask: {

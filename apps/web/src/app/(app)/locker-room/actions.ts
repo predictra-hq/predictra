@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   COMMENT_RATE_LIMIT,
   COMMUNITY_CHANNELS,
+  POST_COOLDOWN,
   REACTION_EMOJIS,
   type CommunityChannel,
 } from "@predictra/shared-types";
@@ -31,12 +32,7 @@ export async function postMessage(_prev: ActionState, formData: FormData): Promi
   const supabase = await createClient();
   const { error } = await supabase.from("community_posts").insert({ channel, body });
   if (error) {
-    return {
-      ok: false,
-      message: error.message.includes(COMMENT_RATE_LIMIT)
-        ? m.rateLimited
-        : getMessages().common.genericError,
-    };
+    return { ok: false, message: postError(error.message) };
   }
   revalidatePath("/locker-room");
   return { ok: true, message: m.published };
@@ -53,15 +49,18 @@ export async function shareSlip(_prev: ActionState, formData: FormData): Promise
   const supabase = await createClient();
   const { error } = await supabase.from("community_posts").insert({ channel: "SLIPS", body, slip });
   if (error) {
-    return {
-      ok: false,
-      message: error.message.includes(COMMENT_RATE_LIMIT)
-        ? m.rateLimited
-        : getMessages().common.genericError,
-    };
+    return { ok: false, message: postError(error.message) };
   }
   revalidatePath("/locker-room");
   return { ok: true, message: m.shared };
+}
+
+/** Messaggio per l'utente dagli errori del database sui messaggi. */
+function postError(message: string): string {
+  const m = getMessages().community;
+  if (message.includes(POST_COOLDOWN)) return m.cooldown;
+  if (message.includes(COMMENT_RATE_LIMIT)) return m.rateLimited;
+  return getMessages().common.genericError;
 }
 
 const idOf = (raw: FormDataEntryValue | null) => {

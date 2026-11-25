@@ -153,11 +153,11 @@ it("analisi delle schedine", async () => {
         for (const legs of [2, 3, 4]) {
           for (const minPrice of [1.15, 1.25, 1.35, 1.5]) {
             const rule: BollettaRule = { minProbability, minPrice, legs };
-            const rules = { DOUBLE: rule, SOLID: rule, BALANCED: rule, HIGH: rule };
+            const rules = { SOLID: rule, BALANCED: rule, HIGH: rule };
             const built = buildBollette(rows, v.prices, v.consensus, calibration, {
               window,
               rules,
-            }).filter((b) => b.profile === "DOUBLE");
+            }).filter((b) => b.profile === "SOLID");
             const s = score(built, v.results);
             if (s.settled < 5) continue;
             variants.push({

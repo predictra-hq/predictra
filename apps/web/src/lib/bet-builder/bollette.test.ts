@@ -105,14 +105,15 @@ describe("schedine consigliate (valori DEMO)", () => {
     expect(picks[0]!.bookmaker).toBe("DEMO (IT)");
   });
 
-  it("probabilità prudente: media tra modello e mercato", () => {
+  it("probabilità prudente: media pesata tra modello e mercato", () => {
     const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.9)]);
     const consensus = new Map([["1|h2h|HOME", 0.5]]);
     const [pick] = playablePicks([row(1, "1X2", "HOME", 0.6)], prices, consensus);
     expect(pick!.modelProbability).toBe(0.6);
     expect(pick!.marketProbability).toBe(0.5);
-    expect(pick!.probability).toBeCloseTo(0.55);
-    expect(pick!.edge).toBeCloseTo(0.55 * 1.9 - 1);
+    // Peso del mercato 0,75 (ADR 0071): 0,25 × 0,6 + 0,75 × 0,5.
+    expect(pick!.probability).toBeCloseTo(0.525);
+    expect(pick!.edge).toBeCloseTo(0.525 * 1.9 - 1);
   });
 
   it("per ogni partita prima la precisione, poi il valore (ADR 0065)", () => {
@@ -132,9 +133,9 @@ describe("schedine consigliate (valori DEMO)", () => {
     ]);
     // Regola «di valore» (ADR 0070): giocate almeno alla quota giusta.
     const rule = { minProbability: 0.65, minPrice: 1.25, legs: 3 };
-    const rules = { DOUBLE: rule, SOLID: rule, BALANCED: rule, HIGH: rule };
+    const rules = { SOLID: rule, BALANCED: rule, HIGH: rule };
     const [solid] = buildBollette(rows, prices, new Map(), new Map(), { rules });
-    expect(solid!.profile).toBe("DOUBLE");
+    expect(solid!.profile).toBe("SOLID");
     // L'over 1,5 (−2%) è sotto la quota giusta: resta fuori.
     expect(solid!.picks.map((p) => [p.matchId, p.market])).toEqual([
       [1, "DOUBLE_CHANCE"],
@@ -143,10 +144,10 @@ describe("schedine consigliate (valori DEMO)", () => {
     expect(solid!.price).toBeCloseTo(1.25 * 1.5);
     expect(solid!.probability).toBeCloseTo(0.8 * 0.68);
     expect(solid!.expectedValue).toBeCloseTo(solid!.probability * solid!.price - 1);
-    // Quote lette alle 08:00 del 20/11: aggiornate fino a 12 ore dopo, poi da ricontrollare.
+    // Quote lette alle 08:00 del 20/11: aggiornate fino a 26 ore dopo, poi da ricontrollare.
     expect(solid!.oddsObservedAt).toBe("2026-11-20T08:00:00Z");
-    expect(oddsAreOld(solid!, new Date("2026-11-20T19:00:00Z"))).toBe(false);
-    expect(oddsAreOld(solid!, new Date("2026-11-21T09:00:00Z"))).toBe(true);
+    expect(oddsAreOld(solid!, new Date("2026-11-21T09:00:00Z"))).toBe(false);
+    expect(oddsAreOld(solid!, new Date("2026-11-21T11:00:00Z"))).toBe(true);
   });
 
   it("nessuna schedina forzata e nessun doppione tra profili; squadre tutte diverse", () => {
@@ -173,7 +174,7 @@ describe("schedine consigliate (valori DEMO)", () => {
 describe("una schedina consigliata non perde in media (valori DEMO)", () => {
   it("profili di valore: solo giocate almeno alla quota giusta (ADR 0070)", () => {
     const rule = { minProbability: 0.65, minPrice: 1.25, legs: 3 };
-    const rules = { DOUBLE: rule, SOLID: rule, BALANCED: rule, HIGH: rule };
+    const rules = { SOLID: rule, BALANCED: rule, HIGH: rule };
     // Probabilità 0,70: a quota 1,50 il valore è +5%, a 1,40 è −2%.
     const rows = [1, 3, 5].map((m) => row(m, "1X2", "HOME", 0.7));
     const good = buildBollette(
@@ -201,7 +202,9 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
   });
 
   it("profili di precisione: le giocate più probabili, anche un po' sotto la quota giusta", () => {
-    // Doppia: due giocate dall'80%; la più probabile prima, anche con valore −2%.
+    // Solida: le giocate più probabili, anche con valore −2%; la partita 1 (quota 1,14) è
+    // sotto la quota minima. Con le soglie allargate la quota totale resta sotto
+    // l'obiettivo (2): resta la schedina con le soglie del profilo.
     const rows = [
       row(1, "DOUBLE_CHANCE", "HOME_DRAW", 0.86),
       row(3, "DOUBLE_CHANCE", "HOME_DRAW", 0.82),
@@ -215,15 +218,37 @@ describe("una schedina consigliata non perde in media (valori DEMO)", () => {
         odds(5, "double_chance", "HOME_DRAW", 1.24), // +0,4%
       ]),
     );
-    const double = bollette.find((b) => b.profile === "DOUBLE")!;
-    expect(double.picks.map((p) => p.matchId)).toEqual([1, 3]);
-    expect(double.expectedValue).toBeGreaterThan(-0.05);
+    const solid = bollette.find((b) => b.profile === "SOLID")!;
+    expect(solid.picks.map((p) => p.matchId)).toEqual([3, 5]);
+    expect(solid.expectedValue).toBeGreaterThan(-0.08);
   });
 
-  it("solo selezioni che non convengono: nessuna schedina", () => {
+  it("selezioni sotto la quota giusta: solo la Solida, entro la tolleranza", () => {
     const rows = [1, 3].map((m) => row(m, "1X2", "HOME", 0.7));
-    const prices = bestItalianPrices([odds(1, "h2h", "HOME", 1.4), odds(3, "h2h", "HOME", 1.4)]);
-    expect(buildBollette(rows, prices)).toEqual([]);
+    // Valore −2% a giocata: Equilibrata e Alta quota no, la Solida sì (−4% in tutto).
+    const near = buildBollette(
+      rows,
+      bestItalianPrices([odds(1, "h2h", "HOME", 1.4), odds(3, "h2h", "HOME", 1.4)]),
+    );
+    expect(near.map((b) => b.profile)).toEqual(["SOLID"]);
+    // Valore −9% a giocata: nessuna schedina.
+    const far = bestItalianPrices([odds(1, "h2h", "HOME", 1.3), odds(3, "h2h", "HOME", 1.3)]);
+    expect(buildBollette(rows, far)).toEqual([]);
+  });
+
+  it("tre schedine, ognuna fino alla sua quota obiettivo (ADR 0071)", () => {
+    // Quattro partite al 60% a quota 1,75 (valore +5%).
+    const rows = [1, 3, 5, 7].map((m) => row(m, "1X2", "HOME", 0.6));
+    const prices = bestItalianPrices([1, 3, 5, 7].map((m) => odds(m, "h2h", "HOME", 1.75)));
+    const bollette = buildBollette(rows, prices);
+    // Solida (soglie allargate fino al 58%): 2 partite, quota 3,06 ≥ 2.
+    // Equilibrata: 3 partite, quota 5,36 ≥ 3,5. Alta quota (quota minima 1,7): 4 partite, 9,38 ≥ 7.
+    expect(bollette.map((b) => [b.profile, b.picks.length])).toEqual([
+      ["SOLID", 2],
+      ["BALANCED", 3],
+      ["HIGH", 4],
+    ]);
+    expect(bollette[2]!.price).toBeCloseTo(1.75 ** 4);
   });
   it("scarta le giocate su cui modello e mercato non sono d'accordo (ADR 0065)", () => {
     const rows = [row(1, "1X2", "HOME", 0.8)];
