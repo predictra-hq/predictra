@@ -329,3 +329,14 @@ ADR 0071.
 - **Quote:** «Non aggiornata» solo dopo 26 ore.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV, anche da telefono: tavolozza delle emoji su messaggi propri e altrui, nomi al passaggio del mouse, eliminazione delle notifiche.
+
+## 25/11/2026: schedine con quota minima 3, 5 e 10
+
+ADR 0072.
+
+- **Schedine consigliate:**
+  - Solida da quota 3, Equilibrata da 5, Alta quota da 10, senza ripiego a quote più basse;
+  - sotto le schedine del periodo si dice quale profilo manca;
+  - in fondo alla sezione compaiono le quote minime.
+
+**Non provato nell'app in esecuzione.** Da guardare su DEV: avviso dei profili mancanti nelle schede Turno e Giornata.

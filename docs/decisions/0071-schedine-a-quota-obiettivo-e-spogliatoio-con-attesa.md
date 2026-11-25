@@ -1,6 +1,6 @@
 # ADR 0071 — Schedine a quota obiettivo, peso del mercato, Spogliatoio con attesa, notifiche eliminabili
 
-- **Stato:** accettato (25/11/2026)
+- **Stato:** accettato (25/11/2026); profili delle schedine aggiornati dall'ADR 0072
 - **Milestone:** M8 (corsie 0, A e B nella stessa modifica)
 - **Aggiorna:** ADR 0070 (profili delle schedine, reazioni), ADR 0064 (Spogliatoio), ADR 0035 (soglie dell'agente)
 

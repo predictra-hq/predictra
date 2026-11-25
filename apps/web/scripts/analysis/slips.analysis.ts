@@ -137,12 +137,16 @@ it("analisi delle schedine", async () => {
     for (const window of ["round", "day"] as const) {
       const all = buildBollette(rows, v.prices, v.consensus, calibration, { window });
       console.log(`\n== Regole attuali (${window}) ==`);
+      const periods = new Set(all.map((b) => b.round)).size;
+      console.log(`periodi con almeno una schedina: ${periods}`);
       for (const profile of Object.keys(BOLLETTA_RULES)) {
-        const s = score(
-          all.filter((b) => b.profile === profile),
-          v.results,
+        const list = all.filter((b) => b.profile === profile);
+        const s = score(list, v.results);
+        const avg = list.length ? list.reduce((a, b) => a + b.price, 0) / list.length : 0;
+        const legs = list.length ? list.reduce((a, b) => a + b.picks.length, 0) / list.length : 0;
+        console.log(
+          `${profile.padEnd(9)} schedine ${list.length} · quota media ${avg.toFixed(2)} · partite ${legs.toFixed(1)} · vinte ${s.won}/${s.settled} ritorno ${pct(s.roi)}`,
         );
-        console.log(`${profile.padEnd(9)} vinte ${s.won}/${s.settled} ritorno ${pct(s.roi)}`);
       }
     }
 
@@ -183,6 +187,84 @@ it("analisi delle schedine", async () => {
       "Alternative per ritorno",
       [...variants].sort((a, b) => b.roi - a.roi),
     );
+
+    // 5. Singole giocate per fascia di quota: quante escono e quanto rendono, con pesi del
+    //    mercato diversi. Una schedina rende come il prodotto delle sue giocate.
+    const bands = [1, 1.5, 2, 2.5, 3.5, 100];
+    for (const w of [0.5, 0.75, 1]) {
+      const legs = playablePicks(rows, v.prices, v.consensus, w, calibration);
+      const t = new Map<string, { n: number; won: number; back: number; p: number }>();
+      for (const p of legs) {
+        const won = legWon(p, v.results);
+        if (won === null) continue;
+        const i = bands.findIndex((b, j) => p.price >= b && p.price < bands[j + 1]!);
+        const key = `quota ${bands[i]}–${bands[i + 1] === 100 ? "oltre" : bands[i + 1]} · valore ${p.edge >= 0 ? "≥ 0" : "< 0"}`;
+        const c = t.get(key) ?? { n: 0, won: 0, back: 0, p: 0 };
+        c.n += 1;
+        c.p += p.probability;
+        if (won) {
+          c.won += 1;
+          c.back += p.price;
+        }
+        t.set(key, c);
+      }
+      console.log(`\n== Giocate per fascia di quota (peso mercato ${w}) ==`);
+      for (const [k, c] of [...t].sort())
+        console.log(
+          `${k.padEnd(30)} n=${String(c.n).padStart(4)} data=${pct(c.p / c.n)} uscita=${pct(c.won / c.n)} ritorno ${pct(c.back / c.n - 1)}`,
+        );
+    }
+
+    // 6. Schedine con quota totale minima obbligatoria (3, 5, 8, 12).
+    const high: { label: string; won: number; settled: number; roi: number }[] = [];
+    for (const window of ["round", "day"] as const) {
+      for (const targetPrice of [3, 5, 8, 12]) {
+        for (const minProbability of [0.35, 0.45, 0.55, 0.65]) {
+          for (const minPrice of [1.3, 1.6, 2]) {
+            for (const precision of [false, true]) {
+              for (const marketWeight of [0.75, 1]) {
+                const rule: BollettaRule = {
+                  minProbability,
+                  minPrice,
+                  legs: 6,
+                  targetPrice,
+                  strictTarget: true,
+                  precision,
+                  minSlipValue: -0.15,
+                };
+                const rules = { SOLID: rule, BALANCED: rule, HIGH: rule };
+                const built = buildBollette(rows, v.prices, v.consensus, calibration, {
+                  window,
+                  rules,
+                  marketWeight,
+                }).filter((b) => b.profile === "SOLID");
+                const s = score(built, v.results);
+                if (s.settled < 3) continue;
+                high.push({
+                  label: `${window} quota≥${targetPrice} p≥${minProbability} q≥${minPrice} ${precision ? "prob" : "valore"} w${marketWeight}`,
+                  ...s,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    for (const targetPrice of [3, 5, 8, 12]) {
+      const list = high
+        .filter((x) => x.label.includes(`quota≥${targetPrice} `))
+        .sort((a, b) => b.roi - a.roi);
+      const n = list.length;
+      const wins = list.reduce((a, x) => a + x.won, 0);
+      const played = list.reduce((a, x) => a + x.settled, 0);
+      console.log(
+        `\n== Quota totale ≥ ${targetPrice}: ${n} varianti, vinte in tutto ${wins}/${played} ==`,
+      );
+      for (const x of list.slice(0, 8))
+        console.log(
+          `${x.label.padEnd(54)} vinte ${x.won}/${x.settled} (${pct(x.won / x.settled)}) ritorno ${pct(x.roi)}`,
+        );
+    }
 
     // 4. Proposte con valore salvate dal motore.
     const since = new Date(Date.now() - 30 * 86_400_000).toISOString();

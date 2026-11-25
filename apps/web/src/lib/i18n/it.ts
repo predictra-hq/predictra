@@ -1103,6 +1103,9 @@ export const it = {
       empty:
         "Nessuna schedina conviene con le quote di adesso. Le quote arrivano 1–2 giorni prima delle partite: riprova più avanti.",
       note: "Nessuna giocata è sicura: più alta è la quota, più spesso si perde.",
+      minimums: "Quota totale minima: Solida {solid}, Equilibrata {balanced}, Alta quota {high}.",
+      missing:
+        "Senza {profiles}: con le giocate e le quote di adesso non si arriva alla quota minima.",
     },
     likely: {
       title: "Le più probabili",
