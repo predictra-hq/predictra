@@ -66,3 +66,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0071](0071-schedine-a-quota-obiettivo-e-spogliatoio-con-attesa.md) | Schedine a quota obiettivo, peso del mercato, Spogliatoio con attesa, notifiche eliminabili | Accettata |
 | [0072](0072-schedine-a-quota-minima.md)                             | Schedine con quota totale minima 3, 5 e 10                                                  | Accettata |
 | [0073](0073-peso-del-mercato-e-verifica-delle-proposte.md)          | Peso del mercato 0,75 nelle proposte con valore e verifica onesta dei risultati             | Accettata |
+| [0074](0074-modello-unico-su-tutte-le-competizioni.md)              | Modello gol unico su tutte le competizioni nel modello PREDICTRA                            | Accettata |

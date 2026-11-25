@@ -209,10 +209,26 @@ Prima misura ([run 48](https://github.com/predictra-hq/predictra/actions/runs/43
 
 Banco di prova, stima su 2024-25 e verifica su 2025-26 (1.751 partite). Combinazione attuale (media 0,6/0,4): Log Loss 0,9926; media geometrica con gli stessi pesi 0,9927; stacking (regressione multinomiale sui logaritmi delle due previsioni, pesi per esito) 0,9945 sul 2025-26, pur migliorando la stagione di stima (0,9836 → 0,9821). È adattamento: **non adottato**, la media fissa resta la scelta più solida.
 
+## Modello unico su tutte le competizioni (25/11/2026, ADR 0074)
+
+Comando `cross` (sola lettura, _Actions → Prediction engine → Run workflow_ con `command = cross`): backtest walk-forward settimanale dal 1/7/2024 (3.499 partite) del modello gol con forze **comuni a tutte le competizioni** (`models/joint.py`), da solo e in media con Dixon-Coles + Elo. Per ogni variante: Log Loss e Brier in tutto, per stagione e per competizione, e la differenza dal modello precedente partita per partita con ± 2 errori standard.
+
+| Variante (Log Loss 1X2)        | Tutte (3.499)        | 2024-25 (2.664)      | 2025-26 (835)        | Champions League (351) |
+| ------------------------------ | -------------------- | -------------------- | -------------------- | ---------------------- |
+| Dixon-Coles + Elo (prima)      | 0,9763               | 0,9818               | 0,9585               | 0,9579                 |
+| Modello unico da solo          | 0,9756               | 0,9790               | 0,9647               | 0,9474                 |
+| Media, peso unico 0,5          | −0,0021 ± 0,0020     | −0,0031 ± 0,0023     | +0,0010 ± 0,0043     | −0,0135 ± 0,0137       |
+| **Media, peso unico 0,3**      | **−0,0017 ± 0,0012** | **−0,0023 ± 0,0014** | **+0,0001 ± 0,0026** | **−0,0100 ± 0,0084**   |
+| Media solo in Champions League | −0,0013 ± 0,0014     | −0,0023 ± 0,0016     | +0,0018 ± 0,0026     | −0,0135 ± 0,0137       |
+
+- **Adottato il peso 0,3**: è l'unica variante con un guadagno oltre il caso in tutto e sul 2024-25, senza peggiorare il 2025-26. Il guadagno più grande è in Champions League, dove prima ogni squadra contava solo le sue poche partite europee.
+- Il peso è stato scelto tra tre valori provati sulle stesse partite: la scelta automatica (ADR 0023) lo ricontrolla sul backtest del database prima di attivare la versione nuova.
+- Il controllo «modello PREDICTRA nuovo» della prova dà gli stessi numeri della media scelta: il codice in produzione è quello misurato.
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.
-- Squadre senza partite nella competizione (per esempio all'inizio della Champions League) hanno forza media.
+- Squadre senza partite nella competizione (per esempio all'inizio della Champions League) hanno forza media nel modello per competizione; dal 25/11/2026 il modello unico porta le partite dei campionati nazionali (ADR 0074).
 - Elo (K = 20, vantaggio casalingo 60) non è ancora tarato.
 
 ### Controllo del 16/11/2026

@@ -1366,7 +1366,7 @@ export const it = {
   modelIntelligence: {
     title: "Modello",
     description:
-      "Un solo modello PREDICTRA: Dixon-Coles sui gol combinato con l'Elo sui risultati. Si riaddestra due volte al giorno su tutte le partite giocate, pesando di più le recenti, e ogni settimana rifà il backtest per controllare che resti più preciso del riferimento. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
+      "Un solo modello PREDICTRA: Dixon-Coles sui gol combinato con l'Elo sui risultati e con un modello gol unico su tutte le competizioni, che in Champions League usa anche le partite dei campionati nazionali. Si riaddestra due volte al giorno su tutte le partite giocate, pesando di più le recenti, e ogni settimana rifà il backtest per controllare che resti più preciso del riferimento. Le probabilità vengono solo da modelli quantitativi, mai da un LLM.",
     activeModel: "Modello PREDICTRA (attivo)",
     noActive:
       "Nessun modello attivo: il motore attiva da solo il modello più forte alla prossima esecuzione, se batte la baseline.",
