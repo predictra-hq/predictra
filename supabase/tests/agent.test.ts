@@ -511,19 +511,22 @@ describe("RLS", () => {
     expect(aliceRead.read_at).not.toBeNull();
   });
 
-  it("di una notifica il proprietario cambia solo read_at", async () => {
+  it("di una notifica il proprietario cambia solo read_at e può eliminarla (ADR 0071)", async () => {
     await asUser(db, alice, async (tx) => {
       expect(await attempt(tx, "update public.notifications set title = 'x'")).toMatch(
         /permission denied/,
       );
-      expect(await attempt(tx, "delete from public.notifications")).toMatch(/permission denied/);
       expect(
         await attempt(
           tx,
           "insert into public.notifications (user_id, kind, title) values (auth.uid(), 'demo', 'x')",
         ),
       ).toMatch(/permission denied/);
+      // Elimina tutto quello che vede: solo le sue.
+      await tx.query("delete from public.notifications");
     });
+    const left = await db.query<{ user_id: string }>("select user_id from public.notifications");
+    expect(left.rows).toEqual([{ user_id: bob.id }]);
   });
 
   it("le scritture dirette sono negate a tutti, anche a service_role", async () => {

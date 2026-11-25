@@ -104,6 +104,7 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
               reactions={p.reactions ?? []}
               action={toggleReaction}
               labels={{ react: c.react, reactWith: c.reactWith }}
+              align={p.is_own ? "end" : "start"}
             />
           }
           actions={

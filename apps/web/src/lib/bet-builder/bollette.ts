@@ -1,4 +1,3 @@
-import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
@@ -50,8 +49,17 @@ import {
  * - niente più schedina lunga a 6 partite: con sei esiti al 55% vince meno di 3 volte su 100.
  */
 
-export const BOLLETTA_PROFILES = ["DOUBLE", "SOLID", "BALANCED", "HIGH"] as const;
-export type BollettaProfile = (typeof BOLLETTA_PROFILES)[number];
+/*
+ * ADR 0071: tre schedine per periodo, sempre, una per tipo: Solida, Equilibrata e Alta
+ * quota. Ognuna ha una quota totale minima (circa 2, 3,5 e 7): si aggiungono partite finché
+ * la si raggiunge. Se le giocate non bastano, le soglie si allentano un po' alla volta
+ * (`RELAX_STEPS`) invece di non proporre niente.
+ */
+export const BOLLETTA_PROFILES = ["SOLID", "BALANCED", "HIGH"] as const;
+/** Profili con cui si costruiscono oggi le schedine (ADR 0071). */
+export type BuiltProfile = (typeof BOLLETTA_PROFILES)[number];
+/** Anche «DOUBLE» (Doppia, fino al 25/11/2026): resta nelle schedine già salvate. */
+export type BollettaProfile = BuiltProfile | "DOUBLE";
 
 export interface BollettaRule {
   /** Probabilità minima di ogni selezione. */
@@ -60,6 +68,8 @@ export interface BollettaRule {
   minPrice: number;
   /** Selezioni al massimo. */
   legs: number;
+  /** Quota totale da raggiungere: si aggiungono partite finché non la si tocca. */
+  targetPrice?: number;
   /**
    * Profilo «di precisione» (ADR 0070): sceglie le giocate più probabili, non le più
    * convenienti, e accetta un valore della schedina fino a `minSlipValue` (leggermente
@@ -70,20 +80,40 @@ export interface BollettaRule {
   minSlipValue?: number;
 }
 
-export const BOLLETTA_RULES: Readonly<Record<BollettaProfile, BollettaRule>> = {
-  // Dati delle ultime settimane (ADR 0070): giocate date dall'80% uscite l'86-87%, dal 70%
-  // il 75-76%. Le due schedine «sicure» usano solo quelle; le altre puntano sul valore.
-  DOUBLE: { minProbability: 0.8, minPrice: 1.1, legs: 2, precision: true, minSlipValue: -0.05 },
-  SOLID: { minProbability: 0.75, minPrice: 1.12, legs: 3, precision: true, minSlipValue: -0.05 },
-  BALANCED: { minProbability: 0.6, minPrice: 1.4, legs: 3 },
-  HIGH: { minProbability: 0.45, minPrice: 1.8, legs: 3 },
+export const BOLLETTA_RULES: Readonly<Record<BuiltProfile, BollettaRule>> = {
+  // Giocate quotate almeno 1,25 (niente partite a 1,10 che non pagano), le più probabili.
+  SOLID: {
+    minProbability: 0.68,
+    minPrice: 1.25,
+    legs: 4,
+    targetPrice: 2,
+    precision: true,
+    minSlipValue: -0.08,
+  },
+  // Giocate tra 1,45 e oltre, probabilità e valore insieme.
+  BALANCED: {
+    minProbability: 0.55,
+    minPrice: 1.45,
+    legs: 4,
+    targetPrice: 3.5,
+    minSlipValue: -0.08,
+  },
+  // Quote alte, poche partite: vince di rado, ma paga.
+  HIGH: { minProbability: 0.4, minPrice: 1.8, legs: 4, targetPrice: 7, minSlipValue: -0.08 },
 };
+
+/** Ogni passo abbassa la probabilità minima di 5 punti e la quota minima di 0,1. */
+export const RELAX_STEPS = 3;
 
 /** Valore = probabilità × quota − 1. Fuori da questo intervallo la selezione è scartata. */
 export const MIN_EDGE = -0.05;
 export const MAX_EDGE = 0.15;
-/** Peso del mercato nella probabilità prudente (ADR 0028): lo stesso delle proposte. */
-export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.5;
+/**
+ * Peso del mercato nella probabilità delle schedine (ADR 0071). Sui dati veri le quote dei
+ * bookmaker senza margine indovinano meglio del modello da solo (Brier 0,2100 contro
+ * 0,2178 su 408 giocate) e ogni peso in più migliora: 0,75 tiene conto di entrambi.
+ */
+export const MARKET_WEIGHT = 0.75;
 export const MIN_LEGS = 2;
 /** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
 export const MAX_DISAGREEMENT = 0.1;
@@ -274,39 +304,70 @@ const byProbability = (a: BollettaPick, b: BollettaPick) =>
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
 
-function buildOne(
-  profile: BollettaProfile,
-  round: string,
+/** Una schedina con le soglie date; `null` se non si arriva ad almeno `MIN_LEGS` partite. */
+function attempt(
+  rule: BollettaRule,
   pool: readonly BollettaPick[],
-  rules: Readonly<Record<BollettaProfile, BollettaRule>> = BOLLETTA_RULES,
-): Bolletta | null {
-  const rule = rules[profile];
+  minProbability: number,
+  minPrice: number,
+): BollettaPick[] | null {
   const order = rule.precision ? byProbability : byValue;
   const minSlipValue = rule.minSlipValue ?? MIN_SLIP_VALUE;
-  // Valore: niente giocate sotto la quota giusta nei profili che puntano sul guadagno.
+  // Precisione: anche un po' sotto la quota giusta; valore: almeno alla quota giusta (ADR 0070).
   const minEdge = rule.precision ? MIN_EDGE : 0;
   // Per ogni partita, la giocata migliore per il profilo tra quelle ammesse.
   const perMatch = new Map<number, BollettaPick>();
   for (const p of pool) {
-    if (p.probability < rule.minProbability || p.price < rule.minPrice || p.edge < minEdge)
-      continue;
+    if (p.probability < minProbability || p.price < minPrice || p.edge < minEdge) continue;
     const current = perMatch.get(p.matchId);
     if (!current || order(p, current) < 0) perMatch.set(p.matchId, p);
   }
   const chosen: BollettaPick[] = [];
   let value = 0;
+  let price = 1;
   const teams = new Set<string>();
   for (const p of [...perMatch.values()].sort(order)) {
     if (chosen.length >= rule.legs) break;
+    // Quota totale raggiunta (ADR 0071): basta così, meno partite vuol dire più probabilità.
+    if (rule.targetPrice && chosen.length >= MIN_LEGS && price >= rule.targetPrice) break;
     if (teams.has(p.home) || teams.has(p.away)) continue;
-    // Una schedina consigliata non deve perdere in media: una selezione che porterebbe il
-    // valore complessivo sotto zero non entra (le più convenienti vengono prima).
+    // Il valore complessivo non scende sotto la soglia del profilo.
     if ((1 + value) * (1 + p.edge) - 1 < minSlipValue) continue;
     value = (1 + value) * (1 + p.edge) - 1;
+    price *= p.price;
     teams.add(p.home).add(p.away);
     chosen.push(p);
   }
-  if (chosen.length < MIN_LEGS) return null;
+  return chosen.length < MIN_LEGS ? null : chosen;
+}
+
+function buildOne(
+  profile: BuiltProfile,
+  round: string,
+  pool: readonly BollettaPick[],
+  rules: Readonly<Record<BuiltProfile, BollettaRule>> = BOLLETTA_RULES,
+): Bolletta | null {
+  const rule = rules[profile];
+  // Prima con le soglie del profilo, poi un po' più larghe finché la quota totale arriva
+  // all'obiettivo (ADR 0071). Se non ci arriva nemmeno così, resta la schedina con le
+  // soglie più strette: meglio una quota più bassa che una schedina più rischiosa del dovuto.
+  let chosen: BollettaPick[] | null = null;
+  for (let step = 0; step <= RELAX_STEPS; step++) {
+    const legs = attempt(
+      rule,
+      pool,
+      rule.minProbability - 0.05 * step,
+      Math.max(1.05, rule.minPrice - 0.1 * step),
+    );
+    if (!legs) continue;
+    chosen ??= legs;
+    const total = legs.reduce((acc, p) => acc * p.price, 1);
+    if (!rule.targetPrice || total >= rule.targetPrice) {
+      chosen = legs;
+      break;
+    }
+  }
+  if (!chosen) return null;
   const probability = chosen.reduce((acc, p) => acc * p.probability, 1);
   const price = chosen.reduce((acc, p) => acc * p.price, 1);
   return {
@@ -348,7 +409,7 @@ export interface BuildOptions {
   /** Periodo delle schedine: turno (predefinito) o giornata. */
   window?: SlipWindow;
   /** Regole dei profili (per l'analisi delle alternative). */
-  rules?: Readonly<Record<BollettaProfile, BollettaRule>>;
+  rules?: Readonly<Record<BuiltProfile, BollettaRule>>;
 }
 
 /** Bollette per periodo (dal più vicino) e profilo; senza doppioni nello stesso periodo. */
@@ -378,8 +439,11 @@ export function buildBollette(
   return result;
 }
 
-/** Oltre questa età la quota va ricontrollata dal bookmaker (12 ore, come la freschezza delle quote). */
-export const ODDS_MAX_AGE_MS = 12 * 3_600_000;
+/**
+ * Oltre questa età la quota va ricontrollata dal bookmaker: 26 ore, come la freschezza delle
+ * quote (le quote si raccolgono una volta al giorno, ADR 0071).
+ */
+export const ODDS_MAX_AGE_MS = 26 * 3_600_000;
 
 export function oddsAreOld(bolletta: Pick<Bolletta, "oddsObservedAt">, now: Date): boolean {
   const observed = new Date(bolletta.oddsObservedAt).getTime();

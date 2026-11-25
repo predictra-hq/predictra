@@ -669,9 +669,9 @@ describe("proposte", () => {
     });
   });
 
-  it("solo quote FRESH: una quota letta più di 12 ore fa è rifiutata", async () => {
+  it("solo quote FRESH: una quota letta più di 26 ore fa è rifiutata (ADR 0071)", async () => {
     await asServiceRole(db, async (tx) => {
-      const s = await seed(tx, -13 * HOUR);
+      const s = await seed(tx, -27 * HOUR);
       const run = await startRun(tx, s.model);
       expect(
         await attempt(tx, "select public.record_bet_proposals($1, $2)", [

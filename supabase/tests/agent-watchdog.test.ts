@@ -58,7 +58,7 @@ describe("agent_watchdog", () => {
   it("notifica Admin e Super Admin una sola volta per episodio", async () => {
     await db.exec(`
       insert into public.agent_runs (source, schedule, worker_id, status, started_at, finished_at)
-      values ('github_actions', 'agent-python', 'demo', 'succeeded', now() - interval '8 hours', now() - interval '8 hours' + interval '2 minutes');
+      values ('github_actions', 'agent-python', 'demo', 'succeeded', now() - interval '12 hours', now() - interval '12 hours' + interval '2 minutes');
     `);
     expect(await watchdog()).toBe(2);
     expect(await watchdog()).toBe(0); // stesso episodio: nessuna nuova notifica
@@ -70,7 +70,7 @@ describe("agent_watchdog", () => {
     // Nuovo episodio: un ciclo riuscito, poi di nuovo fermo oltre la soglia.
     await db.exec(`
       insert into public.agent_runs (source, schedule, worker_id, status, started_at, finished_at)
-      values ('github_actions', 'agent-python', 'demo', 'succeeded', now() - interval '7 hours', now() - interval '7 hours' + interval '2 minutes');
+      values ('github_actions', 'agent-python', 'demo', 'succeeded', now() - interval '11 hours 30 minutes', now() - interval '11 hours 30 minutes' + interval '2 minutes');
     `);
     expect(await watchdog()).toBe(2);
   });

@@ -548,7 +548,7 @@ describe("viste", () => {
     await asServiceRole(db, async (tx) => {
       await tx.query(
         `insert into public.ingestion_runs (provider, job_type, window_key, status, started_at, finished_at)
-         values ($1, 'odds.h2h', 'DEMO', 'SUCCEEDED', now() - interval '13 hours', now() - interval '13 hours')`,
+         values ($1, 'odds.h2h', 'DEMO', 'SUCCEEDED', now() - interval '27 hours', now() - interval '27 hours')`,
         [ODDS],
       );
       const h = await one<{ freshness: string; health: string }>(

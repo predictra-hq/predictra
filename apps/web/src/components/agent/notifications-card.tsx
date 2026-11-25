@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { markNotificationsRead } from "@/app/(app)/dashboard/notification-actions";
+import {
+  deleteNotifications,
+  markNotificationsRead,
+} from "@/app/(app)/dashboard/notification-actions";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import { listMyNotifications } from "@/lib/agent/queries";
@@ -8,8 +11,8 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 const SEVERITY_TONE = { info: "neutral", warning: "warning", error: "negative" } as const;
 
 /**
- * Notifiche in dashboard (M7 B3). Solo le proprie (RLS); la piattaforma non
- * invia email (ADR 0008). I link sono solo percorsi interni (vincolo in tabella).
+ * Notifiche in dashboard (M7 B3). Solo le proprie (RLS), si possono segnare come lette ed
+ * eliminare (ADR 0071); la piattaforma non invia email (ADR 0008). I link sono solo percorsi interni (vincolo in tabella).
  */
 export async function NotificationsCard() {
   const a = getMessages().agent;
@@ -29,13 +32,22 @@ export async function NotificationsCard() {
             </Badge>
           ) : null}
         </CardTitle>
-        {unread > 0 ? (
-          <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
-            <SubmitButton variant="secondary" className="h-8 text-xs">
-              {a.markAllRead}
-            </SubmitButton>
-          </ActionForm>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {unread > 0 ? (
+            <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
+              <SubmitButton variant="secondary" className="h-8 text-xs">
+                {a.markAllRead}
+              </SubmitButton>
+            </ActionForm>
+          ) : null}
+          {items.some((n) => n.read_at) ? (
+            <ActionForm action={deleteNotifications} className="flex items-center gap-2">
+              <SubmitButton variant="ghost" className="h-8 text-xs">
+                {a.deleteRead}
+              </SubmitButton>
+            </ActionForm>
+          ) : null}
+        </div>
       </div>
       {items.length === 0 ? (
         <p className="mt-2 text-sm text-muted">{a.notificationsEmpty}</p>
@@ -61,14 +73,22 @@ export async function NotificationsCard() {
                   ) : null}
                 </p>
               </div>
-              {n.read_at ? null : (
-                <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                {n.read_at ? null : (
+                  <ActionForm action={markNotificationsRead} className="flex items-center gap-2">
+                    <input type="hidden" name="id" value={n.id} />
+                    <SubmitButton variant="ghost" className="h-8 text-xs">
+                      {a.markRead}
+                    </SubmitButton>
+                  </ActionForm>
+                )}
+                <ActionForm action={deleteNotifications} className="flex items-center gap-2">
                   <input type="hidden" name="id" value={n.id} />
                   <SubmitButton variant="ghost" className="h-8 text-xs">
-                    {a.markRead}
+                    {a.deleteNotification}
                   </SubmitButton>
                 </ActionForm>
-              )}
+              </div>
             </li>
           ))}
         </ul>

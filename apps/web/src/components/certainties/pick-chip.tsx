@@ -30,7 +30,8 @@ export function trackerHref(p: Pick, price: ItalianPrice | null): string {
 
 /**
  * Una giocata su una riga: nome e quota a sinistra, probabilità a destra, "+" per
- * registrarla tra le giocate fatte.
+ * registrarla tra le giocate fatte. Se la quota paga meno del giusto (probabilità × quota
+ * − 1 sotto zero) lo dice: probabile non vuol dire conveniente.
  */
 export function PickRow({
   pick: p,
@@ -54,6 +55,11 @@ export function PickRow({
                 {fillTemplate(c.worth, { value: formatPercent(value, 0) })}
               </span>
             ) : null}
+          </span>
+        ) : null}
+        {value !== null && value < 0 ? (
+          <span className="block text-xs text-warning">
+            {fillTemplate(c.belowFair, { loss: formatPercent(-value, 0) })}
           </span>
         ) : null}
         {price?.better ? (

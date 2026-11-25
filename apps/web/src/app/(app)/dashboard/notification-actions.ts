@@ -37,3 +37,30 @@ export async function markNotificationsRead(
   revalidatePath("/dashboard");
   return { ok: true, message: m.marked };
 }
+
+/**
+ * Elimina notifiche dell'utente (ADR 0071): una (`id`) oppure tutte quelle già lette.
+ * La RLS consente di eliminare solo le proprie.
+ */
+export async function deleteNotifications(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const m = getMessages().agent;
+  await requireUser();
+  const rawId = formData.get("id");
+  const supabase = await createClient();
+  let query = supabase.from("notifications").delete();
+  if (rawId !== null && rawId !== "") {
+    const id = idSchema.safeParse(rawId);
+    if (!id.success) return { ok: false, message: getMessages().common.genericError };
+    query = query.eq("id", id.data);
+  } else {
+    query = query.not("read_at", "is", null);
+  }
+  const { error } = await query;
+  if (error) return { ok: false, message: toUserMessage(error) };
+
+  revalidatePath("/dashboard");
+  return { ok: true, message: m.deleted };
+}
