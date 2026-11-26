@@ -60,6 +60,11 @@ In quest'ordine, per non fermare PROD:
    - _Settings → Actions → General_: _Require approval for all external contributors_ (lo chiedeva già l'ADR 0068) e _Workflow permissions_ in sola lettura;
    - _Settings → Code security_: _Secret scanning_ con _Push protection_, _Private vulnerability reporting_, _Dependabot alerts_.
 
+## Esecuzione
+
+- **26/11/2026, passo 1 fatto:** cancellati con la GitHub CLI di `gennpalm` 7 artifact ancora scaricabili (6 backup di PROD dal 20 al 26/11 e gli screenshot del 25/11) e 53 run (Bootstrap Super Admin del 17/11, 50 run di Verifica DEV con `accessibility` e 2 con `accessibility-prod`). Verificato dopo: nessun artifact scaricabile e nessun run di quei tipi. Restano i run di `slip-analysis` e `bankroll-isolation`, con soli numeri aggregati.
+- Passo 3 (merge in `main`) fatto il 26/11/2026. Restano i passi 2 e 4–8.
+
 ## Conseguenze
 
 - Il primo Super Admin di un ambiente nuovo si crea in locale finché il repository è pubblico.
