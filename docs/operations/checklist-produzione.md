@@ -42,7 +42,7 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [x] Coda con retry, dead-letter, heartbeat, watchdog e avvio di riserva; frequenza reale dichiarata nell'interfaccia.
 - [x] Budget misurati: minuti di GitHub Actions e messaggi QStash entro i limiti gratuiti ([ADR 0035](../decisions/0035-pianificazione-agente.md)).
 - [x] Budget con **due ambienti**: solo PROD raccoglie dati e fa girare agente, motore e schedine; DEV riceve una copia al giorno ([ADR 0055](../decisions/0055-una-sola-raccolta-prod-copia-su-dev.md)). Verificato il 17/11/2026: il primo ciclo su PROD non ha ripetuto le raccolte già fatte da DEV.
-- [ ] **Spazio del database** (500 MB sul piano Free): 91 MB il 17/11/2026, di cui 49 MB di previsioni, che crescono di circa 12.000 righe (5 MB) al giorno. Al ritmo attuale il limite arriva verso febbraio 2027. Regola di conservazione delle previsioni superate decisa il 17/11/2026 ([ADR 0041](../decisions/0041-retention.md)): attiva in PROD dal primo giro del motore dopo il merge in `main`.
+- [ ] **Spazio del database** (500 MB sul piano Free): 91 MB il 17/11/2026, di cui 49 MB di previsioni, che crescono di circa 12.000 righe (5 MB) al giorno. Al ritmo attuale il limite arriva verso febbraio 2027. Regola di conservazione delle previsioni superate decisa il 17/11/2026 ([ADR 0041](../decisions/0041-retention.md)): attiva in PROD dal primo giro del motore dopo il merge in `main`. Dal 26/11/2026 il watchdog dell'agente avvisa gli amministratori oltre 350 MB (avviso) e 450 MB (errore), una volta alla settimana (migrazione `20261126130000`).
 
 ## 5. Accessibilità e interfaccia
 

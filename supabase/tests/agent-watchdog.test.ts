@@ -109,3 +109,44 @@ describe("agent_watchdog", () => {
     );
   });
 });
+
+describe("spazio del database (watchdog)", () => {
+  const MB = 1024 * 1024;
+  const alert = (bytes: number) =>
+    db.query<{ v: number }>("select app_private.database_size_alert($1) v", [bytes]);
+  const rows = async () =>
+    (
+      await db.query<{ user_id: string; severity: string; dedupe_key: string }>(
+        "select user_id, severity, dedupe_key from public.notifications where kind = 'database.size' order by severity, user_id",
+      )
+    ).rows;
+
+  it("sotto i 350 MB nessun avviso; il database di prova è ben sotto", async () => {
+    expect((await alert(200 * MB)).rows[0]!.v).toBe(0);
+    await watchdog();
+    expect(await rows()).toEqual([]);
+  });
+
+  it("oltre 350 MB avvisa solo gli amministratori, una volta alla settimana", async () => {
+    expect((await alert(360 * MB)).rows[0]!.v).toBe(2);
+    expect((await alert(370 * MB)).rows[0]!.v).toBe(0);
+    const list = await rows();
+    expect(list.map((r) => r.user_id).sort()).toEqual([admin.id, superAdmin.id].sort());
+    expect(list.every((r) => r.severity === "warning")).toBe(true);
+    expect(list[0]!.dedupe_key).toMatch(/^database\.size:warning:\d{4}-\d{2}$/);
+  });
+
+  it("oltre 450 MB è un errore, con una notifica sua", async () => {
+    await alert(360 * MB);
+    expect((await alert(460 * MB)).rows[0]!.v).toBe(2);
+    expect((await rows()).filter((r) => r.severity === "error")).toHaveLength(2);
+  });
+
+  it("non è eseguibile dagli utenti", async () => {
+    expect(
+      await asUser(db, superAdmin, (tx) =>
+        attempt(tx, "select app_private.database_size_alert(999999999)"),
+      ),
+    ).toMatch(/permission denied/);
+  });
+});
