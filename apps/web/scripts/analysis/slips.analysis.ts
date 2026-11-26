@@ -19,6 +19,7 @@ import {
   BOLLETTA_PROFILES,
   BOLLETTA_RULES,
   buildBollette,
+  consensusFor,
   exhaustiveLegs,
   marketConsensus,
   playablePicks,
@@ -26,7 +27,7 @@ import {
   type BollettaPick,
   type BollettaRule,
 } from "@/lib/bet-builder/bollette";
-import { calibrationFrom } from "@/lib/bet-builder/calibration";
+import { calibrate, calibrationFrom } from "@/lib/bet-builder/calibration";
 import type { LikelyRow } from "@/lib/bet-builder/likely";
 import { settleBolletta } from "@/lib/bet-builder/past";
 import { loadSlipVerification } from "@/lib/certainties/load";
@@ -143,6 +144,47 @@ it("analisi delle schedine", async () => {
         `peso mercato ${w.toFixed(2)}  n=${brier[i]!.n}  Brier=${(brier[i]!.sum / Math.max(1, brier[i]!.n)).toFixed(4)}`,
       ),
     );
+
+    // 0c. Precisione a costo zero (ADR 0078): sulle stesse giocate, confronto appaiato con
+    //     la probabilità usata oggi (margine proporzionale, peso del mercato 0,75, modello
+    //     calibrato). Negativo = meglio di oggi; conta solo se supera ± 2 errori standard.
+    {
+      const shin = marketConsensus(v.odds, "shin");
+      const legs = v.rows.flatMap((r) => {
+        const x = v.results.get(r.match_id);
+        if (!x) return [];
+        const line = r.line === null ? null : Number(r.line);
+        const won = settle(r.market, line, r.selection, x.home, x.away);
+        const prop = v.market(r);
+        const pick = { matchId: r.match_id, market: r.market, line, selection: r.selection };
+        const sh = consensusFor(shin, pick);
+        if (won === null || prop === null || prop === undefined || sh === null) return [];
+        const raw = Number(r.probability);
+        return [{ won, raw, cal: calibrate(raw, r.market, line, calibration), prop, sh }];
+      });
+      const today = (l: (typeof legs)[number]) => 0.25 * l.cal + 0.75 * l.prop;
+      const variants: [string, (l: (typeof legs)[number]) => number][] = [
+        ["modello non calibrato, prop. 0,75", (l) => 0.25 * l.raw + 0.75 * l.prop],
+        ["Shin 0,75", (l) => 0.25 * l.cal + 0.75 * l.sh],
+        ["Shin 0,9", (l) => 0.1 * l.cal + 0.9 * l.sh],
+        ["Shin 1 (solo mercato)", (l) => l.sh],
+        ["proporzionale 0,9", (l) => 0.1 * l.cal + 0.9 * l.prop],
+        ["proporzionale 1 (solo mercato)", (l) => l.prop],
+      ];
+      const matches = new Set(
+        v.rows.filter((r) => v.results.has(r.match_id)).map((r) => r.match_id),
+      );
+      console.log(
+        `\n== Precisione a costo zero: ${legs.length} giocate su ${matches.size} partite, rispetto alla probabilità di oggi ==`,
+      );
+      for (const [label, f] of variants) {
+        const r = pairedBrier(legs.map((l) => ({ a: f(l), b: today(l), won: l.won })));
+        if (r)
+          console.log(
+            `${label.padEnd(34)} Brier ${r.difference >= 0 ? "+" : ""}${r.difference.toFixed(5)} ± ${(2 * r.standardError).toFixed(5)}`,
+          );
+      }
+    }
 
     // 1. Singole giocate ammesse nelle schedine: probabilità data e uscite.
     const pool = playablePicks(rows, v.prices, v.consensus, undefined, calibration);
