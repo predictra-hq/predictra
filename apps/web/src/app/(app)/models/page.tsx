@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { hasPermission, type ModelVersionSummaryRow } from "@predictra/shared-types";
 import { CalibrationChart } from "@/components/predictions/calibration-chart";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
+import { StepUpField } from "@/components/ui/step-up-field";
 import { Alert, Badge, Card, CardTitle, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { runStatusTone } from "@/lib/football/format";
@@ -43,6 +44,7 @@ function ActivateButton({ version }: { version: ModelVersionSummaryRow }) {
   return (
     <ActionForm action={activateModelVersion} className="flex flex-col gap-1">
       <input type="hidden" name="modelVersionId" value={version.model_version_id} />
+      <StepUpField id={`step-up-model-${version.model_version_id}`} compact />
       <SubmitButton variant="secondary" className="h-8 px-3 text-xs">
         {m.activate}
       </SubmitButton>

@@ -69,3 +69,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0074](0074-modello-unico-su-tutte-le-competizioni.md)              | Modello gol unico su tutte le competizioni nel modello PREDICTRA                            | Accettata |
 | [0075](0075-segreti-e-dati-con-repository-pubblico.md)              | Segreti e dati con il repository pubblico                                                   | Accettata |
 | [0076](0076-schedine-riproducibili-e-quote-aggiornate.md)           | Schedine con quote aggiornate, riproducibili, e analisi senza fortuna                       | Accettata |
+| [0077](0077-step-up-2fa.md)                                         | Step-up 2FA per le azioni distruttive                                                       | Accettata |

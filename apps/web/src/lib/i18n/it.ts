@@ -576,6 +576,9 @@ export const it = {
     alertsFrom: "Dal {n}%",
   },
   admin: {
+    stepUpLabel: "Codice dell'app di autenticazione",
+    stepUpHint:
+      "Serve se non hai inserito un codice negli ultimi 5 minuti. Lascia vuoto se l'hai appena fatto.",
     editProfile: "Modifica profilo",
     invitationsTitle: "Inviti",
     invitationsDescription:

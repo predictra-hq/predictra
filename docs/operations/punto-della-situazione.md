@@ -16,7 +16,7 @@
 ### Da fare, in ordine
 
 1. **`gennpalm`, impostazioni di GitHub** (ADR 0075, passi 1–8): cancellare i run con dati esposti, controllare la passphrase dei backup, merge di `dev` in `main`, Environments con i segreti, prova, cancellazione dei segreti del repository, regole dei branch, impostazioni di sicurezza.
-2. **M8, sicurezza:** step-up 2FA per sospensione, cambio di ruolo, attivazione di un modello e reset della password.
+2. **M8, sicurezza:** step-up 2FA in servizio (ADR 0077); da provare su DEV con un login reale (ADR 0077, «Verifica»).
 3. **M8, conservazione dei dati:** durate dell'ADR 0041 da decidere (`gennpalm`); avviso sullo spazio del database (500 MB sul piano Free).
 4. **Interfaccia** (revisione del 26/11/2026): attesa dello Spogliatoio con il tempo che manca, nomi di chi ha reagito visibili anche su telefono, tavolozza delle emoji accessibile, ora della chat nel fuso dell'utente, titoli delle pagine in `it.ts`, testi di almeno 12 px, un solo modulo per formattare i numeri.
 5. **Qualità del codice:** tipi del database generati e controllati in CI; casi di prova comuni alle regole TypeScript e Python delle schedine; errori registrati invece che nascosti (`.catch(() => null)`); test Python anche quando cambia il contratto condiviso.

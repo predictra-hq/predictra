@@ -390,6 +390,50 @@ describe("gestione account", () => {
   });
 });
 
+describe("step-up 2FA per le azioni distruttive (ADR 0077)", () => {
+  const destructive = [
+    ["sospensione", "select public.set_account_status($1, 'SUSPENDED')"],
+    ["cambio di ruolo", "select public.set_user_role($1, 'ADMIN')"],
+    ["link di reset", "select public.authorize_password_reset($1)"],
+  ] as const;
+
+  for (const [label, sql] of destructive) {
+    it(`${label}: serve un codice TOTP degli ultimi 5 minuti`, async () => {
+      // Codice di 6 minuti fa: la sessione è aal2, ma non basta.
+      const stale = await asUser(db, superA, (tx) => attempt(tx, sql, [alice.id]), "aal2", 360);
+      expect(stale).toMatch(/codice dell'app di autenticazione/);
+      // Nessun TOTP nel token (amr con la sola password).
+      const none = await asUser(db, superA, (tx) => attempt(tx, sql, [alice.id]), "aal2", null);
+      expect(none).toMatch(/codice dell'app di autenticazione/);
+      // Codice di 4 minuti fa: passa.
+      expect(
+        await asUser(db, superA, (tx) => attempt(tx, sql, [alice.id]), "aal2", 240),
+      ).toBeNull();
+    });
+  }
+
+  it("l'attivazione di un modello chiede lo step-up prima di ogni altro controllo", async () => {
+    const sql = "select public.set_active_model_version(999999)";
+    expect(await asUser(db, superA, (tx) => attempt(tx, sql), "aal2", 600)).toMatch(
+      /codice dell'app di autenticazione/,
+    );
+    // Con un codice recente si arriva al controllo successivo (versione inesistente).
+    expect(await asUser(db, superA, (tx) => attempt(tx, sql))).toMatch(/inesistente/);
+  });
+
+  it("le azioni non distruttive non chiedono lo step-up", async () => {
+    const invite = await asUser(
+      db,
+      superA,
+      (tx) =>
+        attempt(tx, "select public.create_invitation($1, 'USER')", ["demo-step-up@example.com"]),
+      "aal2",
+      3600,
+    );
+    expect(invite).toBeNull();
+  });
+});
+
 describe("reset password generato dall'amministratore", () => {
   it("un Super Admin autorizza il reset di un utente e viene registrato in audit", async () => {
     const email = await asUser(

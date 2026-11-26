@@ -14,7 +14,7 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [x] Audit append-only con filtri e paginazione.
 - [x] Revisione di sicurezza dell'8/11/2026: database, segreti, dipendenze, workflow.
 - [x] Dati personali (bankroll, giocate) non leggibili dagli amministratori, verificato su DEV con _Verifica DEV_.
-- [ ] **Step-up 2FA** per le azioni distruttive (sospensione, cambio di ruolo, attivazione di un modello): da progettare e provare con un login reale ([security.md](security.md), _Limitazioni note_).
+- [ ] **Step-up 2FA** per le azioni distruttive: in servizio ([ADR 0077](../decisions/0077-step-up-2fa.md)); da provare su DEV con un login reale (ADR 0077, «Verifica»).
 - [ ] Protezione da password compromesse: non disponibile sul piano Free di Supabase. Accettare il limite per iscritto oppure approvare il piano Pro.
 - [ ] `pnpm audit`: vulnerabilità moderata di `minimatch` negli strumenti di lint, da chiudere quando esce la versione corretta di `typescript-eslint`.
 - [ ] Protezione dei branch: con il repository pubblico è disponibile sul piano Free. Regole per `dev` e `main` da creare ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passo 7).
