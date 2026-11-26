@@ -27,7 +27,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { formatRelease } from "@/lib/version";
 
-export const metadata: Metadata = { title: "Profilo" };
+export const metadata: Metadata = { title: getMessages().pageTitles.settings };
 
 export interface ProfileRow {
   href: string;

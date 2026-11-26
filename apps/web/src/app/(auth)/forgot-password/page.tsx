@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Recupero password" };
+export const metadata: Metadata = { title: getMessages().pageTitles.forgotPassword };
 
 /**
  * PREDICTRA non invia email: il link di reimpostazione lo genera un

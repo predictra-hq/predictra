@@ -16,7 +16,7 @@ import type { PastOutcome } from "@/lib/bet-builder/past";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Passate — Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilderPast };
 
 const TONE: Record<PastOutcome, "positive" | "negative" | "neutral"> = {
   WON: "positive",

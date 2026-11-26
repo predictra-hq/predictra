@@ -35,7 +35,7 @@ import {
 import { SITE_PREFIX, untrackedSites } from "@/lib/bankroll/sites";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Bankroll" };
+export const metadata: Metadata = { title: getMessages().pageTitles.bankroll };
 
 /**
  * Sito dove si gioca: uno dei bookmaker di cui raccogliamo le quote, oppure il nome

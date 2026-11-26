@@ -3,16 +3,28 @@ import { SmilePlus } from "lucide-react";
 import { REACTION_EMOJIS, type CommunityReaction, type SharedSlip } from "@predictra/shared-types";
 import { SlipSummary, type SlipResult } from "@/components/community/message";
 import { StyledName } from "@/components/community/styled-name";
+import { ReactionPicker } from "@/components/community/reaction-picker";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { getRequestTimeZone } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const TIME = new Intl.DateTimeFormat("it-IT", {
-  timeZone: "Europe/Rome",
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+/** Giorno e ora del messaggio nel fuso scelto nelle Preferenze. */
+function messageTime(createdAt: string): string {
+  return new Intl.DateTimeFormat("it-IT", {
+    timeZone: getRequestTimeZone(),
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(createdAt));
+}
+
+/** Nomi di chi ha reagito, al massimo tre, poi «+N». */
+function reactedBy(names: readonly string[]): string {
+  return names.length <= 3
+    ? names.join(", ")
+    : `${names.slice(0, 3).join(", ")} +${names.length - 3}`;
+}
 
 /**
  * Messaggio in una bolla, come nelle app di chat (ADR 0065): i tuoi a destra in verde,
@@ -77,8 +89,8 @@ export function ChatBubble({
         {slip ? <SlipSummary slip={slip} result={slipResult} /> : null}
         <div className="mt-1 flex items-center justify-end gap-2">
           {actions}
-          <time dateTime={createdAt} className="text-[11px] tabular-nums text-subtle">
-            {TIME.format(new Date(createdAt))}
+          <time dateTime={createdAt} className="text-xs tabular-nums text-subtle">
+            {messageTime(createdAt)}
           </time>
         </div>
       </div>
@@ -156,7 +168,7 @@ export function Reactions({
         aria-pressed={mine}
         title={title}
         className={cn(
-          "flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
+          "flex min-h-9 min-w-9 cursor-pointer items-center justify-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
           mine
             ? "border-positive/50 bg-positive-soft text-positive-strong"
             : "border-border bg-surface hover:border-border-strong",
@@ -167,31 +179,29 @@ export function Reactions({
       </button>
     </form>
   );
+  // Chi ha reagito, scritto sotto (il `title` non si vede sul telefono): solo nomi visibili.
+  const named = reactions.filter((r) => r.names && r.names.length > 0);
   return (
-    <div className={cn("mt-1 flex flex-wrap items-center gap-1", align === "end" && "justify-end")}>
-      {reactions.map((r) =>
-        button(
-          r.emoji,
-          <>
-            <span aria-hidden="true">{r.emoji}</span>
-            {r.count}
-          </>,
-          r.mine,
-          undefined,
-          // Passando il mouse: chi l'ha messa (solo i nomi visibili, mai l'email).
-          r.names?.length ? r.names.join(", ") : undefined,
-        ),
-      )}
-      <details className="group relative">
-        <summary
-          aria-label={labels.react}
-          className="flex h-7 cursor-pointer list-none items-center rounded-full border border-border bg-surface px-2 text-xs text-muted hover:text-fg [&::-webkit-details-marker]:hidden"
-        >
-          <SmilePlus size={14} aria-hidden="true" />
-        </summary>
-        <div
+    <div className={cn("mt-1 flex flex-col gap-1", align === "end" ? "items-end" : "items-start")}>
+      <div className={cn("flex flex-wrap items-center gap-1", align === "end" && "justify-end")}>
+        {reactions.map((r) =>
+          button(
+            r.emoji,
+            <>
+              <span aria-hidden="true">{r.emoji}</span>
+              {r.count}
+            </>,
+            r.mine,
+            undefined,
+            // Passando il mouse: chi l'ha messa (solo i nomi visibili, mai l'email).
+            r.names?.length ? r.names.join(", ") : undefined,
+          ),
+        )}
+        <ReactionPicker
+          summary={<SmilePlus size={16} aria-hidden="true" />}
+          summaryLabel={labels.react}
           className={cn(
-            "absolute bottom-8 z-10 grid w-max grid-cols-4 gap-0.5 rounded-xl border border-border bg-surface p-1 shadow-lg",
+            "absolute bottom-10 z-10 grid w-max grid-cols-4 gap-0.5 rounded-xl border border-border bg-surface p-1 shadow-lg",
             align === "end" ? "right-0" : "left-0",
           )}
         >
@@ -203,8 +213,18 @@ export function Reactions({
               "border-transparent bg-transparent text-base",
             ),
           )}
-        </div>
-      </details>
+        </ReactionPicker>
+      </div>
+      {named.length > 0 ? (
+        <p className="max-w-xs text-xs text-muted">
+          {named.map((r, i) => (
+            <span key={r.emoji}>
+              {i > 0 ? " · " : null}
+              {r.emoji} {reactedBy(r.names!)}
+            </span>
+          ))}
+        </p>
+      ) : null}
     </div>
   );
 }

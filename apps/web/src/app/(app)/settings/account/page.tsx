@@ -11,7 +11,7 @@ import { getMessages } from "@/lib/i18n";
 import { avatarStyleOf } from "@/lib/profile/avatar";
 import { saveAvatarStyle, saveDisplayName, saveNameStyle } from "../preferences/actions";
 
-export const metadata: Metadata = { title: "Il tuo profilo" };
+export const metadata: Metadata = { title: getMessages().pageTitles.settingsAccount };
 
 /** Riquadro con titolo e una frase che dice a cosa serve: ogni voce del Profilo porta qui. */
 function Section({

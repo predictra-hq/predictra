@@ -13,7 +13,7 @@ import { splitMarketKey, toGroupStat, type HistoryCheck } from "@/lib/prediction
 import { getActiveHistoryCheck } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Affidabilità" };
+export const metadata: Metadata = { title: getMessages().pageTitles.reliability };
 
 /** Soglia minima delle giocate controllate: la stessa da cui partono le Certezze. */
 const MIN_PROBABILITY = BANDS[0]![0];

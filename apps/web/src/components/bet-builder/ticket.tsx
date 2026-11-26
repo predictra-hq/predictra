@@ -46,7 +46,7 @@ export function Ticket({
       <header className="flex items-center gap-2 border-b border-dashed border-border bg-positive-soft/60 px-3.5 py-2">
         <Logo className="size-5 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-mono text-[9px] font-semibold uppercase tracking-[0.18em] text-positive-strong">
+          <p className="truncate font-mono text-xs font-semibold uppercase tracking-[0.18em] text-positive-strong">
             {m.ticketLabel}
           </p>
           <h4 className="truncate text-sm font-semibold leading-tight">{title}</h4>
@@ -112,13 +112,13 @@ export function TicketLeg({
           <span className="rounded border border-positive/40 bg-positive-soft px-1.5 py-px text-xs font-semibold text-positive-strong">
             {pick}
           </span>
-          {time ? <span className="truncate text-[11px] text-subtle">{time}</span> : null}
+          {time ? <span className="truncate text-xs text-subtle">{time}</span> : null}
         </div>
         {note ? <div className="mt-0.5 text-xs">{note}</div> : null}
       </div>
       <div className="flex shrink-0 flex-col items-end leading-tight">
         <span className="font-mono text-base font-semibold tabular-nums">{price}</span>
-        {probability ? <span className="text-[11px] text-muted">{probability}</span> : null}
+        {probability ? <span className="text-xs text-muted">{probability}</span> : null}
         {status ? <span className="mt-0.5">{status}</span> : null}
       </div>
     </li>
@@ -153,7 +153,7 @@ export function TicketTotals({
         ))}
       </dl>
       <div className="shrink-0 text-right">
-        <p className="text-[10px] uppercase tracking-wide text-muted">{priceLabel}</p>
+        <p className="text-xs uppercase tracking-wide text-muted">{priceLabel}</p>
         <p className="font-mono text-2xl font-bold leading-none tabular-nums text-positive-strong">
           {price}
         </p>

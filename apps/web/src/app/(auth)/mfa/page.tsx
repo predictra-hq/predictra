@@ -6,7 +6,7 @@ import { getMessages } from "@/lib/i18n";
 import { safeNextPath } from "@/lib/validation";
 import { verifyMfa } from "./actions";
 
-export const metadata: Metadata = { title: "Verifica 2FA" };
+export const metadata: Metadata = { title: getMessages().pageTitles.mfa };
 
 export default async function MfaPage({ searchParams }: PageProps<"/mfa">) {
   const m = getMessages();

@@ -20,7 +20,7 @@ import { fillTemplate, formatDecimal } from "@/lib/odds/format";
 import { perMatch } from "@/lib/odds/stats";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Squadra" };
+export const metadata: Metadata = { title: getMessages().pageTitles.teamsDetail };
 
 const FORM_SIZE = 5;
 

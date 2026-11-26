@@ -23,7 +23,7 @@ import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 
-export const metadata: Metadata = { title: "Andamento" };
+export const metadata: Metadata = { title: getMessages().pageTitles.performance };
 
 const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
 

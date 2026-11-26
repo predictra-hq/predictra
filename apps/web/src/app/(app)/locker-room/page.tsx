@@ -11,7 +11,7 @@ import { settle } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
 import { deletePost, moderatePost, postMessage, toggleReaction } from "./actions";
 
-export const metadata: Metadata = { title: "Spogliatoio" };
+export const metadata: Metadata = { title: getMessages().pageTitles.lockerRoom };
 
 const TABS = ["general", "slips", "matches"] as const;
 type Tab = (typeof TABS)[number];
@@ -81,6 +81,7 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
             hidden={{ channel }}
             placeholder={c.placeholder}
             sendLabel={c.publish}
+            cooldownLeft={c.cooldownLeft}
           />
         )
       }
@@ -113,7 +114,7 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
                 <input type="hidden" name="postId" value={p.id} />
                 <button
                   type="submit"
-                  className="cursor-pointer text-[11px] text-subtle underline-offset-2 hover:text-negative-strong hover:underline"
+                  className="cursor-pointer text-xs text-subtle underline-offset-2 hover:text-negative-strong hover:underline"
                 >
                   {p.is_own ? c.delete : c.moderate}
                 </button>

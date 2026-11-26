@@ -16,7 +16,7 @@ type Texts = Messages["landing"];
 
 function DemoBadge({ label }: { label: string }) {
   return (
-    <span className="rounded-md border border-warning/40 bg-warning-soft px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-warning">
+    <span className="rounded-md border border-warning/40 bg-warning-soft px-1.5 py-0.5 text-xs font-semibold tracking-wider text-warning">
       {label}
     </span>
   );

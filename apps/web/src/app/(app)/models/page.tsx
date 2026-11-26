@@ -14,7 +14,7 @@ import { activateModelVersion } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Modello" };
+export const metadata: Metadata = { title: getMessages().pageTitles.models };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (

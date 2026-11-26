@@ -39,7 +39,7 @@ import { addBet, deleteBet, settleBet } from "./actions";
 import { BetSlipDetails } from "./bet-slip-details";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Giocate fatte" };
+export const metadata: Metadata = { title: getMessages().pageTitles.tracker };
 
 /** Striscia a sinistra della riga: l'esito si riconosce senza leggere la colonna Stato. */
 const OUTCOME_STRIPE = {

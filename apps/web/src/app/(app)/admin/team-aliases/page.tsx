@@ -18,7 +18,7 @@ import { addTeamAlias } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Alias squadre" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminTeamAliases };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Card } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Account sospeso" };
+export const metadata: Metadata = { title: getMessages().pageTitles.suspended };
 
 export default function SuspendedPage() {
   const m = getMessages();

@@ -35,7 +35,7 @@ import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilder };
 
 /** Fasce di quota delle proposte con valore (ADR 0067): si apre solo quella che interessa. */
 const PRICE_BANDS = [

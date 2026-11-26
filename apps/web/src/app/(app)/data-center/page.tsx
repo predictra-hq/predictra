@@ -15,7 +15,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Dati" };
+export const metadata: Metadata = { title: getMessages().pageTitles.dataCenter };
 
 function Stat({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -204,9 +204,7 @@ export default async function DataCenterPage() {
                     </td>
                     <td className="px-4 py-3 text-xs">
                       <span className="block">{d.issueChecks[i.check_code] ?? i.check_code}</span>
-                      <span className="block font-mono text-[11px] text-subtle">
-                        {i.check_code}
-                      </span>
+                      <span className="block font-mono text-xs text-subtle">{i.check_code}</span>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-muted">
                       {i.entity_type === "match" && i.entity_id ? (

@@ -7,7 +7,7 @@ import { getMessages } from "@/lib/i18n";
 import { confirmLink } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Conferma",
+  title: getMessages().pageTitles.authConfirm,
   robots: { index: false, follow: false },
   // Il token è nell'indirizzo: non deve finire nel Referer di nessuna richiesta.
   referrer: "no-referrer",

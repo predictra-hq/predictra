@@ -26,7 +26,7 @@ import { getActiveHistoryCheck, hasActiveModel } from "@/lib/predictions/queries
 const formatCount = (n: number) =>
   new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(n);
 
-export const metadata: Metadata = { title: "Alta probabilità" };
+export const metadata: Metadata = { title: getMessages().pageTitles.certainties };
 
 /** Sotto questo numero di giocate la percentuale uscita è troppo ballerina. */
 const MIN_SAMPLE = 30;

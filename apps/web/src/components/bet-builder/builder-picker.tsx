@@ -78,7 +78,7 @@ function Choices({
               )}
             >
               <span className="max-w-full truncate text-sm font-semibold">{c.label}</span>
-              <span className="max-w-full truncate text-[11px] tabular-nums text-muted">
+              <span className="max-w-full truncate text-xs tabular-nums text-muted">
                 {c.detail}
               </span>
             </button>

@@ -56,7 +56,7 @@ function NavLinks({
               >
                 {icon}
                 <span className="min-w-0 flex-1 truncate">{label}</span>
-                <span className="text-[10px] uppercase tracking-wide">M{item.milestone}</span>
+                <span className="text-xs uppercase tracking-wide">M{item.milestone}</span>
               </span>
             </li>
           );
@@ -146,7 +146,7 @@ function PendingHint() {
   );
 }
 
-const GROUP_TITLE = "px-3 text-[11px] font-semibold uppercase tracking-wider text-subtle";
+const GROUP_TITLE = "px-3 text-xs font-semibold uppercase tracking-wider text-subtle";
 
 /** Un gruppo del menu: titolo facoltativo e, se richiudibile, aperto solo quando serve. */
 function NavGroupSection({
@@ -280,9 +280,7 @@ export function Sidebar({
               </span>
               <span className="sr-only"> · {messages.nav.dashboard}</span>
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-subtle">
-              {messages.app.tagline}
-            </p>
+            <p className="text-xs uppercase tracking-widest text-subtle">{messages.app.tagline}</p>
           </div>
         </Link>
 

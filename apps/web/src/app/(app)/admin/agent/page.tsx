@@ -34,7 +34,7 @@ import { retryDeadJob } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Agente" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminAgent };
 
 const JOB_TONE: Record<AgentJobStatus, "neutral" | "positive" | "negative" | "warning"> = {
   queued: "neutral",

@@ -19,7 +19,7 @@ import { Limited } from "@/components/ui/limited";
 import { fillTemplate } from "@/lib/odds/format";
 import { ActionDialog } from "@/components/ui/action-dialog";
 
-export const metadata: Metadata = { title: "Inviti" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminInvitations };
 
 const statusTone: Record<InvitationStatus, "neutral" | "positive" | "negative" | "warning"> = {
   PENDING: "warning",

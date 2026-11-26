@@ -28,7 +28,7 @@ import {
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Utenti" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminUsers };
 
 interface ProfileRow {
   id: string;
