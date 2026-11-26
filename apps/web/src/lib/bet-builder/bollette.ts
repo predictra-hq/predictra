@@ -158,6 +158,9 @@ export interface BollettaPick extends LikelyPick {
   observedAt: string;
   /** probabilità × quota − 1. */
   edge: number;
+  /** Versione del modello e momento della previsione usata (ADR 0075). */
+  modelVersionId?: number | null;
+  predictionAsOf?: string | null;
 }
 
 export interface Bolletta {
@@ -173,6 +176,8 @@ export interface Bolletta {
   price: number;
   /** Valore atteso per 1 € puntato: probabilità × quota − 1. */
   expectedValue: number;
+  /** Quante volte sono state allargate le soglie del profilo per costruirla (0 = nessuna). */
+  relaxStep?: number;
 }
 
 const IMPLIED_SELECTIONS: Readonly<Record<string, readonly string[]>> = {
@@ -307,6 +312,8 @@ export function playablePicks(
       better: it.better ?? null,
       observedAt: it.observedAt,
       edge,
+      modelVersionId: r.model_version_id ?? null,
+      predictionAsOf: r.as_of ?? null,
     });
   }
   return result;
@@ -374,6 +381,7 @@ function buildOne(
   // all'obiettivo (ADR 0071). Se non ci arriva nemmeno così: con `strictTarget` (ADR 0072)
   // nessuna schedina, altrimenti resta quella con le soglie più strette.
   let chosen: BollettaPick[] | null = null;
+  let relaxStep = 0;
   for (let step = 0; step <= RELAX_STEPS; step++) {
     const legs = attempt(
       rule,
@@ -382,10 +390,14 @@ function buildOne(
       Math.max(1.05, rule.minPrice - 0.1 * step),
     );
     if (!legs) continue;
-    if (!rule.strictTarget) chosen ??= legs;
+    if (!rule.strictTarget && !chosen) {
+      chosen = legs;
+      relaxStep = step;
+    }
     const total = legs.reduce((acc, p) => acc * p.price, 1);
     if (!rule.targetPrice || total >= rule.targetPrice) {
       chosen = legs;
+      relaxStep = step;
       break;
     }
   }
@@ -400,6 +412,7 @@ function buildOne(
     probability,
     price,
     expectedValue: probability * price - 1,
+    relaxStep,
   };
 }
 
@@ -469,6 +482,60 @@ export function buildBollette(
  * quote (le quote si raccolgono una volta al giorno, ADR 0071).
  */
 export const ODDS_MAX_AGE_MS = 26 * 3_600_000;
+
+/**
+ * Versione delle regole delle schedine consigliate, salvata con ogni schedina (ADR 0075).
+ * Va cambiata a ogni modifica di profili, soglie, peso del mercato o filtri delle quote.
+ */
+export const SLIP_RULES_VERSION = "2026.11.26-1";
+
+/** Regole con cui è stata costruita una schedina di un profilo, da salvare con lei. */
+export function slipRulesSnapshot(profile: BollettaProfile) {
+  return {
+    version: SLIP_RULES_VERSION,
+    profile: profile === "DOUBLE" ? null : BOLLETTA_RULES[profile],
+    marketWeight: MARKET_WEIGHT,
+    relaxSteps: RELAX_STEPS,
+    minEdge: MIN_EDGE,
+    maxEdge: MAX_EDGE,
+    maxDisagreement: MAX_DISAGREEMENT,
+    oddsMaxAgeHours: ODDS_MAX_AGE_MS / 3_600_000,
+    kickoffMarginMinutes: KICKOFF_MARGIN_MS / 60_000,
+  };
+}
+
+/** Come il motore (`KICKOFF_MARGIN`): una partita che inizia tra meno di 15 minuti non si propone. */
+export const KICKOFF_MARGIN_MS = 15 * 60_000;
+
+/**
+ * Solo le quote lette nelle ultime 26 ore, come le quote FRESH del motore e del Costruisci
+ * (ADR 0028, 0071). Una quota più vecchia può essere ferma da giorni: entrerebbe nel consenso
+ * del mercato e, se è la più alta, diventerebbe la quota proposta, gonfiando il valore.
+ */
+export function freshOdds<T extends { observed_at: string }>(rows: readonly T[], now: Date): T[] {
+  const oldest = now.getTime() - ODDS_MAX_AGE_MS;
+  return rows.filter((r) => {
+    const observed = Date.parse(r.observed_at);
+    return Number.isFinite(observed) && observed >= oldest;
+  });
+}
+
+/** Solo le partite che iniziano almeno 15 minuti dopo `now`. */
+export function notStartingSoon<T extends { kickoff_at: string }>(
+  rows: readonly T[],
+  now: Date,
+): T[] {
+  const first = now.getTime() + KICKOFF_MARGIN_MS;
+  return rows.filter((r) => Date.parse(r.kickoff_at) >= first);
+}
+
+/**
+ * Il valore si mostra solo se è positivo anche dopo l'arrotondamento a un decimale (ADR 0072):
+ * così non compare mai «+0,0%».
+ */
+export function hasPositiveValue(bolletta: Pick<Bolletta, "expectedValue">): boolean {
+  return Math.round(bolletta.expectedValue * 1000) > 0;
+}
 
 export function oddsAreOld(bolletta: Pick<Bolletta, "oddsObservedAt">, now: Date): boolean {
   const observed = new Date(bolletta.oddsObservedAt).getTime();

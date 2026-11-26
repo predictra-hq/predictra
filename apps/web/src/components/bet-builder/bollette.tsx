@@ -22,6 +22,7 @@ import {
   type Bolletta,
   type BollettaProfile,
   type SlipWindow,
+  hasPositiveValue,
 } from "@/lib/bet-builder/bollette";
 import { formatEuro } from "@/components/bankroll/shared";
 import { listBankrolls, listLimits, userBookmaker } from "@/lib/bankroll/queries";
@@ -112,7 +113,7 @@ function BollettaCard({
           price={formatOdds(bolletta.price)}
           items={[
             { label: m.winProbability, value: formatPercent(bolletta.probability, 0) },
-            ...(bolletta.expectedValue >= 0
+            ...(hasPositiveValue(bolletta)
               ? [
                   {
                     label: m.value,

@@ -19,7 +19,7 @@ import { getAgentStatus } from "@/lib/agent/queries";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { cookies } from "next/headers";
 import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
-import { buildBollette, oddsAreOld } from "@/lib/bet-builder/bollette";
+import { buildBollette, hasPositiveValue, oddsAreOld } from "@/lib/bet-builder/bollette";
 import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
@@ -513,7 +513,7 @@ export async function AlertsCard() {
   const valuable = bollette
     .filter(
       (b) =>
-        b.expectedValue >= 0 &&
+        hasPositiveValue(b) &&
         b.picks.some((p) => new Date(p.kickoffAt).getTime() <= soonEnd) &&
         !oddsAreOld(b, now),
     )

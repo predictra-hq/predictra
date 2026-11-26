@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBollette,
+  freshOdds,
+  hasPositiveValue,
   marketConsensus,
+  notStartingSoon,
   oddsAreOld,
   playablePicks,
   roundOfKickoff,
@@ -283,5 +286,105 @@ describe("periodo delle schedine (ADR 0070)", () => {
     expect(windowOf("2026-11-21T14:00:00Z", "day")).toBe("2026-11-21");
     // Mezzanotte passata a Roma: già il giorno dopo.
     expect(windowOf("2026-11-21T23:30:00Z", "day")).toBe("2026-11-22");
+  });
+});
+
+describe("quote aggiornate e partite non ancora iniziate", () => {
+  const now = new Date("2026-11-26T12:00:00Z");
+
+  it("tiene solo le quote lette nelle ultime 26 ore", () => {
+    const rows = [
+      { id: 1, observed_at: "2026-11-26T11:00:00Z" },
+      { id: 2, observed_at: "2026-11-25T10:00:00Z" }, // 26 ore esatte: ancora valida
+      { id: 3, observed_at: "2026-11-25T09:59:59Z" }, // appena oltre
+      { id: 4, observed_at: "non è una data" },
+    ];
+    expect(freshOdds(rows, now).map((r) => r.id)).toEqual([1, 2]);
+  });
+
+  it("una quota ferma da giorni non entra né nel consenso né nella quota proposta", () => {
+    const odds: LatestOddsRow[] = [
+      {
+        match_id: 1,
+        bookmaker: "DEMO Fermo",
+        market: "h2h",
+        selection: "HOME",
+        price: 3.5,
+        observed_at: "2026-11-20T08:00:00Z",
+        italian: true,
+      },
+      {
+        match_id: 1,
+        bookmaker: "DEMO Fermo",
+        market: "h2h",
+        selection: "DRAW",
+        price: 3.5,
+        observed_at: "2026-11-20T08:00:00Z",
+        italian: true,
+      },
+      {
+        match_id: 1,
+        bookmaker: "DEMO Fermo",
+        market: "h2h",
+        selection: "AWAY",
+        price: 3.5,
+        observed_at: "2026-11-20T08:00:00Z",
+        italian: true,
+      },
+      {
+        match_id: 1,
+        bookmaker: "DEMO Oggi",
+        market: "h2h",
+        selection: "HOME",
+        price: 1.9,
+        observed_at: "2026-11-26T08:00:00Z",
+        italian: true,
+      },
+      {
+        match_id: 1,
+        bookmaker: "DEMO Oggi",
+        market: "h2h",
+        selection: "DRAW",
+        price: 3.6,
+        observed_at: "2026-11-26T08:00:00Z",
+        italian: true,
+      },
+      {
+        match_id: 1,
+        bookmaker: "DEMO Oggi",
+        market: "h2h",
+        selection: "AWAY",
+        price: 4.2,
+        observed_at: "2026-11-26T08:00:00Z",
+        italian: true,
+      },
+    ];
+    const fresh = freshOdds(odds, now);
+    expect(fresh.every((o) => o.bookmaker === "DEMO Oggi")).toBe(true);
+    expect(bestItalianPrices(fresh).get("1|h2h|HOME")?.price).toBe(1.9);
+    expect(marketConsensus(fresh).get("1|h2h|HOME")).toBeCloseTo(
+      1 / 1.9 / (1 / 1.9 + 1 / 3.6 + 1 / 4.2),
+      10,
+    );
+  });
+
+  it("scarta le partite che iniziano entro 15 minuti", () => {
+    const rows = [
+      { id: 1, kickoff_at: "2026-11-26T12:10:00Z" },
+      { id: 2, kickoff_at: "2026-11-26T12:15:00Z" },
+      { id: 3, kickoff_at: "2026-11-26T11:00:00Z" },
+      { id: 4, kickoff_at: "2026-11-26T20:45:00Z" },
+    ];
+    expect(notStartingSoon(rows, now).map((r) => r.id)).toEqual([2, 4]);
+  });
+});
+
+describe("valore mostrato", () => {
+  it("solo se resta positivo dopo l'arrotondamento a un decimale", () => {
+    expect(hasPositiveValue({ expectedValue: 0.0123 })).toBe(true);
+    expect(hasPositiveValue({ expectedValue: 0.0006 })).toBe(true); // +0,1%
+    expect(hasPositiveValue({ expectedValue: 0.0004 })).toBe(false); // sarebbe «+0,0%»
+    expect(hasPositiveValue({ expectedValue: 0 })).toBe(false);
+    expect(hasPositiveValue({ expectedValue: -0.03 })).toBe(false);
   });
 });

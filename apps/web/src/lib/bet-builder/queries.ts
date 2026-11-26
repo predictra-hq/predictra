@@ -11,7 +11,7 @@ import type {
 } from "@predictra/shared-types";
 import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
 import { cache } from "react";
-import { consensusFor, marketConsensus } from "./bollette";
+import { consensusFor, freshOdds, marketConsensus, notStartingSoon } from "./bollette";
 import {
   bestItalianPrices,
   italianPriceFor,
@@ -202,10 +202,12 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
     "previsioni",
   );
   const withPrediction = [...new Set(predictions.map((p) => p.match_id))];
-  const [odds, site] = await Promise.all([
+  const [allOdds, site] = await Promise.all([
     inChunks(withPrediction, 5, (chunk) => listLatestOdds(chunk), 4),
     userBookmaker(),
   ]);
+  // Solo quote FRESH: la selezione le dichiara tali più sotto (`freshness`).
+  const odds = freshOdds(allOdds, new Date());
   const prices = bestItalianPrices(odds, site?.tracked ?? null);
   const consensus = marketConsensus(odds);
   const weight = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0;
@@ -307,7 +309,7 @@ export async function listLikelyRows(now: Date): Promise<LikelyRow[]> {
         supabase
           .from("v_active_predictions")
           .select(
-            "match_id, kickoff_at, competition_id, home_team_name, away_team_name, market, line, selection, probability, confidence_score",
+            "match_id, kickoff_at, competition_id, home_team_name, away_team_name, market, line, selection, probability, confidence_score, model_version_id, as_of",
           )
           .in("match_id", chunk)
           .in("market", Object.keys(LIKELY_MARKETS))
@@ -455,10 +457,11 @@ export const loadPicksData = cache(async () => picksData(userBookmaker));
 export async function picksData(
   bookmaker: () => Promise<{ tracked: string | null } | null> = async () => null,
 ) {
-  const rows = await listLikelyRows(new Date());
+  const now = new Date();
+  const rows = notStartingSoon(await listLikelyRows(now), now);
   const matchIds = [...new Set(rows.map((r) => Number(r.match_id)))];
-  // Circa 200 righe di quote per partita: gruppi da 5, in parallelo.
-  const odds = await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk), 4);
+  // Circa 200 righe di quote per partita: gruppi da 5, in parallelo. Solo quote aggiornate.
+  const odds = freshOdds(await inChunks(matchIds, 5, (chunk) => listLatestOdds(chunk), 4), now);
   const site = await bookmaker();
   return {
     rows,
