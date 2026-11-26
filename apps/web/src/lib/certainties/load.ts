@@ -3,7 +3,7 @@ import { userBookmaker } from "@/lib/bankroll/queries";
 import { cache } from "react";
 import type { ActivePredictionRow } from "@predictra/shared-types";
 import { consensusFor, marketConsensus } from "@/lib/bet-builder/bollette";
-import { bestItalianPrices, type ItalianPrice } from "@/lib/bet-builder/likely";
+import { bestItalianPrices, type ItalianPrice, type LatestOddsRow } from "@/lib/bet-builder/likely";
 import { listLatestOdds } from "@/lib/bet-builder/queries";
 import { inChunks } from "@/lib/chunks";
 import { selectPicks, type MarketLookup, type Pick } from "./logic";
@@ -62,6 +62,8 @@ export interface VerificationData extends Verification {
   consensus: Map<string, number>;
   /** Migliori quote italiane osservate prima del calcio d'inizio. */
   prices: Map<string, ItalianPrice>;
+  /** Le quote di prima del calcio d'inizio, per le analisi (metodi del margine, ADR 0078). */
+  odds: LatestOddsRow[];
 }
 
 /** Sotto questa probabilità nessun profilo di schedina prende una giocata. */
@@ -90,6 +92,7 @@ async function verificationFrom(minProbability: number | undefined): Promise<Ver
     market: marketLookup(consensus),
     consensus,
     prices: bestItalianPrices(odds),
+    odds,
   };
 }
 

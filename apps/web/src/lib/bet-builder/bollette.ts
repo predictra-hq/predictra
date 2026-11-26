@@ -1,3 +1,4 @@
+import { demargin, type DemarginMethod } from "@predictra/quant";
 import { MARKET_WEIGHT } from "./weight";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
@@ -191,7 +192,15 @@ const IMPLIED_SELECTIONS: Readonly<Record<string, readonly string[]>> = {
  * poi si fa la media tra i bookmaker. La doppia chance viene dal consenso 1X2 quando c'è
  * (somma di due esiti), altrimenti dalle sue quote normalizzate a somma 2.
  */
-export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, number> {
+export function marketConsensus(
+  rows: readonly LatestOddsRow[],
+  /**
+   * Come si toglie il margine di ogni bookmaker (1X2 e under/over). In servizio sempre
+   * «proporzionale»; potenza e Shin servono all'analisi (ADR 0078) finché i dati non
+   * bastano per scegliere (ADR 0076, regola di stop).
+   */
+  method: DemarginMethod = "proportional",
+): Map<string, number> {
   const books = new Map<string, Map<string, number>>();
   for (const r of rows) {
     const price = Number(r.price);
@@ -210,10 +219,16 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
     const implied = selections.map((x) => 1 / book.get(x)!);
     const target = market === "double_chance" ? 2 : 1;
     const total = implied.reduce((a, b) => a + b, 0);
+    const fair = fairShares(
+      selections.map((x) => book.get(x)!),
+      implied,
+      total,
+      market === "double_chance" ? "proportional" : method,
+    );
     selections.forEach((x, i) => {
       const k = `${match}|${market}|${x}`;
       const cur = sums.get(k) ?? { total: 0, n: 0 };
-      cur.total += (implied[i]! / total) * target;
+      cur.total += fair[i]! * target;
       cur.n += 1;
       sums.set(k, cur);
     });
@@ -232,6 +247,23 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
     out.set(`${match}|double_chance|DRAW_AWAY`, d + a);
   }
   return out;
+}
+
+/** Quote di un bookmaker senza margine; se il metodo non si applica, proporzionale. */
+function fairShares(
+  odds: readonly number[],
+  implied: readonly number[],
+  total: number,
+  method: DemarginMethod,
+): number[] {
+  if (method !== "proportional") {
+    try {
+      return demargin(odds, method);
+    } catch {
+      // Quote per cui il metodo non converge: si torna al proporzionale.
+    }
+  }
+  return implied.map((x) => x / total);
 }
 
 export function consensusFor(
@@ -332,6 +364,66 @@ const byProbability = (a: BollettaPick, b: BollettaPick) =>
   b.edge - a.edge ||
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
+
+/**
+ * Ricerca esaustiva (ADR 0078), **solo per l'analisi**: tra tutte le combinazioni di giocate
+ * ammesse dal profilo (al più una per partita, nessuna squadra due volte, al più `rule.legs`),
+ * quella con la probabilità più alta che arriva a `rule.targetPrice` e rispetta il valore
+ * minimo della schedina. La costruzione in servizio (`attempt`) prende invece le giocate
+ * una alla volta e si ferma alla prima che tocca la quota.
+ *
+ * Aggiungere una giocata abbassa sempre la probabilità: un ramo si chiude quando tocca la
+ * quota o quando scende sotto la migliore trovata. Si guardano le `maxCandidates` giocate
+ * più probabili.
+ */
+export function exhaustiveLegs(
+  rule: BollettaRule,
+  pool: readonly BollettaPick[],
+  maxCandidates = 40,
+): BollettaPick[] | null {
+  const minSlipValue = rule.minSlipValue ?? MIN_SLIP_VALUE;
+  const minEdge = rule.minEdge ?? (rule.precision ? MIN_EDGE : 0);
+  const candidates = pool
+    .filter(
+      (p) => p.probability >= rule.minProbability && p.price >= rule.minPrice && p.edge >= minEdge,
+    )
+    .sort(byProbability)
+    .slice(0, maxCandidates);
+  const target = rule.targetPrice ?? 0;
+  let best: BollettaPick[] | null = null;
+  let bestProbability = 0;
+  const chosen: BollettaPick[] = [];
+  const visit = (from: number, probability: number, price: number, value: number) => {
+    if (probability <= bestProbability) return;
+    if (chosen.length >= MIN_LEGS && price >= target) {
+      if (value >= minSlipValue) {
+        best = [...chosen];
+        bestProbability = probability;
+      }
+      return;
+    }
+    if (chosen.length >= rule.legs) return;
+    for (let i = from; i < candidates.length; i++) {
+      const p = candidates[i]!;
+      if (
+        chosen.some(
+          (c) =>
+            c.matchId === p.matchId ||
+            c.home === p.home ||
+            c.home === p.away ||
+            c.away === p.home ||
+            c.away === p.away,
+        )
+      )
+        continue;
+      chosen.push(p);
+      visit(i + 1, probability * p.probability, price * p.price, (1 + value) * (1 + p.edge) - 1);
+      chosen.pop();
+    }
+  };
+  visit(0, 1, 1, 0);
+  return best;
+}
 
 /** Una schedina con le soglie date; `null` se non si arriva ad almeno `MIN_LEGS` partite. */
 function attempt(

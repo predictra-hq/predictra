@@ -8,7 +8,10 @@ Ogni variante prevede le partite degli ultimi mesi come se fossero ancora da gio
 settimana vede solo le partite precedenti) e si confronta con i risultati veri.
 
 Una variante si adotta solo se:
-1. sulle partite recenti ha un Log Loss più basso di almeno ``MARGIN``;
+1. sulle partite recenti ha un Log Loss più basso di almeno ``MARGIN`` e il miglioramento,
+   misurato partita per partita, supera due errori standard (ADR 0078): su circa 1.500
+   partite un errore standard vale circa 0,002, più di ``MARGIN``, e senza questa condizione
+   si adotterebbe spesso una variante migliore solo per caso;
 2. sull'intero storico non è peggiore delle impostazioni attuali.
 
 Le impostazioni adottate diventano una versione nuova, con il suo backtest e l'audit
@@ -22,7 +25,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-from .backtest import backtest_models
+import numpy as np
+
+from .backtest import BacktestResult, backtest_models
 from .data import MatchResult
 from .models.base import Model
 from .models.blend import EloBlendModel, JointEloBlendModel
@@ -158,6 +163,31 @@ class Trial:
     log_loss: float
     brier: float
     matches: int
+    difference: float = 0.0
+    """Log Loss medio della variante meno quello attuale, partita per partita."""
+    standard_error: float = 0.0
+    """Errore standard di ``difference``."""
+
+
+def paired_log_loss(a: BacktestResult, b: BacktestResult) -> tuple[float, float]:
+    """Differenza media di Log Loss (a − b) sulle stesse partite, con il suo errore standard.
+
+    ``backtest_models`` restituisce le partite comuni nello stesso ordine per ogni modello.
+    """
+    if a.probs is None or b.probs is None or a.outcomes is None or len(a.outcomes) < 2:
+        return 0.0, float("inf")
+    if b.outcomes is None or not np.array_equal(a.outcomes, b.outcomes):
+        return 0.0, float("inf")
+    idx = np.arange(len(a.outcomes))
+    la = -np.log(np.clip(a.probs[idx, a.outcomes], 1e-15, 1))
+    lb = -np.log(np.clip(b.probs[idx, b.outcomes], 1e-15, 1))
+    d = la - lb
+    return float(d.mean()), float(d.std(ddof=1) / np.sqrt(len(d)))
+
+
+def clearly_better(t: Trial, margin: float) -> bool:
+    """Migliore di almeno ``margin`` e oltre due errori standard (ADR 0078)."""
+    return t.difference < -margin and t.difference + 2 * t.standard_error < 0
 
 
 @dataclass
@@ -165,7 +195,8 @@ class AutotuneResult:
     current: Trial
     trials: list[Trial] = field(default_factory=list)
     best: Trial | None = None
-    """La variante migliore sulle partite recenti, se batte quella attuale di ``MARGIN``."""
+    """La variante migliore sulle partite recenti, se batte quella attuale di ``MARGIN`` e
+    oltre due errori standard."""
 
     def lines(self) -> list[str]:
         out = [
@@ -173,7 +204,10 @@ class AutotuneResult:
             f"[{self.current.settings.describe()}] LogLoss={self.current.log_loss:.4f}"
         ]
         for t in sorted(self.trials, key=lambda t: t.log_loss):
-            out.append(f"    variante [{t.settings.describe()}] LogLoss={t.log_loss:.4f}")
+            out.append(
+                f"    variante [{t.settings.describe()}] LogLoss={t.log_loss:.4f}"
+                f"  diff={t.difference:+.4f} ± {2 * t.standard_error:.4f}"
+            )
         out.append(
             f"    → migliore: {self.best.settings.describe()}"
             if self.best
@@ -215,8 +249,8 @@ def autotune(
     result = AutotuneResult(Trial(current, cur.log_loss, cur.brier, cur.matches))
     for key, bt in backtests.items():
         if key != "attuale":
-            result.trials.append(Trial(keys[key], bt.log_loss, bt.brier, bt.matches))
-    best = min(result.trials, key=lambda t: (t.log_loss, t.brier), default=None)
-    if best is not None and best.log_loss < cur.log_loss - margin:
-        result.best = best
+            diff, se = paired_log_loss(bt, cur)
+            result.trials.append(Trial(keys[key], bt.log_loss, bt.brier, bt.matches, diff, se))
+    eligible = [t for t in result.trials if clearly_better(t, margin)]
+    result.best = min(eligible, key=lambda t: (t.log_loss, t.brier), default=None)
     return result

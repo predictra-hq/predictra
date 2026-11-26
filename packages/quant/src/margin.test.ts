@@ -8,6 +8,7 @@ import {
   overround,
   powerProbabilities,
   proportionalProbabilities,
+  shinProbabilities,
 } from "./margin";
 
 /*
@@ -56,6 +57,20 @@ describe("probabilità implicite e margine", () => {
     // Favorito: probabilità più alta col metodo della potenza; sfavorito: più bassa.
     expect(pow[0]!).toBeGreaterThan(prop[0]!);
     expect(pow[2]!).toBeLessThan(prop[2]!);
+  });
+
+  it("il metodo di Shin somma a 1, toglie più margine allo sfavorito e senza margine non cambia nulla", () => {
+    const odds = [1.5, 4.2, 6.5];
+    const prop = proportionalProbabilities(odds);
+    const shin = shinProbabilities(odds);
+    expect(shin.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 10);
+    expect(shin[0]!).toBeGreaterThan(prop[0]!);
+    expect(shin[2]!).toBeLessThan(prop[2]!);
+    expect(demargin(odds, "shin")).toEqual(shin);
+    // Quote eque (somma delle implicite = 1): uguali alle implicite.
+    const fair = shinProbabilities([2, 4, 4]);
+    expect(fair[0]).toBeCloseTo(0.5, 10);
+    expect(fair[1]).toBeCloseTo(0.25, 10);
   });
 
   it("rifiuta quote non valide", () => {

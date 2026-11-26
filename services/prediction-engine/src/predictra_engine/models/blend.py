@@ -45,6 +45,9 @@ class EloBlendFit(CompetitionFit):
     goals: GoalsFit
     elo: EloFit
     weight: float
+    # λ e ρ sono del Dixon-Coles interno; la matrice salvata è la sua, riportata all'1X2
+    # combinato salvato con la previsione (rescale_to_1x2).
+    matrix_from = "dixon_coles_rescaled_to_1x2"
 
     def probabilities_1x2(self, home: int, away: int) -> np.ndarray:
         g = self.goals.probabilities_1x2(home, away)
@@ -104,6 +107,9 @@ class JointBlendFit(CompetitionFit):
     joint: JointFit
     competition_id: int
     weight: float
+    # λ e ρ sono del Dixon-Coles interno; la matrice salvata è la sua, riportata all'1X2
+    # combinato salvato con la previsione (rescale_to_1x2).
+    matrix_from = "dixon_coles_rescaled_to_1x2"
 
     def _joint_1x2(self, home: int, away: int) -> np.ndarray | None:
         if self.competition_id not in self.joint.comps:

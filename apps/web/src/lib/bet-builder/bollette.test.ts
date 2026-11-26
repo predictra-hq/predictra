@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBollette,
+  exhaustiveLegs,
   freshOdds,
   hasPositiveValue,
   marketConsensus,
@@ -386,5 +387,63 @@ describe("valore mostrato", () => {
     expect(hasPositiveValue({ expectedValue: 0.0004 })).toBe(false); // sarebbe «+0,0%»
     expect(hasPositiveValue({ expectedValue: 0 })).toBe(false);
     expect(hasPositiveValue({ expectedValue: -0.03 })).toBe(false);
+  });
+});
+
+describe("analisi: ricerca esaustiva e metodi del margine (ADR 0078)", () => {
+  const pick = (matchId: number, probability: number, price: number) => ({
+    matchId,
+    kickoffAt: "2026-11-28T15:00:00Z",
+    competitionId: 1,
+    home: `DEMO Casa ${matchId}`,
+    away: `DEMO Ospite ${matchId}`,
+    market: "1X2",
+    line: null,
+    selection: "HOME",
+    probability,
+    confidence: 0.8,
+    modelProbability: probability,
+    marketProbability: probability,
+    price,
+    bookmaker: "DEMO",
+    observedAt: "2026-11-28T08:00:00Z",
+    edge: probability * price - 1,
+  });
+  const rule = { minProbability: 0.3, minPrice: 1.2, legs: 3, targetPrice: 3, minSlipValue: -0.2 };
+
+  it("trova la combinazione più probabile che arriva alla quota", () => {
+    // Le due più probabili (0,8 e 0,75) insieme danno quota 1,6 × 1,5 = 2,4: non bastano.
+    // La migliore è 0,8 × 0,6 = 0,48 a quota 1,6 × 1,9 = 3,04, meglio di tre partite.
+    const pool = [pick(1, 0.8, 1.6), pick(2, 0.75, 1.5), pick(3, 0.6, 1.9), pick(4, 0.5, 1.7)];
+    const legs = exhaustiveLegs(rule, pool)!;
+    expect(legs.map((p) => p.matchId).sort()).toEqual([1, 3]);
+  });
+
+  it("una sola giocata per partita e nessuna schedina se la quota non si raggiunge", () => {
+    const same = [pick(1, 0.8, 1.6), { ...pick(1, 0.7, 2.5), selection: "AWAY" }];
+    expect(exhaustiveLegs(rule, same)).toBeNull();
+    expect(exhaustiveLegs(rule, [pick(1, 0.9, 1.2), pick(2, 0.9, 1.2)])).toBeNull();
+  });
+
+  it("il consenso con Shin o potenza toglie più margine allo sfavorito; predefinito proporzionale", () => {
+    const odds: LatestOddsRow[] = ["HOME", "DRAW", "AWAY"].map((selection, i) => ({
+      match_id: 1,
+      bookmaker: "DEMO",
+      market: "h2h",
+      selection,
+      price: [1.5, 4.2, 6.5][i]!,
+      observed_at: "2026-11-26T08:00:00Z",
+    }));
+    const prop = marketConsensus(odds);
+    const shin = marketConsensus(odds, "shin");
+    const power = marketConsensus(odds, "power");
+    expect(prop.get("1|h2h|AWAY")).toBeCloseTo(1 / 6.5 / (1 / 1.5 + 1 / 4.2 + 1 / 6.5), 10);
+    expect(shin.get("1|h2h|AWAY")!).toBeLessThan(prop.get("1|h2h|AWAY")!);
+    expect(power.get("1|h2h|HOME")!).toBeGreaterThan(prop.get("1|h2h|HOME")!);
+    // Doppia chance dal consenso 1X2 con lo stesso metodo.
+    expect(shin.get("1|double_chance|HOME_DRAW")).toBeCloseTo(
+      shin.get("1|h2h|HOME")! + shin.get("1|h2h|DRAW")!,
+      10,
+    );
   });
 });

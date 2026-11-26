@@ -16,9 +16,13 @@ const MIN_INDEPENDENT = 300;
 import { createClient as supabaseClient } from "@supabase/supabase-js";
 import { it } from "vitest";
 import {
+  BOLLETTA_PROFILES,
   BOLLETTA_RULES,
   buildBollette,
+  exhaustiveLegs,
+  marketConsensus,
   playablePicks,
+  windowOf,
   type BollettaPick,
   type BollettaRule,
 } from "@/lib/bet-builder/bollette";
@@ -292,6 +296,95 @@ it("analisi delle schedine", async () => {
         `Quota totale ≥ ${targetPrice}`,
         high.filter((x) => x.label.includes(`quota≥${targetPrice} `)),
       );
+    }
+
+    // 8. Metodi per togliere il margine (ADR 0078): quale consenso del mercato indovina meglio
+    //    l'1X2 delle partite giocate. In servizio resta il proporzionale finché i dati non
+    //    bastano (ADR 0076); qui solo la misura, con la differenza partita per partita.
+    {
+      const methods = ["proportional", "power", "shin"] as const;
+      const consensusBy = new Map(methods.map((m) => [m, marketConsensus(v.odds, m)]));
+      const outcomeOf = (home: number, away: number) =>
+        home > away ? "HOME" : home === away ? "DRAW" : "AWAY";
+      const losses = new Map<string, number[]>(methods.map((m) => [m, []]));
+      const briers = new Map<string, number[]>(methods.map((m) => [m, []]));
+      for (const [matchId, r] of v.results) {
+        const per = methods.map((m) =>
+          (["HOME", "DRAW", "AWAY"] as const).map(
+            (x) => consensusBy.get(m)!.get(`${matchId}|h2h|${x}`) ?? null,
+          ),
+        );
+        if (per.some((ps) => ps.some((p) => p === null))) continue;
+        const y = outcomeOf(r.home, r.away);
+        methods.forEach((m, i) => {
+          const ps = per[i]! as number[];
+          const sum = ps.reduce((a, b) => a + b, 0);
+          const probs = ps.map((p) => p / sum);
+          const idx = ["HOME", "DRAW", "AWAY"].indexOf(y);
+          losses.get(m)!.push(-Math.log(Math.max(probs[idx]!, 1e-15)));
+          briers.get(m)!.push(probs.reduce((a, p, j) => a + (p - (j === idx ? 1 : 0)) ** 2, 0));
+        });
+      }
+      const base = losses.get("proportional")!;
+      console.log(`\n== Metodi del margine sull'1X2 (${base.length} partite) ==`);
+      for (const m of methods) {
+        const l = losses.get(m)!;
+        const b = briers.get(m)!;
+        const d = l.map((x, i) => x - base[i]!);
+        const mean = d.reduce((a, x) => a + x, 0) / Math.max(1, d.length);
+        const se =
+          d.length > 1
+            ? Math.sqrt(d.reduce((a, x) => a + (x - mean) ** 2, 0) / (d.length - 1) / d.length)
+            : 0;
+        console.log(
+          `${m.padEnd(13)} LogLoss=${(l.reduce((a, x) => a + x, 0) / Math.max(1, l.length)).toFixed(4)}  Brier=${(b.reduce((a, x) => a + x, 0) / Math.max(1, b.length)).toFixed(4)}  diff=${mean >= 0 ? "+" : ""}${mean.toFixed(4)} ± ${(2 * se).toFixed(4)}`,
+        );
+      }
+    }
+
+    // 9. Ricerca esaustiva contro quella in servizio (ADR 0078): per periodo e profilo, la
+    //    combinazione più probabile che arriva alla quota, contro quella costruita giocata per
+    //    giocata. Profili indipendenti tra loro (in servizio una partita sta in una schedina
+    //    sola per periodo): il confronto è indicativo.
+    {
+      const pool = playablePicks(rows, v.prices, v.consensus, undefined, calibration);
+      for (const window of ["round", "day"] as const) {
+        const built = buildBollette(rows, v.prices, v.consensus, calibration, { window });
+        const periods = new Map<string, typeof pool>();
+        for (const p of pool) {
+          const k = windowOf(p.kickoffAt, window);
+          periods.set(k, [...(periods.get(k) ?? []), p]);
+        }
+        console.log(`\n== Ricerca esaustiva contro quella in servizio (${window}) ==`);
+        for (const profile of BOLLETTA_PROFILES) {
+          const rule = BOLLETTA_RULES[profile];
+          const current = built.filter((b) => b.profile === profile);
+          const exhaustive = [...periods].flatMap(([round, list]) => {
+            const legs = exhaustiveLegs(rule, list);
+            if (!legs) return [];
+            const probability = legs.reduce((a, p) => a + Math.log(p.probability), 0);
+            const price = legs.reduce((a, p) => a * p.price, 1);
+            return [
+              {
+                profile,
+                round,
+                picks: legs,
+                probability: Math.exp(probability),
+                price,
+                oddsObservedAt: legs.map((p) => p.observedAt).sort()[0] ?? "",
+                expectedValue: Math.exp(probability) * price - 1,
+              },
+            ];
+          });
+          const line = (list: typeof current) => {
+            const s = score(list, v.results);
+            const p = list.length ? list.reduce((a, b) => a + b.probability, 0) / list.length : 0;
+            return `${list.length} schedine, data in media ${pct(p)}, vinte ${s.won}/${s.settled}, ritorno ${pct(s.roi)}`;
+          };
+          console.log(`${profile.padEnd(9)} in servizio: ${line(current)}`);
+          console.log(`${"".padEnd(9)} esaustiva:   ${line(exhaustive)}`);
+        }
+      }
     }
 
     // 4. Proposte con valore salvate dal motore, tutte quelle già giocate (a pagine di 1.000).

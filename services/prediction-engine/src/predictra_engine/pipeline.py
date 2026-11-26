@@ -146,6 +146,9 @@ def prediction_rows(
         summary["lambda_home"], summary["lambda_away"] = round(lambdas[0], 5), round(lambdas[1], 5)
         if lambdas[2] is not None:
             summary["rho"] = round(lambdas[2], 5)
+        how = fitted.matrix_from(fixture)
+        if how is not None:
+            summary["matrix_from"] = how
     rows = [
         {
             "match_id": fixture.match_id,
@@ -540,6 +543,8 @@ def _autotune_step(
                         "recent_matches": tuning.current.matches,
                         "recent_log_loss": round(tuning.best.log_loss, 6),
                         "previous_recent_log_loss": round(tuning.current.log_loss, 6),
+                        "difference": round(tuning.best.difference, 6),
+                        "standard_error": round(tuning.best.standard_error, 6),
                         "previous": tuning.current.settings.describe(),
                     },
                 },

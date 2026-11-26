@@ -31,7 +31,7 @@ In gara ci sono solo **Poisson** e **Dixon-Coles** (dalle versioni del 14/11/202
 
 ## Taratura automatica (ADR 0056)
 
-Dal 17/11/2026 il motore ritocca da solo le impostazioni del modello PREDICTRA. Ogni settimana, insieme al confronto dei backtest, prova due varianti vicine su una impostazione per volta a rotazione (ξ, L2, peso dell'Elo) sulle partite degli ultimi sei mesi rigiocate con le sole partite precedenti. Adotta la migliore solo se batte quella attuale di almeno 0,001 di Log Loss e non è peggiore sull'intero storico. Il log del ciclo riporta le varianti provate e l'esito (`taratura automatica su N partite recenti`); un'adozione crea una versione nuova e compare in _Audit_.
+Dal 17/11/2026 il motore ritocca da solo le impostazioni del modello PREDICTRA. Ogni settimana, insieme al confronto dei backtest, prova due varianti vicine su una impostazione per volta a rotazione (ξ, L2, peso dell'Elo) sulle partite degli ultimi sei mesi rigiocate con le sole partite precedenti. Adotta la migliore solo se batte quella attuale di almeno 0,001 di Log Loss, se il miglioramento misurato partita per partita supera due errori standard (dal 26/11/2026, [ADR 0078](../decisions/0078-misure-prima-delle-regole.md)) e se non è peggiore sull'intero storico. Il log riporta per ogni variante `diff = … ± …` (due errori standard). Il log del ciclo riporta le varianti provate e l'esito (`taratura automatica su N partite recenti`); un'adozione crea una versione nuova e compare in _Audit_.
 
 ## Modello attivo: automatico (ADR 0023)
 
@@ -224,6 +224,10 @@ Comando `cross` (sola lettura, _Actions → Prediction engine → Run workflow_ 
 - **Adottato il peso 0,3**: è l'unica variante con un guadagno oltre il caso in tutto e sul 2024-25, senza peggiorare il 2025-26. Il guadagno più grande è in Champions League, dove prima ogni squadra contava solo le sue poche partite europee.
 - Il peso è stato scelto tra tre valori provati sulle stesse partite: la scelta automatica (ADR 0023) lo ricontrolla sul backtest del database prima di attivare la versione nuova.
 - Il controllo «modello PREDICTRA nuovo» della prova dà gli stessi numeri della media scelta: il codice in produzione è quello misurato.
+
+## Matrice dei risultati riproducibile (26/11/2026, ADR 0078)
+
+Nel modello PREDICTRA λ e ρ salvati con la previsione sono quelli del Dixon-Coles interno; la matrice salvata è la sua, riportata all'1X2 combinato (`rescale_to_1x2`). La spiegazione dell'1X2 lo dice con `matrix_from: "dixon_coles_rescaled_to_1x2"`: per ricostruire la matrice servono λ, ρ e l'1X2 salvati.
 
 ## Limiti noti
 

@@ -24,6 +24,10 @@ class CompetitionFit(ABC):
     def lambdas(self, home: int, away: int) -> tuple[float, float, float | None] | None:
         return None
 
+    # Come si ricava la matrice dei risultati da λ e ρ salvati (riproducibilità, ADR 0020,
+    # 0078). None: la matrice è quella di Dixon-Coles con λ e ρ, senza altri passaggi.
+    matrix_from: str | None = None
+
     @abstractmethod
     def parameters(self) -> dict[str, Any]: ...
 
@@ -78,6 +82,9 @@ class FittedModel:
 
     def lambdas(self, fixture: Fixture) -> tuple[float, float, float | None] | None:
         return self.fits[fixture.competition_id].lambdas(fixture.home, fixture.away)
+
+    def matrix_from(self, fixture: Fixture) -> str | None:
+        return self.fits[fixture.competition_id].matrix_from
 
     def games_played(self, fixture: Fixture) -> int:
         """Partite di addestramento della squadra che ne ha meno (ADR 0022, S_campione)."""

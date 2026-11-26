@@ -20,7 +20,7 @@
 3. **M8, conservazione dei dati:** durate dell'ADR 0041 da decidere (`gennpalm`). L'avviso sullo spazio del database è in servizio: il watchdog avvisa oltre 350 e 450 MB (500 MB sul piano Free).
 4. **Interfaccia** (revisione del 26/11/2026): fatte attesa dello Spogliatoio con il tempo che manca, nomi di chi ha reagito, tavolozza delle emoji, ora della chat nel fuso dell'utente, titoli in `it.ts`, testi di almeno 12 px ([interfaccia.md](interfaccia.md), «Revisione del 26/11/2026»). Restano: un solo modulo per formattare i numeri, altezza fissa della chat, prove nell'app in esecuzione.
 5. **Qualità del codice:** tipi del database generati e controllati in CI; casi di prova comuni alle regole TypeScript e Python delle schedine; errori registrati invece che nascosti (`.catch(() => null)`); test Python anche quando cambia il contratto condiviso.
-6. **Modello, quando ci saranno più dati:** analisi delle schedine da rifare ogni due o tre settimane (ADR 0073, 0076); holdout congelato per le prossime prove del modello.
+6. **Modello, quando ci saranno più dati:** analisi delle schedine da rifare ogni due o tre settimane (ADR 0073, 0076). Dal 26/11/2026 l'analisi confronta anche i metodi del margine e la ricerca esaustiva (ADR 0078): si adottano solo sopra le 300 partite decise. Rinviati: calibrazione fuori campione, holdout congelato (a fine girone d'andata).
 
 ### Limiti del budget €0
 
