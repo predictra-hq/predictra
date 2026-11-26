@@ -19,7 +19,8 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [ ] `pnpm audit`: vulnerabilità moderata di `minimatch` negli strumenti di lint, da chiudere quando esce la versione corretta di `typescript-eslint`.
 - [ ] Protezione dei branch: con il repository pubblico è disponibile sul piano Free. Regole per `dev` e `main` da creare ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passo 7).
 - [x] Repository pubblico: niente link d'invito, backup né screenshot negli artifact o nei log dei workflow ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md)).
-- [ ] Run con dati esposti cancellati, segreti spostati negli Environments `operazioni`, `dev` e `prod`, impostazioni di sicurezza del repository attivate ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passi 1–8).
+- [x] Run e artifact con dati esposti cancellati il 26/11/2026 ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passo 1).
+- [ ] Segreti negli Environments, regole dei branch, impostazioni di sicurezza (ADR 0075, passi 4–8): **rinviati, rischio accettato dal proprietario il 26/11/2026**.
 
 ## 2. Backup e ripristino
 
