@@ -27,7 +27,7 @@ Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
 
 ## Esito del 15/11/2026
 
-**33 controlli su 33 superati** ([run 25](https://github.com/predictra-hq/predictra/actions/runs/43720105371)): aggiunte la pagina Certezze e le versioni da telefono (375 px) di Certezze, Partite e dettaglio partita, con screenshot nell'artefatto del run (3 giorni).
+**33 controlli su 33 superati** ([run 25](https://github.com/predictra-hq/predictra/actions/runs/43720105371)): aggiunte la pagina Certezze e le versioni da telefono (375 px) di Certezze, Partite e dettaglio partita, con screenshot nell'artefatto del run (3 giorni; dal 26/11/2026 solo con repository privato, ADR 0075).
 
 ## Esito del 9/11/2026
 

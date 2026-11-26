@@ -1,7 +1,7 @@
 name: Backup
 
 # M8 — backup cifrato del database DEV su Backblaze B2 e test di ripristino (ADR 0040).
-# - backup: ogni giorno alle 02:30 UTC (dump → cifratura AES-256 → B2 + copia artifact 7 giorni)
+# - backup: lunedì e giovedì alle 02:30 UTC (dump → cifratura AES-256 → B2; nessun artifact, ADR 0068)
 # - restore-test: il giorno 1 di ogni mese alle 03:30 UTC (ultimo backup da B2 → ripristino locale)
 # Avvio manuale: Actions → Backup → Run workflow (branch dev).
 # Schedule e pulsante esistono solo quando questo file è anche su main.
@@ -26,7 +26,7 @@ on:
         options: [backup, restore-test, check]
         default: backup
       upload:
-        description: "backup: carica su B2 (se disattivato resta solo un artifact di 1 giorno)"
+        description: "backup: carica su B2 (se disattivato il dump non viene conservato: serve solo con la prova di ripristino)"
         type: boolean
         default: true
       verify:
@@ -64,6 +64,7 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: operazioni
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_ID: ${{ vars.DATA_TARGET == 'prod' && secrets.PROD_SUPABASE_PROJECT_ID || (vars.DATA_TARGET != 'prod' && secrets.DEV_SUPABASE_PROJECT_ID || '') }}
@@ -114,15 +115,8 @@ jobs:
           file="$(bash scripts/backup/dump.sh "$RUNNER_TEMP/backup")"
           echo "file=$file" >> "$GITHUB_OUTPUT"
 
-      - name: Copia come artifact
-        if: env.ACTION == 'backup'
-        uses: actions/upload-artifact@v6
-        with:
-          name: backup-${{ env.ENVIRONMENT }}-${{ github.run_id }}
-          path: ${{ runner.temp }}/backup/
-          retention-days: ${{ env.UPLOAD == 'true' && 7 || 1 }}
-          if-no-files-found: error
-
+      # Nessuna copia come artifact: con il repository pubblico (ADR 0068) gli artifact si
+      # scaricano con qualunque account GitHub, e il dump contiene anche lo schema auth.
       - name: Caricamento su B2 e rotazione
         if: env.ACTION == 'backup' && env.UPLOAD == 'true'
         run: bash scripts/backup/upload.sh "${{ steps.dump.outputs.file }}"

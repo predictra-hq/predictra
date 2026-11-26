@@ -32,6 +32,9 @@ jobs:
     name: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Environment `dev` (solo branch dev) o `prod` (solo branch main), ADR 0075. Se l'Environment
+    # ha un segreto con lo stesso nome, vale quello e non quello passato dal chiamante.
+    environment: ${{ inputs.environment }}
     # Mai due deploy contemporanei sullo stesso ambiente; nessuno viene annullato a metà.
     concurrency:
       group: deploy-${{ inputs.environment }}

@@ -71,7 +71,7 @@ pnpm --filter web dev                   # app locale (richiede apps/web/.env.loc
 
 ## Flusso Git e deploy
 
-- `main` = produzione, `dev` = integrazione, `feature/*` = sviluppo con PR verso `dev`. La protezione dei branch non è disponibile (GitHub Free, repo privato): rispetta il flusso a mano.
+- `main` = produzione, `dev` = integrazione, `feature/*` = sviluppo con PR verso `dev`. Con il repository pubblico la protezione dei branch è disponibile sul piano Free e i segreti stanno negli Environments `operazioni`, `dev` e `prod` (ADR 0075): un job nuovo che usa segreti dichiara il suo Environment. Rispetta comunque il flusso a mano.
 - Merge su `dev` e su `main` solo da `gennpalm`, con **Create a merge commit** e CI verde: sul piano Vercel Hobby si pubblicano solo commit del proprietario e il deploy lo verifica (ADR 0050).
 - **`gennpalm` lavora direttamente su `dev`** (dal 14/11/2026). Dal 15/11/2026 la storia è ripartita da un unico commit iniziale, uguale su `dev` e `main`. **Il collega lavora solo su branch `feature/*`** con la propria utenza e PR verso `dev`; il merge lo fa `gennpalm`. Dopo il merge GitHub cancella il branch da solo: nella pagina _Branches_ restano `main`, `dev` e il lavoro non ancora unito. Un branch `feature/*` esistente significa lavoro non ancora in `dev`. Dopo un merge si riparte da `dev` aggiornato con un branch nuovo.
 - **Commit fatti con Claude Code per `gennpalm`:** autore e committer sempre `Gennaro Palmigiano <129265856+gennpalm@users.noreply.github.com>`, **nessuna** riga `Co-Authored-By` o `Claude-Session` e nessun riferimento a Claude nei messaggi. Niente push con l'identità di Claude.

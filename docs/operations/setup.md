@@ -110,6 +110,17 @@ Il primo accesso non può nascere da un invito in app. Lo crea il workflow **Boo
 
 I workflow ad avvio manuale compaiono in _Actions_ solo se il file è sul branch di default (`main`).
 
+**Con il repository pubblico (ADR 0068) il workflow non crea l'invito**: riepilogo, log ed email inserita sarebbero leggibili da chiunque, e chi apre il link per primo diventa Super Admin. Si crea in locale, da un computer con Node e il repository installato (`pnpm install`), con la chiave segreta presa da Supabase (_Project Settings → API Keys_) e mai salvata in un file del repository:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://<project-id>.supabase.co" \
+SUPABASE_SECRET_KEY="<chiave segreta>" \
+APP_BASE_URL="https://predictra-dev.vercel.app" \
+  node apps/web/scripts/bootstrap-super-admin.mjs persona@example.com
+```
+
+Il link compare solo nel terminale. Poi si procede dal punto 3. La chiave resta nella cronologia della shell: cancellala dopo l'uso.
+
 ## 6. Uso quotidiano degli account (nessuna email)
 
 | Operazione              | Dove                                             | Note                                                  |
@@ -141,6 +152,8 @@ Passi completi e semplici: [produzione.md](produzione.md). In breve: progetti `p
 ## 8. Protezione dei branch
 
 Su **GitHub Free** i repository **privati** non hanno la protezione dei branch (disponibile con GitHub Pro/Team). Fonte: https://docs.github.com/en/get-started/learning-about-github/githubs-plans.
+
+**Dal 24/11/2026 il repository è pubblico** (ADR 0068) e la protezione dei branch, i ruleset e gli Environments sono disponibili sul piano Free. Configurazione da fare: [ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passi 4–8.
 
 Senza protezione restano comunque questi controlli:
 

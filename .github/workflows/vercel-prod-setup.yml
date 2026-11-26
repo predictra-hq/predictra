@@ -25,6 +25,7 @@ jobs:
     if: github.actor == 'gennpalm'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    environment: operazioni
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

@@ -1,0 +1,16 @@
+# Aggiornamenti delle azioni dei workflow (ADR 0075): una PR alla settimana verso dev,
+# con tutte le azioni insieme. Le PR di Dependabot girano senza i segreti del progetto.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    groups:
+      azioni:
+        patterns: ["*"]
+    commit-message:
+      prefix: "Azioni dei workflow:"

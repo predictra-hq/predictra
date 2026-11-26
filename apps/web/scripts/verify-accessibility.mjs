@@ -53,7 +53,7 @@ const SCREENSHOTS = new Set([
   "/locker-room (mobile)",
   "/teams (mobile)",
   "/settings (mobile)",
-  "/admin/users",
+  // Mai /admin/users: mostra le email degli utenti.
 ]);
 
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];

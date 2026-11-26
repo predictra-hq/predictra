@@ -1,0 +1,7 @@
+# Revisione obbligatoria del proprietario (ADR 0075), attiva quando la regola dei branch
+# `dev` e `main` richiede la revisione dei code owner. Chi può cambiare i workflow o il
+# database può leggere i segreti o i dati: lo decide solo il proprietario.
+/.github/ @gennpalm
+/supabase/ @gennpalm
+/scripts/backup/ @gennpalm
+/scripts/sync/ @gennpalm

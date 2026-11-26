@@ -17,7 +17,9 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [ ] **Step-up 2FA** per le azioni distruttive (sospensione, cambio di ruolo, attivazione di un modello): da progettare e provare con un login reale ([security.md](security.md), _Limitazioni note_).
 - [ ] Protezione da password compromesse: non disponibile sul piano Free di Supabase. Accettare il limite per iscritto oppure approvare il piano Pro.
 - [ ] `pnpm audit`: vulnerabilità moderata di `minimatch` negli strumenti di lint, da chiudere quando esce la versione corretta di `typescript-eslint`.
-- [ ] Protezione dei branch: non disponibile su GitHub Free con repository privato. Accettare il flusso manuale ([ADR 0050](../decisions/0050-deploy-solo-commit-del-proprietario.md)) oppure approvare GitHub Pro.
+- [ ] Protezione dei branch: con il repository pubblico è disponibile sul piano Free. Regole per `dev` e `main` da creare ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passo 7).
+- [x] Repository pubblico: niente link d'invito, backup né screenshot negli artifact o nei log dei workflow ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md)).
+- [ ] Run con dati esposti cancellati, segreti spostati negli Environments `operazioni`, `dev` e `prod`, impostazioni di sicurezza del repository attivate ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passi 1–8).
 
 ## 2. Backup e ripristino
 

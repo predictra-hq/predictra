@@ -12,7 +12,7 @@ ogni giorno 02:30 UTC  backup
   4. tar.gz cifrato con gpg AES-256 e BACKUP_PASSPHRASE  →  predictra-dev-<data>.tar.gz.gpg
   5. B2: dev/daily/<AAAA-MM-GG>/ e, se è il primo del mese, dev/monthly/<AAAA-MM>/
   6. rotazione: giornalieri oltre 30 giorni e mensili oltre 12 mesi cancellati
-  7. copia come artifact di GitHub Actions per 7 giorni
+  7. nessuna copia come artifact: con il repository pubblico (ADR 0068) la scaricherebbe chiunque
 giorno 1 di ogni mese 03:30 UTC  restore-test
   ultimo backup da B2 → verifica SHA-256 → decifratura → Supabase locale nel runner (supabase db start)
   → ripristino (roles, schema, data con session_replication_role = replica)
@@ -42,7 +42,7 @@ _Actions → Backup → Run workflow_, branch `dev`:
 
 - `action = check`: scrive, legge e cancella un file di prova su B2 e mostra la regione;
 - `action = backup`:
-  - `upload` disattivato: nessun caricamento su B2, il backup resta solo come artifact per 1 giorno;
+  - `upload` disattivato: nessun caricamento su B2 e nessuna copia conservata (utile solo con `verify`);
   - `verify` attivo: prova subito il ripristino del backup appena creato (circa 5 minuti in più);
 - `action = restore-test`: test di ripristino dell'ultimo backup su B2.
 
@@ -52,7 +52,7 @@ Schedule e pulsante esistono solo quando il workflow è anche su `main`.
 
 Si fa a mano, su un progetto Supabase **nuovo o vuoto**, mai su quello in uso se non è perso.
 
-1. Scarica il backup: da B2 (_Browse Files_), oppure dall'artifact dell'ultimo run (7 giorni).
+1. Scarica il backup da B2 (_Browse Files_).
 2. Decifra ed estrai:
 
    ```bash
@@ -75,6 +75,6 @@ Si fa a mano, su un progetto Supabase **nuovo o vuoto**, mai su quello in uso se
 ## Limiti e note
 
 - **Regione del bucket:** `us-east-005`, negli Stati Uniti, confermata l'8/11/2026. I backup sono cifrati prima di uscire da GitHub e Backblaze non può leggerli. Per spostarsi in Europa: account Backblaze nuovo con regione europea e aggiornamento dei segreti `B2_*`.
-- **Object Lock:** non disponibile con la chiave attuale ("not entitled"). La rotazione e la cancellazione dipendono dalla chiave: se la chiave trapela, un attaccante potrebbe cancellare i backup. La copia come artifact riduce il rischio per gli ultimi 7 giorni.
+- **Object Lock:** non disponibile con la chiave attuale ("not entitled"). La rotazione e la cancellazione dipendono dalla chiave: se la chiave trapela, un attaccante potrebbe cancellare i backup. La copia come artifact, che riduceva il rischio per gli ultimi 7 giorni, è stata tolta quando il repository è diventato pubblico (ADR 0068): da valutare una seconda copia fuori da GitHub, per esempio un secondo bucket gratuito con chiave diversa.
 - I dati degli schemi gestiti da Supabase (es. `storage`) non sono inclusi: PREDICTRA non li usa.
 - Minuti di Actions: circa 3 al giorno per il backup e circa 8 al mese per il test di ripristino.

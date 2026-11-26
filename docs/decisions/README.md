@@ -67,3 +67,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0072](0072-schedine-a-quota-minima.md)                             | Schedine con quota totale minima 3, 5 e 10                                                  | Accettata |
 | [0073](0073-peso-del-mercato-e-verifica-delle-proposte.md)          | Peso del mercato 0,75 nelle proposte con valore e verifica onesta dei risultati             | Accettata |
 | [0074](0074-modello-unico-su-tutte-le-competizioni.md)              | Modello gol unico su tutte le competizioni nel modello PREDICTRA                            | Accettata |
+| [0075](0075-segreti-e-dati-con-repository-pubblico.md)              | Segreti e dati con il repository pubblico                                                   | Accettata |

@@ -130,7 +130,8 @@ Note:
 
 - il workflow lo può avviare solo il proprietario del repository;
 - compare in _Actions_ solo se il file `.github/workflows/bootstrap-super-admin.yml` è sul branch di default (`main`);
-- se esiste già un invito attivo per quell'email, il workflow si ferma senza fare nulla.
+- se esiste già un invito attivo per quell'email, il workflow si ferma senza fare nulla;
+- **con il repository pubblico (ADR 0068) il workflow non crea l'invito**, perché il riepilogo sarebbe leggibile da chiunque: si crea in locale come in [setup.md](setup.md) §5.
 
 ### D2. Attivazione (ognuno per sé)
 

@@ -4,6 +4,10 @@ name: Bootstrap Super Admin
 # Crea un invito SUPER_ADMIN (scripts/bootstrap-super-admin.mjs) senza eseguire nulla in locale.
 # Il link di attivazione NON finisce nei log: compare solo nel riepilogo del run.
 # È personale, monouso e scade in 24 h. Dopo l'attivazione elimina il run (menu ⋯ → Delete workflow run).
+#
+# Con il repository PUBBLICO (ADR 0068) il riepilogo, i log e l'email inserita sono leggibili
+# da chiunque: il job non parte e un secondo job spiega come creare l'invito in locale
+# (docs/operations/setup.md). Torna a funzionare da solo se il repository torna privato.
 
 on:
   workflow_dispatch:
@@ -26,12 +30,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Nessuna variabile d'ambiente qui: i log di un repository pubblico sono pubblici.
+  public-repository:
+    name: Repository pubblico, invito da creare in locale
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Invito non creato
+        run: |
+          echo "::error title=Repository pubblico::Riepilogo e log di questo run sono pubblici: il link di attivazione sarebbe leggibile da chiunque. Crea l'invito in locale (docs/operations/setup.md, «Primi Super Admin») e cancella questo run."
+          exit 1
+
   bootstrap:
     name: Invito Super Admin (${{ inputs.environment }})
     # Solo il proprietario può creare Super Admin. Login fisso: dal 15/11/2026 il
     # repository è dell'organizzazione predictra-hq e `github.repository_owner` vale quella.
-    if: github.actor == 'gennpalm'
+    # Solo con repository privato: vedi il job precedente.
+    if: github.actor == 'gennpalm' && github.event.repository.private
     runs-on: ubuntu-latest
+    environment: operazioni
     timeout-minutes: 10
     env:
       SUPABASE_PROJECT_ID: ${{ inputs.environment == 'prod' && secrets.PROD_SUPABASE_PROJECT_ID || secrets.DEV_SUPABASE_PROJECT_ID }}
