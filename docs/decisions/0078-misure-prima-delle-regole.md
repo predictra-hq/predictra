@@ -37,6 +37,26 @@ Con la riga «Campione» dell'analisi sopra le 300 partite decise. Si adotta un'
 
 La modifica va in un ADR nuovo e cambia `SLIP_RULES_VERSION`.
 
+## Prima misura (26/11/2026)
+
+_Verifica DEV_ → `slip-analysis` ([run](https://github.com/predictra-hq/predictra/actions/runs/45860997992)), dati di DEV (copia di PROD). Campione: 519 giocate su 94 partite con quote prima del via; per le schedine 114 giocate decise su **58 partite** (soglia 300: non raggiunta).
+
+| Confronto (Brier, differenza da oggi; negativo = meglio) | Risultato             | Lettura                                   |
+| -------------------------------------------------------- | --------------------- | ----------------------------------------- |
+| Modello senza calibrazione                               | −0,00000 ± 0,00013    | la calibrazione non cambia nulla          |
+| Shin con mercato al 75%                                  | +0,00010 ± 0,00047    | nessuna differenza dal proporzionale      |
+| Proporzionale con mercato al 90%                         | −0,00089 ± 0,00095    | direzione giusta, dentro il rumore        |
+| Solo mercato (proporzionale)                             | −0,00132 ± 0,00158    | direzione giusta, dentro il rumore        |
+| Metodi del margine sull'1X2 (Log Loss, 93 partite)       | Shin +0,0004 ± 0,0071 | potenza +0,0018 ± 0,0121: nessun guadagno |
+
+Altri segnali:
+
+- **Taratura** della probabilità usata nelle schedine: attese 73,5 giocate vinte, uscite 64 (z = −1,95, al limite). Le giocate scelte sono un po' troppo ottimiste. È l'effetto atteso di una scelta che premia le giocate dove il modello è più ottimista del mercato.
+- **Modello contro mercato** sulle giocate delle schedine: Brier +0,0101 ± 0,0099, il modello indovina peggio, al limite del rumore.
+- **Ricerca esaustiva:** troppe poche schedine per confrontarla (da 0 a 5 per profilo).
+
+**Decisione:** nessuna modifica. Shin e la calibrazione non migliorano nulla e restano solo nell'analisi. L'unica direzione costante, sia qui sia negli ADR 0071 e 0073, è dare più peso al mercato. Si rivaluta con la stessa analisi quando le partite decise superano 300 (circa 4–6 settimane): se il vantaggio del solo mercato resta e supera due errori standard, il peso sale (nuovo ADR, nuova `SLIP_RULES_VERSION`).
+
 ## Conseguenze
 
 - La taratura automatica adotterà meno varianti: quelle adottate saranno miglioramenti veri.
