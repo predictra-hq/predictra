@@ -1,4 +1,4 @@
-import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { MARKET_WEIGHT } from "./weight";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
@@ -135,7 +135,7 @@ export const MAX_EDGE = 0.15;
  * modello da solo (Brier 0,2100 contro 0,2178 su 408 giocate; Log Loss 1X2 0,9500 contro
  * 0,9694): 0,75 tiene conto di entrambi.
  */
-export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.75;
+export { MARKET_WEIGHT };
 export const MIN_LEGS = 2;
 /** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
 export const MAX_DISAGREEMENT = 0.1;

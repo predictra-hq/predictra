@@ -1,4 +1,5 @@
 import "server-only";
+import { orFallback } from "@/lib/log";
 
 /**
  * Fornitore LLM di Ask PREDICTRA (ADR 0042): endpoint compatibile OpenAI, chiamato
@@ -79,7 +80,9 @@ export function groqProvider(apiKey: string, model = DEFAULT_GROQ_MODEL): LlmPro
       // Mai il corpo della risposta d'errore nei log: potrebbe riportare parti della richiesta.
       if (response.status === 429) throw new LlmError("rate_limited", "Groq: limite raggiunto");
       if (!response.ok) throw new LlmError("unavailable", `Groq: HTTP ${response.status}`);
-      const body = (await response.json().catch(() => null)) as CompletionResponse | null;
+      const body = (await response
+        .json()
+        .catch(orFallback("ask/provider #1", null))) as CompletionResponse | null;
       const message = body?.choices?.[0]?.message;
       if (!message) throw new LlmError("bad_response", "Groq: risposta senza messaggio");
       return {

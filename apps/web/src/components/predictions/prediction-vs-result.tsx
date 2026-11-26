@@ -6,6 +6,7 @@ import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 import { getPreKickoffPredictions } from "@/lib/predictions/queries";
 import { matchVerdicts } from "@/lib/predictions/verdict";
+import { orFallback } from "@/lib/log";
 
 /**
  * Partita finita: cosa diceva il modello prima del calcio d'inizio e cosa è uscito.
@@ -25,7 +26,9 @@ export async function PredictionVsResult({
   away: string;
 }) {
   if (status !== "FINISHED" || score.home === null || score.away === null) return null;
-  const rows = await getPreKickoffPredictions(matchId).catch(() => []);
+  const rows = await getPreKickoffPredictions(matchId).catch(
+    orFallback("predictions/prediction-vs-result #1", []),
+  );
   const verdicts = matchVerdicts(rows, { home: score.home, away: score.away });
   if (verdicts.length === 0) return null;
   const m = getMessages().predictions;

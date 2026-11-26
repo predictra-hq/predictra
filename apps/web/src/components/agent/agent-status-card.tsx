@@ -3,6 +3,7 @@ import { Badge, Card } from "@/components/ui/primitives";
 import { getAgentStatus } from "@/lib/agent/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatMinutes, healthTone, lastSuccess, overallHealth } from "./status";
+import { orFallback } from "@/lib/log";
 
 /**
  * Card "Stato agente" della dashboard (M7 B1): ultimo ciclo riuscito, frequenza
@@ -24,7 +25,7 @@ export async function AgentStatusCard({ canMonitor }: { canMonitor: boolean }) {
     );
   }
 
-  const rows = await getAgentStatus().catch(() => null);
+  const rows = await getAgentStatus().catch(orFallback("agent/agent-status-card #1", null));
   if (!rows) {
     return (
       <Card>

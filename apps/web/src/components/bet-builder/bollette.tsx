@@ -37,6 +37,7 @@ import { loadPicksData } from "@/lib/bet-builder/queries";
 import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { orFallback } from "@/lib/log";
 
 const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> = {
   DOUBLE: "positive",
@@ -297,7 +298,7 @@ export async function SchedineSection({
       loadAdviceBankroll(),
       userBookmaker(),
       loadCalibration(),
-      listCompetitions().catch(() => []),
+      listCompetitions().catch(orFallback("bet-builder/bollette #1", [])),
     ]);
   return (
     <BolletteCard

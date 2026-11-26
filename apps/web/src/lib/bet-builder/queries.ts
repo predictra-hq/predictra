@@ -9,7 +9,7 @@ import type {
   UserBetSlipRow,
   UserBetSlipSelectionRow,
 } from "@predictra/shared-types";
-import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { MARKET_WEIGHT } from "./weight";
 import { cache } from "react";
 import { consensusFor, freshOdds, marketConsensus, notStartingSoon } from "./bollette";
 import {
@@ -210,7 +210,7 @@ export async function listManualOptions(now: Date, matchIds?: number[]): Promise
   const odds = freshOdds(allOdds, new Date());
   const prices = bestItalianPrices(odds, site?.tracked ?? null);
   const consensus = marketConsensus(odds);
-  const weight = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0;
+  const weight = MARKET_WEIGHT;
 
   const options = new Map<number, ManualOption>();
   for (const p of predictions) {
