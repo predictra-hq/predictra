@@ -7,6 +7,7 @@ import { betSchema, settleSchema, toIsoDate } from "@/lib/bankroll/validation";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@predictra/shared-types";
 
 /*
  * Giocate registrate a mano dall'utente (PREDICTRA non piazza scommesse).
@@ -42,7 +43,7 @@ export async function addBet(_prev: ActionState, formData: FormData): Promise<Ac
   const supabase = await createClient();
   const { error } = await supabase.from("bets").insert({
     // Selezioni valide: la giocata si chiuderà da sola a partite finite.
-    legs: parseLegs(d.legs),
+    legs: parseLegs(d.legs) as unknown as Json,
     bankroll_id: d.bankrollId,
     description: d.description,
     market: d.market,

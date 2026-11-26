@@ -59,7 +59,7 @@ export async function listCommunityPosts(
   if (error) return null;
   // Una schedina non conforme (scritta prima del vincolo `community_posts_slip_shape`) si
   // scarta qui: non deve rompere la chat né la card in Home.
-  return ((data ?? []) as CommunityPostRow[]).map((row) =>
+  return ((data ?? []) as unknown as CommunityPostRow[]).map((row) =>
     row.slip === null ? row : { ...row, slip: parseSharedSlip(row.slip) },
   );
 }

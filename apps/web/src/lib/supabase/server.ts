@@ -2,6 +2,7 @@ import "server-only";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { Database } from "@predictra/shared-types";
 import { publicEnv } from "@/lib/env";
 
 type ServerClient = Awaited<ReturnType<typeof userClient>>;
@@ -25,7 +26,7 @@ export async function createClient(): Promise<ServerClient> {
 async function userClient() {
   const env = publicEnv();
   const cookieStore = await cookies();
-  return createServerClient(
+  return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {

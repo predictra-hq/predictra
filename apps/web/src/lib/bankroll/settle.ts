@@ -20,7 +20,7 @@ export const settleOpenBets = cache(async (): Promise<{ won: number; lost: numbe
       .eq("status", "OPEN")
       .not("legs", "is", null)
       .limit(200);
-    const bets = ((open ?? []) as { id: number; legs: BetLeg[] }[]).filter((b) =>
+    const bets = ((open ?? []) as unknown as { id: number; legs: BetLeg[] }[]).filter((b) =>
       Array.isArray(b.legs),
     );
     if (bets.length === 0) return summary;

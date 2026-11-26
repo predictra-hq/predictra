@@ -8,3 +8,4 @@ export * from "./agent";
 export * from "./ask";
 export * from "./community";
 export * from "./follows";
+export type { Database, Json } from "./database";

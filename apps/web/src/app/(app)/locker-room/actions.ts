@@ -14,6 +14,7 @@ import { getMessages } from "@/lib/i18n";
 import { parseCommentBody } from "@/lib/community/community";
 import { parseSharedSlip } from "@/lib/community/slip";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@predictra/shared-types";
 
 const channelOf = (raw: FormDataEntryValue | null): CommunityChannel | null =>
   (COMMUNITY_CHANNELS as readonly string[]).includes(String(raw))
@@ -45,7 +46,9 @@ export async function shareSlip(_prev: ActionState, formData: FormData): Promise
   const body = typeof raw === "string" && raw.trim() ? parseCommentBody(raw) : "";
   if (!slip || body === null) return { ok: false, message: m.invalid };
   const supabase = await createClient();
-  const { error } = await supabase.from("community_posts").insert({ channel: "SLIPS", body, slip });
+  const { error } = await supabase
+    .from("community_posts")
+    .insert({ channel: "SLIPS", body, slip: slip as unknown as Json });
   if (error) return postFailure(supabase, error.message);
   revalidatePath("/locker-room");
   return { ok: true, message: m.shared };

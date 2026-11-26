@@ -131,7 +131,28 @@ export async function listKellyMatches(now: Date = new Date()): Promise<KellyMat
     .order("kickoff_at")
     .limit(600);
   if (error) throw new BankrollUnavailable("previsioni del modello", error);
-  return groupKellyMatches(data ?? []);
+  // Le colonne di una vista risultano sempre annullabili: qui servono tutte.
+  return groupKellyMatches(
+    (data ?? []).flatMap((r) =>
+      r.match_id === null ||
+      r.kickoff_at === null ||
+      r.home_team_name === null ||
+      r.away_team_name === null ||
+      r.selection === null ||
+      r.probability === null
+        ? []
+        : [
+            {
+              match_id: r.match_id,
+              kickoff_at: r.kickoff_at,
+              home_team_name: r.home_team_name,
+              away_team_name: r.away_team_name,
+              selection: r.selection,
+              probability: r.probability,
+            },
+          ],
+    ),
+  );
 }
 
 /**

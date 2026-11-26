@@ -64,6 +64,7 @@ pnpm --filter web dev                   # app locale (richiede apps/web/.env.loc
 - **Database:**
   - una nuova migrazione è un **nuovo file** `supabase/migrations/<timestamp>_<nome>.sql`. Le migrazioni già applicate non si modificano;
   - ogni tabella con dati utente ha RLS e test in `supabase/tests/`;
+  - dopo una migrazione si rigenerano i tipi del database con `pnpm --filter @predictra/database gen:types` (`packages/shared-types/src/database.ts`, mai a mano): la CI fallisce se non corrispondono alle migrazioni, e i client Supabase dell'app sono tipizzati con quei tipi;
   - i dati personali (bankroll, puntate) **non** sono visibili agli admin.
 - Impostazioni Auth di Supabase: `supabase/config.toml` (applicato dalla pipeline; dichiara solo ciò che vuoi controllare).
 - Python (M2+): servizi in `services/<nome>/` con `pyproject.toml`.

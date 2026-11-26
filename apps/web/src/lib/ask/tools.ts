@@ -287,7 +287,7 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
       const matchId = id(args.match_id);
       if (!matchId) return empty(t.odds);
       const { data, error } = await supabase
-        .from("v_best_odds_h")
+        .from("v_best_odds_h2h")
         .select("*")
         .eq("match_id", matchId)
         .limit(1);

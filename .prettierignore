@@ -7,3 +7,5 @@ supabase/migrations
 # Fixture: risposte dei provider conservate così come pubblicate
 services/*/tests/fixtures/*.json
 services/*/.venv
+# Generato da supabase/tests/db-types.ts (confrontato byte per byte in CI)
+packages/shared-types/src/database.ts
