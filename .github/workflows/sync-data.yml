@@ -58,7 +58,7 @@ jobs:
       SRC_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
       DST_DB_URL: postgresql://postgres:postgres@localhost:5432/postgres
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           version: 3.0.0
@@ -110,7 +110,7 @@ jobs:
             { echo "SRC_PROJECT_ID=$PROD_ID"; echo "SRC_DB_PASSWORD=$PROD_PW"
               echo "DST_PROJECT_ID=$DEV_ID"; echo "DST_DB_PASSWORD=$DEV_PW"; } >> "$GITHUB_ENV"
           fi
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           version: 3.0.0
