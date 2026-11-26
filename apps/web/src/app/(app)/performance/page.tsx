@@ -22,10 +22,11 @@ import { settleOpenBets } from "@/lib/bankroll/settle";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
+import { formatOdds } from "@/lib/format/number";
 
-export const metadata: Metadata = { title: "Andamento" };
+export const metadata: Metadata = { title: getMessages().pageTitles.performance };
 
-const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
+const odds = (v: number | null) => formatOdds(v);
 
 /** Tabellina di un raggruppamento: voce, giocate vinte su chiuse, profitto e resa. */
 function BreakdownList({ title, rows }: { title: string; rows: readonly BreakdownRow[] }) {

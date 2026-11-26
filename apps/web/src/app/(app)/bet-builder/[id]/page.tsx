@@ -25,7 +25,7 @@ import { fillTemplate, formatDecimal, formatOdds, formatPercent } from "@/lib/od
 import { saveProposalSlip } from "../actions";
 import { hasPermission } from "@predictra/shared-types";
 
-export const metadata: Metadata = { title: "Proposta — Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilderDetail };
 
 export default async function ProposalPage({
   params,

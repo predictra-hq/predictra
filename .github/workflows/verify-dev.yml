@@ -5,7 +5,7 @@ name: Verifica DEV
 #   senza accesso, limiti personali. Gli account vengono sempre cancellati alla fine.
 # - accessibility (M8, B1): l'app di QUESTO branch, avviata nel runner e collegata a
 #   Supabase DEV, controllata con axe (WCAG 2.1 AA) pagina per pagina da un Super Admin
-#   temporaneo con 2FA. Si può avviare anche da un branch di lavoro, prima del merge.
+#   temporaneo con 2FA. Si avvia da `dev` o da `main` (Environment `operazioni`, ADR 0075).
 # - accessibility-prod: le stesse verifiche sul sito PROD in servizio (nessuna build nel
 #   runner), con un Super Admin temporaneo `verifica-a11y-…@example.com` cancellato alla
 #   fine insieme ai suoi dati DEMO. Restano solo le righe di audit della verifica.
@@ -41,8 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
       - run: for f in apps/web/scripts/verify-*.mjs; do node --check "$f"; done
@@ -52,7 +52,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    environment: operazioni
     env:
+      # Repository pubblico (ADR 0068): log e artifact li legge chiunque, e DEV è una copia
+      # dei dati di PROD (ADR 0055). Screenshot e testo delle pagine solo con repository privato.
+      PRIVATE_REPO: ${{ github.event.repository.private }}
       SUPABASE_PROJECT_ID: ${{ inputs.check == 'accessibility-prod' && secrets.PROD_SUPABASE_PROJECT_ID || secrets.DEV_SUPABASE_PROJECT_ID }}
       SUPABASE_SECRET_KEY: ${{ inputs.check == 'accessibility-prod' && secrets.PROD_SUPABASE_SECRET_KEY || secrets.DEV_SUPABASE_SECRET_KEY }}
       PROD_APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL }}
@@ -64,9 +68,9 @@ jobs:
             echo "::error::Mancano i segreti SUPABASE_PROJECT_ID o SUPABASE_SECRET_KEY dell'ambiente scelto"
             exit 1
           fi
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v5
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -100,30 +104,33 @@ jobs:
       - name: Verifica
         run: |
           export NEXT_PUBLIC_SUPABASE_URL="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          extra=()
+          if [ "$PRIVATE_REPO" = "true" ]; then
+            mkdir -p "$RUNNER_TEMP/screenshots"
+            extra=(SCREENSHOT_DIR="$RUNNER_TEMP/screenshots" PRINT_TEXT=1 PRINT_SHOTS=1)
+          fi
           case "$CHECK" in
             bankroll-isolation) node apps/web/scripts/verify-bankroll-isolation.mjs ;;
             accessibility)
-              mkdir -p "$RUNNER_TEMP/screenshots"
-              APP_URL=http://localhost:3000 SCREENSHOT_DIR="$RUNNER_TEMP/screenshots" PRINT_TEXT=1 PRINT_SHOTS=1                 node apps/web/scripts/verify-accessibility.mjs ;;
+              env APP_URL=http://localhost:3000 "${extra[@]}" node apps/web/scripts/verify-accessibility.mjs ;;
             # Analisi delle schedine sui dati di DEV (copia di PROD, ADR 0070): solo numeri
             # aggregati nel log, che è pubblico.
             slip-analysis)
               pnpm --filter web exec vitest run --config vitest.analysis.config.mts ;;
             accessibility-prod)
               if [ -z "$PROD_APP_BASE_URL" ]; then echo "::error::Manca PROD_APP_BASE_URL"; exit 1; fi
-              mkdir -p "$RUNNER_TEMP/screenshots"
-              APP_URL="$PROD_APP_BASE_URL" SCREENSHOT_DIR="$RUNNER_TEMP/screenshots" PRINT_TEXT=1 PRINT_SHOTS=1 \
-                node apps/web/scripts/verify-accessibility.mjs ;;
+              # Sul sito in servizio mai screenshot né testo delle pagine, nemmeno da privato.
+              env APP_URL="$PROD_APP_BASE_URL" node apps/web/scripts/verify-accessibility.mjs ;;
           esac
 
       - name: Errori del server (solo se la verifica fallisce)
         if: failure() && env.CHECK == 'accessibility'
         run: grep -iE "error|warn|unhandled|timeout" "$RUNNER_TEMP/web.log" | tail -80 || true
 
-      # Screenshot di dashboard e lista utenti (account temporaneo, dati DEV), per
-      # controllare a occhio il risultato. Conservati 3 giorni.
-      - uses: actions/upload-artifact@v6
-        if: always() && startsWith(env.CHECK, 'accessibility')
+      # Screenshot delle pagine (account temporaneo, dati DEV), per controllare a occhio il
+      # risultato. Conservati 3 giorni. Solo con repository privato e mai per PROD.
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: always() && env.CHECK == 'accessibility' && env.PRIVATE_REPO == 'true'
         with:
           name: screenshots
           path: ${{ runner.temp }}/screenshots

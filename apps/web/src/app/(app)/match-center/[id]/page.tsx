@@ -22,7 +22,7 @@ import { getMatch, getMatchDetails } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { hasPermission } from "@predictra/shared-types";
 
-export const metadata: Metadata = { title: "Dettaglio partita" };
+export const metadata: Metadata = { title: getMessages().pageTitles.matchCenterDetail };
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (

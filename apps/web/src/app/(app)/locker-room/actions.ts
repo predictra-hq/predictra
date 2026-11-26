@@ -14,6 +14,7 @@ import { getMessages } from "@/lib/i18n";
 import { parseCommentBody } from "@/lib/community/community";
 import { parseSharedSlip } from "@/lib/community/slip";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@predictra/shared-types";
 
 const channelOf = (raw: FormDataEntryValue | null): CommunityChannel | null =>
   (COMMUNITY_CHANNELS as readonly string[]).includes(String(raw))
@@ -31,9 +32,7 @@ export async function postMessage(_prev: ActionState, formData: FormData): Promi
   if (channel === "SLIPS") return { ok: false, message: m.slipsOnly };
   const supabase = await createClient();
   const { error } = await supabase.from("community_posts").insert({ channel, body });
-  if (error) {
-    return { ok: false, message: postError(error.message) };
-  }
+  if (error) return postFailure(supabase, error.message);
   revalidatePath("/locker-room");
   return { ok: true, message: m.published };
 }
@@ -47,20 +46,41 @@ export async function shareSlip(_prev: ActionState, formData: FormData): Promise
   const body = typeof raw === "string" && raw.trim() ? parseCommentBody(raw) : "";
   if (!slip || body === null) return { ok: false, message: m.invalid };
   const supabase = await createClient();
-  const { error } = await supabase.from("community_posts").insert({ channel: "SLIPS", body, slip });
-  if (error) {
-    return { ok: false, message: postError(error.message) };
-  }
+  const { error } = await supabase
+    .from("community_posts")
+    .insert({ channel: "SLIPS", body, slip: slip as unknown as Json });
+  if (error) return postFailure(supabase, error.message);
   revalidatePath("/locker-room");
   return { ok: true, message: m.shared };
 }
 
-/** Messaggio per l'utente dagli errori del database sui messaggi. */
-function postError(message: string): string {
+/** Attesa tra due messaggi (ADR 0071), come nel trigger `check_community_posts_rate`. */
+const COOLDOWN_MS = 2 * 60_000;
+
+/**
+ * Esito per l'utente dagli errori del database sui messaggi. Con l'attesa dice anche da
+ * quando si può riscrivere: l'ora dell'ultimo messaggio proprio (la RLS lascia leggere i
+ * propri) più 2 minuti.
+ */
+async function postFailure(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  message: string,
+): Promise<ActionState> {
   const m = getMessages().community;
-  if (message.includes(POST_COOLDOWN)) return m.cooldown;
-  if (message.includes(COMMENT_RATE_LIMIT)) return m.rateLimited;
-  return getMessages().common.genericError;
+  if (message.includes(POST_COOLDOWN)) {
+    const { data } = await supabase
+      .from("community_posts")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const last = Date.parse(String(data?.created_at ?? ""));
+    return Number.isFinite(last)
+      ? { ok: false, message: m.cooldown, retryAt: new Date(last + COOLDOWN_MS).toISOString() }
+      : { ok: false, message: m.cooldown };
+  }
+  if (message.includes(COMMENT_RATE_LIMIT)) return { ok: false, message: m.rateLimited };
+  return { ok: false, message: getMessages().common.genericError };
 }
 
 const idOf = (raw: FormDataEntryValue | null) => {

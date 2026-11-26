@@ -3,12 +3,8 @@ import type { BankrollKind } from "@predictra/shared-types";
 import { Badge } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 
-const euro = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" });
-
-export function formatEuro(value: number | string | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "–";
-  return euro.format(Number(value));
-}
+export { formatEuro } from "@/lib/format/number";
+import { formatEuro } from "@/lib/format/number";
 
 /** Reale e simulato sempre distinguibili a colpo d'occhio. */
 /** Importo con segno: verde se positivo, rosso se negativo (mai solo il colore: c'è il segno). */

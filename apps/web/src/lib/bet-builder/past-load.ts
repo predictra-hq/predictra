@@ -74,7 +74,7 @@ export async function loadPastRounds(window: SlipWindow = "round"): Promise<Past
     .limit(1000);
   if (error) throw new Error("Schedine salvate non disponibili");
   const latest = new Map<string, SavedRow>();
-  for (const r of (data ?? []) as SavedRow[]) {
+  for (const r of (data ?? []) as unknown as SavedRow[]) {
     const key = `${r.window_start}|${r.profile}`;
     const cur = latest.get(key);
     const better =

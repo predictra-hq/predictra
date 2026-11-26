@@ -22,7 +22,7 @@ import {
 import { homeAdvantage } from "@/lib/odds/stats";
 import { hasPermission } from "@predictra/shared-types";
 
-export const metadata: Metadata = { title: "Campionati" };
+export const metadata: Metadata = { title: getMessages().pageTitles.leagues };
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (

@@ -15,7 +15,7 @@ import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { savePreferences, setAlertThreshold } from "./actions";
 
-export const metadata: Metadata = { title: "Preferenze dell'app" };
+export const metadata: Metadata = { title: getMessages().pageTitles.settingsPreferences };
 
 /** Riquadro con titolo e spiegazione; l'ancora è usata dalle voci del Profilo. */
 function Section({

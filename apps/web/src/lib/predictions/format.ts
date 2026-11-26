@@ -7,6 +7,9 @@ import {
   type PredictionMarket,
 } from "@predictra/shared-types";
 
+// Numeri: modulo unico `lib/format/number.ts`, riesportato qui per gli import esistenti.
+export { formatFairOdds, formatPercent } from "@/lib/format/number";
+
 export type Tone = "neutral" | "positive" | "negative" | "warning";
 
 /** Linee del totale gol mostrate subito; le altre (estreme o con rimborso) sono in "Altri mercati". */
@@ -61,18 +64,6 @@ export function groupPredictions(rows: readonly ActivePredictionRow[]): Predicti
       MARKET_ORDER.indexOf(a.market) - MARKET_ORDER.indexOf(b.market) ||
       (a.line ?? 0) - (b.line ?? 0),
   );
-}
-
-/** 0.4567 → "45,7%" */
-export function formatPercent(value: number | null | undefined, digits = 1): string {
-  if (value === null || value === undefined || !Number.isFinite(Number(value))) return "–";
-  return `${(Number(value) * 100).toFixed(digits).replace(".", ",")}%`;
-}
-
-/** Quota equa 1/p con due decimali; "–" se la probabilità è nulla. */
-export function formatFairOdds(probability: number): string {
-  const p = Number(probability);
-  return p > 0 ? (1 / p).toFixed(2).replace(".", ",") : "–";
 }
 
 /** Linea con segno per gli handicap: 2.5 → "2,5"; -0.5 → "−0,5"; 1 (handicap) → "+1". */

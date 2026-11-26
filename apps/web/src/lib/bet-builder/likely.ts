@@ -51,6 +51,9 @@ export interface LikelyRow {
   selection: string;
   probability: number;
   confidence_score: number;
+  /** Versione del modello e momento della previsione (riproducibilità, ADR 0020, 0075). */
+  model_version_id?: number | null;
+  as_of?: string | null;
 }
 
 export interface LikelyPick {

@@ -7,7 +7,7 @@ import { LoginPassword } from "./login-password";
 import { getMessages } from "@/lib/i18n";
 import { login } from "./actions";
 
-export const metadata: Metadata = { title: "Accesso" };
+export const metadata: Metadata = { title: getMessages().pageTitles.login };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const m = getMessages();

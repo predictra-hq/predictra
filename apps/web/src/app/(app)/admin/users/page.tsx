@@ -13,6 +13,7 @@ import {
   type Role,
 } from "@predictra/shared-types";
 import { ActionDialog } from "@/components/ui/action-dialog";
+import { StepUpField } from "@/components/ui/step-up-field";
 import { Alert, Badge, Card, Field, Input, PageHeader, Select } from "@/components/ui/primitives";
 import { requirePermission } from "@/lib/auth/dal";
 import { formatDateTime, getMessages } from "@/lib/i18n";
@@ -27,7 +28,7 @@ import {
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Utenti" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminUsers };
 
 interface ProfileRow {
   id: string;
@@ -213,6 +214,7 @@ export default async function UsersPage() {
                                   ))}
                                 </Select>
                               </Field>
+                              <StepUpField id={`step-up-role-${u.id}`} />
                             </ActionDialog>
                           ) : null}
                           {manageable ? (
@@ -227,7 +229,9 @@ export default async function UsersPage() {
                                 action={setAccountStatus}
                                 fields={{ userId: u.id, status: "SUSPENDED" }}
                                 labels={dialogLabels}
-                              />
+                              >
+                                <StepUpField id={`step-up-suspend-${u.id}`} />
+                              </ActionDialog>
                             ) : (
                               <ActionDialog
                                 trigger={m.admin.reactivate}
@@ -237,7 +241,9 @@ export default async function UsersPage() {
                                 action={setAccountStatus}
                                 fields={{ userId: u.id, status: "ACTIVE" }}
                                 labels={dialogLabels}
-                              />
+                              >
+                                <StepUpField id={`step-up-reactivate-${u.id}`} />
+                              </ActionDialog>
                             )
                           ) : null}
                           {manageable && u.status === "ACTIVE" ? (
@@ -250,7 +256,9 @@ export default async function UsersPage() {
                               action={createPasswordResetLink}
                               fields={{ userId: u.id }}
                               labels={dialogLabels}
-                            />
+                            >
+                              <StepUpField id={`step-up-reset-${u.id}`} />
+                            </ActionDialog>
                           ) : null}
                         </div>
                       ) : null}

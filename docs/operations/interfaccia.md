@@ -142,6 +142,26 @@ Server e database non sono la causa della poca reattività segnalata sul telefon
 - presentazione da non collegati, su telefono e con il tema chiaro;
 - commenti con due utenti (uno senza data di nascita), cancellazione e moderazione da amministratore.
 
+## Revisione del 26/11/2026
+
+Corretto dalla revisione dell'interfaccia (ADR 0076, 0077 e questo documento):
+
+- **Spogliatoio, attesa tra due messaggi:** il messaggio dice quanto manca («Puoi scrivere di nuovo tra 1:24»), il pulsante resta spento fino ad allora e gli altri errori spariscono appena si riscrive. I lettori di schermo sentono l'avviso una volta sola, non a ogni secondo.
+- **Reazioni:** sotto il messaggio si legge chi ha reagito (fino a tre nomi, poi «+N»), anche sul telefono, dove il `title` non si vede. La tavolozza si chiude con Esc, con un tocco fuori e dopo la scelta; pulsanti di almeno 36 px.
+- **Ora dei messaggi** nel fuso scelto nelle Preferenze (prima sempre `Europe/Rome`).
+- **Testi di almeno 12 px** (`text-xs`) al posto di quelli da 9–11 px: biglietti delle schedine, chat, menu. Restano più piccoli solo le etichette del grafico di calibrazione (SVG che si ridimensiona) e i badge di 20 px delle quote.
+- **Titoli delle schede del browser** in `it.ts` (`pageTitles`).
+- **Valore delle schedine** mostrato solo se positivo dopo l'arrotondamento: niente più «+0,0%».
+- **Step-up 2FA:** nei moduli di sospensione, riattivazione, cambio di ruolo, link di reset e attivazione di un modello c'è il campo facoltativo «Codice dell'app di autenticazione».
+
+Da guardare nell'app in esecuzione (non provato da chi l'ha scritto):
+
+- tavolozza delle emoji su un messaggio in cima alla chat, proprio e altrui, a 375 px: non deve essere tagliata;
+- conto alla rovescia dopo due messaggi di seguito, anche con VoiceOver o TalkBack;
+- la riga «chi ha reagito» con nomi lunghi a 375 px;
+- i biglietti delle schedine con i testi a 12 px: nessuna riga che va a capo male;
+- step-up: la prova dell'ADR 0077, § «Verifica».
+
 ## Scelte escluse
 
 - **Stemmi delle squadre:** non aggiunti. La documentazione delle fonti non copre l'uso delle immagini e API-Football dichiara di non dare licenza di pubblicazione ([api-football.md](../data-sources/api-football.md)); gli stemmi sono marchi dei club. Si riapre solo con una licenza verificata.

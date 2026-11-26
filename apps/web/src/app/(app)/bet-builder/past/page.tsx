@@ -15,8 +15,9 @@ import { slipWindowFrom, windowTitle, WindowTabs } from "@/components/bet-builde
 import type { PastOutcome } from "@/lib/bet-builder/past";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { orFallback } from "@/lib/log";
 
-export const metadata: Metadata = { title: "Passate — Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilderPast };
 
 const TONE: Record<PastOutcome, "positive" | "negative" | "neutral"> = {
   WON: "positive",
@@ -33,7 +34,7 @@ export default async function PastSlipsPage({ searchParams }: PageProps<"/bet-bu
   const profiles = m.bollette.profiles;
   const [rounds, competitionList] = await Promise.all([
     loadPastRounds(window),
-    listCompetitions().catch(() => []),
+    listCompetitions().catch(orFallback("bet-builder/past/page #1", [])),
   ]);
   const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
 

@@ -9,7 +9,7 @@ import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 import { acceptInvite } from "./actions";
 
-export const metadata: Metadata = { title: "Attivazione account" };
+export const metadata: Metadata = { title: getMessages().pageTitles.acceptInvite };
 
 export default async function AcceptInvitePage() {
   const m = getMessages();

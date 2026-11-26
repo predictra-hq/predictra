@@ -1,6 +1,33 @@
 # Punto della situazione
 
-**Aggiornato:** 14/11/2026 (`gennpalm` con Claude Code). Chi riprende il lavoro legge prima questo file, poi [CLAUDE.md](../../CLAUDE.md) e il piano della milestone in [docs/roadmap/](../roadmap/README.md).
+**Aggiornato:** 26/11/2026 (`gennpalm` con Claude Code). Chi riprende il lavoro legge prima questo file, poi [CLAUDE.md](../../CLAUDE.md) e il piano della milestone in [docs/roadmap/](../roadmap/README.md). Le sezioni dopo «Stato al 26/11/2026» sono la storia precedente: dove si contraddicono, vale questa.
+
+## Stato al 26/11/2026
+
+- **PROD in servizio** dal 17/11/2026 (https://predictra-prod.vercel.app, branch `main`); solo PROD raccoglie dati, DEV ne riceve una copia (ADR 0055).
+- **Repository pubblico** dal 24/11/2026 (ADR 0068): le Actions non consumano minuti.
+- **Ultimi lavori:**
+  - schedine consigliate salvate, profili Solida, Equilibrata e Alta quota con quota totale minima 3, 5 e 10, peso del mercato 0,75 (ADR 0070–0073);
+  - modello gol unico su tutte le competizioni nel modello PREDICTRA (ADR 0074);
+  - revisione completa del 26/11/2026 (modello e schedine, interfaccia, sicurezza, qualità del codice) e prime correzioni:
+    - **ADR 0075:** niente link d'invito, backup né screenshot negli artifact o nei log pubblici; Environments `operazioni`, `dev` e `prod`; CODEOWNERS e Dependabot;
+    - **ADR 0076:** schedine con sole quote aggiornate, riproducibili e con proposta immutabile; schedine condivise controllate nel database; analisi con bootstrap a gruppi e regola di stop.
+
+### Da fare, in ordine
+
+1. **`gennpalm`, impostazioni di GitHub** (ADR 0075, passi 1–8): cancellare i run con dati esposti, controllare la passphrase dei backup, merge di `dev` in `main`, Environments con i segreti, prova, cancellazione dei segreti del repository, regole dei branch, impostazioni di sicurezza.
+2. **M8, sicurezza:** step-up 2FA in servizio (ADR 0077); da provare su DEV con un login reale (ADR 0077, «Verifica»).
+3. **M8, conservazione dei dati:** durate dell'ADR 0041 da decidere (`gennpalm`). L'avviso sullo spazio del database è in servizio: il watchdog avvisa oltre 350 e 450 MB (500 MB sul piano Free).
+4. **Interfaccia** (revisione del 26/11/2026): fatte attesa dello Spogliatoio con il tempo che manca, nomi di chi ha reagito, tavolozza delle emoji, ora della chat nel fuso dell'utente, titoli in `it.ts`, testi di almeno 12 px ([interfaccia.md](interfaccia.md), «Revisione del 26/11/2026»). Restano: un solo modulo per formattare i numeri, altezza fissa della chat, prove nell'app in esecuzione.
+5. **Qualità del codice:** tipi del database generati e controllati in CI; casi di prova comuni alle regole TypeScript e Python delle schedine; errori registrati invece che nascosti (`.catch(() => null)`); test Python anche quando cambia il contratto condiviso.
+6. **Modello, quando ci saranno più dati:** analisi delle schedine da rifare ogni due o tre settimane (ADR 0073, 0076). Dal 26/11/2026 l'analisi confronta anche i metodi del margine e la ricerca esaustiva (ADR 0078): si adottano solo sopra le 300 partite decise. Rinviati: calibrazione fuori campione, holdout congelato (a fine girone d'andata).
+
+### Limiti del budget €0
+
+- Quote storiche solo da metà novembre 2026 e una lettura al giorno (500 crediti al mese): servono mesi per dire se le proposte rendono.
+- Formazioni, infortuni e statistiche della stagione in corso solo con API-Football a pagamento: è il motivo per cui il mercato indovina meglio del modello.
+- Protezione dalle password compromesse solo con Supabase Pro.
+- Con il repository di nuovo privato, regole dei branch ed Environments solo con GitHub Pro o Team.
 
 ## Cosa è in servizio su DEV
 

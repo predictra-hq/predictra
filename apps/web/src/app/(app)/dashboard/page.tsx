@@ -15,7 +15,7 @@ import { Alert, CardSkeleton, PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Home" };
+export const metadata: Metadata = { title: getMessages().pageTitles.dashboard };
 
 /**
  * Home: in alto le certezze delle prossimi 7 giorni, sotto bankroll, schedine consigliate

@@ -34,8 +34,9 @@ import {
 
 import { SITE_PREFIX, untrackedSites } from "@/lib/bankroll/sites";
 import { Limited } from "@/components/ui/limited";
+import { orFallback } from "@/lib/log";
 
-export const metadata: Metadata = { title: "Bankroll" };
+export const metadata: Metadata = { title: getMessages().pageTitles.bankroll };
 
 /**
  * Sito dove si gioca: uno dei bookmaker di cui raccogliamo le quote, oppure il nome
@@ -108,7 +109,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
     listBankrolls(),
     listLimits(),
     // Senza elenco si può comunque scrivere il nome del sito a mano.
-    listItalianBookmakers().catch(() => []),
+    listItalianBookmakers().catch(orFallback("bankroll/page #1", [])),
   ]);
   const requested = typeof params.b === "string" ? parseId(params.b) : null;
   const selected = bankrolls.find((b) => b.bankroll_id === requested) ?? bankrolls[0] ?? null;

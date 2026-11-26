@@ -23,4 +23,10 @@ export function toUserMessage(
  * Esito di una Server Action. `link` contiene un link monouso (invito o reset
  * password) da mostrare UNA volta all'amministratore: non viene salvato.
  */
-export type ActionState = { ok: boolean; message: string; link?: string } | null;
+export type ActionState = {
+  ok: boolean;
+  message: string;
+  link?: string;
+  /** Da quando si può riprovare (ISO), per un limite di frequenza come l'attesa dello Spogliatoio. */
+  retryAt?: string;
+} | null;

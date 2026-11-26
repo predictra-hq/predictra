@@ -82,14 +82,30 @@ export async function grantRole(db: PGlite, userId: string, role: string): Promi
 /**
  * Esegue `fn` impersonando un utente come farebbe PostgREST: ruolo
  * `authenticated` e claim JWT impostati nella transazione.
+ *
+ * `amr` come in Supabase: password sempre, TOTP solo con `aal2`. `totpAgeSeconds` dice
+ * quanti secondi fa è stato verificato il codice (step-up, ADR 0077); `null` = nessun TOTP.
  */
 export async function asUser<T>(
   db: PGlite,
   user: TestUser,
   fn: (tx: Pick<PGlite, "query" | "exec">) => Promise<T>,
   aal: Aal = "aal2",
+  totpAgeSeconds: number | null = 0,
 ): Promise<T> {
-  const claims = JSON.stringify({ sub: user.id, email: user.email, role: "authenticated", aal });
+  const now = Math.floor(Date.now() / 1000);
+  const amr: { method: string; timestamp: number }[] = [
+    { method: "password", timestamp: now - 3600 },
+  ];
+  if (aal === "aal2" && totpAgeSeconds !== null)
+    amr.push({ method: "totp", timestamp: now - totpAgeSeconds });
+  const claims = JSON.stringify({
+    sub: user.id,
+    email: user.email,
+    role: "authenticated",
+    aal,
+    amr,
+  });
   return db.transaction(async (tx) => {
     await tx.query("select set_config('request.jwt.claims', $1, true)", [claims]);
     await tx.exec("set local role authenticated");

@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth/dal";
 import { readAccountSettings, withAccountSettings } from "@/lib/account-settings";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@predictra/shared-types";
 
 /**
  * Salva tema, suoni o soglia degli avvisi nell'account (ADR 0067), con RLS solo
@@ -28,5 +29,5 @@ export async function saveAccountSettings(patch: unknown): Promise<void> {
     .maybeSingle();
   await supabase
     .from("user_dashboard_settings")
-    .upsert({ user_id: user.id, settings: withAccountSettings(data?.settings, clean) });
+    .upsert({ user_id: user.id, settings: withAccountSettings(data?.settings, clean) as Json });
 }

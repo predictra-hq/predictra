@@ -22,7 +22,7 @@ import { formPoints, parseForm, perMatch, rate, sortTeamStats } from "@/lib/odds
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Statistiche" };
+export const metadata: Metadata = { title: getMessages().pageTitles.statistics };
 
 function Th({
   children,

@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { changePassword, removeTotp, signOutOtherSessions } from "./actions";
 import { TotpEnrollment } from "./totp-enrollment";
 
-export const metadata: Metadata = { title: "Sicurezza" };
+export const metadata: Metadata = { title: getMessages().pageTitles.settingsSecurity };
 
 export default async function SecurityPage({ searchParams }: PageProps<"/settings/security">) {
   const m = getMessages();

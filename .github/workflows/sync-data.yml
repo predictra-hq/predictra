@@ -51,14 +51,15 @@ jobs:
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    environment: operazioni
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SRC_PROJECT_ID: ${{ secrets.DEV_SUPABASE_PROJECT_ID }}
       SRC_DB_PASSWORD: ${{ secrets.DEV_SUPABASE_DB_PASSWORD }}
       DST_DB_URL: postgresql://postgres:postgres@localhost:5432/postgres
     steps:
-      - uses: actions/checkout@v6
-      - uses: supabase/setup-cli@v3
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           version: 3.0.0
       - name: Database temporaneo con le migrazioni
@@ -73,6 +74,7 @@ jobs:
       || (github.event_name == 'schedule' && vars.DATA_TARGET == 'prod')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: operazioni
     env:
       DIRECTION: ${{ github.event_name == 'workflow_dispatch' && inputs.direction || 'prod-to-dev' }}
       DATA_TARGET: ${{ vars.DATA_TARGET }}
@@ -108,8 +110,8 @@ jobs:
             { echo "SRC_PROJECT_ID=$PROD_ID"; echo "SRC_DB_PASSWORD=$PROD_PW"
               echo "DST_PROJECT_ID=$DEV_ID"; echo "DST_DB_PASSWORD=$DEV_PW"; } >> "$GITHUB_ENV"
           fi
-      - uses: actions/checkout@v6
-      - uses: supabase/setup-cli@v3
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
         with:
           version: 3.0.0
       - name: Copia

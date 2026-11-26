@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
 
-export const metadata: Metadata = { title: "Audit" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminAudit };
 
 interface AuditRow {
   id: number;

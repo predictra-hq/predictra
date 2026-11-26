@@ -21,6 +21,13 @@ Regole comuni:
 
 Le proposte e le selezioni referenziano previsioni e quote con `on delete restrict`: la politica di conservazione di M8 dovrà tenerne conto.
 
+**`recommended_slips`** (ADR 0070, 0075): schedine consigliate di ogni turno e giornata (`window_kind` `round`/`day`, `window_start`, `profile`), una riga per schedina diversa (unica per periodo, profilo e `signature`). La scrive solo il servizio (l'agente, `apps/web/src/lib/bet-builder/record.ts`); la leggono tutti gli utenti attivi; si copia da PROD a DEV.
+
+- `picks`: le giocate come le mostra la pagina. Dal 26/11/2026 ogni giocata ha anche `modelProbability`, `marketProbability`, `observedAt` della quota, `modelVersionId` e `predictionAsOf`.
+- `model_version_id`, `rules_version`, `rules` (regole del profilo, peso del mercato, soglie, età massima delle quote, margine prima del via) e `relax_step` (quante volte sono state allargate le soglie): vuoti per le schedine salvate prima del 26/11/2026.
+- **Proposta immutabile:** un giro successivo con la stessa schedina aggiorna solo `last_seen_at` (trigger `recommended_slips_keep_proposal`). Quota, probabilità e giocate restano quelle della prima proposta.
+- `source`: `live` (proposta prima delle partite) o `rebuilt` (ricostruita dopo, con i dati di allora).
+
 ## Viste
 
 | Vista                      | Contenuto                                                                                                                                                                                                                                                                                 | Usata da                      |

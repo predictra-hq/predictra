@@ -7,7 +7,7 @@ import type {
   NameStyle,
   RecentCommentRow,
 } from "@predictra/shared-types";
-import type { SharedResult } from "@/lib/community/slip";
+import { parseSharedSlip, type SharedResult } from "@/lib/community/slip";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -56,7 +56,12 @@ export async function listCommunityPosts(
     p_channel: channel,
     p_limit: limit,
   });
-  return error ? null : ((data ?? []) as CommunityPostRow[]);
+  if (error) return null;
+  // Una schedina non conforme (scritta prima del vincolo `community_posts_slip_shape`) si
+  // scarta qui: non deve rompere la chat né la card in Home.
+  return ((data ?? []) as unknown as CommunityPostRow[]).map((row) =>
+    row.slip === null ? row : { ...row, slip: parseSharedSlip(row.slip) },
+  );
 }
 
 /** Risultati delle partite delle schedine condivise (ADR 0070); vuoto se la lettura fallisce. */

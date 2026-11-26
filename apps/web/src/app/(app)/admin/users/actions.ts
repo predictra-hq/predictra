@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/dal";
 import { generateAuthLink } from "@/lib/auth/links";
+import { refreshStepUp } from "@/lib/auth/step-up";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -22,13 +23,15 @@ export async function setAccountStatus(
   formData: FormData,
 ): Promise<ActionState> {
   const m = getMessages();
-  await requirePermission("users.manage");
+  const actor = await requirePermission("users.manage");
   const userId = uuidSchema.safeParse(formData.get("userId"));
   const status = statusSchema.safeParse(formData.get("status"));
   if (!userId.success || !status.success) return { ok: false, message: m.common.genericError };
 
-  // Il DB verifica permessi, gerarchia, 2FA e registra l'audit.
+  // Il DB verifica permessi, gerarchia, 2FA, step-up (ADR 0077) e registra l'audit.
   const supabase = await createClient();
+  const stepUp = await refreshStepUp(supabase, actor.id, formData);
+  if (stepUp) return { ok: false, message: stepUp };
   const { error } = await supabase.rpc("set_account_status", {
     p_user_id: userId.data,
     p_status: status.data,
@@ -48,12 +51,14 @@ export async function setAccountStatus(
 
 export async function setUserRole(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const m = getMessages();
-  await requirePermission("users.manage");
+  const actor = await requirePermission("users.manage");
   const userId = uuidSchema.safeParse(formData.get("userId"));
   const role = roleSchema.safeParse(formData.get("role"));
   if (!userId.success || !role.success) return { ok: false, message: m.common.genericError };
 
   const supabase = await createClient();
+  const stepUp = await refreshStepUp(supabase, actor.id, formData);
+  if (stepUp) return { ok: false, message: stepUp };
   const { error } = await supabase.rpc("set_user_role", {
     p_user_id: userId.data,
     p_role: role.data,
@@ -105,11 +110,13 @@ export async function createPasswordResetLink(
   formData: FormData,
 ): Promise<ActionState> {
   const m = getMessages();
-  await requirePermission("users.manage");
+  const actor = await requirePermission("users.manage");
   const userId = uuidSchema.safeParse(formData.get("userId"));
   if (!userId.success) return { ok: false, message: m.common.genericError };
 
   const supabase = await createClient();
+  const stepUp = await refreshStepUp(supabase, actor.id, formData);
+  if (stepUp) return { ok: false, message: stepUp };
   const { data: email, error } = await supabase.rpc("authorize_password_reset", {
     p_user_id: userId.data,
   });

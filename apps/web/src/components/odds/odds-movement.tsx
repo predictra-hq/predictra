@@ -11,6 +11,7 @@ import {
 import { listMatchOddsHistory } from "@/lib/odds/queries";
 import { cn } from "@/lib/utils";
 import { Limited } from "@/components/ui/limited";
+import { orFallback } from "@/lib/log";
 
 const SELECTIONS = ["HOME", "DRAW", "AWAY"] as const;
 const CHART = { width: 96, height: 24 };
@@ -30,7 +31,7 @@ const DIRECTION_TONE: Record<MovementDirection, string> = {
 export async function OddsMovementCard({ matchId }: { matchId: number }) {
   const m = getMessages().oddsMovement;
   const selections = getMessages().predictions.selections as Record<string, string>;
-  const points = await listMatchOddsHistory(matchId).catch(() => []);
+  const points = await listMatchOddsHistory(matchId).catch(orFallback("odds/odds-movement #1", []));
   const rows = oddsMovement(points, SELECTIONS);
   if (rows.length === 0 || rows.every((r) => r.series.length < 2)) return null;
 

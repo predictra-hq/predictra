@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/auth/dal";
+import { refreshStepUp } from "@/lib/auth/step-up";
 import { toUserMessage, type ActionState } from "@/lib/errors";
 import { getMessages } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
@@ -21,11 +22,13 @@ export async function activateModelVersion(
   formData: FormData,
 ): Promise<ActionState> {
   const m = getMessages();
-  await requirePermission("models.manage");
+  const actor = await requirePermission("models.manage");
   const parsed = schema.safeParse({ modelVersionId: formData.get("modelVersionId") });
   if (!parsed.success) return { ok: false, message: m.common.genericError };
 
   const supabase = await createClient();
+  const stepUp = await refreshStepUp(supabase, actor.id, formData);
+  if (stepUp) return { ok: false, message: stepUp };
   const { error } = await supabase.rpc("set_active_model_version", {
     p_model_version_id: parsed.data.modelVersionId,
   });

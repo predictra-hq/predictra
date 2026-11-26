@@ -1,4 +1,5 @@
-import { DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { demargin, type DemarginMethod } from "@predictra/quant";
+import { MARKET_WEIGHT } from "./weight";
 import { calibrate, type Calibration } from "./calibration";
 import { roundStartOf } from "./format";
 import {
@@ -135,7 +136,7 @@ export const MAX_EDGE = 0.15;
  * modello da solo (Brier 0,2100 contro 0,2178 su 408 giocate; Log Loss 1X2 0,9500 contro
  * 0,9694): 0,75 tiene conto di entrambi.
  */
-export const MARKET_WEIGHT = DEFAULT_BET_BUILDER_RULES.market_weight ?? 0.75;
+export { MARKET_WEIGHT };
 export const MIN_LEGS = 2;
 /** Distanza massima tra modello (corretto) e mercato senza margine, in punti. */
 export const MAX_DISAGREEMENT = 0.1;
@@ -158,6 +159,9 @@ export interface BollettaPick extends LikelyPick {
   observedAt: string;
   /** probabilità × quota − 1. */
   edge: number;
+  /** Versione del modello e momento della previsione usata (ADR 0075). */
+  modelVersionId?: number | null;
+  predictionAsOf?: string | null;
 }
 
 export interface Bolletta {
@@ -173,6 +177,8 @@ export interface Bolletta {
   price: number;
   /** Valore atteso per 1 € puntato: probabilità × quota − 1. */
   expectedValue: number;
+  /** Quante volte sono state allargate le soglie del profilo per costruirla (0 = nessuna). */
+  relaxStep?: number;
 }
 
 const IMPLIED_SELECTIONS: Readonly<Record<string, readonly string[]>> = {
@@ -186,7 +192,15 @@ const IMPLIED_SELECTIONS: Readonly<Record<string, readonly string[]>> = {
  * poi si fa la media tra i bookmaker. La doppia chance viene dal consenso 1X2 quando c'è
  * (somma di due esiti), altrimenti dalle sue quote normalizzate a somma 2.
  */
-export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, number> {
+export function marketConsensus(
+  rows: readonly LatestOddsRow[],
+  /**
+   * Come si toglie il margine di ogni bookmaker (1X2 e under/over). In servizio sempre
+   * «proporzionale»; potenza e Shin servono all'analisi (ADR 0078) finché i dati non
+   * bastano per scegliere (ADR 0076, regola di stop).
+   */
+  method: DemarginMethod = "proportional",
+): Map<string, number> {
   const books = new Map<string, Map<string, number>>();
   for (const r of rows) {
     const price = Number(r.price);
@@ -205,10 +219,16 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
     const implied = selections.map((x) => 1 / book.get(x)!);
     const target = market === "double_chance" ? 2 : 1;
     const total = implied.reduce((a, b) => a + b, 0);
+    const fair = fairShares(
+      selections.map((x) => book.get(x)!),
+      implied,
+      total,
+      market === "double_chance" ? "proportional" : method,
+    );
     selections.forEach((x, i) => {
       const k = `${match}|${market}|${x}`;
       const cur = sums.get(k) ?? { total: 0, n: 0 };
-      cur.total += (implied[i]! / total) * target;
+      cur.total += fair[i]! * target;
       cur.n += 1;
       sums.set(k, cur);
     });
@@ -227,6 +247,23 @@ export function marketConsensus(rows: readonly LatestOddsRow[]): Map<string, num
     out.set(`${match}|double_chance|DRAW_AWAY`, d + a);
   }
   return out;
+}
+
+/** Quote di un bookmaker senza margine; se il metodo non si applica, proporzionale. */
+function fairShares(
+  odds: readonly number[],
+  implied: readonly number[],
+  total: number,
+  method: DemarginMethod,
+): number[] {
+  if (method !== "proportional") {
+    try {
+      return demargin(odds, method);
+    } catch {
+      // Quote per cui il metodo non converge: si torna al proporzionale.
+    }
+  }
+  return implied.map((x) => x / total);
 }
 
 export function consensusFor(
@@ -307,6 +344,8 @@ export function playablePicks(
       better: it.better ?? null,
       observedAt: it.observedAt,
       edge,
+      modelVersionId: r.model_version_id ?? null,
+      predictionAsOf: r.as_of ?? null,
     });
   }
   return result;
@@ -325,6 +364,66 @@ const byProbability = (a: BollettaPick, b: BollettaPick) =>
   b.edge - a.edge ||
   a.kickoffAt.localeCompare(b.kickoffAt) ||
   a.matchId - b.matchId;
+
+/**
+ * Ricerca esaustiva (ADR 0078), **solo per l'analisi**: tra tutte le combinazioni di giocate
+ * ammesse dal profilo (al più una per partita, nessuna squadra due volte, al più `rule.legs`),
+ * quella con la probabilità più alta che arriva a `rule.targetPrice` e rispetta il valore
+ * minimo della schedina. La costruzione in servizio (`attempt`) prende invece le giocate
+ * una alla volta e si ferma alla prima che tocca la quota.
+ *
+ * Aggiungere una giocata abbassa sempre la probabilità: un ramo si chiude quando tocca la
+ * quota o quando scende sotto la migliore trovata. Si guardano le `maxCandidates` giocate
+ * più probabili.
+ */
+export function exhaustiveLegs(
+  rule: BollettaRule,
+  pool: readonly BollettaPick[],
+  maxCandidates = 40,
+): BollettaPick[] | null {
+  const minSlipValue = rule.minSlipValue ?? MIN_SLIP_VALUE;
+  const minEdge = rule.minEdge ?? (rule.precision ? MIN_EDGE : 0);
+  const candidates = pool
+    .filter(
+      (p) => p.probability >= rule.minProbability && p.price >= rule.minPrice && p.edge >= minEdge,
+    )
+    .sort(byProbability)
+    .slice(0, maxCandidates);
+  const target = rule.targetPrice ?? 0;
+  let best: BollettaPick[] | null = null;
+  let bestProbability = 0;
+  const chosen: BollettaPick[] = [];
+  const visit = (from: number, probability: number, price: number, value: number) => {
+    if (probability <= bestProbability) return;
+    if (chosen.length >= MIN_LEGS && price >= target) {
+      if (value >= minSlipValue) {
+        best = [...chosen];
+        bestProbability = probability;
+      }
+      return;
+    }
+    if (chosen.length >= rule.legs) return;
+    for (let i = from; i < candidates.length; i++) {
+      const p = candidates[i]!;
+      if (
+        chosen.some(
+          (c) =>
+            c.matchId === p.matchId ||
+            c.home === p.home ||
+            c.home === p.away ||
+            c.away === p.home ||
+            c.away === p.away,
+        )
+      )
+        continue;
+      chosen.push(p);
+      visit(i + 1, probability * p.probability, price * p.price, (1 + value) * (1 + p.edge) - 1);
+      chosen.pop();
+    }
+  };
+  visit(0, 1, 1, 0);
+  return best;
+}
 
 /** Una schedina con le soglie date; `null` se non si arriva ad almeno `MIN_LEGS` partite. */
 function attempt(
@@ -374,6 +473,7 @@ function buildOne(
   // all'obiettivo (ADR 0071). Se non ci arriva nemmeno così: con `strictTarget` (ADR 0072)
   // nessuna schedina, altrimenti resta quella con le soglie più strette.
   let chosen: BollettaPick[] | null = null;
+  let relaxStep = 0;
   for (let step = 0; step <= RELAX_STEPS; step++) {
     const legs = attempt(
       rule,
@@ -382,10 +482,14 @@ function buildOne(
       Math.max(1.05, rule.minPrice - 0.1 * step),
     );
     if (!legs) continue;
-    if (!rule.strictTarget) chosen ??= legs;
+    if (!rule.strictTarget && !chosen) {
+      chosen = legs;
+      relaxStep = step;
+    }
     const total = legs.reduce((acc, p) => acc * p.price, 1);
     if (!rule.targetPrice || total >= rule.targetPrice) {
       chosen = legs;
+      relaxStep = step;
       break;
     }
   }
@@ -400,6 +504,7 @@ function buildOne(
     probability,
     price,
     expectedValue: probability * price - 1,
+    relaxStep,
   };
 }
 
@@ -469,6 +574,60 @@ export function buildBollette(
  * quote (le quote si raccolgono una volta al giorno, ADR 0071).
  */
 export const ODDS_MAX_AGE_MS = 26 * 3_600_000;
+
+/**
+ * Versione delle regole delle schedine consigliate, salvata con ogni schedina (ADR 0075).
+ * Va cambiata a ogni modifica di profili, soglie, peso del mercato o filtri delle quote.
+ */
+export const SLIP_RULES_VERSION = "2026.11.26-1";
+
+/** Regole con cui è stata costruita una schedina di un profilo, da salvare con lei. */
+export function slipRulesSnapshot(profile: BollettaProfile) {
+  return {
+    version: SLIP_RULES_VERSION,
+    profile: profile === "DOUBLE" ? null : BOLLETTA_RULES[profile],
+    marketWeight: MARKET_WEIGHT,
+    relaxSteps: RELAX_STEPS,
+    minEdge: MIN_EDGE,
+    maxEdge: MAX_EDGE,
+    maxDisagreement: MAX_DISAGREEMENT,
+    oddsMaxAgeHours: ODDS_MAX_AGE_MS / 3_600_000,
+    kickoffMarginMinutes: KICKOFF_MARGIN_MS / 60_000,
+  };
+}
+
+/** Come il motore (`KICKOFF_MARGIN`): una partita che inizia tra meno di 15 minuti non si propone. */
+export const KICKOFF_MARGIN_MS = 15 * 60_000;
+
+/**
+ * Solo le quote lette nelle ultime 26 ore, come le quote FRESH del motore e del Costruisci
+ * (ADR 0028, 0071). Una quota più vecchia può essere ferma da giorni: entrerebbe nel consenso
+ * del mercato e, se è la più alta, diventerebbe la quota proposta, gonfiando il valore.
+ */
+export function freshOdds<T extends { observed_at: string }>(rows: readonly T[], now: Date): T[] {
+  const oldest = now.getTime() - ODDS_MAX_AGE_MS;
+  return rows.filter((r) => {
+    const observed = Date.parse(r.observed_at);
+    return Number.isFinite(observed) && observed >= oldest;
+  });
+}
+
+/** Solo le partite che iniziano almeno 15 minuti dopo `now`. */
+export function notStartingSoon<T extends { kickoff_at: string }>(
+  rows: readonly T[],
+  now: Date,
+): T[] {
+  const first = now.getTime() + KICKOFF_MARGIN_MS;
+  return rows.filter((r) => Date.parse(r.kickoff_at) >= first);
+}
+
+/**
+ * Il valore si mostra solo se è positivo anche dopo l'arrotondamento a un decimale (ADR 0072):
+ * così non compare mai «+0,0%».
+ */
+export function hasPositiveValue(bolletta: Pick<Bolletta, "expectedValue">): boolean {
+  return Math.round(bolletta.expectedValue * 1000) > 0;
+}
 
 export function oddsAreOld(bolletta: Pick<Bolletta, "oddsObservedAt">, now: Date): boolean {
   const observed = new Date(bolletta.oddsObservedAt).getTime();

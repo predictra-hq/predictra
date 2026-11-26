@@ -22,6 +22,7 @@ import {
   type Bolletta,
   type BollettaProfile,
   type SlipWindow,
+  hasPositiveValue,
 } from "@/lib/bet-builder/bollette";
 import { formatEuro } from "@/components/bankroll/shared";
 import { listBankrolls, listLimits, userBookmaker } from "@/lib/bankroll/queries";
@@ -36,6 +37,8 @@ import { loadPicksData } from "@/lib/bet-builder/queries";
 import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { orFallback } from "@/lib/log";
+import { formatSignedPercent } from "@/lib/format/number";
 
 const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> = {
   DOUBLE: "positive",
@@ -46,12 +49,6 @@ const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> 
 
 /** Puntata d'esempio quando l'utente non ne ha indicata una. */
 const EXAMPLE_STAKE = 10;
-
-/** "+4,2%" / "−1,5%": valore atteso per 1 € puntato. */
-function formatSignedPercent(value: number): string {
-  const text = formatPercent(Math.abs(value));
-  return value >= 0 ? `+${text}` : `−${text}`;
-}
 
 function BollettaCard({
   bolletta,
@@ -112,7 +109,7 @@ function BollettaCard({
           price={formatOdds(bolletta.price)}
           items={[
             { label: m.winProbability, value: formatPercent(bolletta.probability, 0) },
-            ...(bolletta.expectedValue >= 0
+            ...(hasPositiveValue(bolletta)
               ? [
                   {
                     label: m.value,
@@ -296,7 +293,7 @@ export async function SchedineSection({
       loadAdviceBankroll(),
       userBookmaker(),
       loadCalibration(),
-      listCompetitions().catch(() => []),
+      listCompetitions().catch(orFallback("bet-builder/bollette #1", [])),
     ]);
   return (
     <BolletteCard

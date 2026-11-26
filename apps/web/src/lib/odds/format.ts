@@ -8,6 +8,9 @@ import { InvalidOddsError, overround, powerProbabilities } from "@predictra/quan
  * previsioni di PREDICTRA (ADR 0016, regola 5 di CLAUDE.md).
  */
 
+// Numeri: modulo unico `lib/format/number.ts`, riesportato qui per gli import esistenti.
+export { formatDecimal, formatOdds, formatPercent } from "@/lib/format/number";
+
 const LOCALE = "it-IT";
 
 /** Sostituisce i segnaposto `{nome}` di un testo di `it.ts`; quelli senza valore restano. */
@@ -15,34 +18,6 @@ export function fillTemplate(template: string, values: Record<string, string | n
   return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (whole, key: string) =>
     key in values ? String(values[key]) : whole,
   );
-}
-
-/** Quota decimale con due cifre: 2 → "2,00". */
-export function formatOdds(price: number | null | undefined): string {
-  if (price === null || price === undefined || !Number.isFinite(price)) return "—";
-  return new Intl.NumberFormat(LOCALE, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price);
-}
-
-/** Frazione come percentuale: 0.0441 → "4,4%". */
-export function formatPercent(value: number | null | undefined, digits = 1): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
-  return new Intl.NumberFormat(LOCALE, {
-    style: "percent",
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(value);
-}
-
-/** Numero con cifre decimali fisse: 1.4567 → "1,46". */
-export function formatDecimal(value: number | null | undefined, digits = 2): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
-  return new Intl.NumberFormat(LOCALE, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(value);
 }
 
 /** Differenza con segno esplicito: 0.31 → "+0,31", -2 → "−2,00". */

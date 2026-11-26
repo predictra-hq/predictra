@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/primitives";
 import { getMessages } from "@/lib/i18n";
 import { resetPassword } from "./actions";
 
-export const metadata: Metadata = { title: "Nuova password" };
+export const metadata: Metadata = { title: getMessages().pageTitles.resetPassword };
 
 export default function ResetPasswordPage() {
   const m = getMessages();

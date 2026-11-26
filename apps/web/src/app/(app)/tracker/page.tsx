@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { checkLimits, lossSince, suggestStake } from "@predictra/bankroll";
-import { BET_STATUSES, DEFAULT_BET_BUILDER_RULES } from "@predictra/shared-types";
+import { BET_STATUSES } from "@predictra/shared-types";
+import { MARKET_WEIGHT } from "@/lib/bet-builder/weight";
 import { formatEuro, KindBadge, SignedEuro, Stat, Th } from "@/components/bankroll/shared";
 import { FilterForm } from "@/components/ui/filter-form";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
@@ -38,8 +39,9 @@ import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
 import { BetSlipDetails } from "./bet-slip-details";
 import { Limited } from "@/components/ui/limited";
+import { formatOdds } from "@/lib/format/number";
 
-export const metadata: Metadata = { title: "Giocate fatte" };
+export const metadata: Metadata = { title: getMessages().pageTitles.tracker };
 
 /** Striscia a sinistra della riga: l'esito si riconosce senza leggere la colonna Stato. */
 const OUTCOME_STRIPE = {
@@ -49,7 +51,7 @@ const OUTCOME_STRIPE = {
   even: "border-l-warning",
 } as const;
 
-const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
+const odds = (v: number | null) => formatOdds(v);
 
 /** Valori precompilati dai link "Registra" delle Certezze e "L'ho giocata" delle schedine (`/tracker?add=1&d=…`). */
 function parsePrefill(params: Record<string, string | string[] | undefined>) {
@@ -106,11 +108,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
   const kellyProbability =
     modelProbability === null
       ? null
-      : usedProbability(
-          modelProbability,
-          marketProbability,
-          DEFAULT_BET_BUILDER_RULES.market_weight ?? 0,
-        );
+      : usedProbability(modelProbability, marketProbability, MARKET_WEIGHT);
   const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
   const kellyAsked = params.km !== undefined || params.ko !== undefined;
   const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;

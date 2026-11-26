@@ -168,3 +168,22 @@ def test_peso_elo_fuori_intervallo_rifiutato():
 
     with pytest.raises(ValueError):
         EloBlendModel("x", poisson_model(), Elo(), 1.5)
+
+
+def test_matrice_salvata_riproducibile_da_lambda_rho_e_1x2(league):
+    """ADR 0078: dalla previsione salvata (λ, ρ, 1X2) si riottiene la matrice salvata."""
+    from predictra_engine.models.blend import EloBlendModel, rescale_to_1x2
+    from predictra_engine.models.goals import GoalsModel, score_matrix
+
+    as_of = league[-1].kickoff_at + timedelta(days=1)
+    goals = GoalsModel("g", dixon_coles=True, xi=0.001, l2=3.0)
+    blend = EloBlendModel("dixon_coles", goals, Elo(), 0.4).fit(league, as_of)
+    fx = fixture(1, 20)
+    lh, la, rho = blend.lambdas(fx)
+    assert blend.matrix_from(fx) == "dixon_coles_rescaled_to_1x2"
+    rebuilt = rescale_to_1x2(score_matrix(lh, la, rho or 0.0), blend.probabilities_1x2(fx))
+    assert rebuilt == pytest.approx(blend.score_matrix(fx))
+    # Il solo Dixon-Coles con λ e ρ non basta: per questo si salva `matrix_from`.
+    assert not np.allclose(score_matrix(lh, la, rho or 0.0), blend.score_matrix(fx))
+    # Il modello gol da solo non riscala la matrice.
+    assert goals.fit(league, as_of).matrix_from(fx) is None

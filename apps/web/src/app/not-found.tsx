@@ -4,7 +4,7 @@ import { SearchX } from "lucide-react";
 import { StatusPage, statusLinkClass } from "@/components/shell/status-page";
 import { getMessages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: "Pagina non trovata" };
+export const metadata: Metadata = { title: getMessages().pageTitles.notFound };
 
 /** Indirizzo inesistente: stessa grafica del resto del sito, in italiano. */
 export default function NotFound() {

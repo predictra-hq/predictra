@@ -18,6 +18,7 @@ import { loadPicksData } from "@/lib/bet-builder/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatLine, formatPercent } from "@/lib/predictions/format";
+import { orFallback } from "@/lib/log";
 
 /** "Doppia chance 1X", "Totale gol Under 2,5", "Gol squadra Casa over 0,5". */
 export function pickLabel(
@@ -177,7 +178,7 @@ export function LikelyCard({
 export async function LikelySection({ stake }: { stake: number | null }) {
   const [{ rows, prices }, competitionList] = await Promise.all([
     loadPicksData(),
-    listCompetitions().catch(() => []),
+    listCompetitions().catch(orFallback("bet-builder/likely #1", [])),
   ]);
   const picks = bestPicks(rows);
   return (

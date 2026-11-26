@@ -14,10 +14,12 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [x] Audit append-only con filtri e paginazione.
 - [x] Revisione di sicurezza dell'8/11/2026: database, segreti, dipendenze, workflow.
 - [x] Dati personali (bankroll, giocate) non leggibili dagli amministratori, verificato su DEV con _Verifica DEV_.
-- [ ] **Step-up 2FA** per le azioni distruttive (sospensione, cambio di ruolo, attivazione di un modello): da progettare e provare con un login reale ([security.md](security.md), _Limitazioni note_).
+- [ ] **Step-up 2FA** per le azioni distruttive: in servizio ([ADR 0077](../decisions/0077-step-up-2fa.md)); da provare su DEV con un login reale (ADR 0077, «Verifica»).
 - [ ] Protezione da password compromesse: non disponibile sul piano Free di Supabase. Accettare il limite per iscritto oppure approvare il piano Pro.
 - [ ] `pnpm audit`: vulnerabilità moderata di `minimatch` negli strumenti di lint, da chiudere quando esce la versione corretta di `typescript-eslint`.
-- [ ] Protezione dei branch: non disponibile su GitHub Free con repository privato. Accettare il flusso manuale ([ADR 0050](../decisions/0050-deploy-solo-commit-del-proprietario.md)) oppure approvare GitHub Pro.
+- [ ] Protezione dei branch: con il repository pubblico è disponibile sul piano Free. Regole per `dev` e `main` da creare ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passo 7).
+- [x] Repository pubblico: niente link d'invito, backup né screenshot negli artifact o nei log dei workflow ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md)).
+- [ ] Run con dati esposti cancellati, segreti spostati negli Environments `operazioni`, `dev` e `prod`, impostazioni di sicurezza del repository attivate ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md), passi 1–8).
 
 ## 2. Backup e ripristino
 
@@ -40,7 +42,7 @@ Legenda: `[x]` fatto e verificabile nel repository o su DEV · `[ ]` da fare.
 - [x] Coda con retry, dead-letter, heartbeat, watchdog e avvio di riserva; frequenza reale dichiarata nell'interfaccia.
 - [x] Budget misurati: minuti di GitHub Actions e messaggi QStash entro i limiti gratuiti ([ADR 0035](../decisions/0035-pianificazione-agente.md)).
 - [x] Budget con **due ambienti**: solo PROD raccoglie dati e fa girare agente, motore e schedine; DEV riceve una copia al giorno ([ADR 0055](../decisions/0055-una-sola-raccolta-prod-copia-su-dev.md)). Verificato il 17/11/2026: il primo ciclo su PROD non ha ripetuto le raccolte già fatte da DEV.
-- [ ] **Spazio del database** (500 MB sul piano Free): 91 MB il 17/11/2026, di cui 49 MB di previsioni, che crescono di circa 12.000 righe (5 MB) al giorno. Al ritmo attuale il limite arriva verso febbraio 2027. Regola di conservazione delle previsioni superate decisa il 17/11/2026 ([ADR 0041](../decisions/0041-retention.md)): attiva in PROD dal primo giro del motore dopo il merge in `main`.
+- [ ] **Spazio del database** (500 MB sul piano Free): 91 MB il 17/11/2026, di cui 49 MB di previsioni, che crescono di circa 12.000 righe (5 MB) al giorno. Al ritmo attuale il limite arriva verso febbraio 2027. Regola di conservazione delle previsioni superate decisa il 17/11/2026 ([ADR 0041](../decisions/0041-retention.md)): attiva in PROD dal primo giro del motore dopo il merge in `main`. Dal 26/11/2026 il watchdog dell'agente avvisa gli amministratori oltre 350 MB (avviso) e 450 MB (errore), una volta alla settimana (migrazione `20261126130000`).
 
 ## 5. Accessibilità e interfaccia
 

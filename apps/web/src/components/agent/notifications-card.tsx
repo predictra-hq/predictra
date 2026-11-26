@@ -7,6 +7,7 @@ import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Badge, Card, CardTitle } from "@/components/ui/primitives";
 import { listMyNotifications } from "@/lib/agent/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
+import { orFallback } from "@/lib/log";
 
 const SEVERITY_TONE = { info: "neutral", warning: "warning", error: "negative" } as const;
 
@@ -16,7 +17,7 @@ const SEVERITY_TONE = { info: "neutral", warning: "warning", error: "negative" }
  */
 export async function NotificationsCard() {
   const a = getMessages().agent;
-  const data = await listMyNotifications().catch(() => null);
+  const data = await listMyNotifications().catch(orFallback("agent/notifications-card #1", null));
   // Nessuna notifica: il riquadro non compare.
   if (!data || data.items.length === 0) return null;
   const { items, unread } = data;

@@ -366,6 +366,36 @@ describe("chat della comunità (ADR 0064)", () => {
     });
   });
 
+  it("rifiuta schedine malformate scritte direttamente (ADR 0075)", async () => {
+    const leg = { match: "DEMO A – DEMO B", pick: "1", price: 1.5 };
+    await asUser(db, alice, async (tx) => {
+      const shape = /community_posts_slip_shape/;
+      expect(await post(tx, "SLIPS", "", { title: "x", picks: 1 })).toMatch(shape);
+      expect(await post(tx, "SLIPS", "", { picks: [leg] })).toMatch(shape);
+      expect(await post(tx, "SLIPS", "", { title: "x", picks: [] })).toMatch(shape);
+      expect(await post(tx, "SLIPS", "", { title: "x", picks: [{ match: 1, pick: "1" }] })).toMatch(
+        shape,
+      );
+      expect(await post(tx, "SLIPS", "", { title: "x", picks: ["testo"] })).toMatch(shape);
+      expect(
+        await post(tx, "SLIPS", "", { title: "x", picks: Array.from({ length: 13 }, () => leg) }),
+      ).toMatch(shape);
+      expect(await post(tx, "SLIPS", "", { title: "x".repeat(61), picks: [leg] })).toMatch(shape);
+      expect(await post(tx, "SLIPS", "", { title: "x", picks: [leg], price: "alta" })).toMatch(
+        shape,
+      );
+      // Una schedina conforme, con chiave della giocata, passa.
+      expect(
+        await post(tx, "SLIPS", "", {
+          title: "Solida",
+          picks: [{ ...leg, key: "12|h2h||HOME" }],
+          price: 1.5,
+          probability: null,
+        }),
+      ).toBeNull();
+    });
+  });
+
   it("reazioni: elenco chiuso, una per emoji e persona, contate per tutti (ADR 0070)", async () => {
     const slip = { title: "Doppia", picks: [{ match: "DEMO A – DEMO B", pick: "1X", price: 1.2 }] };
     await asUser(db, alice, (tx) => post(tx, "SLIPS", "", slip));

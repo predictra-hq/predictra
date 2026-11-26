@@ -22,11 +22,12 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 import { getActiveHistoryCheck, hasActiveModel } from "@/lib/predictions/queries";
+import { orFallback } from "@/lib/log";
 
 const formatCount = (n: number) =>
   new Intl.NumberFormat("it-IT", { useGrouping: "always" }).format(n);
 
-export const metadata: Metadata = { title: "Alta probabilità" };
+export const metadata: Metadata = { title: getMessages().pageTitles.certainties };
 
 /** Sotto questo numero di giocate la percentuale uscita è troppo ballerina. */
 const MIN_SAMPLE = 30;
@@ -189,7 +190,7 @@ async function CertaintiesContent() {
 async function ReliabilitySection() {
   const [verification, historyCheck] = await Promise.all([
     loadVerification(),
-    getActiveHistoryCheck().catch(() => null),
+    getActiveHistoryCheck().catch(orFallback("certainties/page #1", null)),
   ]);
   const history = new Map(
     (historyCheck?.bands ?? []).map((b) => [b.from, { wins: b.wins, count: b.count }]),

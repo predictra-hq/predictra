@@ -11,7 +11,7 @@ import { containsPattern, parseSearch, SEARCH_MIN_LENGTH } from "@/lib/football/
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 
-export const metadata: Metadata = { title: "Squadre" };
+export const metadata: Metadata = { title: getMessages().pageTitles.teams };
 
 function TeamList({ teams }: { teams: readonly TeamInfo[] }) {
   return (

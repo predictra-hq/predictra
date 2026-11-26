@@ -15,6 +15,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { formatOdds, formatPercent } from "@/lib/odds/format";
 import { createClient } from "@/lib/supabase/server";
 import type { ToolDefinition } from "./provider";
+import { formatDecimal } from "@/lib/format/number";
 
 /*
  * Strumenti in sola lettura di Ask PREDICTRA (ADR 0042 §1). Usano il client con la
@@ -287,7 +288,7 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
       const matchId = id(args.match_id);
       if (!matchId) return empty(t.odds);
       const { data, error } = await supabase
-        .from("v_best_odds_h")
+        .from("v_best_odds_h2h")
         .select("*")
         .eq("match_id", matchId)
         .limit(1);
@@ -490,11 +491,8 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
         rows: [
           {
             [t.trainingMatches]: String(r.training_matches),
-            Brier: r.brier !== null ? Number(r.brier).toFixed(3).replace(".", ",") : "–",
-            [t.baselineBrier]:
-              r.baseline_brier !== null
-                ? Number(r.baseline_brier).toFixed(3).replace(".", ",")
-                : "–",
+            Brier: formatDecimal(r.brier, 3),
+            [t.baselineBrier]: formatDecimal(r.baseline_brier, 3),
             [t.beatsBaseline]: r.beats_baseline === null ? "–" : r.beats_baseline ? t.yes : t.no,
           },
         ],

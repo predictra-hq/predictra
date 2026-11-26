@@ -860,4 +860,42 @@ describe("schedine consigliate salvate (ADR 0070)", () => {
       ).toMatch(/permission denied/);
     });
   });
+
+  it("un giro successivo aggiorna solo l'ultima vista, non la proposta (ADR 0075)", async () => {
+    const upsert = (price: number, seen: string, rulesVersion: string) =>
+      asServiceRole(db, (tx) =>
+        tx.query(
+          `insert into public.recommended_slips (window_kind, window_start, profile, signature, picks,
+             price, probability, expected_value, first_kickoff_at, model_version_id, rules_version,
+             rules, relax_step, last_seen_at)
+           values ('round', '2026-11-27', 'SOLID', '7|h2h||HOME;8|h2h||AWAY', '[{"matchId":7}]',
+             $1, 0.4, 0.02, '2026-11-28T15:00:00Z', 3, $3, '{"marketWeight":0.75}', 1, $2)
+           on conflict (window_kind, window_start, profile, signature)
+           do update set price = excluded.price, probability = excluded.probability,
+             rules_version = excluded.rules_version, last_seen_at = excluded.last_seen_at`,
+          [price, seen, rulesVersion],
+        ),
+      );
+    await upsert(3.1, "2026-11-26T08:00:00Z", "2026.11.26-1");
+    await upsert(2.6, "2026-11-27T18:00:00Z", "2026.12.01-1");
+    const { rows } = await asServiceRole(db, (tx) =>
+      tx.query<Record<string, unknown>>(
+        `select price::float8 as price, probability::float8 as probability, rules_version,
+           relax_step, model_version_id::int as model_version_id, rules, last_seen_at
+         from public.recommended_slips where window_start = '2026-11-27'`,
+      ),
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      price: 3.1,
+      probability: 0.4,
+      rules_version: "2026.11.26-1",
+      relax_step: 1,
+      model_version_id: 3,
+      rules: { marketWeight: 0.75 },
+    });
+    expect(new Date(rows[0]!.last_seen_at as string).toISOString()).toBe(
+      "2026-11-27T18:00:00.000Z",
+    );
+  });
 });

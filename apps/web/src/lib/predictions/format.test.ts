@@ -63,9 +63,9 @@ describe("raggruppamento", () => {
 describe("formattazione", () => {
   it("percentuali, quote eque e linee", () => {
     expect(formatPercent(0.4567)).toBe("45,7%");
-    expect(formatPercent(null)).toBe("–");
+    expect(formatPercent(null)).toBe("—");
     expect(formatFairOdds(0.25)).toBe("4,00");
-    expect(formatFairOdds(0)).toBe("–");
+    expect(formatFairOdds(0)).toBe("—");
     expect(formatLine(2.5, "TOTAL_GOALS")).toBe("2,5");
     expect(formatLine(-0.5, "ASIAN_HANDICAP")).toBe("−0,5");
     expect(formatLine(1, "EUROPEAN_HANDICAP")).toBe("+1");

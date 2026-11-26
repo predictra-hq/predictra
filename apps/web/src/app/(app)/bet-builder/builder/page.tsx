@@ -22,7 +22,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { saveManualSlip } from "../actions";
 
-export const metadata: Metadata = { title: "Costruisci — Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilderBuilder };
 
 type Outcome = ManualOption["outcomes"][number];
 

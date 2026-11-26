@@ -3,6 +3,7 @@
 import { requireUser } from "@/lib/auth/dal";
 import { withTourDone } from "@/lib/tour";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@predictra/shared-types";
 
 /**
  * Segna il tutorial come visto nel profilo dell'utente (`user_dashboard_settings.settings`,
@@ -19,5 +20,5 @@ export async function completeTour(): Promise<void> {
     .maybeSingle();
   await supabase
     .from("user_dashboard_settings")
-    .upsert({ user_id: user.id, settings: withTourDone(data?.settings) });
+    .upsert({ user_id: user.id, settings: withTourDone(data?.settings) as Json });
 }

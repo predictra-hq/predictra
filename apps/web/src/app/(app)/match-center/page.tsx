@@ -24,7 +24,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
 
-export const metadata: Metadata = { title: "Partite" };
+export const metadata: Metadata = { title: getMessages().pageTitles.matchCenter };
 
 /** Una sola lettura per tutte le righe della pagina (React `cache` per richiesta). */
 const strongestFor = cache((idsKey: string) =>

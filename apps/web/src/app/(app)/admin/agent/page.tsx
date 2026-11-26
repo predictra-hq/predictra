@@ -33,8 +33,9 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { retryDeadJob } from "./actions";
 import { SectionTabs } from "@/components/shell/section-tabs";
 import { Limited } from "@/components/ui/limited";
+import { orFallback } from "@/lib/log";
 
-export const metadata: Metadata = { title: "Agente" };
+export const metadata: Metadata = { title: getMessages().pageTitles.adminAgent };
 
 const JOB_TONE: Record<AgentJobStatus, "neutral" | "positive" | "negative" | "warning"> = {
   queued: "neutral",
@@ -96,11 +97,11 @@ export default async function AgentPage({ searchParams }: PageProps<"/admin/agen
   const status = parseStatus((await searchParams).status);
 
   const [sources, queue, budgets, runs, jobs] = await Promise.all([
-    getAgentStatus().catch(() => null),
-    getQueueSummary().catch(() => null),
-    listRateLimits().catch(() => null),
-    listRuns().catch(() => null),
-    listJobs(status).catch(() => null),
+    getAgentStatus().catch(orFallback("admin/agent/page #1", null)),
+    getQueueSummary().catch(orFallback("admin/agent/page #2", null)),
+    listRateLimits().catch(orFallback("admin/agent/page #3", null)),
+    listRuns().catch(orFallback("admin/agent/page #4", null)),
+    listJobs(status).catch(orFallback("admin/agent/page #5", null)),
   ]);
   const unavailable = !sources || !queue || !budgets || !runs || !jobs;
 

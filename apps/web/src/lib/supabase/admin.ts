@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@predictra/shared-types";
 import { publicEnv } from "@/lib/env";
 import { serverEnv } from "@/lib/env.server";
 
@@ -11,7 +12,7 @@ import { serverEnv } from "@/lib/env.server";
 export function createAdminClient() {
   const { NEXT_PUBLIC_SUPABASE_URL } = publicEnv();
   const { SUPABASE_SECRET_KEY } = serverEnv();
-  return createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, {
+  return createClient<Database>(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

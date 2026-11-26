@@ -12,8 +12,9 @@ import { formatLine } from "@/lib/predictions/format";
 import { splitMarketKey, toGroupStat, type HistoryCheck } from "@/lib/predictions/history";
 import { getActiveHistoryCheck } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
+import { orFallback } from "@/lib/log";
 
-export const metadata: Metadata = { title: "Affidabilità" };
+export const metadata: Metadata = { title: getMessages().pageTitles.reliability };
 
 /** Soglia minima delle giocate controllate: la stessa da cui partono le Certezze. */
 const MIN_PROBABILITY = BANDS[0]![0];
@@ -150,7 +151,7 @@ export default async function ReliabilityPage() {
   const [verification, competitions, history] = await Promise.all([
     loadVerification(),
     listCompetitions(),
-    getActiveHistoryCheck().catch(() => null),
+    getActiveHistoryCheck().catch(orFallback("reliability/page #1", null)),
   ]);
   const stats = (keyOf: Parameters<typeof groupStats>[2]) =>
     groupStats(

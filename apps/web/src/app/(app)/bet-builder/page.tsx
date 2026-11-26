@@ -34,8 +34,9 @@ import { slipTrackerHref } from "@/lib/bet-builder/register";
 import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
+import { orFallback } from "@/lib/log";
 
-export const metadata: Metadata = { title: "Schedine" };
+export const metadata: Metadata = { title: getMessages().pageTitles.betBuilder };
 
 /** Fasce di quota delle proposte con valore (ADR 0067): si apre solo quella che interessa. */
 const PRICE_BANDS = [
@@ -183,7 +184,7 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   const [run, proposals, competitionList] = await Promise.all([
     getLatestRun(),
     listActiveProposals(),
-    listCompetitions().catch(() => []),
+    listCompetitions().catch(orFallback("bet-builder/page #1", [])),
   ]);
   const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
 

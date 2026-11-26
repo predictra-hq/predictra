@@ -3,13 +3,26 @@
  * Ricostruisce le schedine con le previsioni e le quote di PRIMA di ogni partita, le
  * confronta con i risultati e prova regole alternative. Stampa solo numeri aggregati:
  * nessun dato personale (il log del repository è pubblico).
+ *
+ * Onestà dei numeri (ADR 0075):
+ * - gli intervalli al 95% vengono da un bootstrap a gruppi di schedine collegate da partite
+ *   comuni: le schedine non sono indipendenti;
+ * - delle griglie di regole alternative si mostra la distribuzione dei ritorni, non la
+ *   variante migliore: con poche schedine per variante la migliore è soprattutto fortuna;
+ * - nessuna regola si cambia da qui finché le partite già decise sono meno di
+ *   MIN_INDEPENDENT (la riga «Campione» lo dice).
  */
+const MIN_INDEPENDENT = 300;
 import { createClient as supabaseClient } from "@supabase/supabase-js";
 import { it } from "vitest";
 import {
+  BOLLETTA_PROFILES,
   BOLLETTA_RULES,
   buildBollette,
+  exhaustiveLegs,
+  marketConsensus,
   playablePicks,
+  windowOf,
   type BollettaPick,
   type BollettaRule,
 } from "@/lib/bet-builder/bollette";
@@ -20,9 +33,28 @@ import { loadSlipVerification } from "@/lib/certainties/load";
 import { settle } from "@/lib/certainties/logic";
 import { getActiveHistoryCheck } from "@/lib/predictions/queries";
 import { withServiceClient } from "@/lib/supabase/server";
+import { calibrationTest, clusteredBootstrap, pairedBrier, quantile } from "@/lib/analysis/stats";
 
 type Results = ReadonlyMap<number, { home: number; away: number }>;
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+/** Distribuzione dei ritorni di una griglia di regole: mai la variante migliore da sola. */
+function distribution(
+  title: string,
+  list: readonly { won: number; settled: number; roi: number }[],
+): void {
+  console.log(`\n== ${title}: ${list.length} varianti ==`);
+  if (list.length === 0) return;
+  const rois = list.map((x) => x.roi);
+  const played = list.reduce((a, x) => a + x.settled, 0);
+  const positive = rois.filter((r) => r > 0).length;
+  console.log(
+    `schedine per variante in media ${(played / list.length).toFixed(1)} · ritorno mediano ${pct(quantile(rois, 0.5))} · dal 10° al 90° percentile ${pct(quantile(rois, 0.1))} – ${pct(quantile(rois, 0.9))} · positive ${positive}/${list.length}`,
+  );
+  console.log(
+    "Le varianti usano le stesse partite: la migliore non dimostra niente, conta la distribuzione.",
+  );
+}
 
 function legWon(p: Pick<BollettaPick, "matchId" | "market" | "line" | "selection">, r: Results) {
   const x = r.get(p.matchId);
@@ -132,6 +164,29 @@ it("analisi delle schedine", async () => {
         `${k.padEnd(34)} n=${String(c.n).padStart(4)} data=${pct(c.p / c.n)} uscita=${pct(c.won / c.n)}`,
       );
     }
+    // Taratura di tutte le giocate insieme e confronto appaiato modello / mercato.
+    const decided = pool.flatMap((p) => {
+      const won = legWon(p, v.results);
+      return won === null ? [] : [{ p, won }];
+    });
+    const cal = calibrationTest(decided.map(({ p, won }) => ({ probability: p.probability, won })));
+    const decidedMatches = new Set(decided.map(({ p }) => p.matchId)).size;
+    console.log(
+      `\nCampione: ${decided.length} giocate decise su ${decidedMatches} partite; soglia per cambiare regole: ${MIN_INDEPENDENT} partite (${decidedMatches >= MIN_INDEPENDENT ? "raggiunta" : "non raggiunta"})`,
+    );
+    if (cal)
+      console.log(
+        `Taratura (probabilità usata): attese ${cal.expected.toFixed(1)}, uscite ${cal.observed}, z=${cal.z.toFixed(2)} (oltre ±2 è sospetta)`,
+      );
+    const paired = pairedBrier(
+      decided
+        .filter(({ p }) => p.marketProbability !== null)
+        .map(({ p, won }) => ({ a: p.modelProbability, b: p.marketProbability!, won })),
+    );
+    if (paired)
+      console.log(
+        `Brier modello − mercato: ${paired.difference.toFixed(4)} ± ${(2 * paired.standardError).toFixed(4)} (n=${paired.n}; negativo = il modello indovina meglio)`,
+      );
 
     // 2. Regole attuali, per turno e per giornata.
     for (const window of ["round", "day"] as const) {
@@ -172,21 +227,7 @@ it("analisi delle schedine", async () => {
         }
       }
     }
-    const show = (title: string, list: typeof variants) => {
-      console.log(`\n== ${title} ==`);
-      for (const x of list.slice(0, 15))
-        console.log(
-          `${x.label.padEnd(42)} vinte ${x.won}/${x.settled} (${pct(x.won / x.settled)}) ritorno ${pct(x.roi)}`,
-        );
-    };
-    show(
-      "Alternative per percentuale di vincita",
-      [...variants].sort((a, b) => b.won / b.settled - a.won / a.settled || b.settled - a.settled),
-    );
-    show(
-      "Alternative per ritorno",
-      [...variants].sort((a, b) => b.roi - a.roi),
-    );
+    distribution("Alternative (Solida, un profilo alla volta)", variants);
 
     // 5. Singole giocate per fascia di quota: quante escono e quanto rendono, con pesi del
     //    mercato diversi. Una schedina rende come il prodotto delle sue giocate.
@@ -251,19 +292,99 @@ it("analisi delle schedine", async () => {
       }
     }
     for (const targetPrice of [3, 5, 8, 12]) {
-      const list = high
-        .filter((x) => x.label.includes(`quota≥${targetPrice} `))
-        .sort((a, b) => b.roi - a.roi);
-      const n = list.length;
-      const wins = list.reduce((a, x) => a + x.won, 0);
-      const played = list.reduce((a, x) => a + x.settled, 0);
-      console.log(
-        `\n== Quota totale ≥ ${targetPrice}: ${n} varianti, vinte in tutto ${wins}/${played} ==`,
+      distribution(
+        `Quota totale ≥ ${targetPrice}`,
+        high.filter((x) => x.label.includes(`quota≥${targetPrice} `)),
       );
-      for (const x of list.slice(0, 8))
-        console.log(
-          `${x.label.padEnd(54)} vinte ${x.won}/${x.settled} (${pct(x.won / x.settled)}) ritorno ${pct(x.roi)}`,
+    }
+
+    // 8. Metodi per togliere il margine (ADR 0078): quale consenso del mercato indovina meglio
+    //    l'1X2 delle partite giocate. In servizio resta il proporzionale finché i dati non
+    //    bastano (ADR 0076); qui solo la misura, con la differenza partita per partita.
+    {
+      const methods = ["proportional", "power", "shin"] as const;
+      const consensusBy = new Map(methods.map((m) => [m, marketConsensus(v.odds, m)]));
+      const outcomeOf = (home: number, away: number) =>
+        home > away ? "HOME" : home === away ? "DRAW" : "AWAY";
+      const losses = new Map<string, number[]>(methods.map((m) => [m, []]));
+      const briers = new Map<string, number[]>(methods.map((m) => [m, []]));
+      for (const [matchId, r] of v.results) {
+        const per = methods.map((m) =>
+          (["HOME", "DRAW", "AWAY"] as const).map(
+            (x) => consensusBy.get(m)!.get(`${matchId}|h2h|${x}`) ?? null,
+          ),
         );
+        if (per.some((ps) => ps.some((p) => p === null))) continue;
+        const y = outcomeOf(r.home, r.away);
+        methods.forEach((m, i) => {
+          const ps = per[i]! as number[];
+          const sum = ps.reduce((a, b) => a + b, 0);
+          const probs = ps.map((p) => p / sum);
+          const idx = ["HOME", "DRAW", "AWAY"].indexOf(y);
+          losses.get(m)!.push(-Math.log(Math.max(probs[idx]!, 1e-15)));
+          briers.get(m)!.push(probs.reduce((a, p, j) => a + (p - (j === idx ? 1 : 0)) ** 2, 0));
+        });
+      }
+      const base = losses.get("proportional")!;
+      console.log(`\n== Metodi del margine sull'1X2 (${base.length} partite) ==`);
+      for (const m of methods) {
+        const l = losses.get(m)!;
+        const b = briers.get(m)!;
+        const d = l.map((x, i) => x - base[i]!);
+        const mean = d.reduce((a, x) => a + x, 0) / Math.max(1, d.length);
+        const se =
+          d.length > 1
+            ? Math.sqrt(d.reduce((a, x) => a + (x - mean) ** 2, 0) / (d.length - 1) / d.length)
+            : 0;
+        console.log(
+          `${m.padEnd(13)} LogLoss=${(l.reduce((a, x) => a + x, 0) / Math.max(1, l.length)).toFixed(4)}  Brier=${(b.reduce((a, x) => a + x, 0) / Math.max(1, b.length)).toFixed(4)}  diff=${mean >= 0 ? "+" : ""}${mean.toFixed(4)} ± ${(2 * se).toFixed(4)}`,
+        );
+      }
+    }
+
+    // 9. Ricerca esaustiva contro quella in servizio (ADR 0078): per periodo e profilo, la
+    //    combinazione più probabile che arriva alla quota, contro quella costruita giocata per
+    //    giocata. Profili indipendenti tra loro (in servizio una partita sta in una schedina
+    //    sola per periodo): il confronto è indicativo.
+    {
+      const pool = playablePicks(rows, v.prices, v.consensus, undefined, calibration);
+      for (const window of ["round", "day"] as const) {
+        const built = buildBollette(rows, v.prices, v.consensus, calibration, { window });
+        const periods = new Map<string, typeof pool>();
+        for (const p of pool) {
+          const k = windowOf(p.kickoffAt, window);
+          periods.set(k, [...(periods.get(k) ?? []), p]);
+        }
+        console.log(`\n== Ricerca esaustiva contro quella in servizio (${window}) ==`);
+        for (const profile of BOLLETTA_PROFILES) {
+          const rule = BOLLETTA_RULES[profile];
+          const current = built.filter((b) => b.profile === profile);
+          const exhaustive = [...periods].flatMap(([round, list]) => {
+            const legs = exhaustiveLegs(rule, list);
+            if (!legs) return [];
+            const probability = legs.reduce((a, p) => a + Math.log(p.probability), 0);
+            const price = legs.reduce((a, p) => a * p.price, 1);
+            return [
+              {
+                profile,
+                round,
+                picks: legs,
+                probability: Math.exp(probability),
+                price,
+                oddsObservedAt: legs.map((p) => p.observedAt).sort()[0] ?? "",
+                expectedValue: Math.exp(probability) * price - 1,
+              },
+            ];
+          });
+          const line = (list: typeof current) => {
+            const s = score(list, v.results);
+            const p = list.length ? list.reduce((a, b) => a + b.probability, 0) / list.length : 0;
+            return `${list.length} schedine, data in media ${pct(p)}, vinte ${s.won}/${s.settled}, ritorno ${pct(s.roi)}`;
+          };
+          console.log(`${profile.padEnd(9)} in servizio: ${line(current)}`);
+          console.log(`${"".padEnd(9)} esaustiva:   ${line(exhaustive)}`);
+        }
+      }
     }
 
     // 4. Proposte con valore salvate dal motore, tutte quelle già giocate (a pagine di 1.000).
@@ -307,17 +428,19 @@ it("analisi delle schedine", async () => {
         },
         v.results,
       );
-    // Ritorno medio puntando 1 su ognuna, con intervallo al 95% (approssimazione normale):
-    // dice quanto il risultato può dipendere dalla fortuna.
-    const roiLine = (returns: number[]) => {
-      const n = returns.length;
-      if (n === 0) return "nessuna";
-      const mean = returns.reduce((a, x) => a + x, 0) / n;
-      const sd = Math.sqrt(returns.reduce((a, x) => a + (x - mean) ** 2, 0) / Math.max(1, n - 1));
-      const half = (1.96 * sd) / Math.sqrt(n);
-      const won = returns.filter((x) => x > 0).length;
-      return `vinte ${won}/${n} (${pct(won / n)}) ritorno ${pct(mean)} [95%: da ${pct(mean - half)} a ${pct(mean + half)}]`;
+    // Ritorno medio puntando 1 su ognuna, con intervallo al 95% da bootstrap a gruppi di
+    // schedine con partite comuni: dice quanto il risultato può dipendere dalla fortuna.
+    type Return = { keys: string[]; value: number };
+    const roiLine = (items: Return[]) => {
+      const b = clusteredBootstrap(items);
+      if (!b) return "nessuna";
+      const won = items.filter((x) => x.value > 0).length;
+      return `vinte ${won}/${b.n} (${pct(won / b.n)}) ritorno ${pct(b.mean)} [95%: da ${pct(b.low)} a ${pct(b.high)}; ${b.groups} gruppi indipendenti]`;
     };
+    const proposalReturn = (p: SavedProposal, legs: (boolean | null)[]): Return => ({
+      keys: p.bet_proposal_legs.map((l) => String(l.match_id)),
+      value: legs.every(Boolean) ? Number(p.combined_price) - 1 : -1,
+    });
     // Il motore gira più volte al giorno e ripropone spesso la stessa schedina: si conta una
     // volta sola (stesse giocate), con la prima quota proposta.
     const seenSlips = new Set<string>();
@@ -337,10 +460,10 @@ it("analisi delle schedine", async () => {
     console.log(
       `\n== Proposte con valore già decise: ${settledProposals.length} distinte (${proposals.length} salvate), dal ${firstDay.slice(0, 10)} ==`,
     );
-    const groups = new Map<string, number[]>();
+    const groups = new Map<string, Return[]>();
     for (const { p, legs } of settledProposals) {
       const key = `${p.category} · ${p.legs_count} selezioni`;
-      const r = legs.every(Boolean) ? Number(p.combined_price) - 1 : -1;
+      const r = proposalReturn(p, legs);
       groups.set(key, [...(groups.get(key) ?? []), r]);
       groups.set("TUTTE", [...(groups.get("TUTTE") ?? []), r]);
     }
@@ -355,14 +478,14 @@ it("analisi delle schedine", async () => {
         distinct.set(`${l.match_id}|${l.market}|${l.line}|${l.selection}`, l);
     console.log(`\n== Giocate distinte delle proposte: ${distinct.size} ==`);
     for (const w of [0, 0.25, 0.5, 0.75, 0.9, 1]) {
-      const kept: number[] = [];
+      const kept: Return[] = [];
       let expected = 0;
       for (const l of distinct.values()) {
         if (l.model_probability === null || l.market_probability === null) continue;
         const prob = (1 - w) * Number(l.model_probability) + w * Number(l.market_probability);
         if (prob * Number(l.price) - 1 < 0.02) continue;
         const won = legResult(l);
-        kept.push(won ? Number(l.price) - 1 : -1);
+        kept.push({ keys: [String(l.match_id)], value: won ? Number(l.price) - 1 : -1 });
         expected += prob;
       }
       console.log(
@@ -371,14 +494,14 @@ it("analisi delle schedine", async () => {
     }
     // Le stesse proposte, tenute solo se ogni giocata ha ancora valore con il peso dato.
     for (const w of [0.5, 0.75, 1]) {
-      const kept: number[] = [];
+      const kept: Return[] = [];
       for (const { p, legs } of settledProposals) {
         const ok = p.bet_proposal_legs.every((l) => {
           if (l.model_probability === null || l.market_probability === null) return false;
           const prob = (1 - w) * Number(l.model_probability) + w * Number(l.market_probability);
           return prob * Number(l.price) - 1 >= 0.02;
         });
-        if (ok) kept.push(legs.every(Boolean) ? Number(p.combined_price) - 1 : -1);
+        if (ok) kept.push(proposalReturn(p, legs));
       }
       console.log(`proposte con peso mercato ${w.toFixed(2)}: ${roiLine(kept)}`);
     }

@@ -19,7 +19,7 @@ import { getAgentStatus } from "@/lib/agent/queries";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { cookies } from "next/headers";
 import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
-import { buildBollette, oddsAreOld } from "@/lib/bet-builder/bollette";
+import { buildBollette, hasPositiveValue, oddsAreOld } from "@/lib/bet-builder/bollette";
 import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
@@ -39,6 +39,8 @@ import { confidenceTone, formatPercent } from "@/lib/predictions/format";
 import { confidenceBand } from "@predictra/shared-types";
 import { hasActiveModel, listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
+import { orFallback } from "@/lib/log";
+import { formatDecimal } from "@/lib/format/number";
 
 const formatDay = (d: Date) =>
   new Intl.DateTimeFormat("it-IT", {
@@ -85,7 +87,7 @@ export function StatCard({
 export async function ActiveModelCard() {
   const m = getMessages();
   const d = m.dashboard;
-  const versions = await listModelVersions().catch(() => null);
+  const versions = await listModelVersions().catch(orFallback("dashboard/cards #1", null));
   const active = versions?.find((v) => v.status === "ACTIVE") ?? null;
   return (
     <StatCard href="/models" title={d.activeModel}>
@@ -95,10 +97,7 @@ export async function ActiveModelCard() {
             {m.modelIntelligence.modelNames[active.model_key]}
           </p>
           <p className="text-xs text-muted">
-            {d.brier}{" "}
-            <span className="font-mono text-fg">
-              {active.brier === null ? "–" : Number(active.brier).toFixed(3).replace(".", ",")}
-            </span>
+            {d.brier} <span className="font-mono text-fg">{formatDecimal(active.brier, 3)}</span>
             {" · "}
             {d.trainedOn} <span className="font-mono text-fg">{active.training_matches}</span>
           </p>
@@ -123,7 +122,7 @@ export async function BankrollCard() {
   const d = getMessages().dashboard;
   // Chiude le giocate le cui partite sono finite, così il saldo è aggiornato.
   await settleOpenBets();
-  const rows = await listBankrolls().catch(() => null);
+  const rows = await listBankrolls().catch(orFallback("dashboard/cards #2", null));
   if (!rows || rows.length === 0) {
     return (
       <StatCard href="/bankroll" title={d.yourBankroll}>
@@ -188,12 +187,14 @@ export function ProbabilityBar({ home, draw, away }: { home: number; draw: numbe
 export async function UpcomingMatchesCard() {
   const d = getMessages().dashboard;
   const [calendar, hasModel] = await Promise.all([
-    listNextMatches(6).catch(() => null),
-    hasActiveModel().catch(() => false),
+    listNextMatches(6).catch(orFallback("dashboard/cards #3", null)),
+    hasActiveModel().catch(orFallback("dashboard/cards #4", false)),
   ]);
   const predictions =
     calendar && hasModel
-      ? await listPredictions1x2(calendar.map((r) => r.match_id)).catch(() => [])
+      ? await listPredictions1x2(calendar.map((r) => r.match_id)).catch(
+          orFallback("dashboard/cards #5", []),
+        )
       : [];
   const matches = calendar ? withPredictions(calendar, predictions) : [];
   const anyMissing = matches.some((x) => !x.prediction);
@@ -278,7 +279,7 @@ export async function UpcomingMatchesCard() {
 export async function ProposalsCard() {
   const m = getMessages();
   const d = m.dashboard;
-  const rows = await listActiveProposals().catch(() => null);
+  const rows = await listActiveProposals().catch(orFallback("dashboard/cards #6", null));
   const top = rows ? topProposals(rows) : [];
   return (
     <Card>
@@ -410,7 +411,7 @@ async function loadBollette() {
 export async function SchedineCard() {
   const d = getMessages().dashboard;
   const s = getMessages().betBuilder.bollette;
-  const bollette = await loadBollette().catch(() => null);
+  const bollette = await loadBollette().catch(orFallback("dashboard/cards #7", null));
   const round = bollette?.[0]?.round ?? null;
   const shown = round ? (bollette ?? []).filter((b) => b.round === round) : [];
 
@@ -449,9 +450,11 @@ export async function SystemStatusCard({ canMonitor }: { canMonitor: boolean }) 
   const m = getMessages();
   const d = m.dashboard;
   const [versions, sources, agent] = await Promise.all([
-    listModelVersions().catch(() => null),
-    getSourceHealth().catch(() => null),
-    canMonitor ? getAgentStatus().catch(() => null) : Promise.resolve(null),
+    listModelVersions().catch(orFallback("dashboard/cards #8", null)),
+    getSourceHealth().catch(orFallback("dashboard/cards #9", null)),
+    canMonitor
+      ? getAgentStatus().catch(orFallback("dashboard/cards #10", null))
+      : Promise.resolve(null),
   ]);
   const active = versions?.find((v) => v.status === "ACTIVE") ?? null;
   // Freschezza dei dati in uso: la fonte più aggiornata tra quelle con termini verificati.
@@ -503,17 +506,17 @@ export async function AlertsCard() {
   const threshold = parseAlertThreshold((await cookies()).get(ALERT_COOKIE)?.value);
   const now = new Date();
   const [picks, bollette, settled, bankrolls] = await Promise.all([
-    loadHomeCertainties().catch(() => []),
-    loadBollette().catch(() => []),
+    loadHomeCertainties().catch(orFallback("dashboard/cards #11", [])),
+    loadBollette().catch(orFallback("dashboard/cards #12", [])),
     settleOpenBets(),
-    listBankrolls().catch(() => []),
+    listBankrolls().catch(orFallback("dashboard/cards #13", [])),
   ]);
   const soon = soonPicks(picks, now, threshold).slice(0, 4);
   const soonEnd = now.getTime() + 48 * 3_600_000;
   const valuable = bollette
     .filter(
       (b) =>
-        b.expectedValue >= 0 &&
+        hasPositiveValue(b) &&
         b.picks.some((p) => new Date(p.kickoffAt).getTime() <= soonEnd) &&
         !oddsAreOld(b, now),
     )
@@ -594,7 +597,7 @@ export async function AlertsCard() {
 /** Le giocate più probabili delle prossimi 7 giorni (probabilità combinata modello/mercato). */
 export async function CertaintiesCard() {
   const d = getMessages().dashboard;
-  const picks = await loadHomeCertainties().catch(() => null);
+  const picks = await loadHomeCertainties().catch(orFallback("dashboard/cards #14", null));
   const best = picks?.[0];
 
   return (
