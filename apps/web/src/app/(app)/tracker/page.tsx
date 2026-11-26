@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 import { addBet, deleteBet, settleBet } from "./actions";
 import { BetSlipDetails } from "./bet-slip-details";
 import { Limited } from "@/components/ui/limited";
+import { formatOdds } from "@/lib/format/number";
 
 export const metadata: Metadata = { title: getMessages().pageTitles.tracker };
 
@@ -50,7 +51,7 @@ const OUTCOME_STRIPE = {
   even: "border-l-warning",
 } as const;
 
-const odds = (v: number | null) => (v === null ? "–" : Number(v).toFixed(2).replace(".", ","));
+const odds = (v: number | null) => formatOdds(v);
 
 /** Valori precompilati dai link "Registra" delle Certezze e "L'ho giocata" delle schedine (`/tracker?add=1&d=…`). */
 function parsePrefill(params: Record<string, string | string[] | undefined>) {

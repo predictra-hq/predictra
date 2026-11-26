@@ -40,6 +40,7 @@ import { confidenceBand } from "@predictra/shared-types";
 import { hasActiveModel, listModelVersions } from "@/lib/predictions/queries";
 import { cn } from "@/lib/utils";
 import { orFallback } from "@/lib/log";
+import { formatDecimal } from "@/lib/format/number";
 
 const formatDay = (d: Date) =>
   new Intl.DateTimeFormat("it-IT", {
@@ -96,10 +97,7 @@ export async function ActiveModelCard() {
             {m.modelIntelligence.modelNames[active.model_key]}
           </p>
           <p className="text-xs text-muted">
-            {d.brier}{" "}
-            <span className="font-mono text-fg">
-              {active.brier === null ? "–" : Number(active.brier).toFixed(3).replace(".", ",")}
-            </span>
+            {d.brier} <span className="font-mono text-fg">{formatDecimal(active.brier, 3)}</span>
             {" · "}
             {d.trainedOn} <span className="font-mono text-fg">{active.training_matches}</span>
           </p>

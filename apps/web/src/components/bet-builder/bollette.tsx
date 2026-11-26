@@ -38,6 +38,7 @@ import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { orFallback } from "@/lib/log";
+import { formatSignedPercent } from "@/lib/format/number";
 
 const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> = {
   DOUBLE: "positive",
@@ -48,12 +49,6 @@ const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> 
 
 /** Puntata d'esempio quando l'utente non ne ha indicata una. */
 const EXAMPLE_STAKE = 10;
-
-/** "+4,2%" / "−1,5%": valore atteso per 1 € puntato. */
-function formatSignedPercent(value: number): string {
-  const text = formatPercent(Math.abs(value));
-  return value >= 0 ? `+${text}` : `−${text}`;
-}
 
 function BollettaCard({
   bolletta,
