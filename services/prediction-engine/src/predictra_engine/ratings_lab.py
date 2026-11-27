@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from .cross import EVAL_FROM, table
+from .cross import EVAL_FROM, JointPoisson, table
 from .data import MatchResult
 from .models.blend import dixon_coles_model
 from .models.elo import Elo
@@ -43,20 +43,48 @@ def run_ratings(store: Any, as_of: datetime, start: datetime = EVAL_FROM) -> lis
     }
     lines = [f"Pi-ratings ed Elo unico (sola lettura) — as_of {as_of.isoformat()}"]
     lines.append(f"  partite di addestramento {len(results)}, valutazione dal {start.date()}")
-    active = walk(dixon_coles_model(), results, start)
+    model = dixon_coles_model()
+    active = walk(model, results, start)
     pi = walk(PiRatings(), results, start)
-    pi_fast = walk(PiRatings(lam=0.05, gamma=0.5), results, start)
+    elo_comp = walk(Elo(), results, start)
     elo_global = walk(GlobalElo(), results, start)
+    # Componenti del modello attivo, per sostituire l'Elo per competizione con l'Elo unico.
+    goals = walk(model.goals, results, start)
+    joint = walk(JointPoisson(model.joint_xi, model.joint_l2), results, start)
     preds: dict[str, dict[int, np.ndarray]] = {
         REFERENCE: active,
-        "elo per competizione": walk(Elo(), results, start),
+        "elo per competizione": elo_comp,
         "elo unico": elo_global,
         "pi-ratings": pi,
-        "pi-ratings λ 0,05 γ 0,5": pi_fast,
+        # Controllo: dalle componenti si deve riottenere il modello attivo.
+        "attivo ricostruito": compose(goals, elo_comp, joint, model.weight, model.joint_weight),
     }
+    for w in (model.weight, 0.5):
+        preds[f"attivo con elo unico (peso {w})"] = compose(
+            goals, elo_global, joint, w, model.joint_weight
+        )
     for w in (0.15, 0.3):
         preds[f"attivo + pi {w}"] = mix(active, pi, w)
         preds[f"attivo + elo unico {w}"] = mix(active, elo_global, w)
-    preds["attivo + pi 0,15 + elo unico 0,15"] = mix(mix(active, pi, 0.15 / 0.85), elo_global, 0.15)
     lines += table(preds, results, names, REFERENCE)
     return lines
+
+
+def compose(
+    goals: dict[int, np.ndarray],
+    elo: dict[int, np.ndarray],
+    joint: dict[int, np.ndarray],
+    elo_weight: float,
+    joint_weight: float,
+) -> dict[int, np.ndarray]:
+    """Come il modello PREDICTRA: (1 − j)·[(1 − w)·gol + w·Elo] + j·unico, rinormalizzato."""
+    out = {}
+    for i in set(goals) & set(elo):
+        inner = (1 - elo_weight) * goals[i] + elo_weight * elo[i]
+        inner = inner / inner.sum()
+        if i in joint:
+            p = (1 - joint_weight) * inner + joint_weight * joint[i]
+            out[i] = p / p.sum()
+        else:
+            out[i] = inner
+    return out
