@@ -470,7 +470,8 @@ export const it = {
     noData: "Non disponibile ora, riprova tra poco.",
     lastUpdate: "Ultimo aggiornamento",
     systemTitle: "Stato del sistema",
-    schedineEmpty: "Le schedine compaiono 1–2 giorni prima delle partite.",
+    schedineEmpty:
+      "Per ora nessuna schedina arriva alla quota minima con le quote aggiornate. Si ricalcolano a ogni raccolta: intanto guarda le giocate ad alta probabilità.",
   },
   security: {
     title: "Sicurezza",
@@ -1322,6 +1323,7 @@ export const it = {
       "Schedina ricostruita dopo, con le previsioni e le quote di prima delle partite: allora non veniva ancora salvata.",
     priceBands: { low: "Quota fino a 3", mid: "Quota da 3 a 6", high: "Quota oltre 6" },
     priceBandCount: "{n} proposte",
+    priceBandCountOne: "1 proposta",
     builderRemove: "Togli {pick}",
     builderPickDetail: "{p} · quota {price}",
     builderShareTitle: "La mia schedina",
