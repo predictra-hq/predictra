@@ -36,6 +36,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("market", help="peso del mercato nella probabilità combinata (sola lettura)")
     sub.add_parser("totals", help="taratura dei gol totali sui dati reali (sola lettura)")
     sub.add_parser("cross", help="modello unico su tutte le competizioni (sola lettura)")
+    sub.add_parser("ratings", help="pi-ratings ed Elo unico a confronto (sola lettura)")
     tune_cmd = sub.add_parser(
         "tune", help="confronta gli iperparametri dei modelli gol (sola lettura)"
     )
@@ -79,6 +80,12 @@ def main(argv: list[str] | None = None) -> int:
         from .cross import run_cross
 
         for line in run_cross(store, datetime.now(UTC).replace(microsecond=0)):
+            print(line, flush=True)
+        return 0
+    if args.command == "ratings":
+        from .ratings_lab import run_ratings
+
+        for line in run_ratings(store, datetime.now(UTC).replace(microsecond=0)):
             print(line, flush=True)
         return 0
     if args.command == "stats":

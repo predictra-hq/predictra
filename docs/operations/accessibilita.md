@@ -2,6 +2,8 @@
 
 Obiettivo: **WCAG 2.1 livello AA** su tutte le pagine dell'app.
 
+> I run di _Verifica DEV_ con `accessibility` e `accessibility-prod` fino al 26/11/2026 sono stati cancellati, perché i loro log e artifact contenevano testo e immagini delle pagine con dati reali, leggibili da chiunque nel repository pubblico ([ADR 0075](../decisions/0075-segreti-e-dati-con-repository-pubblico.md)). I link ai run qui sotto non funzionano più: gli esiti restano quelli scritti.
+
 ## Come si verifica
 
 - **Contrasti del tema:** test automatico in `apps/web/src/lib/theme-contrast.test.ts`, eseguito in CI. Legge i colori da `globals.css` e controlla, **per il tema scuro e per il tema chiaro**, tre soglie su `bg`, `surface` e `surface-2`:

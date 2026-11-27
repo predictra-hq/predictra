@@ -23,6 +23,7 @@ from .base import CompetitionFit, FittedModel, Model
 from .elo import Elo, EloFit
 from .goals import DEFAULT_L2, NEWCOMER_ATTACK, NEWCOMER_DEFENCE, GoalsFit, GoalsModel
 from .joint import JointFit, fit_joint
+from .ratings import GlobalElo
 
 
 def rescale_to_1x2(matrix: np.ndarray, target: np.ndarray) -> np.ndarray:
@@ -93,6 +94,16 @@ class EloBlendModel(Model):
             self.elo.fit_competition(results, as_of),
             self.weight,
         )
+
+    def fit(self, results: list[MatchResult], as_of: datetime) -> FittedModel:
+        fitted = super().fit(results, as_of)
+        # ADR 0079: con l'Elo unico ogni competizione usa le valutazioni comuni a tutte.
+        if self.elo.scope == "all":
+            glob = GlobalElo(self.elo.k, self.elo.home_advantage).fit(results, as_of)
+            for comp, fit in fitted.fits.items():
+                if comp in glob.fits and isinstance(fit, EloBlendFit):
+                    fit.elo = glob.fits[comp]  # type: ignore[assignment]
+        return fitted
 
 
 # Peso scelto sul banco di prova del 14/11/2026 (ADR 0039).
@@ -192,10 +203,13 @@ JOINT_XI = 0.0015
 
 
 def dixon_coles_model() -> EloBlendModel:
-    """Modello PREDICTRA (ADR 0024, 0039, 0074): Dixon-Coles combinato con l'Elo e, sull'1X2,
-    con il modello gol unico su tutte le competizioni.
+    """Modello PREDICTRA (ADR 0024, 0039, 0074, 0079): Dixon-Coles combinato con l'Elo e,
+    sull'1X2, con il modello gol unico su tutte le competizioni.
 
     ξ = 0,001 al giorno (emivita circa 23 mesi) e neopromosse più deboli (ADR 0038).
+    Dal 27/11/2026 l'Elo è unico su tutte le competizioni (ADR 0079, prova `ratings` su
+    3.517 partite dal 1/7/2024: Log Loss 1X2 −0,0017 ± 0,0013, al posto di quello per
+    competizione).
     """
     goals = GoalsModel(
         "dixon_coles",
@@ -208,7 +222,7 @@ def dixon_coles_model() -> EloBlendModel:
     return JointEloBlendModel(
         "dixon_coles",
         goals,
-        Elo(),
+        Elo(scope="all"),
         ELO_WEIGHT,
         joint_weight=JOINT_WEIGHT,
         joint_xi=JOINT_XI,

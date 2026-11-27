@@ -29,7 +29,7 @@ Inoltre il valore «+0,0%» compariva per schedine con valore nullo, mentre l'AD
    - intervallo al 95% del ritorno con bootstrap a gruppi di schedine collegate da partite comuni, con il numero di gruppi indipendenti;
    - taratura di tutte le giocate insieme (z delle uscite rispetto alle probabilità) e confronto appaiato del Brier tra modello e mercato sulle stesse giocate;
    - delle griglie di regole alternative solo la distribuzione dei ritorni (mediana, 10° e 90° percentile, quante positive), mai la variante migliore;
-   - **regola di stop:** nessun cambio di profili o peso del mercato dall'analisi finché le partite già decise sono meno di 300. Lo script dice se la soglia è raggiunta.
+   - **regola di stop:** nessun cambio di profili o peso del mercato dall'analisi finché le partite già decise sono meno di 200; poi la decisione si ripete ogni 100 partite in più (soglia portata da 300 a 200 dal proprietario il 26/11/2026, ADR 0078). Lo script dice a che punto si è (_Verifica DEV_ → `slip-analysis`, avvio a mano).
 
 ## Conseguenze
 

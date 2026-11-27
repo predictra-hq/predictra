@@ -72,7 +72,7 @@ def with_settings(model: EloBlendModel, s: Settings) -> EloBlendModel:
         newcomer_defence=g.newcomer_defence,
         newcomer_days=g.newcomer_days,
     )
-    elo = Elo(model.elo.k, model.elo.home_advantage)
+    elo = Elo(model.elo.k, model.elo.home_advantage, model.elo.scope)
     if isinstance(model, JointEloBlendModel):
         return JointEloBlendModel(
             model.key,
@@ -104,7 +104,10 @@ def model_from_hyperparameters(base: EloBlendModel, hp: dict[str, Any]) -> EloBl
             newcomer_defence=float(newcomer.get("defence", 0.0)),
             newcomer_days=int(newcomer.get("days", 300)),
         )
-        rating = Elo(float(elo["k"]), float(elo["home_advantage"]))
+        # Versioni dal 27/11/2026 (ADR 0079): Elo unico; prima per competizione.
+        rating = Elo(
+            float(elo["k"]), float(elo["home_advantage"]), str(elo.get("scope", "competition"))
+        )
         joint = hp.get("joint")
         # Versioni dal 25/11/2026 (ADR 0074): anche il modello unico; prima no.
         if joint:

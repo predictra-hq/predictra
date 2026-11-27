@@ -270,12 +270,32 @@ def test_pulizia_delle_previsioni_superate_a_fine_giro():
     assert prune(Broken([], [])) == (0, "RuntimeError: rete")
 
 
+def per_competition_model():
+    """Il modello PREDICTRA con l'Elo per competizione (prima dell'ADR 0079). Sul campionato
+    simulato ha una variante vicina chiaramente migliore: serve a provare il meccanismo."""
+    from predictra_engine.models import Elo
+    from predictra_engine.models.blend import JointEloBlendModel
+
+    m = dixon_coles_model()
+    return JointEloBlendModel(
+        m.key,
+        m.goals,
+        Elo(),
+        m.weight,
+        joint_weight=m.joint_weight,
+        joint_xi=m.joint_xi,
+        joint_l2=m.joint_l2,
+    )
+
+
 def test_taratura_automatica_adotta_le_impostazioni_migliori_e_le_ricorda(league):
     """ADR 0056: la variante migliore sui risultati veri diventa la versione attiva."""
     past, upcoming, now = setup(league)
     store = FakeStore(past, upcoming)
     store.clock = now
-    s = run(store, [Baseline(), dixon_coles_model()], now=now, code_commit=COMMIT, model_code=CODE)
+    s = run(
+        store, [Baseline(), per_competition_model()], now=now, code_commit=COMMIT, model_code=CODE
+    )
     assert s.tuning is not None and s.tuning.trials
     assert s.adopted is not None  # sul campionato simulato una variante è migliore
     assert s.tuning.best.log_loss < s.tuning.current.log_loss
@@ -292,7 +312,7 @@ def test_taratura_automatica_adotta_le_impostazioni_migliori_e_le_ricorda(league
     store.clock = now + timedelta(days=2)
     s2 = run(
         store,
-        [Baseline(), dixon_coles_model()],
+        [Baseline(), per_competition_model()],
         now=now + timedelta(days=2),
         code_commit=COMMIT,
         model_code=CODE,

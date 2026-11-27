@@ -159,8 +159,35 @@ def test_sfidante_dixon_coles_con_elo_registra_gli_iperparametri():
     hp = dixon_coles_model().hyperparameters()
     assert hp["dixon_coles"] is True
     assert hp["elo_weight"] == 0.4
-    assert hp["elo"] == {"k": 20.0, "home_advantage": 60.0}
+    # ADR 0079: Elo unico su tutte le competizioni.
+    assert hp["elo"] == {"k": 20.0, "home_advantage": 60.0, "scope": "all"}
     assert dixon_coles_model().key == "dixon_coles"
+    # Un Elo per competizione non aggiunge `scope`: le versioni salvate restano uguali.
+    assert Elo().hyperparameters() == {"k": 20.0, "home_advantage": 60.0}
+
+
+def test_elo_unico_nel_modello_e_ricostruibile(league):
+    """ADR 0079: il modello PREDICTRA usa le valutazioni Elo comuni a tutte le competizioni,
+    le salva per ogni competizione e si ricostruisce uguale dagli iperparametri salvati."""
+    from dataclasses import replace
+
+    from predictra_engine.autotune import model_from_hyperparameters
+
+    cup = [replace(r, competition_id=901, match_id=r.match_id + 100_000) for r in league[:40]]
+    data = league + cup
+    as_of = league[-1].kickoff_at + timedelta(days=1)
+    model = dixon_coles_model()
+    fitted = model.fit(data, as_of)
+    elo_900 = fitted.fits[900].inner.elo
+    elo_901 = fitted.fits[901].inner.elo
+    assert elo_900.state is elo_901.state  # stesse valutazioni in tutte le competizioni
+    saved = fitted.fits[901].parameters()["elo"]
+    assert saved["scope"] == "all" and saved["ratings"]
+    rebuilt = model_from_hyperparameters(model, model.hyperparameters())
+    assert rebuilt is not None and rebuilt.elo.scope == "all"
+    assert rebuilt.fit(data, as_of).probabilities_1x2(fixture(1, 20)) == pytest.approx(
+        fitted.probabilities_1x2(fixture(1, 20))
+    )
 
 
 def test_peso_elo_fuori_intervallo_rifiutato():

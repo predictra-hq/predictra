@@ -60,6 +60,13 @@ In quest'ordine, per non fermare PROD:
    - _Settings → Actions → General_: _Require approval for all external contributors_ (lo chiedeva già l'ADR 0068) e _Workflow permissions_ in sola lettura;
    - _Settings → Code security_: _Secret scanning_ con _Push protection_, _Private vulnerability reporting_, _Dependabot alerts_.
 
+## Esecuzione
+
+- **26/11/2026, passo 1 fatto:** cancellati con la GitHub CLI di `gennpalm` 7 artifact ancora scaricabili (6 backup di PROD dal 20 al 26/11 e gli screenshot del 25/11) e 53 run (Bootstrap Super Admin del 17/11, 50 run di Verifica DEV con `accessibility` e 2 con `accessibility-prod`). Verificato dopo: nessun artifact scaricabile e nessun run di quei tipi. Restano i run di `slip-analysis` e `bankroll-isolation`, con soli numeri aggregati.
+- Passo 3 (merge in `main`) fatto il 26/11/2026.
+- **26/11/2026, passi 4–8 rinviati per scelta del proprietario (rischio accettato).** Restano i segreti a livello di repository: chi ha permesso di scrittura (oggi `gennpalm` e `Alfry1299`) o ne ruba l'account può leggerli con un workflow su un proprio branch. Attenuanti: nessun workflow con segreti gira sulle PR, le PR da esterni richiedono approvazione alla prima volta (impostazione predefinita di GitHub), entrambi gli account hanno la 2FA di GitHub (da confermare). Lo script `Predictra/.tools/environments.ps1`, fuori dal repository, fa i passi 4–6 quando si decide di farli; i workflow dichiarano già gli Environments.
+- Passo 2 (passphrase dei backup): da cambiare solo se non è una stringa casuale di almeno 20 caratteri; decide il proprietario.
+
 ## Conseguenze
 
 - Il primo Super Admin di un ambiente nuovo si crea in locale finché il repository è pubblico.
