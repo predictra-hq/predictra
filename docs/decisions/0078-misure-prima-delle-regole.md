@@ -30,7 +30,7 @@ L'ADR 0076 vieta però di cambiare le regole delle schedine finché le partite g
 
 ## Quando adottare le alternative
 
-Con la riga «Campione» dell'analisi sopra le 300 partite decise. Si adotta un'alternativa se, nella stessa analisi:
+Con la riga «Campione» dell'analisi sopra le 200 partite decise, poi di nuovo a 300, 400 e così via (scelta del proprietario del 26/11/2026: con 200 partite il margine del caso è circa la metà di oggi). L'analisi si avvia a mano (_Verifica DEV_ → `slip-analysis`) e dice a che punto si è. Si adotta un'alternativa se, nella stessa analisi:
 
 - per il metodo del margine, il Log Loss migliora oltre due errori standard rispetto al proporzionale;
 - per la ricerca esaustiva, le schedine hanno probabilità media più alta a parità di quota minima, senza un ritorno peggiore oltre l'intervallo.
@@ -55,7 +55,7 @@ Altri segnali:
 - **Modello contro mercato** sulle giocate delle schedine: Brier +0,0101 ± 0,0099, il modello indovina peggio, al limite del rumore.
 - **Ricerca esaustiva:** troppe poche schedine per confrontarla (da 0 a 5 per profilo).
 
-**Decisione:** nessuna modifica. Shin e la calibrazione non migliorano nulla e restano solo nell'analisi. L'unica direzione costante, sia qui sia negli ADR 0071 e 0073, è dare più peso al mercato. Si rivaluta con la stessa analisi quando le partite decise superano 300 (circa 4–6 settimane): se il vantaggio del solo mercato resta e supera due errori standard, il peso sale (nuovo ADR, nuova `SLIP_RULES_VERSION`).
+**Decisione:** nessuna modifica. Shin e la calibrazione non migliorano nulla e restano solo nell'analisi. L'unica direzione costante, sia qui sia negli ADR 0071 e 0073, è dare più peso al mercato. Si rivaluta con la stessa analisi a 200 partite decise (circa 3–4 settimane), poi ogni 100: se il vantaggio del solo mercato resta e supera due errori standard, il peso sale (nuovo ADR, nuova `SLIP_RULES_VERSION`).
 
 ## Conseguenze
 

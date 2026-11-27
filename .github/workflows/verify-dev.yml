@@ -60,7 +60,7 @@ jobs:
       SUPABASE_PROJECT_ID: ${{ inputs.check == 'accessibility-prod' && secrets.PROD_SUPABASE_PROJECT_ID || secrets.DEV_SUPABASE_PROJECT_ID }}
       SUPABASE_SECRET_KEY: ${{ inputs.check == 'accessibility-prod' && secrets.PROD_SUPABASE_SECRET_KEY || secrets.DEV_SUPABASE_SECRET_KEY }}
       PROD_APP_BASE_URL: ${{ secrets.PROD_APP_BASE_URL }}
-      CHECK: ${{ inputs.check }}
+      CHECK: ${{ inputs.check || 'slip-analysis' }}
     steps:
       - name: Verifica segreti
         run: |

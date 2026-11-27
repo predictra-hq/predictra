@@ -10,9 +10,19 @@
  * - delle griglie di regole alternative si mostra la distribuzione dei ritorni, non la
  *   variante migliore: con poche schedine per variante la migliore è soprattutto fortuna;
  * - nessuna regola si cambia da qui finché le partite già decise sono meno di
- *   MIN_INDEPENDENT (la riga «Campione» lo dice).
+ *   MIN_INDEPENDENT; poi si ripete la decisione ogni REVIEW_STEP partite in più (scelta del
+ *   proprietario del 26/11/2026). La riga «Campione» dice a che punto si è.
  */
-const MIN_INDEPENDENT = 300;
+const MIN_INDEPENDENT = 200;
+const REVIEW_STEP = 100;
+
+/** Prossima soglia di decisione: 200, poi 300, 400… */
+function nextReview(matches: number): number {
+  if (matches < MIN_INDEPENDENT) return MIN_INDEPENDENT;
+  return (
+    MIN_INDEPENDENT + REVIEW_STEP * (Math.floor((matches - MIN_INDEPENDENT) / REVIEW_STEP) + 1)
+  );
+}
 import { createClient as supabaseClient } from "@supabase/supabase-js";
 import { it } from "vitest";
 import {
@@ -214,7 +224,7 @@ it("analisi delle schedine", async () => {
     const cal = calibrationTest(decided.map(({ p, won }) => ({ probability: p.probability, won })));
     const decidedMatches = new Set(decided.map(({ p }) => p.matchId)).size;
     console.log(
-      `\nCampione: ${decided.length} giocate decise su ${decidedMatches} partite; soglia per cambiare regole: ${MIN_INDEPENDENT} partite (${decidedMatches >= MIN_INDEPENDENT ? "raggiunta" : "non raggiunta"})`,
+      `\nCampione: ${decided.length} giocate decise su ${decidedMatches} partite; ${decidedMatches >= MIN_INDEPENDENT ? `DECISIONE POSSIBILE (soglia ${MIN_INDEPENDENT} raggiunta)` : `decisione non ancora possibile (soglia ${MIN_INDEPENDENT})`}; prossima revisione a ${nextReview(decidedMatches)} partite`,
     );
     if (cal)
       console.log(

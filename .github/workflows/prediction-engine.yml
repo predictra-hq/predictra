@@ -25,7 +25,7 @@ on:
       command:
         description: "run = previsioni; tune = taratura; diagnose = verifica; stats = tiri e xG; market = peso del mercato; totals = taratura gol totali; cross = modello unico su tutte le competizioni (tutti tranne run in sola lettura)"
         type: choice
-        options: [run, tune, diagnose, stats, market, totals, cross]
+        options: [run, tune, diagnose, stats, market, totals, cross, ratings]
         default: run
       tune_args:
         description: "Solo per tune: es. --l2 2,3,4 --xi 0,0.005"
@@ -134,6 +134,10 @@ jobs:
           fi
           if [ "$COMMAND" = "cross" ]; then
             uv run python -m predictra_engine cross
+            exit 0
+          fi
+          if [ "$COMMAND" = "ratings" ]; then
+            uv run python -m predictra_engine ratings
             exit 0
           fi
           if [ "$COMMAND" = "stats" ]; then
