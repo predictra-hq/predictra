@@ -415,8 +415,10 @@ export async function SchedineCard() {
   const round = bollette?.[0]?.round ?? null;
   const shown = round ? (bollette ?? []).filter((b) => b.round === round) : [];
 
+  // Senza schedine la card porta alle giocate ad alta probabilità, come dice il testo.
+  const empty = bollette !== null && shown.length === 0;
   return (
-    <StatCard href="/bet-builder" title={s.title}>
+    <StatCard href={empty ? "/certainties" : "/bet-builder"} title={s.title}>
       {bollette === null ? (
         <p className="mt-2 text-sm text-muted">{d.noData}</p>
       ) : shown.length === 0 ? (

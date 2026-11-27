@@ -156,7 +156,8 @@ export default async function PerformancePage({ searchParams }: PageProps<"/perf
                 ))}
               </Select>
             </Field>
-            <Button type="submit" variant="secondary">
+            {/* La tendina aggiorna da sola: il pulsante compare solo da tastiera. */}
+            <Button type="submit" variant="secondary" className="sr-only focus:not-sr-only">
               {t.apply}
             </Button>
           </FilterForm>
@@ -180,6 +181,10 @@ export default async function PerformancePage({ searchParams }: PageProps<"/perf
                       {metrics.settledBets} / {metrics.bets}
                     </Stat>
                   </dl>
+                  {/* Senza giocate i numeri sono solo trattini: si spiega come cominciare. */}
+                  {metrics.bets === 0 ? (
+                    <p className="mt-3 text-sm text-muted">{t.noBetsInPeriod}</p>
+                  ) : null}
                   <details className="mt-3 text-sm">
                     <summary className="cursor-pointer text-xs text-muted hover:text-fg">
                       {t.moreMetrics}

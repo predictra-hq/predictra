@@ -153,7 +153,13 @@ export default async function MatchCenterPage({ searchParams }: PageProps<"/matc
             ))}
           </Select>
         </Field>
-        <Button type="submit" variant="secondary" className="col-span-2 sm:col-span-1">
+        {/* Le tendine aggiornano la lista da sole (FilterForm): il pulsante serve solo da
+            tastiera o senza JavaScript, quindi compare quando riceve il focus. */}
+        <Button
+          type="submit"
+          variant="secondary"
+          className="sr-only col-span-2 focus:not-sr-only sm:col-span-1"
+        >
           {m.matchCenter.show}
         </Button>
       </FilterForm>

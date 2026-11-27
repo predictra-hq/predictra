@@ -300,7 +300,8 @@ export const it = {
     settings: "Impostazioni",
     profile: "Profilo",
     security: "Sicurezza",
-    preferences: "Preferenze dell'app",
+    // Breve: è una scheda in alto sul telefono (il titolo della pagina resta completo).
+    preferences: "Preferenze",
     account: "Il tuo profilo",
     users: "Utenti",
     invitations: "Inviti",
@@ -470,7 +471,8 @@ export const it = {
     noData: "Non disponibile ora, riprova tra poco.",
     lastUpdate: "Ultimo aggiornamento",
     systemTitle: "Stato del sistema",
-    schedineEmpty: "Le schedine compaiono 1–2 giorni prima delle partite.",
+    schedineEmpty:
+      "Per ora nessuna schedina arriva alla quota minima con le quote aggiornate. Si ricalcolano a ogni raccolta: intanto guarda le giocate ad alta probabilità.",
   },
   security: {
     title: "Sicurezza",
@@ -895,6 +897,7 @@ export const it = {
     show: "Mostra",
     disclaimer:
       "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni del modello sono nel dettaglio di ogni partita e nella pagina Schedine.",
+    methodTitle: "Come si calcola il margine",
     staleNote:
       "Piano gratuito di The Odds API (500 crediti al mese): quote raccolte due volte al giorno, nessun dato live. Una quota è “Non aggiornata” dopo {hours} ore dall'ultima osservazione.",
     coverageTitle: "Copertura reale",
@@ -1322,6 +1325,7 @@ export const it = {
       "Schedina ricostruita dopo, con le previsioni e le quote di prima delle partite: allora non veniva ancora salvata.",
     priceBands: { low: "Quota fino a 3", mid: "Quota da 3 a 6", high: "Quota oltre 6" },
     priceBandCount: "{n} proposte",
+    priceBandCountOne: "1 proposta",
     builderRemove: "Togli {pick}",
     builderPickDetail: "{p} · quota {price}",
     builderShareTitle: "La mia schedina",
@@ -1728,6 +1732,8 @@ export const it = {
     clv: "CLV medio (approssimato)",
     noData: "–",
     curve: "Profitto cumulato",
+    noBetsInPeriod:
+      "Nessuna giocata in questo periodo. Registrane una da «Giocate fatte», oppure tocca «L'ho giocata» su una schedina: qui vedrai profitto, resa e successo.",
     metricsHelp:
       "Yield = profitto / giocato. ROI = profitto / capitale netto versato. Successo: giocate chiuse in profitto, esclusi i rimborsi. Il CLV usa le quote di chiusura che inserisci.",
     addBet: "Nuova giocata",

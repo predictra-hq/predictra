@@ -239,7 +239,9 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
                           />
                           {m.priceBands[band.key]}
                           <span className="font-normal text-subtle">
-                            {fillTemplate(m.priceBandCount, { n: group.length })}
+                            {group.length === 1
+                              ? m.priceBandCountOne
+                              : fillTemplate(m.priceBandCount, { n: group.length })}
                           </span>
                         </summary>
                         <div className={`mt-3 ${TICKET_GRID}`}>

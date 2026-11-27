@@ -31,7 +31,8 @@ export function CompetitionFilter({
           )}
         </Select>
       </Field>
-      <Button type="submit" variant="secondary" className="sm:w-fit">
+      {/* La tendina aggiorna da sola (FilterForm): il pulsante compare solo da tastiera. */}
+      <Button type="submit" variant="secondary" className="sr-only focus:not-sr-only sm:w-fit">
         {submitLabel}
       </Button>
     </FilterForm>
