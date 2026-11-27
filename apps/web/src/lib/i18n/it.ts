@@ -1730,6 +1730,8 @@ export const it = {
     clv: "CLV medio (approssimato)",
     noData: "–",
     curve: "Profitto cumulato",
+    noBetsInPeriod:
+      "Nessuna giocata in questo periodo. Registrane una da «Giocate fatte», oppure tocca «L'ho giocata» su una schedina: qui vedrai profitto, resa e successo.",
     metricsHelp:
       "Yield = profitto / giocato. ROI = profitto / capitale netto versato. Successo: giocate chiuse in profitto, esclusi i rimborsi. Il CLV usa le quote di chiusura che inserisci.",
     addBet: "Nuova giocata",

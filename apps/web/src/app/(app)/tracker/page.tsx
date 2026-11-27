@@ -143,7 +143,8 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
             ))}
           </Select>
         </Field>
-        <Button type="submit" variant="secondary">
+        {/* La tendina aggiorna da sola: il pulsante compare solo da tastiera. */}
+        <Button type="submit" variant="secondary" className="sr-only focus:not-sr-only">
           {t.apply}
         </Button>
       </FilterForm>
