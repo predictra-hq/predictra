@@ -532,6 +532,21 @@ export function windowOf(kickoffAt: string, window: SlipWindow): string {
   return window === "round" ? roundOfKickoff(kickoffAt) : romeDayOf(kickoffAt);
 }
 
+/**
+ * Periodo da mostrare (scelta del proprietario del 27/11/2026): solo il turno in corso, o
+ * solo la giornata di oggi. I turni più lontani non si propongono: quote e previsioni
+ * cambiano prima che si giochino. Il salvataggio per le Passate (`record.ts`) non cambia.
+ */
+export function currentWindowStart(window: SlipWindow, now: Date): string {
+  return windowOf(now.toISOString(), window);
+}
+
+/** La partita (o la data `AAAA-MM-GG`) cade nel periodo da mostrare? */
+export function inCurrentWindow(kickoffOrDate: string, window: SlipWindow, now: Date): boolean {
+  const at = kickoffOrDate.length === 10 ? `${kickoffOrDate}T12:00:00Z` : kickoffOrDate;
+  return windowOf(at, window) === currentWindowStart(window, now);
+}
+
 export interface BuildOptions {
   /** Periodo delle schedine: turno (predefinito) o giornata. */
   window?: SlipWindow;

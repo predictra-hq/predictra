@@ -140,7 +140,7 @@ export default async function PerformancePage({ searchParams }: PageProps<"/perf
       {bankrolls.length === 0 ? (
         <Alert tone="warning">
           {t.needBankroll}{" "}
-          <Link href="/bankroll" className="underline">
+          <Link href="/accounts" className="underline">
             {b.title}
           </Link>
         </Alert>

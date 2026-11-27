@@ -60,7 +60,7 @@ export const MAIN_NAV_GROUPS: readonly NavGroup[] = [
     id: "money",
     label: "groupMoney",
     items: [
-      { key: "bankroll", href: "/bankroll" },
+      { key: "bankroll", href: "/accounts" },
       { key: "tracker", href: "/tracker" },
       { key: "performance", href: "/performance" },
     ],

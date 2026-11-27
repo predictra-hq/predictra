@@ -4,6 +4,7 @@ import { REACTION_EMOJIS, type CommunityReaction, type SharedSlip } from "@predi
 import { SlipSummary, type SlipResult } from "@/components/community/message";
 import { StyledName } from "@/components/community/styled-name";
 import { ReactionPicker } from "@/components/community/reaction-picker";
+import { Tooltip } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { getRequestTimeZone } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -162,25 +163,25 @@ export function Reactions({
     <form key={emoji} action={action}>
       <input type="hidden" name="postId" value={postId} />
       <input type="hidden" name="emoji" value={emoji} />
-      <button
-        type="submit"
-        aria-label={labels.reactWith.replace("{emoji}", emoji)}
-        aria-pressed={mine}
-        title={title}
-        className={cn(
-          "flex min-h-9 min-w-9 cursor-pointer items-center justify-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
-          mine
-            ? "border-positive/50 bg-positive-soft text-positive-strong"
-            : "border-border bg-surface hover:border-border-strong",
-          extra,
-        )}
-      >
-        {content}
-      </button>
+      {/* Chi ha reagito: solo passando con il mouse (o con il focus), con la grafica del sito. */}
+      <Tooltip label={title} align={align === "end" ? "end" : "start"}>
+        <button
+          type="submit"
+          aria-label={labels.reactWith.replace("{emoji}", emoji)}
+          aria-pressed={mine}
+          className={cn(
+            "flex min-h-9 min-w-9 cursor-pointer items-center justify-center gap-1 rounded-full border px-2 text-xs tabular-nums transition-colors",
+            mine
+              ? "border-positive/50 bg-positive-soft text-positive-strong"
+              : "border-border bg-surface hover:border-border-strong",
+            extra,
+          )}
+        >
+          {content}
+        </button>
+      </Tooltip>
     </form>
   );
-  // Chi ha reagito, scritto sotto (il `title` non si vede sul telefono): solo nomi visibili.
-  const named = reactions.filter((r) => r.names && r.names.length > 0);
   return (
     <div className={cn("mt-1 flex flex-col gap-1", align === "end" ? "items-end" : "items-start")}>
       <div className={cn("flex flex-wrap items-center gap-1", align === "end" && "justify-end")}>
@@ -194,7 +195,7 @@ export function Reactions({
             r.mine,
             undefined,
             // Passando il mouse: chi l'ha messa (solo i nomi visibili, mai l'email).
-            r.names?.length ? r.names.join(", ") : undefined,
+            r.names?.length ? reactedBy(r.names) : undefined,
           ),
         )}
         <ReactionPicker
@@ -215,16 +216,6 @@ export function Reactions({
           )}
         </ReactionPicker>
       </div>
-      {named.length > 0 ? (
-        <p className="max-w-xs text-xs text-muted">
-          {named.map((r, i) => (
-            <span key={r.emoji}>
-              {i > 0 ? " · " : null}
-              {r.emoji} {reactedBy(r.names!)}
-            </span>
-          ))}
-        </p>
-      ) : null}
     </div>
   );
 }

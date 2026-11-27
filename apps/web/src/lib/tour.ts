@@ -16,7 +16,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
   { id: "home", selector: 'a[href="/dashboard"]' },
   { id: "bets", selector: 'a[href="/certainties"]' },
   { id: "football", selector: 'a[href="/match-center"]' },
-  { id: "money", selector: 'a[href="/bankroll"]' },
+  { id: "money", selector: 'a[href="/accounts"]' },
   { id: "ask", selector: '[data-tour="ask"]' },
   { id: "profile", selector: 'a[href="/settings"]' },
 ];

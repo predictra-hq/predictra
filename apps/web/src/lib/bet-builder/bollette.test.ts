@@ -447,3 +447,24 @@ describe("analisi: ricerca esaustiva e metodi del margine (ADR 0078)", () => {
     );
   });
 });
+
+describe("solo il periodo attuale (27/11/2026)", () => {
+  it("turno: da venerdì a lunedì o da martedì a giovedì, quello che contiene oggi", async () => {
+    const { currentWindowStart, inCurrentWindow } = await import("./bollette");
+    const friday = new Date("2026-11-27T10:00:00Z");
+    expect(currentWindowStart("round", friday)).toBe("2026-11-27");
+    expect(inCurrentWindow("2026-11-30T19:45:00Z", "round", friday)).toBe(true); // lunedì
+    expect(inCurrentWindow("2026-12-01T19:45:00Z", "round", friday)).toBe(false); // martedì dopo
+    expect(inCurrentWindow("2026-12-04", "round", friday)).toBe(false); // turno successivo
+    // Giovedì sera: il turno è ancora quello di martedì.
+    expect(currentWindowStart("round", new Date("2026-11-26T21:00:00Z"))).toBe("2026-11-24");
+  });
+
+  it("giornata: solo oggi, nel fuso di Roma", async () => {
+    const { inCurrentWindow } = await import("./bollette");
+    const now = new Date("2026-11-27T22:30:00Z"); // 23:30 a Roma
+    expect(inCurrentWindow("2026-11-27T19:45:00Z", "day", now)).toBe(true);
+    expect(inCurrentWindow("2026-11-28T14:00:00Z", "day", now)).toBe(false);
+    expect(inCurrentWindow("2026-11-27", "day", now)).toBe(true);
+  });
+});

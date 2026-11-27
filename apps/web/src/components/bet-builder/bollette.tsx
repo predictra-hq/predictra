@@ -18,6 +18,7 @@ import {
   BOLLETTA_PROFILES,
   BOLLETTA_RULES,
   buildBollette,
+  currentWindowStart,
   oddsAreOld,
   type Bolletta,
   type BollettaProfile,
@@ -39,6 +40,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { orFallback } from "@/lib/log";
 import { formatSignedPercent } from "@/lib/format/number";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const PROFILE_TONE: Record<BollettaProfile, "positive" | "neutral" | "warning"> = {
   DOUBLE: "positive",
@@ -124,12 +126,14 @@ function BollettaCard({
       play={
         <>
           {bankroll && advice ? (
-            <p className="mb-2 text-xs text-muted" title={m.adviceHint}>
-              {advised !== null
-                ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
-                : fillTemplate(m.adviceNone, { name: bankroll.name })}
-              {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
-            </p>
+            <Tooltip label={m.adviceHint} align="start" className="mb-2 block">
+              <p className="text-xs text-muted">
+                {advised !== null
+                  ? fillTemplate(m.advice, { name: bankroll.name, stake: formatEuro(advised) })
+                  : fillTemplate(m.adviceNone, { name: bankroll.name })}
+                {advised !== null && advice.cappedByLimit ? ` (${m.adviceCapped})` : ""}
+              </p>
+            </Tooltip>
           ) : null}
           <StakeBox
             defaultStake={Math.max(1, Math.floor(playStake ?? EXAMPLE_STAKE))}
@@ -295,12 +299,15 @@ export async function SchedineSection({
       loadCalibration(),
       listCompetitions().catch(orFallback("bet-builder/bollette #1", [])),
     ]);
+  const now = new Date();
   return (
     <BolletteCard
-      bollette={buildBollette(rows, prices, consensus, calibration, { window })}
+      bollette={buildBollette(rows, prices, consensus, calibration, { window }).filter(
+        (b) => b.round === currentWindowStart(window, now),
+      )}
       window={window}
       stake={stake}
-      now={new Date()}
+      now={now}
       bankroll={bankroll}
       site={site?.name ?? null}
       competitions={new Map(competitions.map((c) => [c.id, c.name]))}

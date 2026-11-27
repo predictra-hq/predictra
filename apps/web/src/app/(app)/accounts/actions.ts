@@ -20,7 +20,7 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 const done = (message: string): ActionState => {
-  revalidatePath("/bankroll");
+  revalidatePath("/accounts");
   revalidatePath("/tracker");
   return { ok: true, message };
 };

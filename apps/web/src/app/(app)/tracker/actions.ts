@@ -17,7 +17,7 @@ import type { Json } from "@predictra/shared-types";
 
 const done = (message: string): ActionState => {
   revalidatePath("/tracker");
-  revalidatePath("/bankroll");
+  revalidatePath("/accounts");
   return { ok: true, message };
 };
 

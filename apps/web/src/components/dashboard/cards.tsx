@@ -19,7 +19,12 @@ import { getAgentStatus } from "@/lib/agent/queries";
 import { pickLabel } from "@/components/bet-builder/likely";
 import { cookies } from "next/headers";
 import { ALERT_COOKIE, parseAlertThreshold, soonPicks } from "@/lib/alerts";
-import { buildBollette, hasPositiveValue, oddsAreOld } from "@/lib/bet-builder/bollette";
+import {
+  buildBollette,
+  currentWindowStart,
+  hasPositiveValue,
+  oddsAreOld,
+} from "@/lib/bet-builder/bollette";
 import { loadCalibration } from "@/lib/bet-builder/calibration-load";
 import { loadHomeCertainties } from "@/lib/certainties/load";
 import { listActiveProposals, loadPicksData } from "@/lib/bet-builder/queries";
@@ -125,7 +130,7 @@ export async function BankrollCard() {
   const rows = await listBankrolls().catch(orFallback("dashboard/cards #2", null));
   if (!rows || rows.length === 0) {
     return (
-      <StatCard href="/bankroll" title={d.yourBankroll}>
+      <StatCard href="/accounts" title={d.yourBankroll}>
         <p className="mt-2 text-sm text-muted">{rows ? d.noBankroll : d.noData}</p>
         {rows ? (
           <p className="mt-2 text-sm font-medium text-positive-strong">{d.createBankroll}</p>
@@ -135,7 +140,7 @@ export async function BankrollCard() {
   }
   const t = bankrollTotals(rows);
   return (
-    <StatCard href="/bankroll" title={d.yourBankroll}>
+    <StatCard href="/accounts" title={d.yourBankroll}>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{formatEuro(t.balance)}</p>
       <p className="mt-1 text-xs text-muted">
         {fillTemplate(d.bankrollLine, { available: formatEuro(t.available), open: t.openBets })}
@@ -412,8 +417,9 @@ export async function SchedineCard() {
   const d = getMessages().dashboard;
   const s = getMessages().betBuilder.bollette;
   const bollette = await loadBollette().catch(orFallback("dashboard/cards #7", null));
-  const round = bollette?.[0]?.round ?? null;
-  const shown = round ? (bollette ?? []).filter((b) => b.round === round) : [];
+  // Solo il turno in corso, come la pagina Schedine.
+  const round = currentWindowStart("round", new Date());
+  const shown = (bollette ?? []).filter((b) => b.round === round);
 
   // Senza schedine la card porta alle giocate ad alta probabilità, come dice il testo.
   const empty = bollette !== null && shown.length === 0;

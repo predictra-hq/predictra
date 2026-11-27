@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useId, useState } from "react";
+import { Tooltip } from "@/components/ui/tooltip";
 
 /** Testi già tradotti dal server (il componente gira nel browser). */
 export interface StakeBoxLabels {
@@ -118,13 +119,14 @@ export function StakeBox({
             .replace("{profit}", euro.format(payout - stake))}
         </p>
       ) : null}
-      <Link
-        href={withPlay(registerHref, { stake, odds, site })}
-        title={labels.registerHint}
-        className="mt-3 flex h-11 items-center justify-center rounded-xl bg-positive px-4 text-sm font-semibold text-on-positive transition-colors hover:bg-positive-strong active:translate-y-px"
-      >
-        {labels.register}
-      </Link>
+      <Tooltip label={labels.registerHint} className="mt-3 flex w-full">
+        <Link
+          href={withPlay(registerHref, { stake, odds, site })}
+          className="flex h-11 w-full items-center justify-center rounded-xl bg-positive px-4 text-sm font-semibold text-on-positive transition-colors hover:bg-positive-strong active:translate-y-px"
+        >
+          {labels.register}
+        </Link>
+      </Tooltip>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   formatPercent,
   formatSigned,
 } from "@/lib/odds/format";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const CATEGORY_TONE: Record<BetProposalCategory, "positive" | "neutral" | "warning"> = {
   CONSERVATIVE: "positive",
@@ -58,9 +59,9 @@ export function BetBuilderNav({
 function Metric({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <span className="flex flex-col gap-0.5 rounded-lg border border-border bg-surface-2 px-3 py-2">
-      <span className="text-xs text-muted" title={hint}>
-        {label}
-      </span>
+      <Tooltip label={hint} align="start">
+        <span className="text-xs text-muted">{label}</span>
+      </Tooltip>
       <span className="font-mono text-base">{value}</span>
     </span>
   );
