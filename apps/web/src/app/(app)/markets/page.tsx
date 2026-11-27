@@ -204,9 +204,14 @@ export default async function MarketsPage({ searchParams }: PageProps<"/markets"
           submitLabel={m.show}
         />
       ) : null}
-      <p className="mb-3 text-xs text-muted">
-        {m.disclaimer} {m.methodNote}
-      </p>
+      {/* La nota sul metodo (formule del margine) è per chi la cerca: chiusa di partenza. */}
+      <div className="mb-3 text-xs text-muted">
+        <p>{m.disclaimer}</p>
+        <details className="mt-1">
+          <summary className="cursor-pointer hover:text-fg">{m.methodTitle}</summary>
+          <p className="mt-1">{m.methodNote}</p>
+        </details>
+      </div>
       {groups.length === 0 ? (
         <EmptyState>{m.noEvents}</EmptyState>
       ) : (

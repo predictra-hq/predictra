@@ -300,7 +300,8 @@ export const it = {
     settings: "Impostazioni",
     profile: "Profilo",
     security: "Sicurezza",
-    preferences: "Preferenze dell'app",
+    // Breve: è una scheda in alto sul telefono (il titolo della pagina resta completo).
+    preferences: "Preferenze",
     account: "Il tuo profilo",
     users: "Utenti",
     invitations: "Inviti",
@@ -896,6 +897,7 @@ export const it = {
     show: "Mostra",
     disclaimer:
       "Le probabilità implicite si ricavano dalle quote togliendo il margine del bookmaker: non sono previsioni di PREDICTRA. Le previsioni del modello sono nel dettaglio di ogni partita e nella pagina Schedine.",
+    methodTitle: "Come si calcola il margine",
     staleNote:
       "Piano gratuito di The Odds API (500 crediti al mese): quote raccolte due volte al giorno, nessun dato live. Una quota è “Non aggiornata” dopo {hours} ore dall'ultima osservazione.",
     coverageTitle: "Copertura reale",
