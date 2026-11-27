@@ -51,21 +51,36 @@ def run_ratings(store: Any, as_of: datetime, start: datetime = EVAL_FROM) -> lis
     # Componenti del modello attivo, per sostituire l'Elo per competizione con l'Elo unico.
     goals = walk(model.goals, results, start)
     joint = walk(JointPoisson(model.joint_xi, model.joint_l2), results, start)
+    # Dal 27/11/2026 (ADR 0079) il modello attivo usa l'Elo unico: la ricostruzione di
+    # controllo lo usa; l'Elo per competizione resta come termine di confronto.
+    elo = model.elo
     preds: dict[str, dict[int, np.ndarray]] = {
         REFERENCE: active,
         "elo per competizione": elo_comp,
         "elo unico": elo_global,
         "pi-ratings": pi,
-        # Controllo: dalle componenti si deve riottenere il modello attivo.
-        "attivo ricostruito": compose(goals, elo_comp, joint, model.weight, model.joint_weight),
+        "attivo ricostruito": compose(goals, elo_global, joint, model.weight, model.joint_weight),
+        "attivo con elo per competizione": compose(
+            goals, elo_comp, joint, model.weight, model.joint_weight
+        ),
     }
-    for w in (model.weight, 0.5):
-        preds[f"attivo con elo unico (peso {w})"] = compose(
-            goals, elo_global, joint, w, model.joint_weight
+    preds["attivo con elo unico (peso 0.5)"] = compose(
+        goals, elo_global, joint, 0.5, model.joint_weight
+    )
+    # Taratura dell'Elo unico: K (velocità di aggiornamento) e vantaggio casalingo.
+    for k, home in (
+        (15, elo.home_advantage),
+        (25, elo.home_advantage),
+        (30, elo.home_advantage),
+        (elo.k, 40),
+        (elo.k, 80),
+        (25, 80),
+    ):
+        tuned = walk(GlobalElo(k, home), results, start)
+        preds[f"attivo, elo unico K {k} casa {home}"] = compose(
+            goals, tuned, joint, model.weight, model.joint_weight
         )
-    for w in (0.15, 0.3):
-        preds[f"attivo + pi {w}"] = mix(active, pi, w)
-        preds[f"attivo + elo unico {w}"] = mix(active, elo_global, w)
+    preds["attivo + pi 0.15"] = mix(active, pi, 0.15)
     lines += table(preds, results, names, REFERENCE)
     return lines
 
