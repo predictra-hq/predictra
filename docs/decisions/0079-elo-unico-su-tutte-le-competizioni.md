@@ -31,6 +31,10 @@ Il controllo «attivo ricostruito» dalle componenti dà esattamente il modello 
 4. **Pi-ratings non adottati:** da soli sono peggiori dell'Elo e in combinazione non aggiungono nulla. Restano nel comando `ratings`.
 5. **Soglia di decisione delle schedine:** 200 partite decise invece di 300, poi di nuovo ogni 100 (scelta del proprietario del 26/11/2026; ADR 0076 e 0078 aggiornati).
 
+## Taratura dell'Elo unico (27/11/2026)
+
+Stessa prova ([run](https://github.com/predictra-hq/predictra/actions/runs/46002086925)), sul modello attivo con l'Elo unico (Log Loss 1X2 0,9729 contro 0,9746 con l'Elo per competizione, −0,0017 ± 0,0013). Varianti di K (15, 25, 30) e vantaggio casalingo (40, 80): la migliore è K 30 con −0,0002 ± 0,0005, dentro il rumore. **Nessuna modifica:** K 20 e vantaggio 60 restano. Anche il peso dell'Elo a 0,5 non cambia nulla (−0,0002 ± 0,0005); lo varia comunque da sola la taratura automatica (ADR 0056).
+
 ## Conseguenze
 
 - Previsioni un po' più precise, soprattutto nelle coppe europee e nei campionati con squadre che giocano anche in Europa. Il guadagno medio è piccolo (circa 0,002 di Log Loss): con i soli risultati il modello resta vicino al suo limite, e le quote del mercato contengono ancora informazioni che il modello non ha.

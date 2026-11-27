@@ -23,6 +23,7 @@ import {
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
+import { Tooltip } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = { title: getMessages().pageTitles.matchCenter };
 
@@ -52,22 +53,24 @@ function StrongestPick({ pick }: { pick: Pick | undefined }) {
   // senza storico sufficiente.
   if (!pick)
     return (
-      <span className="text-subtle" title={mc.noPickHint}>
-        –
-      </span>
+      <Tooltip label={mc.noPickHint}>
+        <span className="text-subtle">–</span>
+      </Tooltip>
     );
   const certain = pick.probability >= CERTAINTY_FROM;
   return (
-    <span className="whitespace-nowrap" title={certain ? undefined : mc.weakPickHint}>
-      {pickLabel(pick)}{" "}
-      <span
-        className={
-          certain ? "font-mono font-semibold text-positive-strong" : "font-mono text-muted"
-        }
-      >
-        {formatPercent(pick.probability, 0)}
+    <Tooltip label={certain ? undefined : mc.weakPickHint}>
+      <span className="whitespace-nowrap">
+        {pickLabel(pick)}{" "}
+        <span
+          className={
+            certain ? "font-mono font-semibold text-positive-strong" : "font-mono text-muted"
+          }
+        >
+          {formatPercent(pick.probability, 0)}
+        </span>
       </span>
-    </span>
+    </Tooltip>
   );
 }
 

@@ -74,7 +74,7 @@ const PAGES = [
   "/bet-builder/slips",
   "/bet-builder/results",
   "/bet-builder/past",
-  "/bankroll",
+  "/accounts",
   "/tracker",
   "/performance",
   "/locker-room",

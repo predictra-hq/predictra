@@ -52,7 +52,6 @@ function NavLinks({
               <span
                 className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-subtle"
                 aria-disabled="true"
-                title={`${messages.common.availableFrom} Milestone ${item.milestone}`}
               >
                 {icon}
                 <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -304,7 +303,7 @@ export function Sidebar({
           <div className="flex items-center gap-3">
             <UserAvatar style={avatarStyle} name={userLabel} className="size-9" />
             <div className="min-w-0">
-              <p className="truncate text-sm" title={userLabel}>
+              <p className="truncate text-sm">
                 <StyledName name={userLabel} color={nameColor} style={nameStyle} />
               </p>
               <p className="text-xs text-muted">{roleLabel}</p>

@@ -35,6 +35,7 @@ import { listCompetitions } from "@/lib/football/queries";
 import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds, formatPercent } from "@/lib/odds/format";
 import { orFallback } from "@/lib/log";
+import { inCurrentWindow } from "@/lib/bet-builder/bollette";
 
 export const metadata: Metadata = { title: getMessages().pageTitles.betBuilder };
 
@@ -181,12 +182,15 @@ export default async function BetBuilderPage({ searchParams }: PageProps<"/bet-b
   const window = slipWindowFrom((await searchParams).w);
   const technical = hasPermission(user.roles, "agents.monitor");
   const m = getMessages().betBuilder;
-  const [run, proposals, competitionList] = await Promise.all([
+  const [run, allProposals, competitionList] = await Promise.all([
     getLatestRun(),
     listActiveProposals(),
     listCompetitions().catch(orFallback("bet-builder/page #1", [])),
   ]);
   const competitions = new Map(competitionList.map((c) => [c.id, c.name]));
+  // Solo il turno in corso o la giornata di oggi, come le schedine consigliate.
+  const now = new Date();
+  const proposals = allProposals.filter((p) => inCurrentWindow(p.slate_date, window, now));
 
   // Turni (ADR 0036): le multiple uniscono partite da venerdì a lunedì o da martedì a giovedì.
   const slates = [...new Set(proposals.map((p) => roundStartOf(p.slate_date)))].sort();

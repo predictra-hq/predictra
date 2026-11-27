@@ -160,7 +160,7 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       {bankrolls.length === 0 ? (
         <Alert className="mt-6" tone="warning">
           {t.needBankroll}{" "}
-          <Link href="/bankroll" className="underline">
+          <Link href="/accounts" className="underline">
             {b.title}
           </Link>
         </Alert>

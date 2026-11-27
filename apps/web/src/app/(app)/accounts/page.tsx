@@ -99,7 +99,7 @@ function BookmakerFields({
   );
 }
 
-export default async function BankrollPage({ searchParams }: PageProps<"/bankroll">) {
+export default async function BankrollPage({ searchParams }: PageProps<"/accounts">) {
   await requireUser();
   const m = getMessages().bankroll;
   const c = getMessages().common;
@@ -167,7 +167,7 @@ export default async function BankrollPage({ searchParams }: PageProps<"/bankrol
               </dl>
               {b.bankroll_id !== selected?.bankroll_id ? (
                 <Link
-                  href={`/bankroll?b=${b.bankroll_id}`}
+                  href={`/accounts?b=${b.bankroll_id}`}
                   className="mt-4 inline-block text-sm text-positive-strong hover:underline"
                 >
                   {m.select}

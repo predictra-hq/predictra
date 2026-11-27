@@ -19,6 +19,7 @@ import { formatDateTime, getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatFairOdds, formatLine, formatPercent } from "@/lib/predictions/format";
 import { orFallback } from "@/lib/log";
+import { inCurrentWindow } from "@/lib/bet-builder/bollette";
 
 /** "Doppia chance 1X", "Totale gol Under 2,5", "Gol squadra Casa over 0,5". */
 export function pickLabel(
@@ -180,7 +181,9 @@ export async function LikelySection({ stake }: { stake: number | null }) {
     loadPicksData(),
     listCompetitions().catch(orFallback("bet-builder/likely #1", [])),
   ]);
-  const picks = bestPicks(rows);
+  // Solo il turno in corso (scelta del proprietario del 27/11/2026).
+  const now = new Date();
+  const picks = bestPicks(rows.filter((r) => inCurrentWindow(r.kickoff_at, "round", now)));
   return (
     <LikelyCard
       picks={picks}

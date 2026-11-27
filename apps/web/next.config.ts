@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
       { source: "/affidabilita", destination: "/reliability", permanent: true },
       { source: "/discussions", destination: "/locker-room?c=matches", permanent: true },
       { source: "/community", destination: "/locker-room", permanent: true },
+      // 27/11/2026: «Bankroll» diventa «Conti».
+      { source: "/bankroll", destination: "/accounts", permanent: true },
     ];
   },
 };

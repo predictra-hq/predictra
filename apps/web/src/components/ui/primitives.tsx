@@ -4,7 +4,6 @@ import type {
   InputHTMLAttributes,
   LabelHTMLAttributes,
   ReactNode,
-  SelectHTMLAttributes,
 } from "react";
 import { CircleAlert, CircleCheck, Inbox, Info, TriangleAlert } from "lucide-react";
 import { TableLabels } from "@/components/ui/table-labels";
@@ -64,19 +63,8 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   );
 }
 
-export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
-      className={cn(
-        "h-10 w-full cursor-pointer rounded-lg border border-input bg-bg px-3 text-sm text-fg transition-colors",
-        "hover:border-muted focus:border-positive focus:outline-none focus:ring-2 focus:ring-positive/30",
-        "disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
+// Tendina con la grafica del sito (27/11/2026): stesso uso di un <select>, vedi select.tsx.
+export { Select } from "./select";
 
 export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
   return <label className={cn("text-sm font-medium text-fg", className)} {...props} />;

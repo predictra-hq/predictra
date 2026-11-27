@@ -8,6 +8,7 @@ import type { Pick } from "@/lib/certainties/logic";
 import { getMessages } from "@/lib/i18n";
 import { fillTemplate, formatOdds } from "@/lib/odds/format";
 import { formatPercent } from "@/lib/predictions/format";
+import { Tooltip } from "@/components/ui/tooltip";
 
 /** Link al modulo "Aggiungi giocata" del Tracker, già compilato con questa giocata. */
 export function trackerHref(p: Pick, price: ItalianPrice | null): string {
@@ -48,14 +49,16 @@ export function PickRow({
       <span className="min-w-0 flex-1">
         <span className="block text-sm">{pickLabel(p)}</span>
         {price ? (
-          <span className="block text-xs text-muted" title={price.bookmaker}>
-            {fillTemplate(c.priceShort, { price: formatOdds(price.price) })}
-            {value !== null && value >= 0 ? (
-              <span className="ml-1.5 font-medium text-positive-strong">
-                {fillTemplate(c.worth, { value: formatPercent(value, 0) })}
-              </span>
-            ) : null}
-          </span>
+          <Tooltip label={price.bookmaker} align="start" className="block">
+            <span className="block text-xs text-muted">
+              {fillTemplate(c.priceShort, { price: formatOdds(price.price) })}
+              {value !== null && value >= 0 ? (
+                <span className="ml-1.5 font-medium text-positive-strong">
+                  {fillTemplate(c.worth, { value: formatPercent(value, 0) })}
+                </span>
+              ) : null}
+            </span>
+          </Tooltip>
         ) : null}
         {value !== null && value < 0 ? (
           <span className="block text-xs text-warning">
