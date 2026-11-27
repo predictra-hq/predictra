@@ -102,8 +102,19 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
     kellyMatch && kellyInput.selection
       ? (kellyMatch.probabilities[kellyInput.selection] ?? null)
       : null;
+  const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
+  // Consenso di mercato (ADR 0028) e schedine giocate (ADR 0070) non dipendono l'uno
+  // dall'altro: si leggono insieme, non una dopo l'altra.
+  const [consensus, slips] = await Promise.all([
+    kellyMatch
+      ? getMarketConsensus(kellyMatch.matchId)
+      : Promise.resolve<Awaited<ReturnType<typeof getMarketConsensus>>>({}),
+    listBetSlips(bets.map((b) => b.id)).catch(() => ({
+      legs: new Map(),
+      matches: new Map(),
+    })),
+  ]);
   // ADR 0028: probabilità prudente = media tra modello e consenso di mercato.
-  const consensus = kellyMatch ? await getMarketConsensus(kellyMatch.matchId) : {};
   const marketProbability = kellyInput.selection ? consensus[kellyInput.selection] : undefined;
   const kellyProbability =
     modelProbability === null
@@ -111,12 +122,6 @@ export default async function TrackerPage({ searchParams }: PageProps<"/tracker"
       : usedProbability(modelProbability, marketProbability, MARKET_WEIGHT);
   const kellyReady = kellyProbability !== null && kellyInput.odds !== null;
   const kellyAsked = params.km !== undefined || params.ko !== undefined;
-  const bets = since ? allBets.filter((x) => new Date(x.placed_at) >= since) : allBets;
-  // Schedine giocate: partite, esiti scelti e risultati (ADR 0070).
-  const slips = await listBetSlips(bets.map((b) => b.id)).catch(() => ({
-    legs: new Map(),
-    matches: new Map(),
-  }));
 
   return (
     <>
