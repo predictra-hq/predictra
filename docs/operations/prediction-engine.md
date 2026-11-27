@@ -229,6 +229,10 @@ Comando `cross` (sola lettura, _Actions → Prediction engine → Run workflow_ 
 
 Nel modello PREDICTRA λ e ρ salvati con la previsione sono quelli del Dixon-Coles interno; la matrice salvata è la sua, riportata all'1X2 combinato (`rescale_to_1x2`). La spiegazione dell'1X2 lo dice con `matrix_from: "dixon_coles_rescaled_to_1x2"`: per ricostruire la matrice servono λ, ρ e l'1X2 salvati.
 
+## Elo unico e pi-ratings (27/11/2026, ADR 0079)
+
+Comando `ratings` (sola lettura, _Run workflow_ con `command = ratings`): backtest settimanale dal 1/7/2024 (3.517 partite) del modello attivo, dell'Elo per competizione, dell'Elo unico su tutte le competizioni e dei pi-ratings, da soli e in combinazione. Con l'Elo unico al posto di quello per competizione il Log Loss 1X2 scende di 0,0017 ± 0,0013: **adottato**. I pi-ratings non aggiungono nulla. Dettagli e tabella nell'[ADR 0079](../decisions/0079-elo-unico-su-tutte-le-competizioni.md).
+
 ## Limiti noti
 
 - Lo storico è solo la stagione in corso: all'inizio il campione è piccolo e il Confidence Score sarà spesso basso.

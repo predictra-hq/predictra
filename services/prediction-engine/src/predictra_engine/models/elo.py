@@ -63,12 +63,23 @@ class EloFit(CompetitionFit):
 class Elo(Model):
     key = "elo"
 
-    def __init__(self, k: float = 20.0, home_advantage: float = 60.0) -> None:
+    def __init__(
+        self, k: float = 20.0, home_advantage: float = 60.0, scope: str = "competition"
+    ) -> None:
+        if scope not in ("competition", "all"):
+            raise ValueError("scope: 'competition' o 'all'")
         self.k = k
         self.home_advantage = home_advantage
+        # ADR 0079: "all" = una valutazione per squadra su tutte le competizioni (Elo unico).
+        # Lo applica EloBlendModel; da solo l'Elo resta per competizione.
+        self.scope = scope
 
     def hyperparameters(self) -> dict[str, Any]:
-        return {"k": self.k, "home_advantage": self.home_advantage}
+        hp: dict[str, Any] = {"k": self.k, "home_advantage": self.home_advantage}
+        # Solo quando cambia: le versioni già salvate restano con gli stessi iperparametri.
+        if self.scope != "competition":
+            hp["scope"] = self.scope
+        return hp
 
     def fit_competition(self, results: list[MatchResult], as_of: datetime) -> EloFit:
         ratings: dict[int, float] = {}

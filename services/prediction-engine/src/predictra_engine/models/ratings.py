@@ -64,13 +64,22 @@ class GlobalFit(CompetitionFit):
     c1: float
     c2: float
     beta: float
+    teams: frozenset[int] = frozenset()
+    """Squadre della competizione: di queste si salvano le valutazioni (ADR 0020)."""
 
     def probabilities_1x2(self, home: int, away: int) -> np.ndarray:
         p = ordinal_probabilities(self.state.diff(home, away), self.c1, self.c2, self.beta)
         return p / p.sum()
 
     def parameters(self) -> dict[str, Any]:
-        return {"model": self.model_key, "c1": self.c1, "c2": self.c2, "beta": self.beta}
+        return {
+            "model": self.model_key,
+            "scope": "all",
+            "ratings": self.state.ratings_for(self.teams),
+            "c1": round(self.c1, 6),
+            "c2": round(self.c2, 6),
+            "beta": round(self.beta, 8),
+        }
 
 
 class GlobalRatingModel(Model):
@@ -98,7 +107,15 @@ class GlobalRatingModel(Model):
             by_comp[r.competition_id].append(r)
         c1, c2, beta = fit_ordinal(np.array(diffs), np.array(outcomes), self.beta0)
         fits: dict[int, CompetitionFit] = {
-            comp: GlobalFit(self.key, state, c1, c2, beta) for comp in sorted(by_comp)
+            comp: GlobalFit(
+                self.key,
+                state,
+                c1,
+                c2,
+                beta,
+                frozenset(t for r in rows for t in (r.home, r.away)),
+            )
+            for comp, rows in sorted(by_comp.items())
         }
         return FittedModel(self, fits, by_comp)
 
@@ -115,7 +132,14 @@ class _PiState:
         return g if rating >= 0 else -g
 
     def diff(self, home: int, away: int) -> float:
-        return self._goals(self.home[home]) - self._goals(self.away[away])
+        # .get: una previsione non deve aggiungere squadre allo stato.
+        return self._goals(self.home.get(home, 0.0)) - self._goals(self.away.get(away, 0.0))
+
+    def ratings_for(self, teams: frozenset[int]) -> dict[str, list[float]]:
+        return {
+            str(t): [round(self.home.get(t, 0.0), 5), round(self.away.get(t, 0.0), 5)]
+            for t in sorted(teams)
+        }
 
     def update(self, r: MatchResult) -> None:
         error = (r.home_goals - r.away_goals) - self.diff(r.home, r.away)
@@ -149,7 +173,14 @@ class _EloState:
         self.ratings: dict[int, float] = defaultdict(lambda: INITIAL_RATING)
 
     def diff(self, home: int, away: int) -> float:
-        return self.ratings[home] + self.home_advantage - self.ratings[away]
+        return (
+            self.ratings.get(home, INITIAL_RATING)
+            + self.home_advantage
+            - self.ratings.get(away, INITIAL_RATING)
+        )
+
+    def ratings_for(self, teams: frozenset[int]) -> dict[str, float]:
+        return {str(t): round(self.ratings.get(t, INITIAL_RATING), 3) for t in sorted(teams)}
 
     def update(self, r: MatchResult) -> None:
         d = self.diff(r.home, r.away)
