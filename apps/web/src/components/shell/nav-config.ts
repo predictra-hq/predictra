@@ -85,7 +85,7 @@ export const BOTTOM_NAV: readonly NavItem[] = [
   {
     key: "profile",
     href: "/settings",
-    alsoMatch: ["/admin", "/models", "/data-center", "/markets", "/statistics"],
+    alsoMatch: ["/admin", "/models", "/data-center", "/markets", "/statistics", "/feedback"],
   },
 ];
 
@@ -106,6 +106,7 @@ export const ADMIN_SECTIONS = {
     { key: "users", href: "/admin/users" },
     { key: "invitations", href: "/admin/invitations" },
     { key: "audit", href: "/admin/audit" },
+    { key: "feedbackInbox", href: "/admin/feedback" },
   ],
   football: [
     { key: "marketIntelligence", href: "/markets" },

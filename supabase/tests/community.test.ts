@@ -428,3 +428,155 @@ describe("chat della comunità (ADR 0064)", () => {
     });
   });
 });
+
+describe("Spogliatoio in tempo reale, ruolo e feedback (ADR 0081)", () => {
+  const sent = async () =>
+    (
+      await db.query<{ topic: string; event: string; payload: unknown; private: boolean }>(
+        "select topic, event, payload, private from realtime.messages order by id",
+      )
+    ).rows;
+
+  it("ogni messaggio, reazione o commento manda un avviso privato, senza contenuto", async () => {
+    await asUser(db, alice, (tx) =>
+      tx.query("insert into public.community_posts (channel, body) values ('GENERAL', 'Ciao')"),
+    );
+    const postId = Number(
+      (await db.query<{ id: number }>("select id from public.community_posts")).rows[0]!.id,
+    );
+    await asUser(db, bob, (tx) =>
+      tx.query("insert into public.community_reactions (post_id, emoji) values ($1, '👍')", [
+        postId,
+      ]),
+    );
+    await asUser(db, bob, (tx) =>
+      tx.query("insert into public.match_comments (match_id, body) values ($1, 'Bella partita')", [
+        matchId,
+      ]),
+    );
+    const rows = await sent();
+    expect(rows.map((r) => r.topic)).toEqual([
+      "community:general",
+      "community:general",
+      "community:matches",
+    ]);
+    for (const r of rows) {
+      expect(r).toMatchObject({ event: "changed", private: true });
+      // Solo il tipo di tabella: niente testo, nomi o id.
+      expect(Object.keys(r.payload as object)).toEqual(["kind"]);
+    }
+  });
+
+  it("gli avvisi li riceve solo un iscritto attivo, solo sui canali dello Spogliatoio", async () => {
+    await asUser(db, alice, (tx) =>
+      tx.query("insert into public.community_posts (channel, body) values ('GENERAL', 'Ciao')"),
+    );
+    const visible = (user: TestUser, topic: string) =>
+      asUser(db, user, async (tx) => {
+        await tx.query("select set_config('realtime.topic', $1, true)", [topic]);
+        return (await tx.query("select id from realtime.messages")).rows.length;
+      });
+    expect(await visible(bob, "community:general")).toBe(1);
+    expect(await visible(bob, "community:altro")).toBe(0);
+    await db.query(
+      "update public.profiles set status = 'SUSPENDED', suspended_at = now() where id = $1",
+      [bob.id],
+    );
+    expect(await visible(bob, "community:general")).toBe(0);
+  });
+
+  it("accanto al nome il ruolo solo per Admin e Super Admin", async () => {
+    await asUser(db, alice, (tx) =>
+      tx.query(
+        "insert into public.community_posts (channel, body) values ('GENERAL', 'Da utente')",
+      ),
+    );
+    await asUser(db, admin, (tx) =>
+      tx.query("insert into public.community_posts (channel, body) values ('GENERAL', 'Da admin')"),
+    );
+    const rows = await asUser(
+      db,
+      bob,
+      async (tx) =>
+        (
+          await tx.query<{ body: string; author_role: string | null }>(
+            "select body, author_role from public.community_feed('GENERAL', 20)",
+          )
+        ).rows,
+    );
+    expect(Object.fromEntries(rows.map((r) => [r.body, r.author_role]))).toEqual({
+      "Da utente": null,
+      "Da admin": "SUPER_ADMIN",
+    });
+  });
+
+  it("feedback: lo scrive e lo rivede solo l'autore, gli admin con 2FA li leggono tutti", async () => {
+    const send = (user: TestUser, kind: string, body: string, page: string | null = null) =>
+      asUser(db, user, (tx) =>
+        attempt(tx, "insert into public.feedback (kind, body, page) values ($1, $2, $3)", [
+          kind,
+          body,
+          page,
+        ]),
+      );
+    expect(await send(alice, "IDEA", "Vorrei la chat in tempo reale", "/locker-room")).toBeNull();
+    expect(await send(bob, "PROBLEM", "La pagina non si apre")).toBeNull();
+    expect(await send(bob, "BOH", "Tipo sconosciuto")).toMatch(/feedback_kind_check/);
+    expect(await send(bob, "IDEA", "  ")).toMatch(/feedback_body_check/);
+    expect(await send(bob, "IDEA", "Pagina esterna", "https://esempio.test")).toMatch(
+      /feedback_page_check/,
+    );
+    expect(await send(bob, "IDEA", "Pagina esterna", "//esempio.test")).toMatch(
+      /feedback_page_check/,
+    );
+    const own = await asUser(
+      db,
+      bob,
+      async (tx) => (await tx.query<{ body: string }>("select body from public.feedback")).rows,
+    );
+    expect(own.map((r) => r.body)).toEqual(["La pagina non si apre"]);
+    // Nessuno lo modifica dopo l'invio.
+    expect(
+      await asUser(db, bob, (tx) => attempt(tx, "update public.feedback set body = 'Cambiato'")),
+    ).toMatch(/permission denied/);
+
+    expect(
+      await asUser(db, bob, (tx) => attempt(tx, "select * from public.admin_feedback_list(10)")),
+    ).not.toBeNull();
+    expect(
+      await asUser(
+        db,
+        admin,
+        (tx) => attempt(tx, "select * from public.admin_feedback_list(10)"),
+        "aal1",
+      ),
+    ).not.toBeNull();
+    const all = await asUser(
+      db,
+      admin,
+      async (tx) =>
+        (
+          await tx.query<{ kind: string; author_name: string; page: string | null }>(
+            "select kind, author_name, page from public.admin_feedback_list(10) order by id",
+          )
+        ).rows,
+    );
+    expect(all).toEqual([
+      { kind: "IDEA", author_name: "Alice", page: "/locker-room" },
+      { kind: "PROBLEM", author_name: "Utente", page: null },
+    ]);
+  });
+
+  it("feedback: al massimo 5 all'ora", async () => {
+    for (let i = 0; i < 5; i++) {
+      await asUser(db, alice, (tx) =>
+        tx.query("insert into public.feedback (kind, body) values ('IDEA', $1)", [`Idea ${i}`]),
+      );
+    }
+    expect(
+      await asUser(db, alice, (tx) =>
+        attempt(tx, "insert into public.feedback (kind, body) values ('IDEA', 'Sesta')"),
+      ),
+    ).toContain("FEEDBACK_RATE_LIMIT");
+  });
+});

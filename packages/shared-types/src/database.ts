@@ -956,6 +956,41 @@ export type Database = {
           },
         ];
       };
+      feedback: {
+        Row: {
+          id: number;
+          user_id: string;
+          kind: string;
+          body: string;
+          page: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: never;
+          user_id?: string;
+          kind: string;
+          body: string;
+          page?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: never;
+          user_id?: string;
+          kind?: string;
+          body?: string;
+          page?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feedback_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ingestion_runs: {
         Row: {
           id: number;
@@ -3227,6 +3262,7 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: Record<PropertyKey, never>; Returns: Database["public"]["Enums"]["app_role"] };
       add_team_alias: { Args: { p_team_id: number | null; p_alias: string | null }; Returns: number };
+      admin_feedback_list: { Args: { p_limit?: number | null }; Returns: { id: number | null; kind: string | null; body: string | null; page: string | null; created_at: string | null; author_name: string | null; author_email: string | null }[] };
       admin_update_profile: { Args: { p_user_id: string | null; p_display_name: string | null; p_name_color: string | null; p_name_style: string | null; p_avatar_style: string | null }; Returns: undefined };
       agent_watchdog: { Args: Record<PropertyKey, never>; Returns: number };
       ask_consume: { Args: Record<PropertyKey, never>; Returns: number };
@@ -3235,7 +3271,7 @@ export type Database = {
       auto_activate_model_version: { Args: { p_model_version_id: number | null; p_reason: string | null }; Returns: undefined };
       birthdays_today: { Args: Record<PropertyKey, never>; Returns: { display_name: string | null; name_color: string | null; name_style: string | null }[] };
       claim_agent_jobs: { Args: { p_worker_id: string | null; p_limit?: number | null; p_lease_seconds?: number | null; p_types?: string[] | null; p_run_id?: number | null }; Returns: { id: number; type: string; idempotency_key: string; payload: Json; status: Database["public"]["Enums"]["agent_job_status"]; attempts: number; max_attempts: number; next_run_at: string; locked_by: string | null; locked_until: string | null; last_error: string | null; result: Json | null; last_run_id: number | null; created_at: string; updated_at: string; started_at: string | null; finished_at: string | null }[] };
-      community_feed: { Args: { p_channel: string | null; p_limit?: number | null }; Returns: { id: number | null; channel: string | null; body: string | null; slip: Json | null; created_at: string | null; author_name: string | null; name_color: string | null; name_style: string | null; avatar_style: string | null; is_own: boolean | null; reactions: Json | null }[] };
+      community_feed: { Args: { p_channel: string | null; p_limit?: number | null }; Returns: { id: number | null; channel: string | null; body: string | null; slip: Json | null; created_at: string | null; author_name: string | null; name_color: string | null; name_style: string | null; avatar_style: string | null; is_own: boolean | null; reactions: Json | null; author_role: string | null }[] };
       complete_agent_job: { Args: { p_job_id: number | null; p_worker_id: string | null; p_result?: Json | null }; Returns: undefined };
       consume_agent_quota: { Args: { p_provider: string | null; p_window: Database["public"]["Enums"]["agent_quota_window"] | null; p_quota: number | null; p_cost?: number | null }; Returns: boolean };
       consume_rate_limit: { Args: { p_key: string | null; p_max: number | null; p_window_seconds: number | null }; Returns: boolean };

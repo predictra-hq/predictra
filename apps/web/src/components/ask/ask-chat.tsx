@@ -133,8 +133,9 @@ function Exchange({ item }: { item: AskState }) {
   );
 }
 
-export function AskChat() {
-  const [question, setQuestion] = useState("");
+/** `initialQuestion`: domanda già scritta (es. dall'analisi della schedina), da inviare con un tocco. */
+export function AskChat({ initialQuestion = "" }: { initialQuestion?: string }) {
+  const [question, setQuestion] = useState(initialQuestion);
   const [history, formAction] = useActionState(async (prev: AskState[], formData: FormData) => {
     const result = await ask(null, formData);
     playSound(result.answer ? "notify" : "error");

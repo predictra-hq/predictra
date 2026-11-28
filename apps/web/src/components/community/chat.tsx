@@ -45,7 +45,10 @@ export function ChatBubble({
   actions,
   reactions,
   anchor,
+  role,
 }: {
+  /** Ruolo accanto al nome, già tradotto: solo per Admin e Super Admin (ADR 0081). */
+  role?: string | null;
   /** Ancora del messaggio (`post-<id>`), per arrivarci dalla Home. */
   anchor?: string;
   /** Esito della schedina condivisa (ADR 0070). */
@@ -84,6 +87,11 @@ export function ChatBubble({
             style={nameStyle as never}
             className="truncate font-semibold"
           />
+          {role ? (
+            <span className="shrink-0 rounded-full bg-positive-soft px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-positive-strong">
+              {role}
+            </span>
+          ) : null}
         </p>
         {context ? <div className="mt-0.5 text-xs">{context}</div> : null}
         {body ? <p className="whitespace-pre-line break-words text-sm text-fg">{body}</p> : null}
