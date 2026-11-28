@@ -30,6 +30,7 @@ const AUTHENTICATED_FUNCTIONS = [
   // RPC dell'app
   "public.accept_invitation",
   "public.add_team_alias",
+  "public.admin_feedback_list",
   "public.admin_update_profile",
   "public.ask_consume",
   "public.ask_record",
@@ -59,6 +60,7 @@ const AUTHENTICATED_WRITABLE = [
   "bets",
   "community_posts",
   "community_reactions",
+  "feedback",
   "match_comments",
   "notifications",
   "personal_limits",

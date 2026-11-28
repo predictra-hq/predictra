@@ -73,3 +73,4 @@ Le motivazioni dettagliate e le fonti sono in [M0-piano-tecnico.md](../architect
 | [0078](0078-misure-prima-delle-regole.md)                           | Taratura oltre il rumore, matrice riproducibile, alternative misurate prima di adottarle       | Accettata |
 | [0079](0079-elo-unico-su-tutte-le-competizioni.md)                  | Elo unico su tutte le competizioni nel modello PREDICTRA                                       | Accettata |
 | [0080](0080-periodo-attuale-conti-e-componenti-personalizzati.md)   | Solo il periodo attuale, «Conti» al posto di «Bankroll», tendine e suggerimenti personalizzati | Accettata |
+| [0081](0081-spogliatoio-live-costruisci-per-me-feedback.md)         | Spogliatoio in tempo reale, «Costruiscila per me», feedback e sostegno                         | Proposta  |

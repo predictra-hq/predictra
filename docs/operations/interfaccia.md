@@ -360,3 +360,23 @@ ADR 0072.
   - in fondo alla sezione compaiono le quote minime.
 
 **Non provato nell'app in esecuzione.** Da guardare su DEV: avviso dei profili mancanti nelle schede Turno e Giornata.
+
+## 28/11/2026: Spogliatoio in tempo reale, «Costruiscila per me», feedback
+
+Dettagli e motivazioni nell'[ADR 0081](../decisions/0081-spogliatoio-live-costruisci-per-me-feedback.md).
+
+- **Spogliatoio in tempo reale** (`components/community/live-refresh.tsx`): i messaggi nuovi, le reazioni e i commenti alle partite compaiono da soli. In alto a destra «In diretta» (punto verde) quando il collegamento c'è; altrimenti «Si aggiorna quando torni qui».
+- **Ruolo accanto al nome** nelle chat: un'etichetta «Admin» o «Super Admin» solo per chi ha quel ruolo.
+- **Costruiscila per me** (in cima a Costruisci): si sceglie quanto rischiare e, se si vuole, quante partite; la schedina si riempie con le giocate più probabili del modello, con quota reale. Sotto la valutazione c'è l'**Analisi della schedina**:
+  - un giudizio in parole e «su 100 schedine così ne passerebbero circa N»;
+  - la giocata più debole;
+  - «Cosa cambierebbe», con un tocco su «Applica»;
+  - «Chiedi a PREDICTRA il rischio», che apre la chat con la domanda già scritta.
+- **«Incolla codice» della 2FA** solo su telefono e tablet; sul computer si usa Ctrl+V.
+- **Feedback e sostegno** (`/feedback`, dal Profilo → Aiuto): si sceglie il tipo e si scrive. Sotto ci sono gli ultimi feedback mandati. Gli amministratori li leggono in _Utenti e accessi → Feedback_. Il riquadro «Sostieni PREDICTRA» compare solo se è impostato `DONATION_URL`.
+
+**Non provato nell'app in esecuzione:** le pagine richiedono l'accesso e il tempo reale ha bisogno di Supabase. Da guardare su DEV:
+
+- due dispositivi nella stessa chat, per vedere un messaggio comparire da solo;
+- «Costruiscila per me» con partite in programma;
+- la 2FA sul telefono e sul computer.

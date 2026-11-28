@@ -3,6 +3,7 @@ import Link from "next/link";
 import { highestRole, type CommunityChannel } from "@predictra/shared-types";
 import { ChatBubble, ChatThread, Reactions } from "@/components/community/chat";
 import { ChatComposer } from "@/components/community/chat-composer";
+import { LiveRefresh } from "@/components/community/live-refresh";
 import { PageHeader } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
 import { listCommunityPosts, listRecentComments, listSharedResults } from "@/lib/community/queries";
@@ -24,7 +25,8 @@ const CHANNEL: Record<Exclude<Tab, "matches">, CommunityChannel> = {
  * Spogliatoio (ADR 0064, 0065): tre chat per tutti gli iscritti, come nelle app di
  * messaggi. Generale per parlare di tutto, Schedine per condividere e commentare le
  * schedine, Partite con gli ultimi commenti scritti sotto le partite. I messaggi stanno
- * sopra, il più recente in basso; si scrive nel campo in fondo.
+ * sopra, il più recente in basso; si scrive nel campo in fondo. In tempo reale (ADR 0081):
+ * un messaggio nuovo compare da solo, senza ricaricare la pagina.
  */
 export default async function LockerRoomPage({ searchParams }: PageProps<"/locker-room">) {
   const user = await requireUser();
@@ -38,6 +40,9 @@ export default async function LockerRoomPage({ searchParams }: PageProps<"/locke
   return (
     <>
       <PageHeader title={c.title} description={c.description} />
+      <div className="mb-2 flex justify-end">
+        <LiveRefresh topic={`community:${tab}`} labels={{ live: c.live, offline: c.liveOffline }} />
+      </div>
       <nav aria-label={c.title} className="tab-strip mb-3">
         {TABS.map((t) => (
           <Link key={t} href={`/locker-room?c=${t}`} aria-current={t === tab ? "page" : undefined}>
@@ -91,6 +96,7 @@ async function Chat({ channel, canModerate }: { channel: CommunityChannel; canMo
           key={p.id}
           own={p.is_own}
           author={p.author_name}
+          role={p.author_role ? m.roles[p.author_role] : null}
           avatarStyle={p.avatar_style}
           nameColor={p.name_color}
           nameStyle={p.name_style}

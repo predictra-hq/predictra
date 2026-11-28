@@ -6,6 +6,7 @@ import {
   BotMessageSquare,
   ChevronRight,
   LogOut,
+  MessageSquareHeart,
   Palette,
   PenLine,
   ShieldCheck,
@@ -192,7 +193,10 @@ export default async function ProfilePage() {
 
         <Group
           title={p.groupHelp}
-          rows={[{ href: "/ask", icon: BotMessageSquare, label: p.rowAsk }]}
+          rows={[
+            { href: "/ask", icon: BotMessageSquare, label: p.rowAsk },
+            { href: "/feedback", icon: MessageSquareHeart, label: p.rowFeedback },
+          ]}
         >
           <li>
             <TourRestartRow label={p.restartTour} />

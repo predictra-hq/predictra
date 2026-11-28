@@ -34,6 +34,19 @@ export const COMMENT_RATE_LIMIT = "COMMENT_RATE_LIMIT";
 /** Spogliatoio: dopo un messaggio si aspettano 2 minuti (ADR 0071). */
 export const POST_COOLDOWN = "POST_COOLDOWN";
 
+/** Feedback degli iscritti (ADR 0081): tipi ammessi, come il vincolo `feedback_kind_check`. */
+export const FEEDBACK_KINDS = ["IDEA", "PROBLEM", "PRAISE", "OTHER"] as const;
+export type FeedbackKind = (typeof FEEDBACK_KINDS)[number];
+/** Lunghezza del testo, come il vincolo `feedback_body_check`. */
+export const FEEDBACK_MIN_LENGTH = 3;
+export const FEEDBACK_MAX_LENGTH = 1000;
+/** Al più 5 feedback all'ora per persona. */
+export const FEEDBACK_RATE_LIMIT = "FEEDBACK_RATE_LIMIT";
+
+export function isFeedbackKind(value: unknown): value is FeedbackKind {
+  return typeof value === "string" && (FEEDBACK_KINDS as readonly string[]).includes(value);
+}
+
 export function isNameColor(value: unknown): value is NameColor {
   return typeof value === "string" && (NAME_COLORS as readonly string[]).includes(value);
 }
@@ -137,4 +150,6 @@ export interface CommunityPostRow {
   is_own: boolean;
   /** Reazioni di tutti (ADR 0070). */
   reactions?: CommunityReaction[];
+  /** Ruolo dell'autore solo se Admin o Super Admin, altrimenti null (ADR 0081). */
+  author_role?: "ADMIN" | "SUPER_ADMIN" | null;
 }

@@ -7,6 +7,8 @@ export const it = {
   pageTitles: {
     adminAgent: "Agente",
     adminAudit: "Audit",
+    adminFeedback: "Feedback ricevuti",
+    feedback: "Feedback e sostegno",
     adminInvitations: "Inviti",
     adminTeamAliases: "Alias squadre",
     adminUsers: "Utenti",
@@ -306,6 +308,7 @@ export const it = {
     users: "Utenti",
     invitations: "Inviti",
     audit: "Audit",
+    feedbackInbox: "Feedback",
     teamAliases: "Alias squadre",
     agent: "Agente",
     quickNav: "Pagine principali",
@@ -329,6 +332,7 @@ export const it = {
     securityValue: "Password, 2FA, dispositivi",
     rowPreferences: "Preferenze",
     rowAsk: "Chiedi a PREDICTRA",
+    rowFeedback: "Feedback e sostegno",
     mfaOn: "2FA attiva",
     mfaOff: "2FA da attivare",
     restartTour: "Rivedi il tutorial",
@@ -497,8 +501,38 @@ export const it = {
     passwordSection: "Password",
     passwordUpdated: "Password aggiornata.",
   },
+  feedback: {
+    title: "Feedback e sostegno",
+    description:
+      "Dicci cosa ti piace, cosa non funziona o cosa vorresti trovare. Li leggono gli amministratori.",
+    formTitle: "Scrivi un feedback",
+    formHint: "Più è preciso, più è facile sistemarlo: cosa stavi facendo e cosa ti aspettavi.",
+    kindLabel: "Di che si tratta?",
+    kinds: { IDEA: "Un'idea", PROBLEM: "Un problema", PRAISE: "Mi piace", OTHER: "Altro" },
+    bodyLabel: "Il tuo messaggio",
+    placeholder: "Es. «Nello Spogliatoio vorrei poter rispondere a un messaggio preciso»",
+    send: "Invia feedback",
+    sent: "Grazie! Il tuo feedback è arrivato.",
+    invalid: "Scegli il tipo e scrivi un messaggio tra 3 e 1000 caratteri.",
+    rateLimited: "Hai mandato molti feedback nell'ultima ora: riprova più tardi.",
+    privacy:
+      "Lo vedono solo gli amministratori, con il tuo nome e la tua email per poterti rispondere dentro PREDICTRA. Non si inviano email.",
+    ownTitle: "I tuoi ultimi feedback",
+    ownEmpty: "Non ne hai ancora mandati.",
+    donateTitle: "Sostieni PREDICTRA",
+    donateText:
+      "PREDICTRA è gratuito e senza pubblicità. Se ti è utile, puoi aiutare a coprire i costi con una donazione libera.",
+    donateButton: "Fai una donazione",
+    donateNote:
+      "Si apre un sito esterno: PREDICTRA non vede né conserva i dati del pagamento. La donazione non sblocca funzioni e non dà vantaggi.",
+    adminTitle: "Feedback ricevuti",
+    adminDescription: "Idee, problemi e apprezzamenti degli iscritti, dal più recente.",
+    adminEmpty: "Ancora nessun feedback.",
+  },
   community: {
     title: "Spogliatoio",
+    live: "In diretta",
+    liveOffline: "Si aggiorna quando torni qui",
     homeEmpty: "Ancora nessun messaggio. Entra e scrivi il primo.",
     slipsOnly: "Nella chat Schedine si condividono solo schedine, con il pulsante «Condividi».",
     slipsComposer:
@@ -1305,6 +1339,37 @@ export const it = {
       "Ultima elaborazione: {at} · combinazioni valutate {candidates} · proposte {proposals}",
     thresholds:
       "Soglie: EV ≥ {ev} · probabilità ≥ {p} · Confidence Score ≥ {c} · al massimo {legs} selezioni · solo quote aggiornate.",
+    autoTitle: "Costruiscila per me",
+    autoHint:
+      "Scegli quanto vuoi rischiare: PREDICTRA mette in schedina, partita per partita, la giocata più probabile secondo il modello, con una quota reale. Poi puoi cambiarla come vuoi.",
+    autoLevel: "Quanto vuoi rischiare?",
+    autoLegs: "Quante partite?",
+    autoLegsAuto: "Decidi tu",
+    autoButton: "Costruisci la schedina",
+    autoDone: "Fatta: {n} partite, livello {level}. Sotto trovi l'analisi e cosa cambierebbe.",
+    autoReachedOther:
+      "Con {n} partite la schedina non resta {level}: è {reached}. Prova con meno partite o lascia decidere a PREDICTRA.",
+    autoEmpty:
+      "Non ci sono abbastanza giocate con previsione e quota reale per costruirla adesso. Riprova più tardi o sceglile a mano.",
+    analysisTitle: "Analisi della schedina",
+    verdicts: {
+      CONSERVATIVE: "Abbastanza sicura",
+      BALANCED: "Rischio medio",
+      AGGRESSIVE: "Rischiosa",
+    },
+    analysisOutOf: "Su 100 schedine come questa, secondo il modello ne passerebbero circa {n}.",
+    analysisWeakest:
+      "La giocata più debole è {pick} in {match}: {p}. È quella che più facilmente fa perdere la schedina.",
+    whatIfTitle: "Cosa cambierebbe",
+    whatIfRemove: "Senza {pick}",
+    whatIfSwap: "{to} al posto di {pick}",
+    whatIfResult: "Probabilità da {from} a {to} · quota {price}",
+    whatIfApply: "Applica",
+    askRisk: "Chiedi a PREDICTRA il rischio",
+    askQuestion:
+      "Analizza il rischio della mia schedina: {picks}. Probabilità totale {p}. Qual è il rischio principale e cosa cambierebbe togliendo o sostituendo {weakest}?",
+    analysisNote:
+      "Probabilità del modello e quote reali raccolte: nessuna schedina è sicura e nessun risultato è garantito.",
     builderTitle: "Costruisci una schedina",
     builderDescription:
       "Scegli una giocata per partita, fino a 10 partite dei prossimi giorni: esito finale, doppia chance, gol o entrambe segnano. La valutazione si aggiorna da sola.",

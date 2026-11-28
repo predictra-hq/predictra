@@ -6,14 +6,24 @@ import {
   type BuilderGroup,
   type BuilderMarket,
 } from "@/components/bet-builder/builder-picker";
+import { AutoBuilderForm, SlipAnalysisCard } from "@/components/bet-builder/auto-builder";
 import { EvaluationPanel } from "@/components/bet-builder/evaluation";
 import { ShareSlip } from "@/components/community/share-slip";
 import { shareProps } from "@/components/community/share-labels";
 import { pickKey } from "@/lib/community/slip";
 import { BetBuilderDisclaimer, BetBuilderNav } from "@/components/bet-builder/shared";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
-import { Card, CardTitle, EmptyState, Field, Input, PageHeader } from "@/components/ui/primitives";
+import {
+  Alert,
+  Card,
+  CardTitle,
+  EmptyState,
+  Field,
+  Input,
+  PageHeader,
+} from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth/dal";
+import { analyzeSlip, autoBuild, parseAutoLegs, parseAutoLevel } from "@/lib/bet-builder/auto";
 import { evaluateSelections, parseSelectionKeys, selectionKey } from "@/lib/bet-builder/evaluate";
 import { selectionLabel } from "@/lib/bet-builder/format";
 import { listManualOptions, type ManualOption } from "@/lib/bet-builder/queries";
@@ -79,12 +89,19 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
   const params = await searchParams;
   const now = new Date();
   const [options, competitions] = await Promise.all([listManualOptions(now), listCompetitions()]);
-  const chosenKeys = parseSelectionKeys(params.s).map(selectionKey);
+  // «Costruiscila per me» (ADR 0081): con `?auto=` la schedina la riempiono i dati.
+  const autoLevel = parseAutoLevel(params.auto);
+  const autoLegs = parseAutoLegs(params.legs);
+  const auto = autoLevel ? autoBuild(options, autoLevel, autoLegs, now) : null;
+  const chosenKeys = auto
+    ? auto.selections.map(selectionKey)
+    : parseSelectionKeys(params.s).map(selectionKey);
   const outcomes = options.flatMap((o) => o.outcomes);
   const selected = chosenKeys
     .map((k) => outcomes.find((o) => selectionKey(o) === k))
     .filter((o) => o !== undefined);
   const evaluation = evaluateSelections(selected, now);
+  const analysis = evaluation.modellable ? analyzeSlip(selected, options, now) : null;
   const summary =
     evaluation.probability === null
       ? null
@@ -115,6 +132,28 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
     <>
       <PageHeader title={m.builderTitle} description={m.builderDescription} />
       <BetBuilderNav current="builder" />
+
+      {options.length > 0 ? <AutoBuilderForm level={autoLevel} legs={autoLegs} /> : null}
+      {auto && autoLevel ? (
+        <Alert
+          tone={auto.selections.length === 0 ? "warning" : "positive"}
+          className="mb-4"
+          aria-live="polite"
+        >
+          {auto.selections.length === 0
+            ? m.autoEmpty
+            : auto.reached !== null && auto.reached !== autoLevel
+              ? fillTemplate(m.autoReachedOther, {
+                  n: auto.selections.length,
+                  level: m.categories[autoLevel],
+                  reached: m.categories[auto.reached],
+                })
+              : fillTemplate(m.autoDone, {
+                  n: auto.selections.length,
+                  level: m.categories[autoLevel],
+                })}
+        </Alert>
+      ) : null}
 
       {options.length === 0 ? (
         <EmptyState>{m.builderEmpty}</EmptyState>
@@ -212,6 +251,16 @@ export default async function BuilderPage({ searchParams }: PageProps<"/bet-buil
                 </div>
               ) : null}
             </Card>
+            {analysis ? (
+              <SlipAnalysisCard
+                analysis={analysis}
+                hrefFor={builderHref}
+                picks={selected.map(
+                  (x) =>
+                    `${x.homeTeam} – ${x.awayTeam}: ${selectionLabel(x.selection, x.homeTeam, x.awayTeam, x.market, x.line)}${x.probability === null ? "" : ` (${formatPercent(x.probability, 0)})`}`,
+                )}
+              />
+            ) : null}
             {selected.length > 0 ? (
               <Card>
                 <CardTitle className="mb-3">{m.saveSlip}</CardTitle>

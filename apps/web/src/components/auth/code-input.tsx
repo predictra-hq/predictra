@@ -16,9 +16,10 @@ export interface CodeInputLabels {
 
 /**
  * Codice della 2FA in 6 caselle, come nelle app. Si può scrivere una cifra alla volta,
- * incollare il codice in qualunque casella o usare il bottone "Incolla codice". La prima
- * casella ha `autoComplete="one-time-code"`: su iPhone e Android la tastiera propone il
- * codice dagli appunti o dal portachiavi. Con 6 cifre il modulo parte da solo
+ * incollare il codice in qualunque casella o, su telefono e tablet, usare il bottone
+ * "Incolla codice" (sul computer non compare: si usa Ctrl+V). La prima casella ha
+ * `autoComplete="one-time-code"`: su iPhone e Android la tastiera propone il codice dagli
+ * appunti o dal portachiavi. Con 6 cifre il modulo parte da solo
  * (`autoSubmit`), oppure avvisa chi lo usa (`onChange`).
  */
 export function CodeInput({
@@ -134,7 +135,9 @@ export function CodeInput({
         <button
           type="button"
           onClick={pasteFromClipboard}
-          className="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-lg py-1 text-sm text-positive-strong hover:underline"
+          // Solo su telefoni e tablet (puntatore a tocco): sul computer si incolla con Ctrl+V
+          // in una casella, il bottone era solo un ingombro.
+          className="inline-flex cursor-pointer items-center gap-1.5 self-start rounded-lg py-1 text-sm text-positive-strong hover:underline pointer-fine:hidden"
         >
           <ClipboardPaste size={16} aria-hidden="true" />
           {labels.paste}
